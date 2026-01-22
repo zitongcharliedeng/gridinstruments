@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DCompose Web - Isomorphic Keyboard Synthesizer</title>
+  <meta name="description" content="Play music with your computer keyboard using the DCompose/Wicki-Hayden isomorphic layout. Zero latency, works on mobile with external keyboards.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    :root {
+      --bg-primary: #0f0f1a;
+      --bg-secondary: #1a1a2e;
+      --bg-tertiary: #252542;
+      --text-primary: #e8e8f0;
+      --text-secondary: #9090a0;
+      --accent-primary: #6366f1;
+      --accent-secondary: #8b5cf6;
+      --note-white: #f8f8fc;
+      --note-black: #2a2a3e;
+      --note-active: #22c55e;
+      --note-sustained: #f59e0b;
+    }
+    
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    
+    #app {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      padding: 1rem;
+      gap: 1rem;
+    }
+    
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 0.75rem 1rem;
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      border: 1px solid var(--bg-tertiary);
+    }
+    
+    .logo {
+      font-size: 1.25rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    
+    .control-group {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .control-group label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-secondary);
+    }
+    
+    select, button {
+      font-family: inherit;
+      font-size: 0.875rem;
+      padding: 0.5rem 0.75rem;
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      border: 1px solid transparent;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    
+    select:hover, button:hover {
+      background: var(--bg-primary);
+      border-color: var(--accent-primary);
+    }
+    
+    select:focus, button:focus {
+      outline: none;
+      border-color: var(--accent-primary);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+    }
+    
+    button.active {
+      background: var(--accent-primary);
+      color: white;
+    }
+    
+    .octave-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+    
+    .octave-controls button {
+      width: 2rem;
+      height: 2rem;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+    }
+    
+    .octave-display {
+      min-width: 2rem;
+      text-align: center;
+      font-weight: 600;
+      font-size: 0.875rem;
+    }
+    
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    
+    .keyboard-container {
+      flex: 1;
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      border: 1px solid var(--bg-tertiary);
+      padding: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 300px;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    #keyboard-canvas {
+      max-width: 100%;
+      max-height: 100%;
+    }
+    
+    .info-panel {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+    }
+    
+    .info-card {
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      border: 1px solid var(--bg-tertiary);
+      padding: 1rem;
+    }
+    
+    .info-card h3 {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-secondary);
+      margin-bottom: 0.5rem;
+    }
+    
+    .info-card .value {
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+    
+    #chord-display {
+      color: var(--accent-secondary);
+    }
+    
+    #notes-display {
+      font-size: 1rem;
+      color: var(--text-primary);
+      word-break: break-word;
+    }
+    
+    footer {
+      text-align: center;
+      padding: 1rem;
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+    }
+    
+    footer a {
+      color: var(--accent-primary);
+      text-decoration: none;
+    }
+    
+    footer a:hover {
+      text-decoration: underline;
+    }
+    
+    .instructions {
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      border: 1px solid var(--bg-tertiary);
+      padding: 1rem;
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+    }
+    
+    .instructions p {
+      margin-bottom: 0.5rem;
+    }
+    
+    .instructions kbd {
+      display: inline-block;
+      padding: 0.125rem 0.375rem;
+      background: var(--bg-tertiary);
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 0.8em;
+    }
+    
+    @media (max-width: 768px) {
+      header {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      
+      .controls {
+        justify-content: center;
+      }
+    }
+    
+    /* Touch instructions overlay */
+    #touch-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(15, 15, 26, 0.95);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 2rem;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: opacity 0.3s ease;
+    }
+    
+    #touch-overlay.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+    
+    #touch-overlay p {
+      font-size: 1.25rem;
+      max-width: 400px;
+    }
+    
+    #touch-overlay .icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <header>
+      <div class="logo">DCompose Web</div>
+      <div class="controls">
+        <div class="control-group">
+          <label>Layout</label>
+          <select id="layout-select">
+            <option value="qwerty-us">QWERTY (US)</option>
+            <option value="qwerty-uk">QWERTY (UK)</option>
+            <option value="qwertz">QWERTZ (DE)</option>
+            <option value="azerty">AZERTY (FR)</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label>Octave</label>
+          <div class="octave-controls">
+            <button id="octave-down">-</button>
+            <span class="octave-display" id="octave-display">0</span>
+            <button id="octave-up">+</button>
+          </div>
+        </div>
+        <div class="control-group">
+          <button id="sustain-toggle">Sustain: OFF</button>
+        </div>
+        <div class="control-group">
+          <select id="waveform-select">
+            <option value="sawtooth">Sawtooth</option>
+            <option value="sine">Sine</option>
+            <option value="square">Square</option>
+            <option value="triangle">Triangle</option>
+          </select>
+        </div>
+      </div>
+    </header>
+    
+    <main>
+      <div class="keyboard-container">
+        <canvas id="keyboard-canvas"></canvas>
+        <div id="touch-overlay">
+          <div>
+            <div class="icon">&#127929;</div>
+            <p>Tap anywhere to start the audio engine, then use your keyboard to play!</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="info-panel">
+        <div class="info-card">
+          <h3>Detected Chord</h3>
+          <div class="value" id="chord-display">-</div>
+        </div>
+        <div class="info-card">
+          <h3>Active Notes</h3>
+          <div class="value" id="notes-display">-</div>
+        </div>
+      </div>
+      
+      <div class="instructions">
+        <p><strong>How to play:</strong> Press keys on your keyboard. The layout follows the DCompose/Wicki-Hayden isomorphic pattern.</p>
+        <p><kbd>Space</kbd> Toggle sustain | <kbd>+</kbd> / <kbd>-</kbd> Change octave | Connect a USB keyboard to your phone to play on mobile!</p>
+      </div>
+    </main>
+    
+    <footer>
+      Based on <a href="https://www.toverlamp.org/static/wickisynth/wickisynth_lowlatency.html" target="_blank">WickiSynth</a> by Piers Titus van der Torren |
+      Inspired by <a href="https://github.com/flipcoder/midimech" target="_blank">MIDImech</a> and <a href="https://www.striso.org/the-note-layout/" target="_blank">Striso</a> |
+      <a href="https://github.com/YOUR_USERNAME/dcompose-web" target="_blank">GitHub</a>
+    </footer>
+  </div>
+  
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
