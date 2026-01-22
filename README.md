@@ -2,7 +2,7 @@
 
 A web-based isomorphic keyboard synthesizer using the DCompose/Wicki-Hayden note layout. Play music with your computer keyboard - works on mobile with external USB keyboards!
 
-**[Try it live](https://YOUR_USERNAME.github.io/dcompose-web)**
+**[Try it live](https://zitongcharliedeng.github.io/dcompose-web)**
 
 ## Why I Made This
 
