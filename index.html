@@ -248,35 +248,6 @@
       }
     }
     
-    /* Touch instructions overlay */
-    #touch-overlay {
-      position: absolute;
-      inset: 0;
-      background: rgba(15, 15, 26, 0.95);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      padding: 2rem;
-      border-radius: 12px;
-      cursor: pointer;
-      transition: opacity 0.3s ease;
-    }
-    
-    #touch-overlay.hidden {
-      opacity: 0;
-      pointer-events: none;
-    }
-    
-    #touch-overlay p {
-      font-size: 1.25rem;
-      max-width: 400px;
-    }
-    
-    #touch-overlay .icon {
-      font-size: 3rem;
-      margin-bottom: 1rem;
-    }
   </style>
 </head>
 <body>
@@ -318,12 +289,6 @@
     <main>
       <div class="keyboard-container">
         <canvas id="keyboard-canvas"></canvas>
-        <div id="touch-overlay">
-          <div>
-            <div class="icon">&#127929;</div>
-            <p>Tap anywhere to start the audio engine, then use your keyboard to play!</p>
-          </div>
-        </div>
       </div>
       
       <div class="info-panel">

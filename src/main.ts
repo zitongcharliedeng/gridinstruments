@@ -2,7 +2,7 @@
  * DCompose Web - Main Application
  * 
  * A web-based isomorphic keyboard synthesizer with DCompose/Wicki-Hayden layout.
- * Play music with your computer keyboard - works on mobile with external keyboards!
+ * Play music with your computer keyboard or mouse - works on mobile with external keyboards!
  */
 
 import { getLayout, KeyboardLayout, KeyCoordinate } from './lib/keyboard-layouts';
@@ -15,9 +15,15 @@ class DComposeApp {
   private visualizer: KeyboardVisualizer | null = null;
   private currentLayout: KeyboardLayout;
   private octaveOffset: number = 0;
-  private activeKeys: Map<string, { coordX: number; coordY: number }> = new Map();
-  private keyRepeat: Set<string> = new Set(); // Prevent key repeat
-  private mouseNotes: Map<number, string> = new Map(); // pointerId -> noteId for mouse/touch
+  
+  // Track active notes - store VISUAL coordinates (without octave offset)
+  // Key = source identifier (keyCode or "mouse_pointerId")
+  // Value = { coordX, coordY } in VISUAL space (for highlighting)
+  private activeNotes: Map<string, { coordX: number; coordY: number }> = new Map();
+  private keyRepeat: Set<string> = new Set();
+  
+  // Mouse/touch state
+  private pointerDown: Map<number, { coordX: number; coordY: number } | null> = new Map();
   
   // DOM elements
   private canvas: HTMLCanvasElement;
@@ -27,7 +33,6 @@ class DComposeApp {
   private waveformSelect: HTMLSelectElement;
   private chordDisplay: HTMLElement;
   private notesDisplay: HTMLElement;
-  private touchOverlay: HTMLElement;
   
   constructor() {
     this.synth = new Synth();
@@ -41,19 +46,13 @@ class DComposeApp {
     this.waveformSelect = document.getElementById('waveform-select') as HTMLSelectElement;
     this.chordDisplay = document.getElementById('chord-display') as HTMLElement;
     this.notesDisplay = document.getElementById('notes-display') as HTMLElement;
-    this.touchOverlay = document.getElementById('touch-overlay') as HTMLElement;
     
     this.init();
   }
   
   private async init(): Promise<void> {
-    // Setup event listeners
     this.setupEventListeners();
-    
-    // Setup visualizer
     this.setupVisualizer();
-    
-    // Initial render
     this.render();
   }
   
@@ -65,58 +64,43 @@ class DComposeApp {
     const width = Math.min(rect.width - 32, 900);
     const height = Math.min(rect.height - 32, 400);
     
-    this.visualizer = new KeyboardVisualizer(this.canvas, {
-      width,
-      height,
-    });
+    this.visualizer = new KeyboardVisualizer(this.canvas, { width, height });
     
-    // Handle resize
     window.addEventListener('resize', () => {
       if (!this.visualizer) return;
       const newRect = container.getBoundingClientRect();
-      const newWidth = Math.min(newRect.width - 32, 900);
-      const newHeight = Math.min(newRect.height - 32, 400);
-      this.visualizer.resize(newWidth, newHeight);
+      this.visualizer.resize(
+        Math.min(newRect.width - 32, 900),
+        Math.min(newRect.height - 32, 400)
+      );
     });
   }
   
-  private setupEventListeners(): void {
-    // Touch overlay - initialize audio on first interaction
-    const initAudio = async () => {
+  private async ensureAudioReady(): Promise<void> {
+    if (!this.synth.isInitialized()) {
       await this.synth.init();
-      if (this.synth.isInitialized()) {
-        this.touchOverlay.classList.add('hidden');
-      }
-    };
-    
-    this.touchOverlay.addEventListener('click', initAudio);
-    this.touchOverlay.addEventListener('touchstart', initAudio);
-    
-    // Also init on first keydown
-    document.addEventListener('keydown', async () => {
-      if (!this.synth.isInitialized()) {
-        await this.synth.init();
-        if (this.synth.isInitialized()) {
-          this.touchOverlay.classList.add('hidden');
-        }
-      }
-    }, { once: true });
-    
+    }
+  }
+  
+  private setupEventListeners(): void {
     // Keyboard events
     document.addEventListener('keydown', this.handleKeyDown.bind(this));
     document.addEventListener('keyup', this.handleKeyUp.bind(this));
     
-    // Mouse/touch events on canvas for clicking notes
+    // Mouse/touch events - full support for click, hold, and drag
     this.canvas.addEventListener('pointerdown', this.handlePointerDown.bind(this));
+    this.canvas.addEventListener('pointermove', this.handlePointerMove.bind(this));
     this.canvas.addEventListener('pointerup', this.handlePointerUp.bind(this));
     this.canvas.addEventListener('pointerleave', this.handlePointerUp.bind(this));
     this.canvas.addEventListener('pointercancel', this.handlePointerUp.bind(this));
+    
+    // Prevent default touch behaviors on canvas
+    this.canvas.addEventListener('touchstart', (e) => e.preventDefault(), { passive: false });
     
     // Layout selector
     this.layoutSelect.addEventListener('change', () => {
       this.currentLayout = getLayout(this.layoutSelect.value);
       this.stopAllNotes();
-      this.render();
     });
     
     // Octave controls
@@ -136,7 +120,6 @@ class DComposeApp {
       this.synth.setSustain(newSustain);
       this.sustainButton.textContent = `Sustain: ${newSustain ? 'ON' : 'OFF'}`;
       this.sustainButton.classList.toggle('active', newSustain);
-      this.render();
     });
     
     // Waveform selector
@@ -144,7 +127,7 @@ class DComposeApp {
       this.synth.setWaveform(this.waveformSelect.value as WaveformType);
     });
     
-    // Prevent spacebar from scrolling
+    // Prevent spacebar scroll
     document.addEventListener('keydown', (e) => {
       if (e.code === 'Space' && e.target === document.body) {
         e.preventDefault();
@@ -152,22 +135,19 @@ class DComposeApp {
     });
   }
   
-  private handleKeyDown(event: KeyboardEvent): void {
+  private async handleKeyDown(event: KeyboardEvent): Promise<void> {
     const code = event.code;
     
-    // Prevent key repeat
     if (this.keyRepeat.has(code)) return;
     this.keyRepeat.add(code);
     
     // Special keys
     if (code === 'Space') {
       event.preventDefault();
-      // Toggle sustain
       const newSustain = !this.synth.getSustain();
       this.synth.setSustain(newSustain);
       this.sustainButton.textContent = `Sustain: ${newSustain ? 'ON' : 'OFF'}`;
       this.sustainButton.classList.toggle('active', newSustain);
-      this.render();
       return;
     }
     
@@ -183,18 +163,22 @@ class DComposeApp {
       return;
     }
     
-    // Get note coordinate from layout
     const coord = this.currentLayout.keyMap[code] as KeyCoordinate | undefined;
     if (!coord) return;
     
     event.preventDefault();
+    await this.ensureAudioReady();
     
     const [coordX, coordY] = coord;
-    const noteId = `${coordX}_${coordY + this.octaveOffset}`;
     
-    // Play note
-    this.synth.playNote(noteId, coordX, coordY, this.octaveOffset);
-    this.activeKeys.set(code, { coordX, coordY: coordY + this.octaveOffset });
+    // Create unique note ID for audio (includes octave offset)
+    const audioNoteId = `key_${code}_${coordX}_${coordY + this.octaveOffset}`;
+    
+    // Play note with octave offset applied to audio
+    this.synth.playNote(audioNoteId, coordX, coordY, this.octaveOffset);
+    
+    // Store VISUAL coordinates (without octave offset) for highlighting
+    this.activeNotes.set(code, { coordX, coordY });
     
     this.render();
     this.updateDisplay();
@@ -202,75 +186,108 @@ class DComposeApp {
   
   private handleKeyUp(event: KeyboardEvent): void {
     const code = event.code;
-    
-    // Clear key repeat flag
     this.keyRepeat.delete(code);
     
-    // Get stored coordinate for this key
-    const keyData = this.activeKeys.get(code);
-    if (!keyData) return;
+    const noteData = this.activeNotes.get(code);
+    if (!noteData) return;
     
-    const { coordX, coordY } = keyData;
-    const noteId = `${coordX}_${coordY}`;
+    const { coordX, coordY } = noteData;
     
-    // Stop note
-    this.synth.stopNote(noteId);
-    this.activeKeys.delete(code);
+    // Stop the audio note (with octave offset that was used when playing)
+    const audioNoteId = `key_${code}_${coordX}_${coordY + this.octaveOffset}`;
+    this.synth.stopNote(audioNoteId);
     
+    this.activeNotes.delete(code);
     this.render();
     this.updateDisplay();
   }
   
   private async handlePointerDown(event: PointerEvent): Promise<void> {
-    // Initialize audio if needed
-    if (!this.synth.isInitialized()) {
-      await this.synth.init();
-      if (this.synth.isInitialized()) {
-        this.touchOverlay.classList.add('hidden');
+    await this.ensureAudioReady();
+    
+    // Capture pointer for drag support
+    this.canvas.setPointerCapture(event.pointerId);
+    
+    const button = this.getButtonAtPointer(event);
+    if (button) {
+      this.playPointerNote(event.pointerId, button.coordX, button.coordY);
+    }
+    this.pointerDown.set(event.pointerId, button);
+  }
+  
+  private handlePointerMove(event: PointerEvent): void {
+    // Only process if this pointer is down
+    if (!this.pointerDown.has(event.pointerId)) return;
+    
+    const currentButton = this.pointerDown.get(event.pointerId);
+    const newButton = this.getButtonAtPointer(event);
+    
+    // Check if we moved to a different button
+    const currentId = currentButton ? `${currentButton.coordX}_${currentButton.coordY}` : null;
+    const newId = newButton ? `${newButton.coordX}_${newButton.coordY}` : null;
+    
+    if (currentId !== newId) {
+      // Stop old note if any
+      if (currentButton) {
+        this.stopPointerNote(event.pointerId, currentButton.coordX, currentButton.coordY);
       }
+      
+      // Play new note if any
+      if (newButton) {
+        this.playPointerNote(event.pointerId, newButton.coordX, newButton.coordY);
+      }
+      
+      this.pointerDown.set(event.pointerId, newButton);
+    }
+  }
+  
+  private handlePointerUp(event: PointerEvent): void {
+    const currentButton = this.pointerDown.get(event.pointerId);
+    if (currentButton) {
+      this.stopPointerNote(event.pointerId, currentButton.coordX, currentButton.coordY);
     }
     
-    if (!this.visualizer) return;
+    this.pointerDown.delete(event.pointerId);
+    this.canvas.releasePointerCapture(event.pointerId);
+  }
+  
+  private getButtonAtPointer(event: PointerEvent): { coordX: number; coordY: number } | null {
+    if (!this.visualizer) return null;
     
-    // Get click position relative to canvas
     const rect = this.canvas.getBoundingClientRect();
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
     
-    // Find which button was clicked
     const button = this.visualizer.getButtonAtPoint(x, y);
-    if (!button) return;
+    return button ? { coordX: button.coordX, coordY: button.coordY } : null;
+  }
+  
+  private playPointerNote(pointerId: number, coordX: number, coordY: number): void {
+    const audioNoteId = `ptr_${pointerId}_${coordX}_${coordY + this.octaveOffset}`;
+    this.synth.playNote(audioNoteId, coordX, coordY, this.octaveOffset);
     
-    const { coordX, coordY, noteId } = button;
-    
-    // Play note with mouse prefix to avoid conflicts with keyboard
-    const mouseNoteId = `mouse_${noteId}`;
-    this.synth.playNote(mouseNoteId, coordX, coordY, this.octaveOffset);
-    this.mouseNotes.set(event.pointerId, mouseNoteId);
-    
-    // Also track in activeKeys for display purposes
-    this.activeKeys.set(`mouse_${event.pointerId}`, { coordX, coordY: coordY + this.octaveOffset });
+    // Store VISUAL coordinates for highlighting
+    this.activeNotes.set(`ptr_${pointerId}`, { coordX, coordY });
     
     this.render();
     this.updateDisplay();
   }
   
-  private handlePointerUp(event: PointerEvent): void {
-    const mouseNoteId = this.mouseNotes.get(event.pointerId);
-    if (mouseNoteId) {
-      this.synth.stopNote(mouseNoteId);
-      this.mouseNotes.delete(event.pointerId);
-      this.activeKeys.delete(`mouse_${event.pointerId}`);
-      
-      this.render();
-      this.updateDisplay();
-    }
+  private stopPointerNote(pointerId: number, coordX: number, coordY: number): void {
+    const audioNoteId = `ptr_${pointerId}_${coordX}_${coordY + this.octaveOffset}`;
+    this.synth.stopNote(audioNoteId);
+    
+    this.activeNotes.delete(`ptr_${pointerId}`);
+    
+    this.render();
+    this.updateDisplay();
   }
   
   private stopAllNotes(): void {
     this.synth.stopAll();
-    this.activeKeys.clear();
+    this.activeNotes.clear();
     this.keyRepeat.clear();
+    this.pointerDown.clear();
     this.render();
     this.updateDisplay();
   }
@@ -278,8 +295,8 @@ class DComposeApp {
   private render(): void {
     if (!this.visualizer) return;
     
-    // Get active note IDs
-    const activeNoteIds = Array.from(this.activeKeys.values()).map(
+    // Convert active notes to visual note IDs (using VISUAL coordinates)
+    const activeNoteIds = Array.from(this.activeNotes.values()).map(
       ({ coordX, coordY }) => `${coordX}_${coordY}`
     );
     
@@ -288,16 +305,14 @@ class DComposeApp {
   }
   
   private updateDisplay(): void {
-    // Get active coordinates
-    const coords: Array<[number, number, number]> = Array.from(this.activeKeys.values()).map(
-      ({ coordX, coordY }) => [coordX, coordY, 0]
+    // Get coordinates with octave offset for correct note name display
+    const coords: Array<[number, number, number]> = Array.from(this.activeNotes.values()).map(
+      ({ coordX, coordY }) => [coordX, coordY + this.octaveOffset, 0]
     );
     
-    // Detect chord
     const chords = detectChord(coords);
     this.chordDisplay.textContent = chords.length > 0 ? chords.slice(0, 3).join(' / ') : '-';
     
-    // Get note names
     const noteNames = getActiveNoteNames(coords);
     this.notesDisplay.textContent = noteNames.length > 0 ? noteNames.join(', ') : '-';
   }
