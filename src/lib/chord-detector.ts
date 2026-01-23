@@ -13,11 +13,11 @@ import { Chord, Note } from 'tonal';
  * @param octaveOffset Global octave offset
  */
 export function coordToNoteName(x: number, y: number, octaveOffset: number = 0): string {
-  // Circle of fifths note names
+  // Circle of fifths note names (D at index 3)
   const noteNamesBase = ['F', 'C', 'G', 'D', 'A', 'E', 'B'];
   
-  // Calculate note name
-  const noteIndex = ((x % 7) + 7) % 7;
+  // Calculate note name: D (x=0) → index 3
+  const noteIndex = (((x + 3) % 7) + 7) % 7;
   const accidentalCount = Math.floor((x + 3) / 7);
   
   let noteName = noteNamesBase[noteIndex];
@@ -60,7 +60,7 @@ export function detectChord(coords: Array<[number, number, number]>): string[] {
   // Convert coords to note names (without octave for chord detection)
   const noteNames = coords.map(([x, _y, _oct]) => {
     const noteNamesBase = ['F', 'C', 'G', 'D', 'A', 'E', 'B'];
-    const noteIndex = ((x % 7) + 7) % 7;
+    const noteIndex = (((x + 3) % 7) + 7) % 7; // D (x=0) → index 3
     const accidentalCount = Math.floor((x + 3) / 7);
     
     let noteName = noteNamesBase[noteIndex];

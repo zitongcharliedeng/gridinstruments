@@ -229,16 +229,23 @@ export function getLayout(id: string): KeyboardLayout {
 /**
  * Get note name from coordinate
  * x = position in circle of fifths (0 = D)
+ * 
+ * Circle of fifths: ...Fb-Cb-Gb-Db-Ab-Eb-Bb-F-C-G-D-A-E-B-F#-C#-G#-D#-A#-E#-B#...
+ * Where D is at x=0
  */
 export function getNoteNameFromCoord(x: number): string {
-  // Circle of fifths from F to B#
-  // D is at position 0
+  // Note names in circle of fifths order, with D at index 3
   const noteNamesBase = ['F', 'C', 'G', 'D', 'A', 'E', 'B'];
-  const accidentals = ['\u266D\u266D', '\u266D', '', '\u266F', '\u00D7']; // bb, b, natural, #, x
+  // Accidentals: double-flat, flat, natural, sharp, double-sharp
+  const accidentals = ['\u266D\u266D', '\u266D', '', '\u266F', '\u00D7']; // 𝄫, ♭, , ♯, ×
   
-  // Calculate which note and accidental
-  const noteIndex = ((x % 7) + 7) % 7; // 0-6, wraps around
-  const accidentalIndex = Math.floor((x + 3) / 7) + 2; // offset so D=0 maps to natural
+  // Calculate note index: D (x=0) should map to index 3
+  // x=0 → 3, x=1 → 4 (A), x=-1 → 2 (G), x=4 → 0 (F), x=-4 → 6 (B)
+  const noteIndex = (((x + 3) % 7) + 7) % 7;
+  
+  // Calculate accidental: how many times we've wrapped around the 7-note cycle
+  // x in [-3, 3] → natural, x in [4, 10] → sharp, x in [-10, -4] → flat
+  const accidentalIndex = Math.floor((x + 3) / 7) + 2;
   
   const noteName = noteNamesBase[noteIndex];
   const accidental = accidentals[Math.max(0, Math.min(4, accidentalIndex))] || '';
