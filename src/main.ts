@@ -240,28 +240,8 @@ class DComposeApp {
     if (this.keyRepeat.has(code)) return;
     this.keyRepeat.add(code);
     
-    // Special keys
-    if (code === 'Space') {
-      event.preventDefault();
-      const newSustain = !this.synth.getSustain();
-      this.synth.setSustain(newSustain);
-      this.sustainButton.textContent = `Sustain: ${newSustain ? 'ON' : 'OFF'}`;
-      this.sustainButton.classList.toggle('active', newSustain);
-      return;
-    }
-    
-    if (code === 'Equal' || code === 'NumpadAdd') {
-      this.octaveOffset = Math.min(4, this.octaveOffset + 1);
-      this.octaveDisplay.textContent = this.octaveOffset.toString();
-      return;
-    }
-    
-    if (code === 'Minus' || code === 'NumpadSubtract') {
-      this.octaveOffset = Math.max(-4, this.octaveOffset - 1);
-      this.octaveDisplay.textContent = this.octaveOffset.toString();
-      return;
-    }
-    
+    // ALL keys play notes - no keyboard shortcuts for settings
+    // Settings are controlled via UI only (mouse/touch)
     const coord = this.currentLayout.keyMap[code] as KeyCoordinate | undefined;
     if (!coord) return;
     
