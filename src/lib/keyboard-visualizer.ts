@@ -36,13 +36,14 @@ export class KeyboardVisualizer {
   private options: VisualizerOptions = {
     width: 900,
     height: 400,
-    buttonRadius: 18,
+    buttonRadius: 15,
     generator: [700, 1200], // 12-TET: fifth=700cents, octave=1200cents
   };
   
-  // Layout parameters (matching original WickiSynth)
-  private genX = [22, 0];  // x offset per [fifth, octave]
-  private genYFactor = 0.055; // y scale factor for pitch
+  // Layout parameters - matching original WickiSynth more closely
+  // In original: genx=[20,0], genyFact=0.07
+  private genX = [20, 0];  // x offset per [fifth, octave]
+  private genYFactor = 0.07; // y scale factor for pitch (matches original)
   
   // Colors
   private colors = {
@@ -102,9 +103,9 @@ export class KeyboardVisualizer {
     ];
     
     // Generate grid - i = circle of fifths, j = octave
-    // Range to cover visible area
-    const iRange = 10;  // -10 to +10 in circle of fifths
-    const jRange = 3;   // -3 to +3 octaves
+    // Range to cover visible area with good density
+    const iRange = 9;   // -9 to +9 in circle of fifths (covers Fb to B#)
+    const jRange = 4;   // -4 to +4 octaves
     
     for (let i = -iRange; i <= iRange; i++) {
       for (let j = -jRange; j <= jRange; j++) {
