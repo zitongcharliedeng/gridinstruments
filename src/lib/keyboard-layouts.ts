@@ -27,6 +27,14 @@ export interface KeyboardLayout {
  * This covers the main alphanumeric section of a standard keyboard
  * Works with: ANSI, ISO, 60%, 65%, TKL, Full-size keyboards
  * Works with: QWERTY, Dvorak, Colemak, AZERTY, QWERTZ (all use same physical codes!)
+ * 
+ * NOTE: We EXCLUDE the bottom row (Ctrl, Alt, Space row) from the grid.
+ * Rationale: On 95%+ of keyboards, this row has a massive spacebar that breaks
+ * the uniform grid pattern. The spacebar alone occupies 5-6 key widths, making
+ * it useless for isomorphic note playing. So we repurpose this row for modifiers:
+ * - Alt = Hold for sustain
+ * - Space = Hold for vibrato
+ * - Ctrl = Reserved (unused, avoids Ctrl+W closing tab)
  */
 const PHYSICAL_ROWS = [
   // Row 0: Number row (leftmost position)
@@ -40,31 +48,57 @@ const PHYSICAL_ROWS = [
   // CapsLock is a modifier at position 0
   [null, 'KeyA', 'KeyS', 'KeyD', 'KeyF', 'KeyG', 'KeyH', 'KeyJ', 'KeyK', 'KeyL', 'Semicolon', 'Quote'],
   
-  // Row 3: Bottom letter row (ZXCV row)
+  // Row 3: Bottom letter row (ZXCV row) - THIS IS THE LAST ROW FOR NOTES
   // IntlBackslash is the ISO key between LShift and Z (only on ISO keyboards)
   // ANSI keyboards don't have this key - it simply won't fire events
   ['IntlBackslash', 'KeyZ', 'KeyX', 'KeyC', 'KeyV', 'KeyB', 'KeyN', 'KeyM', 'Comma', 'Period', 'Slash'],
+  
+  // Row 4 (Ctrl/Alt/Space row) is NOT included - reserved for modifiers
+  // See MODIFIER_ROW_KEYS for the list of excluded keys
 ];
 
-// Special keys that are NOT notes (present on virtually every keyboard)
+/**
+ * Special keys that are NOT notes
+ * Bottom row (Ctrl, Alt, Space) is reserved for modifiers
+ * This prevents accidental browser shortcuts (Ctrl+W, Alt+Tab, etc.)
+ * 
+ * Philosophy:
+ * - Alt = HOLD for sustain (not toggle)
+ * - Space = HOLD for vibrato  
+ * - Ctrl = reserved (avoid browser shortcuts like Ctrl+W)
+ * - All other keys = play notes
+ */
 export const SPECIAL_KEYS = {
-  SUSTAIN: 'CapsLock',  // Toggle sustain
+  SUSTAIN: 'AltLeft',   // Hold for sustain (AltLeft or AltRight)
+  SUSTAIN_RIGHT: 'AltRight',
   VIBRATO: 'Space',     // Hold for vibrato
 };
 
+// Bottom row keys that are NOT notes (modifier row)
+export const MODIFIER_ROW_KEYS = new Set([
+  'ControlLeft', 'ControlRight',
+  'AltLeft', 'AltRight', 
+  'MetaLeft', 'MetaRight',  // Windows/Command key
+  'Space',
+  'ShiftLeft', 'ShiftRight',
+  'ContextMenu',
+  'Fn', // Function key (if present)
+]);
+
 /**
  * Additional keys that can be optionally mapped
- * These are on the edges/modifiers and may be useful for some users
+ * These are on the edges and may be useful for some users
+ * NOTE: Shift keys ARE mapped as notes (edge of grid), NOT as modifiers
  */
 const EXTENDED_KEYS = {
-  // Function row (F1-F12)
+  // Function row (F1-F12) - NOT mapped, reserved for browser/OS
   functionRow: ['Escape', 'F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'F9', 'F10', 'F11', 'F12'],
   
-  // Left-side modifiers (can be mapped as extra bass notes)
-  leftModifiers: ['Tab', 'CapsLock', 'ShiftLeft'],
+  // Left-side keys (mapped as extra bass notes)
+  leftEdge: ['Tab', 'CapsLock', 'ShiftLeft'],
   
-  // Right-side keys (can be mapped as extra treble notes)  
-  rightModifiers: ['Backspace', 'Enter', 'ShiftRight'],
+  // Right-side keys (mapped as extra treble notes)  
+  rightEdge: ['Backspace', 'Enter', 'ShiftRight'],
   
   // Numpad (for full-size keyboards)
   numpad: [
@@ -117,7 +151,13 @@ function generateKeyMap(includeExtended: boolean = true): Record<string, KeyCoor
     keyMap['Tab'] = physicalToIsomorphic(-1, 1);
     
     // Add CapsLock (to the left of home row, physX = -1, physY = 2)
+    // CapsLock is NOW a playable note, not sustain anymore
     keyMap['CapsLock'] = physicalToIsomorphic(-1, 2);
+    
+    // Add Shift keys (left and right edges of bottom row)
+    // These are notes, NOT modifiers (Shift is in the letter row, not the Ctrl/Alt/Space row)
+    keyMap['ShiftLeft'] = physicalToIsomorphic(-1, 3);
+    keyMap['ShiftRight'] = physicalToIsomorphic(11, 3);
     
     // Add Backspace (after Equal, physX = 13, physY = 0)
     keyMap['Backspace'] = physicalToIsomorphic(13, 0);

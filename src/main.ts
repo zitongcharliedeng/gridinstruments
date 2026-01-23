@@ -11,8 +11,8 @@
  * - Works with ANY keyboard layout (QWERTY, Dvorak, AZERTY, etc.) - uses physical key codes
  */
 
-import { getLayout, KeyboardLayout, KeyCoordinate, SPECIAL_KEYS } from './lib/keyboard-layouts';
-import { Synth, WaveformType, TUNING_MARKERS, FIFTH_MIN, FIFTH_MAX, FIFTH_DEFAULT } from './lib/synth';
+import { getLayout, KeyboardLayout, KeyCoordinate, SPECIAL_KEYS, MODIFIER_ROW_KEYS } from './lib/keyboard-layouts';
+import { Synth, WaveformType, TUNING_MARKERS, FIFTH_MIN, FIFTH_MAX, FIFTH_DEFAULT, findNearestMarker } from './lib/synth';
 import { KeyboardVisualizer } from './lib/keyboard-visualizer';
 import { detectChord, getActiveNoteNames } from './lib/chord-detector';
 
@@ -20,10 +20,16 @@ class DComposeApp {
   private synth: Synth;
   private visualizer: KeyboardVisualizer | null = null;
   private currentLayout: KeyboardLayout;
-  private octaveOffset: number = 0;
   
-  // Track active notes - store VISUAL coordinates (without octave offset)
-  private activeNotes: Map<string, { coordX: number; coordY: number }> = new Map();
+  // Pitch offset system (unified logic for both octave and transpose)
+  // octaveOffset: shifts by octaves (y-axis, ±12 semitones per step)
+  // transposeOffset: shifts by fifths (x-axis, ±7 semitones per step)
+  private octaveOffset: number = 0;
+  private transposeOffset: number = 0;
+  
+  // Track active notes - store VISUAL coordinates (without offsets applied)
+  // vibratoOnPress: whether vibrato was active when key was pressed (for sustained note retention)
+  private activeNotes: Map<string, { coordX: number; coordY: number; vibratoOnPress: boolean }> = new Map();
   private keyRepeat: Set<string> = new Set();
   
   // Mouse/touch state
@@ -162,6 +168,7 @@ class DComposeApp {
     this.canvas.addEventListener('touchstart', (e) => e.preventDefault(), { passive: false });
     
     // Octave controls
+    // Octave controls (Y-axis shift, ±12 semitones per step)
     document.getElementById('octave-down')?.addEventListener('click', () => {
       this.octaveOffset = Math.max(-4, this.octaveOffset - 1);
       this.octaveDisplay.textContent = this.octaveOffset.toString();
@@ -172,7 +179,21 @@ class DComposeApp {
       this.octaveDisplay.textContent = this.octaveOffset.toString();
     });
     
-    // Sustain toggle
+    // Transpose controls (X-axis shift, ±7 semitones per step = circle of fifths)
+    // Same logic as octave, just different axis. No duped code - both are just offsets.
+    const transposeDisplay = document.getElementById('transpose-display');
+    
+    document.getElementById('transpose-down')?.addEventListener('click', () => {
+      this.transposeOffset = Math.max(-7, this.transposeOffset - 1);
+      if (transposeDisplay) transposeDisplay.textContent = this.transposeOffset.toString();
+    });
+    
+    document.getElementById('transpose-up')?.addEventListener('click', () => {
+      this.transposeOffset = Math.min(7, this.transposeOffset + 1);
+      if (transposeDisplay) transposeDisplay.textContent = this.transposeOffset.toString();
+    });
+    
+    // Sustain toggle (button click - Alt key is the primary method)
     this.sustainButton?.addEventListener('click', () => {
       const newSustain = !this.synth.getSustain();
       this.synth.setSustain(newSustain);
@@ -188,6 +209,8 @@ class DComposeApp {
     // === NEW CONTROLS ===
     
     // Tuning slider - CONTINUOUS from FIFTH_MIN to FIFTH_MAX
+    const nearestMarkerDisplay = document.getElementById('nearest-marker');
+    
     if (this.tuningSlider) {
       this.tuningSlider.min = FIFTH_MIN.toString();
       this.tuningSlider.max = FIFTH_MAX.toString();
@@ -204,6 +227,17 @@ class DComposeApp {
         if (this.tuningValue) {
           this.tuningValue.textContent = value.toFixed(1);
         }
+        // Show nearest tuning marker
+        if (nearestMarkerDisplay) {
+          const { marker, distance } = findNearestMarker(value);
+          if (distance < 2) {
+            nearestMarkerDisplay.textContent = `= ${marker.name}`;
+            nearestMarkerDisplay.style.color = 'var(--accent-primary)';
+          } else {
+            nearestMarkerDisplay.textContent = `≈ ${marker.name} (${distance > 0 ? '+' : ''}${(value - marker.fifth).toFixed(1)}¢)`;
+            nearestMarkerDisplay.style.color = 'var(--text-secondary)';
+          }
+        }
       });
     }
     
@@ -218,6 +252,44 @@ class DComposeApp {
     if (this.eqSlider) {
       this.eqSlider.addEventListener('input', () => {
         this.synth.setEQ(parseFloat(this.eqSlider!.value));
+      });
+    }
+    
+    // === Visualizer scale controls (decimal inputs) ===
+    const scaleXInput = document.getElementById('scale-x-input') as HTMLInputElement;
+    const scaleYInput = document.getElementById('scale-y-input') as HTMLInputElement;
+    
+    if (scaleXInput) {
+      scaleXInput.addEventListener('input', () => {
+        if (!this.visualizer) return;
+        const { scaleY } = this.visualizer.getScale();
+        this.visualizer.setScale(parseFloat(scaleXInput.value) || 1, scaleY);
+      });
+    }
+    
+    if (scaleYInput) {
+      scaleYInput.addEventListener('input', () => {
+        if (!this.visualizer) return;
+        const { scaleX } = this.visualizer.getScale();
+        this.visualizer.setScale(scaleX, parseFloat(scaleYInput.value) || 1);
+      });
+    }
+    
+    // Button spacing is auto-calculated, but user can adjust the gap percentage
+    const spacingInput = document.getElementById('spacing-input') as HTMLInputElement;
+    if (spacingInput) {
+      spacingInput.addEventListener('input', () => {
+        if (!this.visualizer) return;
+        this.visualizer.setButtonSpacing(parseFloat(spacingInput.value) || 0);
+      });
+    }
+    
+    // A4 Reference Hz input
+    const a4HzInput = document.getElementById('a4-hz-input') as HTMLInputElement;
+    if (a4HzInput) {
+      a4HzInput.addEventListener('input', () => {
+        const hz = parseFloat(a4HzInput.value) || 440;
+        this.synth.setA4Hz(hz);
       });
     }
     
@@ -237,40 +309,55 @@ class DComposeApp {
   private async handleKeyDown(event: KeyboardEvent): Promise<void> {
     const code = event.code;
     
+    // Prevent default for ALL keys to avoid browser shortcuts (Ctrl+W, Alt+Tab, etc.)
+    // EXCEPT for F-keys, Escape, and system shortcuts we explicitly want to allow
+    const allowDefault = ['F5', 'F11', 'F12', 'Escape'].includes(code);
+    if (!allowDefault) {
+      event.preventDefault();
+    }
+    
     if (this.keyRepeat.has(code)) return;
     this.keyRepeat.add(code);
     
-    // Special keys (on every keyboard)
-    if (code === SPECIAL_KEYS.SUSTAIN) {
-      // CapsLock = toggle sustain
-      event.preventDefault();
-      const newSustain = !this.synth.getSustain();
-      this.synth.setSustain(newSustain);
-      this.sustainButton.textContent = `Sustain: ${newSustain ? 'ON' : 'OFF'}`;
-      this.sustainButton.classList.toggle('active', newSustain);
+    // === Modifier row keys (Ctrl, Alt, Space) - NOT notes ===
+    
+    // Alt = HOLD for sustain
+    if (code === SPECIAL_KEYS.SUSTAIN || code === SPECIAL_KEYS.SUSTAIN_RIGHT) {
+      await this.ensureAudioReady();
+      this.synth.setSustain(true);
+      this.sustainButton.textContent = 'Sustain: ON';
+      this.sustainButton.classList.add('active');
       return;
     }
     
+    // Space = HOLD for vibrato (only affects actively pressed notes, not sustained)
     if (code === SPECIAL_KEYS.VIBRATO) {
-      // Space = vibrato (hold)
-      event.preventDefault();
       await this.ensureAudioReady();
       this.synth.setVibrato(true);
       return;
     }
     
-    // All other keys play notes
+    // Skip other modifier row keys (Ctrl, Meta/Win) - they do nothing
+    if (MODIFIER_ROW_KEYS.has(code)) {
+      return;
+    }
+    
+    // === All other keys play notes ===
     const coord = this.currentLayout.keyMap[code] as KeyCoordinate | undefined;
     if (!coord) return;
     
-    event.preventDefault();
     await this.ensureAudioReady();
     
     const [coordX, coordY] = coord;
-    const audioNoteId = `key_${code}_${coordX}_${coordY + this.octaveOffset}`;
+    // Apply transpose offset (fifths) AND octave offset
+    const effectiveCoordX = coordX + this.transposeOffset;
+    const audioNoteId = `key_${code}_${effectiveCoordX}_${coordY + this.octaveOffset}`;
     
-    this.synth.playNote(audioNoteId, coordX, coordY, this.octaveOffset);
-    this.activeNotes.set(code, { coordX, coordY });
+    // Track if vibrato is active when this note starts (for sustained note vibrato retention)
+    const vibratoActive = this.synth.getVibrato();
+    
+    this.synth.playNote(audioNoteId, effectiveCoordX, coordY, this.octaveOffset, vibratoActive);
+    this.activeNotes.set(code, { coordX, coordY, vibratoOnPress: vibratoActive });
     
     this.render();
     this.updateDisplay();
@@ -280,18 +367,34 @@ class DComposeApp {
     const code = event.code;
     this.keyRepeat.delete(code);
     
-    // Special key release
+    // === Modifier key releases ===
+    
+    // Alt release = sustain OFF (releases all sustained notes)
+    if (code === SPECIAL_KEYS.SUSTAIN || code === SPECIAL_KEYS.SUSTAIN_RIGHT) {
+      this.synth.setSustain(false);
+      this.sustainButton.textContent = 'Sustain: OFF';
+      this.sustainButton.classList.remove('active');
+      return;
+    }
+    
+    // Space release = vibrato OFF
     if (code === SPECIAL_KEYS.VIBRATO) {
       this.synth.setVibrato(false);
       return;
     }
     
-    // Note release
+    // Skip other modifier row keys
+    if (MODIFIER_ROW_KEYS.has(code)) {
+      return;
+    }
+    
+    // === Note release ===
     const noteData = this.activeNotes.get(code);
     if (!noteData) return;
     
     const { coordX, coordY } = noteData;
-    const audioNoteId = `key_${code}_${coordX}_${coordY + this.octaveOffset}`;
+    const effectiveCoordX = coordX + this.transposeOffset;
+    const audioNoteId = `key_${code}_${effectiveCoordX}_${coordY + this.octaveOffset}`;
     this.synth.stopNote(audioNoteId);
     
     this.activeNotes.delete(code);
@@ -349,15 +452,18 @@ class DComposeApp {
   }
   
   private playPointerNote(pointerId: number, coordX: number, coordY: number): void {
-    const audioNoteId = `ptr_${pointerId}_${coordX}_${coordY + this.octaveOffset}`;
-    this.synth.playNote(audioNoteId, coordX, coordY, this.octaveOffset);
-    this.activeNotes.set(`ptr_${pointerId}`, { coordX, coordY });
+    const effectiveCoordX = coordX + this.transposeOffset;
+    const audioNoteId = `ptr_${pointerId}_${effectiveCoordX}_${coordY + this.octaveOffset}`;
+    const vibratoActive = this.synth.getVibrato();
+    this.synth.playNote(audioNoteId, effectiveCoordX, coordY, this.octaveOffset, vibratoActive);
+    this.activeNotes.set(`ptr_${pointerId}`, { coordX, coordY, vibratoOnPress: vibratoActive });
     this.render();
     this.updateDisplay();
   }
   
   private stopPointerNote(pointerId: number, coordX: number, coordY: number): void {
-    const audioNoteId = `ptr_${pointerId}_${coordX}_${coordY + this.octaveOffset}`;
+    const effectiveCoordX = coordX + this.transposeOffset;
+    const audioNoteId = `ptr_${pointerId}_${effectiveCoordX}_${coordY + this.octaveOffset}`;
     this.synth.stopNote(audioNoteId);
     this.activeNotes.delete(`ptr_${pointerId}`);
     this.render();

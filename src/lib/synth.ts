@@ -19,6 +19,8 @@ interface Voice {
   coordX: number;  // Store coordinates for live tuning updates
   coordY: number;
   octaveOffset: number;
+  vibratoOnPress: boolean;  // Whether vibrato was active when note started (retained on sustain)
+  vibratoGainNode: GainNode | null;  // Per-voice vibrato modulation
 }
 
 /**
@@ -43,6 +45,25 @@ export const FIFTH_MIN = 650;  // Below 7-TET
 export const FIFTH_MAX = 750;  // Above 5-TET
 export const FIFTH_DEFAULT = 700; // 12-TET
 
+/**
+ * Find the nearest tuning marker to a given fifth value
+ * Returns the marker and how far away it is in cents
+ */
+export function findNearestMarker(fifthCents: number): { marker: typeof TUNING_MARKERS[0]; distance: number } {
+  let nearest = TUNING_MARKERS[0];
+  let minDistance = Math.abs(fifthCents - nearest.fifth);
+  
+  for (const marker of TUNING_MARKERS) {
+    const distance = Math.abs(fifthCents - marker.fifth);
+    if (distance < minDistance) {
+      minDistance = distance;
+      nearest = marker;
+    }
+  }
+  
+  return { marker: nearest, distance: minDistance };
+}
+
 export class Synth {
   private context: AudioContext | null = null;
   private masterGain: GainNode | null = null;
@@ -53,15 +74,16 @@ export class Synth {
   private waveform: WaveformType = 'sawtooth';
   
   // Vibrato (LFO modulating pitch)
+  // Shared LFO for all voices, per-voice gain nodes for individual control
   private vibratoLFO: OscillatorNode | null = null;
-  private vibratoGain: GainNode | null = null;
   private _vibratoEnabled: boolean = false;
   private vibratoRate: number = 5; // Hz
   private vibratoDepth: number = 10; // cents
   
   // Tuning parameters (can be changed live!)
   private generator: [number, number] = [700, 1200]; // [fifth, octave] in cents
-  private baseFreq: number = 293.66; // D4
+  private baseFreq: number = 293.66; // D4 (calculated from A4=440Hz)
+  private _a4Hz: number = 440; // A4 reference frequency
   
   // Envelope parameters
   private attackTime: number = 0.01;
@@ -127,6 +149,9 @@ export class Synth {
   setGenerator(generator: [number, number]): void {
     this.generator = generator;
     
+    // Recalculate D4 from A4 (relationship changes with fifth size)
+    this.recalculateBaseFreq();
+    
     // Update all playing voices with new frequencies
     for (const voice of this.voices.values()) {
       const newFreq = this.getFrequency(voice.coordX, voice.coordY, voice.octaveOffset);
@@ -157,6 +182,47 @@ export class Synth {
     if (marker) {
       this.setFifth(marker.fifth);
     }
+  }
+  
+  // === A4 Reference Frequency ===
+  
+  /**
+   * Set A4 reference frequency (default 440Hz)
+   * This recalculates D4 (baseFreq) and updates all playing notes
+   * 
+   * Relationship: A is 3 fifths above D, so:
+   * D4 = A4 / 2^(3 * fifth / 1200)
+   */
+  setA4Hz(hz: number): void {
+    this._a4Hz = Math.max(400, Math.min(480, hz));
+    this.recalculateBaseFreq();
+    
+    // Update all playing voices with new frequencies
+    for (const voice of this.voices.values()) {
+      const newFreq = this.getFrequency(voice.coordX, voice.coordY, voice.octaveOffset);
+      voice.oscillator.frequency.value = newFreq;
+    }
+  }
+  
+  getA4Hz(): number {
+    return this._a4Hz;
+  }
+  
+  /**
+   * Get the current D4 base frequency
+   */
+  getD4Hz(): number {
+    return this.baseFreq;
+  }
+  
+  /**
+   * Recalculate D4 frequency from A4 reference
+   * A is 3 fifths above D: A = D * 2^(3 * fifth / 1200)
+   * So: D = A / 2^(3 * fifth / 1200)
+   */
+  private recalculateBaseFreq(): void {
+    const threeFifths = 3 * this.generator[0]; // cents
+    this.baseFreq = this._a4Hz / Math.pow(2, threeFifths / 1200);
   }
   
   // === Volume ===
@@ -220,41 +286,39 @@ export class Synth {
   // === Vibrato ===
   
   /**
+   * Initialize the shared vibrato LFO (called once on first use)
+   */
+  private ensureVibratoLFO(): void {
+    if (!this.context || this.vibratoLFO) return;
+    
+    this.vibratoLFO = this.context.createOscillator();
+    this.vibratoLFO.type = 'sine';
+    this.vibratoLFO.frequency.value = this.vibratoRate;
+    this.vibratoLFO.start();
+  }
+  
+  /**
    * Enable/disable vibrato (pitch modulation)
-   * Hold Space to add vibrato to all playing notes
+   * 
+   * IMPORTANT BEHAVIOR:
+   * - Vibrato only affects ACTIVELY HELD notes (not sustained notes)
+   * - When a note is released but sustained, it RETAINS the vibrato state it had when pressed
+   * - So if you press a note with vibrato, release it (sustain holds it), the vibrato continues
+   * - But pressing vibrato AFTER a note is sustained does NOT add vibrato to it
    */
   setVibrato(enabled: boolean): void {
     if (!this.context) return;
     
     this._vibratoEnabled = enabled;
+    this.ensureVibratoLFO();
     
-    if (enabled) {
-      // Apply vibrato to all playing voices
-      for (const voice of this.voices.values()) {
-        const depthHz = voice.oscillator.frequency.value * (this.vibratoDepth / 1200);
-        
-        // Create LFO for this voice if not exists
-        if (!this.vibratoLFO) {
-          this.vibratoLFO = this.context.createOscillator();
-          this.vibratoLFO.type = 'sine';
-          this.vibratoLFO.frequency.value = this.vibratoRate;
-          this.vibratoLFO.start();
-          
-          this.vibratoGain = this.context.createGain();
-          this.vibratoGain.gain.value = 0;
-          this.vibratoLFO.connect(this.vibratoGain);
-        }
-        
-        // Ramp up vibrato depth
-        this.vibratoGain!.gain.setTargetAtTime(depthHz, this.context.currentTime, 0.1);
-        this.vibratoGain!.connect(voice.oscillator.frequency);
-      }
-    } else {
-      // Ramp down and disconnect vibrato
-      if (this.vibratoGain && this.context) {
-        this.vibratoGain.gain.setTargetAtTime(0, this.context.currentTime, 0.05);
-      }
-    }
+    // Note: We don't retroactively add/remove vibrato to existing voices here.
+    // Vibrato state is captured at note-press time (vibratoOnPress).
+    // This method just sets the flag for NEW notes.
+    // 
+    // However, for voices that are being actively held (not yet in sustainedVoices),
+    // we could add vibrato dynamically. For now, keeping it simple:
+    // vibrato state is locked in at note start.
   }
   
   getVibrato(): boolean {
@@ -277,8 +341,9 @@ export class Synth {
    * @param x Circle of fifths position
    * @param y Octave offset
    * @param octaveOffset Global octave offset
+   * @param vibratoOnPress Whether vibrato is active when note starts (retained if sustained)
    */
-  playNote(noteId: string, x: number, y: number, octaveOffset: number = 0): void {
+  playNote(noteId: string, x: number, y: number, octaveOffset: number = 0, vibratoOnPress: boolean = false): void {
     if (!this.context || !this.masterGain) return;
     
     // If note is already playing, don't restart it
@@ -303,6 +368,16 @@ export class Synth {
     oscillator.start();
     gainNode.gain.setTargetAtTime(1, this.context.currentTime, this.attackTime);
     
+    // Create per-voice vibrato if vibrato is active
+    let vibratoGainNode: GainNode | null = null;
+    if (vibratoOnPress && this.vibratoLFO) {
+      vibratoGainNode = this.context.createGain();
+      const depthHz = frequency * (this.vibratoDepth / 1200);
+      vibratoGainNode.gain.value = depthHz;
+      this.vibratoLFO.connect(vibratoGainNode);
+      vibratoGainNode.connect(oscillator.frequency);
+    }
+    
     // Store voice with coordinates for live tuning updates
     this.voices.set(noteId, {
       oscillator,
@@ -310,6 +385,8 @@ export class Synth {
       coordX: x,
       coordY: y,
       octaveOffset,
+      vibratoOnPress,
+      vibratoGainNode,
     });
   }
   

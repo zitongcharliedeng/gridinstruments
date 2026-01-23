@@ -405,6 +405,14 @@
           </div>
         </div>
         <div class="control-group">
+          <label>Transpose</label>
+          <div class="octave-controls">
+            <button id="transpose-down">−</button>
+            <span class="octave-display" id="transpose-display">0</span>
+            <button id="transpose-up">+</button>
+          </div>
+        </div>
+        <div class="control-group">
           <button id="sustain-toggle">Sustain: OFF</button>
         </div>
         <div class="control-group">
@@ -432,6 +440,7 @@
         </div>
         <div class="tuning-value-display">
           <span id="tuning-value">700.0</span> <span>cents</span>
+          <div id="nearest-marker" style="font-size: 0.8rem; margin-top: 0.25rem;">= 12-TET</div>
         </div>
       </div>
       
@@ -453,6 +462,22 @@
           </div>
         </div>
         
+        <!-- Visualizer scale (decimal inputs - minimalist) -->
+        <div class="audio-controls">
+          <div class="slider-control">
+            <h3>Scale X</h3>
+            <input type="number" id="scale-x-input" min="0.5" max="2" step="0.1" value="1" style="width: 100%; padding: 0.5rem; background: var(--bg-tertiary); color: var(--text-primary); border: 1px solid transparent; border-radius: 8px;">
+          </div>
+          <div class="slider-control">
+            <h3>Scale Y</h3>
+            <input type="number" id="scale-y-input" min="0.5" max="2" step="0.1" value="1" style="width: 100%; padding: 0.5rem; background: var(--bg-tertiary); color: var(--text-primary); border: 1px solid transparent; border-radius: 8px;">
+          </div>
+          <div class="slider-control">
+            <h3>A4 Reference (Hz)</h3>
+            <input type="number" id="a4-hz-input" min="400" max="480" step="1" value="440" style="width: 100%; padding: 0.5rem; background: var(--bg-tertiary); color: var(--text-primary); border: 1px solid transparent; border-radius: 8px;">
+          </div>
+        </div>
+        
         <div class="info-panel">
           <div class="info-card">
             <h3>Detected Chord</h3>
@@ -465,8 +490,9 @@
         </div>
         
         <div class="instructions">
-          <p><strong>How to play:</strong> ALL keyboard keys play notes on the isomorphic grid. Works with ANY layout (QWERTY, Dvorak, AZERTY, etc.).</p>
-          <p><kbd>CapsLock</kbd> Toggle sustain | <kbd>Space</kbd> Hold for vibrato | Use sliders for tuning (7-TET to 5-TET), volume, and tone.</p>
+          <p><strong>How to play:</strong> ALL letter/number keys play notes on the isomorphic grid. Works with ANY layout (QWERTY, Dvorak, AZERTY, etc.).</p>
+          <p><kbd>Alt</kbd> Hold for sustain | <kbd>Space</kbd> Hold for vibrato | Bottom row (Ctrl/Alt/Space) = modifiers, not notes.</p>
+          <p>Transpose shifts left/right on circle of fifths. Octave shifts up/down in pitch.</p>
         </div>
       </div>
     </div>

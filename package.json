@@ -20,6 +20,7 @@
   "author": "",
   "license": "MIT",
   "devDependencies": {
+    "@playwright/test": "^1.57.0",
     "typescript": "^5.3.3",
     "vite": "^5.0.10"
   },
