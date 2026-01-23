@@ -137,83 +137,54 @@
       font-size: 0.875rem;
     }
     
-    /* Main layout with tuning slider on left */
+    /* Main layout - full width */
     .main-content {
       flex: 1;
       display: flex;
+      flex-direction: column;
       gap: 1rem;
     }
     
-    /* Tuning panel - left side */
-    .tuning-panel {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
+    /* Tuning panel - horizontal below keyboard */
+    .tuning-panel-horizontal {
       background: var(--bg-secondary);
       border-radius: 12px;
       border: 1px solid var(--bg-tertiary);
       padding: 1rem;
-      min-width: 180px;
     }
     
-    .tuning-panel h3 {
+    .tuning-controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+    
+    .tuning-controls h3 {
       font-size: 0.75rem;
       text-transform: uppercase;
       letter-spacing: 0.05em;
       color: var(--text-secondary);
-      text-align: center;
+      margin: 0;
+      flex-shrink: 0;
     }
     
-    .tuning-slider-container {
-      display: flex;
+    /* Horizontal slider */
+    .horizontal-slider {
       flex: 1;
-      gap: 0.5rem;
-      min-height: 300px;
-    }
-    
-    /* Vertical slider */
-    .vertical-slider {
-      writing-mode: vertical-lr;
-      direction: rtl;
-      width: 24px;
-      height: 100%;
+      height: 24px;
       cursor: pointer;
       accent-color: var(--accent-primary);
-    }
-    
-    /* Tuning markers alongside slider */
-    #tuning-markers {
-      position: relative;
-      flex: 1;
-      font-size: 0.7rem;
-    }
-    
-    .tuning-marker {
-      position: absolute;
-      left: 0;
-      right: 0;
-      cursor: pointer;
-      padding: 2px 4px;
-      color: var(--text-secondary);
-      transition: color 0.15s, background 0.15s;
-      border-radius: 4px;
-      white-space: nowrap;
-      transform: translateY(50%);
-    }
-    
-    .tuning-marker:hover {
-      color: var(--text-primary);
-      background: var(--bg-tertiary);
+      margin: 0 1rem;
     }
     
     .tuning-value-display {
-      text-align: center;
+      text-align: right;
       font-size: 1.25rem;
       font-weight: 600;
       color: var(--accent-primary);
-      padding: 0.5rem;
-      background: var(--bg-tertiary);
-      border-radius: 8px;
+      flex-shrink: 0;
+      min-width: 120px;
     }
     
     .tuning-value-display span {
@@ -362,31 +333,17 @@
         justify-content: center;
       }
       
-      .main-content {
+      .tuning-controls {
         flex-direction: column;
+        align-items: stretch;
       }
       
-      .tuning-panel {
-        flex-direction: row;
-        min-width: auto;
-        min-height: auto;
+      .horizontal-slider {
+        margin: 0.5rem 0;
       }
       
-      .tuning-slider-container {
-        flex-direction: row;
-        min-height: auto;
-        height: 60px;
-      }
-      
-      .vertical-slider {
-        writing-mode: horizontal-tb;
-        direction: ltr;
-        width: 100%;
-        height: 24px;
-      }
-      
-      #tuning-markers {
-        display: none; /* Hide on mobile for simplicity */
+      .tuning-value-display {
+        text-align: center;
       }
     }
   </style>
@@ -397,25 +354,6 @@
       <div class="logo">DCompose Web</div>
       <div class="controls">
         <div class="control-group">
-          <label>Octave</label>
-          <div class="octave-controls">
-            <button id="octave-down">−</button>
-            <span class="octave-display" id="octave-display">0</span>
-            <button id="octave-up">+</button>
-          </div>
-        </div>
-        <div class="control-group">
-          <label>Transpose</label>
-          <div class="octave-controls">
-            <button id="transpose-down">−</button>
-            <span class="octave-display" id="transpose-display">0</span>
-            <button id="transpose-up">+</button>
-          </div>
-        </div>
-        <div class="control-group">
-          <button id="sustain-toggle">Sustain: OFF</button>
-        </div>
-        <div class="control-group">
           <label>Wave</label>
           <select id="waveform-select">
             <option value="sawtooth">Sawtooth</option>
@@ -424,57 +362,57 @@
             <option value="triangle">Triangle</option>
           </select>
         </div>
+        <div class="control-group">
+          <label>Volume</label>
+          <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.3" style="width: 120px; accent-color: var(--accent-primary);">
+        </div>
+        <div class="control-group">
+          <span id="vibrato-indicator" style="display: none; font-size: 0.75rem; font-weight: 600; color: var(--accent-primary); background: rgba(99, 102, 241, 0.15); padding: 0.25rem 0.5rem; border-radius: 6px;">VIBRATO</span>
+          <span id="sustain-indicator" style="display: none; font-size: 0.75rem; font-weight: 600; color: var(--note-sustained); background: rgba(245, 158, 11, 0.15); padding: 0.25rem 0.5rem; border-radius: 6px;">SUSTAIN</span>
+        </div>
       </div>
     </header>
     
     <div class="main-content">
-      <!-- Tuning slider panel (left) -->
-      <div class="tuning-panel">
-        <h3>Tuning (Fifth)</h3>
-        <div class="tuning-slider-container">
-          <input type="range" id="tuning-slider" class="vertical-slider" 
-                 min="650" max="750" step="0.1" value="700">
-          <div id="tuning-markers">
-            <!-- Markers populated by JS -->
-          </div>
-        </div>
-        <div class="tuning-value-display">
-          <span id="tuning-value">700.0</span> <span>cents</span>
-          <div id="nearest-marker" style="font-size: 0.8rem; margin-top: 0.25rem;">= 12-TET</div>
-        </div>
-      </div>
-      
       <!-- Main keyboard area -->
       <div class="main-area">
         <div class="keyboard-container">
           <canvas id="keyboard-canvas"></canvas>
         </div>
         
-        <!-- Audio controls -->
-        <div class="audio-controls">
-          <div class="slider-control">
-            <h3>Volume</h3>
-            <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.3">
-          </div>
-          <div class="slider-control">
-            <h3>Tone (Bass ← → Treble)</h3>
-            <input type="range" id="eq-slider" min="-1" max="1" step="0.01" value="0">
+        <!-- Tuning slider (horizontal, below keyboard) -->
+        <div class="tuning-panel-horizontal">
+          <div class="tuning-controls">
+            <h3>Fifth Size</h3>
+            <input type="range" id="tuning-slider" class="horizontal-slider" 
+                   min="650" max="750" step="0.1" value="700">
+            <div class="tuning-value-display" style="text-align: center; margin-top: 0.25rem;">
+              <span id="tuning-value" style="font-size: 1.1rem; font-weight: bold;">700.0</span> <span style="font-size: 0.9rem;">cents</span>
+              <span id="nearest-marker" style="font-size: 0.9rem; margin-left: 0.5rem; color: var(--accent-primary);">= 12-TET</span>
+            </div>
           </div>
         </div>
         
-        <!-- Visualizer scale (decimal inputs - minimalist) -->
+        <!-- D4 Reference Control -->
         <div class="audio-controls">
           <div class="slider-control">
-            <h3>Scale X</h3>
-            <input type="number" id="scale-x-input" min="0.5" max="2" step="0.1" value="1" style="width: 100%; padding: 0.5rem; background: var(--bg-tertiary); color: var(--text-primary); border: 1px solid transparent; border-radius: 8px;">
-          </div>
-          <div class="slider-control">
-            <h3>Scale Y</h3>
-            <input type="number" id="scale-y-input" min="0.5" max="2" step="0.1" value="1" style="width: 100%; padding: 0.5rem; background: var(--bg-tertiary); color: var(--text-primary); border: 1px solid transparent; border-radius: 8px;">
-          </div>
-          <div class="slider-control">
-            <h3>A4 Reference (Hz)</h3>
-            <input type="number" id="a4-hz-input" min="400" max="480" step="1" value="440" style="width: 100%; padding: 0.5rem; background: var(--bg-tertiary); color: var(--text-primary); border: 1px solid transparent; border-radius: 8px;">
+            <h3>D4 Reference</h3>
+            <div style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
+              <div style="flex: 1;">
+                <label style="font-size: 0.75rem; color: var(--text-secondary); display: block; margin-bottom: 0.25rem;">Note Name</label>
+                <input type="text" id="d4-note-input" placeholder="D4" value="D4" style="width: 100%; padding: 0.5rem; background: var(--bg-tertiary); color: var(--text-primary); border: 1px solid transparent; border-radius: 8px; text-transform: uppercase;">
+              </div>
+              <div style="flex: 1;">
+                <label style="font-size: 0.75rem; color: var(--text-secondary); display: block; margin-bottom: 0.25rem;">Frequency (Hz)</label>
+                <input type="number" id="d4-hz-input" min="100" max="2000" step="1" value="293.66" style="width: 100%; padding: 0.5rem; background: var(--bg-tertiary); color: var(--text-primary); border: 1px solid transparent; border-radius: 8px;">
+              </div>
+            </div>
+            <div style="font-size: 0.7rem; color: var(--text-secondary); line-height: 1.4;">
+              <div>D2: 73.42 Hz | D3: 146.83 Hz</div>
+              <div><strong>D4: 293.66 Hz</strong> (default)</div>
+              <div>D5: 587.33 Hz | D6: 1174.66 Hz</div>
+              <div style="margin-top: 0.25rem; font-style: italic;">Double for +1 octave, Half for -1 octave</div>
+            </div>
           </div>
         </div>
         

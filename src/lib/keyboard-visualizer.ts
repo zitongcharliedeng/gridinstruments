@@ -8,11 +8,13 @@
  */
 
 import { getNoteNameFromCoord } from './keyboard-layouts';
+import { TUNING_MARKERS, findNearestMarker } from './synth';
 
 export interface VisualizerOptions {
   width: number;
   height: number;
   generator: [number, number]; // [fifth, octave] in cents
+  d4Hz: number; // Current D4 reference frequency
   // Scale factors for zoom control (can be set via decimal input or drag)
   scaleX: number; // Horizontal spacing multiplier (1.0 = default)
   scaleY: number; // Vertical spacing multiplier (1.0 = default)
@@ -42,16 +44,16 @@ export class KeyboardVisualizer {
     width: 900,
     height: 400,
     generator: [700, 1200], // 12-TET: fifth=700cents, octave=1200cents
+    d4Hz: 293.66, // Default D4 frequency
     scaleX: 1.0, // Horizontal zoom (1.0 = default)
     scaleY: 1.0, // Vertical zoom (1.0 = default)
-    buttonSpacing: 0.05, // 5% gap between buttons (0 = touching)
+    buttonSpacing: 0.35, // 35% gap between buttons to prevent overlap
   };
   
-  // Layout parameters - matching original WickiSynth more closely
-  // In original: genx=[20,0], genyFact=0.07
-  // These are BASE values, multiplied by scaleX/scaleY options
-  private baseGenX = 20;  // Base x spacing per fifth
-  private baseGenYFactor = 0.07; // Base y scale factor for pitch
+  // Layout parameters - TRUE 1:1 ISOMETRIC GRID
+  // Both axes use the same cents-per-pixel ratio (baseGenYFactor)
+  // This makes genX = genY[0] at all tunings → truly isometric layout
+  private baseGenYFactor = 0.07; // cents-per-pixel ratio for BOTH axes
   
   // Cached auto-calculated button radius
   private calculatedButtonRadius: number = 15;
@@ -99,6 +101,14 @@ export class KeyboardVisualizer {
   setGenerator(generator: [number, number]): void {
     this.options.generator = generator;
     this.generateButtons();
+    this.render();
+  }
+  
+  /**
+   * Set the D4 reference frequency
+   */
+  setD4Hz(hz: number): void {
+    this.options.d4Hz = hz;
     this.render();
   }
   
@@ -153,12 +163,43 @@ export class KeyboardVisualizer {
   }
   
   /**
+   * Get Y position of the golden line (D4 reference line)
+   * Returns undefined if line is not visible
+   */
+  getGoldenLineY(): number | undefined {
+    const { height } = this.options;
+    const { genYFactor } = this.getSpacing();
+    const centerY = height / 2;
+    
+    // D is at the center (0 fifths from D), so pitch = 0 cents
+    const d4PitchCents = 0;
+    const d4Y = centerY - (d4PitchCents * genYFactor);
+    
+    // Only return if visible on screen
+    if (d4Y > 0 && d4Y < height) {
+      return d4Y;
+    }
+    return undefined;
+  }
+  
+  /**
    * Get effective spacing values (base * scale)
+   * genYFactor auto-adjusts based on fifth size to maintain visual stability
    */
   private getSpacing(): { genX: number; genYFactor: number } {
+    // TRUE 1:1 SCALE: Both axes use the same cents-per-pixel ratio
+    // Both X and Y scale proportionally with fifth size
+    // This makes the grid truly isometric - 1 cent = 1 cent on both axes
+    const currentFifth = this.options.generator[0];
+    
+    // Use the SAME scaling factor for both axes (no inverse adjustment)
+    // genX and genY[0] will be equal at all tunings → TRUE 1:1 ratio
+    const genX = currentFifth * this.baseGenYFactor * this.options.scaleX;
+    const genYFactor = this.baseGenYFactor * this.options.scaleY;
+    
     return {
-      genX: this.baseGenX * this.options.scaleX,
-      genYFactor: this.baseGenYFactor * this.options.scaleY,
+      genX,
+      genYFactor,
     };
   }
   
@@ -221,10 +262,12 @@ export class KeyboardVisualizer {
         // Calculate pitch in cents from center (D)
         const pitchCents = i * generator[0] + j * generator[1];
         
-        // Only include buttons that are on screen (with padding)
+        // Only include buttons that are on screen (with margins for labels)
         const padding = buttonRadius * 2;
+        const topMargin = 30;    // Space for tuning label at top
+        const bottomMargin = 45; // Space for X-axis labels at bottom
         if (screenX < -padding || screenX > width + padding) continue;
-        if (screenY < -padding || screenY > height + padding) continue;
+        if (screenY < topMargin - padding || screenY > height - bottomMargin + padding) continue;
         
         const noteName = getNoteNameFromCoord(i);
         
@@ -321,30 +364,123 @@ export class KeyboardVisualizer {
     
     this.ctx.setLineDash([]);
     
-    // Draw reference line for A4=440Hz
-    // A is 3 fifths up from D, so pitch = 3 * fifth cents
-    const a4PitchCents = 3 * generator[0]; // A is 3 fifths from D
-    const a4Y = centerY - (a4PitchCents * genYFactor);
+    // Draw reference line for current D4 Hz (HORIZONTAL - Y-axis)
+    // D is at the center (0 fifths from D), so pitch = 0 cents
+    const d4PitchCents = 0; // D is the center reference
+    const d4Y = centerY - (d4PitchCents * genYFactor);
     
-    if (a4Y > 0 && a4Y < height) {
+    if (d4Y > 0 && d4Y < height) {
       this.ctx.strokeStyle = '#886644';
       this.ctx.lineWidth = 1;
       this.ctx.setLineDash([2, 4]);
       this.ctx.beginPath();
-      this.ctx.moveTo(40, a4Y);
-      this.ctx.lineTo(width, a4Y);
+      this.ctx.moveTo(40, d4Y);
+      this.ctx.lineTo(width, d4Y);
       this.ctx.stroke();
       this.ctx.setLineDash([]);
       
-      // A4=440Hz label
+      // D4 label with current Hz value
+      const d4HzValue = this.options.d4Hz.toFixed(2);
       this.ctx.fillStyle = '#aa8866';
       this.ctx.font = 'bold 9px Inter, sans-serif';
       this.ctx.textAlign = 'right';
-      this.ctx.fillText('A4=440', width - 4, a4Y - 4);
+      this.ctx.fillText(`D4=${d4HzValue}Hz`, width - 4, d4Y - 4);
     }
+    
+    // Draw reference line for current Fifth size (VERTICAL - X-axis)
+    // This is THE key indicator - the X-axis fifth spacing IS the tuning
+    const centerLineX = centerX;
+    
+    // Draw vertical line through entire grid
+    this.ctx.strokeStyle = '#bb9966';
+    this.ctx.lineWidth = 2;
+    this.ctx.setLineDash([6, 3]);
+    this.ctx.beginPath();
+    this.ctx.moveTo(centerLineX, 25);
+    this.ctx.lineTo(centerLineX, height - 50);
+    this.ctx.stroke();
+    this.ctx.setLineDash([]);
+    
+    // Fifth label - PROMINENT at top of canvas
+    const currentFifth = generator[0];
+    const { marker } = findNearestMarker(currentFifth);
+    const isExact = Math.abs(currentFifth - marker.fifth) < 0.5;
+    
+    // Draw label box background
+    const labelText = isExact 
+      ? `${marker.name} (${currentFifth.toFixed(1)}¢)`
+      : `5th = ${currentFifth.toFixed(1)}¢`;
+    
+    this.ctx.font = 'bold 14px Inter, sans-serif';
+    const textWidth = this.ctx.measureText(labelText).width;
+    
+    // Draw background rectangle for visibility
+    this.ctx.fillStyle = 'rgba(30, 30, 50, 0.9)';
+    this.ctx.fillRect(centerLineX - textWidth/2 - 8, 2, textWidth + 16, 22);
+    this.ctx.strokeStyle = '#bb9966';
+    this.ctx.lineWidth = 1;
+    this.ctx.strokeRect(centerLineX - textWidth/2 - 8, 2, textWidth + 16, 22);
+    
+    // Draw text
+    this.ctx.fillStyle = '#ffcc88';
+    this.ctx.textAlign = 'center';
+    this.ctx.textBaseline = 'top';
+    this.ctx.fillText(labelText, centerLineX, 6);
     
     // Draw circle of fifths labels at bottom (X-axis)
     this.drawCircleOfFifthsLabels(centerX, genX);
+    
+    // Draw tuning markers inline with grid
+    this.drawTuningMarkersInline(centerX, genX);
+  }
+  
+  /**
+   * Draw tuning markers inline with the circle of fifths grid
+   * Each marker appears at its corresponding X position based on fifth size
+   */
+  private drawTuningMarkersInline(centerX: number, genX: number): void {
+    const { width, height, generator } = this.options;
+    const currentFifth = generator[0]; // Current fifth size in cents
+    const markerY = height - 20; // Position inline with grid X-axis (slightly above circle-of-fifths labels)
+    
+    this.ctx.textAlign = 'center';
+    this.ctx.textBaseline = 'bottom';
+    
+    for (const marker of TUNING_MARKERS) {
+      // Calculate X position based on circle-of-fifths grid
+      // Each column in the grid represents one step in the circle of fifths
+      // The current tuning's fifth size determines the spacing
+      // Position: i = (marker.fifth - currentFifth) / currentFifth gives the grid column
+      const centerFifth = 700; // 12-TET reference (D is at center)
+      const gridColumn = (marker.fifth - centerFifth) / currentFifth;
+      const x = centerX + gridColumn * genX;
+      
+      // Only draw if on screen
+      if (x < 20 || x > width - 20) continue;
+      
+      // Highlight current tuning
+      const isCurrent = Math.abs(marker.fifth - currentFifth) < 2;
+      
+      if (isCurrent) {
+        // Current tuning - bold and highlighted
+        this.ctx.fillStyle = '#aa88ff';
+        this.ctx.font = 'bold 10px Inter, sans-serif';
+        
+        // Draw arrow pointing to it
+        this.ctx.beginPath();
+        this.ctx.moveTo(x, markerY + 2);
+        this.ctx.lineTo(x - 3, markerY + 6);
+        this.ctx.lineTo(x + 3, markerY + 6);
+        this.ctx.closePath();
+        this.ctx.fill();
+      } else {
+        // Other markers - subtle
+        this.ctx.fillStyle = '#555566';
+        this.ctx.font = '8px Inter, sans-serif';
+      }
+      
+      this.ctx.fillText(marker.name, x, markerY);
+    }
   }
   
   /**
@@ -353,30 +489,35 @@ export class KeyboardVisualizer {
    */
   private drawCircleOfFifthsLabels(centerX: number, genX: number): void {
     const { width, height } = this.options;
-    const labelY = height - 8; // Position near bottom
+    const labelY = height - 10; // Position at bottom edge, in the reserved margin area
     
-    this.ctx.fillStyle = '#555566';
-    this.ctx.font = '9px Inter, sans-serif';
     this.ctx.textAlign = 'center';
     this.ctx.textBaseline = 'bottom';
     
-    // Draw labels for visible columns
+    // Draw labels for visible columns - HUGE VISIBLE FONTS
     for (let i = -9; i <= 9; i++) {
       const x = centerX + i * genX;
-      if (x < 20 || x > width - 20) continue;
+      if (x < 30 || x > width - 30) continue;
       
       const noteName = getNoteNameFromCoord(i);
       
-      // Highlight D (center) and naturals
+      // Highlight D (center) with VERY LARGE text, others still readable
       if (i === 0) {
-        this.ctx.fillStyle = '#8888aa';
-        this.ctx.font = 'bold 10px Inter, sans-serif';
-      } else if (Math.abs(i) <= 3) {
-        this.ctx.fillStyle = '#666677';
-        this.ctx.font = '9px Inter, sans-serif';
+        // D is CENTER - make it HUGE and BRIGHT
+        this.ctx.fillStyle = '#ffffff';
+        this.ctx.font = 'bold 28px Inter, sans-serif';
+      } else if (Math.abs(i) <= 2) {
+        // Nearby notes (G, A, C, E) - large and bright
+        this.ctx.fillStyle = '#ffffff';
+        this.ctx.font = 'bold 20px Inter, sans-serif';
+      } else if (Math.abs(i) <= 5) {
+        // Medium distance - visible
+        this.ctx.fillStyle = '#ddddee';
+        this.ctx.font = 'bold 16px Inter, sans-serif';
       } else {
-        this.ctx.fillStyle = '#444455';
-        this.ctx.font = '8px Inter, sans-serif';
+        // Far notes - still readable
+        this.ctx.fillStyle = '#bbbbcc';
+        this.ctx.font = '14px Inter, sans-serif';
       }
       
       this.ctx.fillText(noteName, x, labelY);

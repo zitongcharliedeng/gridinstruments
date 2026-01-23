@@ -82,8 +82,8 @@ export class Synth {
   
   // Tuning parameters (can be changed live!)
   private generator: [number, number] = [700, 1200]; // [fifth, octave] in cents
-  private baseFreq: number = 293.66; // D4 (calculated from A4=440Hz)
-  private _a4Hz: number = 440; // A4 reference frequency
+  private baseFreq: number = 293.66; // D4 base frequency
+  private _d4Hz: number = 293.66; // D4 reference frequency
   
   // Envelope parameters
   private attackTime: number = 0.01;
@@ -149,7 +149,7 @@ export class Synth {
   setGenerator(generator: [number, number]): void {
     this.generator = generator;
     
-    // Recalculate D4 from A4 (relationship changes with fifth size)
+    // Update baseFreq (already set to D4 Hz, no recalculation needed)
     this.recalculateBaseFreq();
     
     // Update all playing voices with new frequencies
@@ -184,18 +184,17 @@ export class Synth {
     }
   }
   
-  // === A4 Reference Frequency ===
+  // === D4 Reference Frequency ===
   
   /**
-   * Set A4 reference frequency (default 440Hz)
-   * This recalculates D4 (baseFreq) and updates all playing notes
+   * Set D4 reference frequency (default 293.66Hz)
+   * This updates baseFreq and all playing notes
    * 
-   * Relationship: A is 3 fifths above D, so:
-   * D4 = A4 / 2^(3 * fifth / 1200)
+   * D4 is the center note of the DCompose layout (coordinate [0,0])
    */
-  setA4Hz(hz: number): void {
-    this._a4Hz = Math.max(400, Math.min(480, hz));
-    this.recalculateBaseFreq();
+  setD4Hz(hz: number): void {
+    this._d4Hz = Math.max(100, Math.min(2000, hz));
+    this.baseFreq = this._d4Hz;
     
     // Update all playing voices with new frequencies
     for (const voice of this.voices.values()) {
@@ -204,25 +203,17 @@ export class Synth {
     }
   }
   
-  getA4Hz(): number {
-    return this._a4Hz;
-  }
-  
-  /**
-   * Get the current D4 base frequency
-   */
   getD4Hz(): number {
-    return this.baseFreq;
+    return this._d4Hz;
   }
   
   /**
-   * Recalculate D4 frequency from A4 reference
-   * A is 3 fifths above D: A = D * 2^(3 * fifth / 1200)
-   * So: D = A / 2^(3 * fifth / 1200)
+   * Recalculate base frequency (currently unused - will be updated in TASK 12)
+   * Kept for future when we implement proper frequency calculations
    */
   private recalculateBaseFreq(): void {
-    const threeFifths = 3 * this.generator[0]; // cents
-    this.baseFreq = this._a4Hz / Math.pow(2, threeFifths / 1200);
+    // TODO: Update this in TASK 12 to properly handle D4-based calculations
+    this.baseFreq = this._d4Hz;
   }
   
   // === Volume ===
@@ -329,6 +320,10 @@ export class Synth {
   
   /**
    * Calculate frequency from isomorphic coordinates
+   * ALL frequencies are relative to D4 (baseFreq = _d4Hz)
+   * - Doubling D4 Hz = up 1 octave (multiply by 2)
+   * - Halving D4 Hz = down 1 octave (divide by 2)
+   * - Formula: freq = D4 * 2^(cents/1200)
    */
   private getFrequency(x: number, y: number, octaveOffset: number = 0): number {
     const cents = y * this.generator[1] + x * this.generator[0] + octaveOffset * 1200;

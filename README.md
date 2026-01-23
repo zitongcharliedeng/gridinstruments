@@ -10,12 +10,20 @@ I've been experimenting with the MIDImech layout and became very interested in t
 
 The latency is close to zero - I can just use my phone as the web viewer and speaker to experiment with layouts and tunings on the go.
 
+## Note: Scale Workshop Does This Better
+
+After making this, I discovered [Scale Workshop](https://scaleworkshop.plainsound.org/) by Sevish and the Xenharmonic Developers. It does everything DCompose Web does and much more - MIDI I/O, scale export, tuning file formats, and any isomorphic layout you want (set horizontal key mapping to 2 semitones for DCompose-equivalent).
+
+**You should probably just use Scale Workshop.** It's more feature-rich and actively maintained by a community.
+
+I'm keeping DCompose Web online as a simple, zero-config way to try the DCompose layout, but Scale Workshop is the better tool.
+
 ## Features
 
 ### Core Features
 - **Zero latency** - Web Audio API with direct oscillator synthesis
 - **Isomorphic layout** - Same chord/scale shapes work in any key
-- **Works with ANY keyboard** - QWERTY, Dvorak, AZERTY, Colemak, etc. (uses physical key codes)
+- **Works with ANY keyboard layout** - QWERTY, Dvorak, AZERTY, etc. Uses `KeyboardEvent.code` (physical key position) not `key` (letter). The physical key in the "H" position always plays D, regardless of what letter your OS thinks it types.
 - **Chord detection** - Real-time chord name display using Tonal.js
 - **Mobile-friendly** - Connect a USB keyboard to your phone and play!
 - **Visual feedback** - See which notes are being pressed on the grid
@@ -66,6 +74,19 @@ This means:
 | `Space` (hold) | Vibrato - adds pitch modulation to active notes |
 | Octave +/- buttons | Shift all notes up/down by octave |
 | Transpose +/- buttons | Shift all notes left/right on circle of fifths |
+
+### Verified Key Coverage
+
+All these keys work as notes on the isomorphic grid:
+- **Letters**: A-Z (all of them)
+- **Numbers**: 0-9, plus Backquote (`` ` ``), Minus (`-`), Equal (`=`)
+- **Punctuation**: BracketLeft (`[`), BracketRight (`]`), Backslash (`\`/`|`), Semicolon (`;`), Quote (`'`/`"`), Comma (`,`), Period (`.`), Slash (`/`)
+- **Edge keys**: Tab, Backspace, Enter
+- **ISO keyboards**: IntlBackslash (the extra key between left Shift and Z)
+
+**NOT mapped** (reserved as modifiers or browser keys):
+- Modifier row: Ctrl, Alt, Space, Meta/Win, Shift, CapsLock
+- Function keys: F1-F12, Escape
 
 ### Modifier Row Design
 
@@ -142,11 +163,13 @@ This project is heavily inspired by and builds upon:
 
 - **[WickiSynth](https://www.toverlamp.org/static/wickisynth/wickisynth_lowlatency.html)** by Piers Titus van der Torren - The original web-based Wicki keyboard synthesizer. The core keyboard mapping concept and oscillator synth design come from this project.
 
+- **[Scale Workshop](https://scaleworkshop.plainsound.org/)** by Sevish and Xenharmonic Developers - Feature-rich microtonal scale workstation with isomorphic keyboard. Does everything DCompose Web does and more - use it if you need serious microtonal tools!
+
 - **[MIDImech](https://github.com/flipcoder/midimech)** by flipcoder - Isomorphic musical layout engine for LinnStrument and Launchpad X. Inspired the UI approach and chord detection feature.
 
 - **[Striso](https://www.striso.org/the-note-layout/)** by Piers Titus van der Torren - Physical instrument using the DCompose layout. The official source of the DCompose note layout design.
 
-- **[isomorphic-qwerty](https://github.com/xenharmonic-devs/isomorphic-qwerty)** - Library for mapping QWERTY keyboards to isomorphic coordinates.
+- **[isomorphic-qwerty](https://github.com/xenharmonic-devs/isomorphic-qwerty)** by Xenharmonic Devs - Library for mapping QWERTY keyboards to isomorphic coordinates. Same authors as Scale Workshop.
 
 ## The DCompose Layout
 

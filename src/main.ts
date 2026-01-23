@@ -11,9 +11,10 @@
  * - Works with ANY keyboard layout (QWERTY, Dvorak, AZERTY, etc.) - uses physical key codes
  */
 
-import { getLayout, KeyboardLayout, KeyCoordinate, SPECIAL_KEYS, MODIFIER_ROW_KEYS } from './lib/keyboard-layouts';
-import { Synth, WaveformType, TUNING_MARKERS, FIFTH_MIN, FIFTH_MAX, FIFTH_DEFAULT, findNearestMarker } from './lib/synth';
+import { getLayout, KeyboardLayout, KeyCoordinate } from './lib/keyboard-layouts';
+import { Synth, WaveformType, FIFTH_MIN, FIFTH_MAX, FIFTH_DEFAULT, findNearestMarker } from './lib/synth';
 import { KeyboardVisualizer } from './lib/keyboard-visualizer';
+import { Note } from 'tonal';
 import { detectChord, getActiveNoteNames } from './lib/chord-detector';
 
 class DComposeApp {
@@ -21,9 +22,8 @@ class DComposeApp {
   private visualizer: KeyboardVisualizer | null = null;
   private currentLayout: KeyboardLayout;
   
-  // Pitch offset system (unified logic for both octave and transpose)
-  // octaveOffset: shifts by octaves (y-axis, ±12 semitones per step)
-  // transposeOffset: shifts by fifths (x-axis, ±7 semitones per step)
+  // Pitch offset system removed - all transposition now via D4 Hz
+  // Kept as 0 for backward compatibility with existing code
   private octaveOffset: number = 0;
   private transposeOffset: number = 0;
   
@@ -34,20 +34,22 @@ class DComposeApp {
   
   // Mouse/touch state
   private pointerDown: Map<number, { coordX: number; coordY: number } | null> = new Map();
+  private draggingGoldenLine: boolean = false;
+  private goldenLineDragStartY: number = 0;
+  private goldenLineDragStartHz: number = 293.66;
   
   // DOM elements
   private canvas: HTMLCanvasElement;
-  private octaveDisplay: HTMLElement;
-  private sustainButton: HTMLButtonElement;
   private waveformSelect: HTMLSelectElement;
   private chordDisplay: HTMLElement;
   private notesDisplay: HTMLElement;
+  private vibratoIndicator: HTMLElement | null = null;
+  private sustainIndicator: HTMLElement | null = null;
   
   // New control elements
   private tuningSlider: HTMLInputElement | null = null;
   private tuningValue: HTMLElement | null = null;
   private volumeSlider: HTMLInputElement | null = null;
-  private eqSlider: HTMLInputElement | null = null;
   
   constructor() {
     this.synth = new Synth();
@@ -55,17 +57,16 @@ class DComposeApp {
     
     // Get DOM elements
     this.canvas = document.getElementById('keyboard-canvas') as HTMLCanvasElement;
-    this.octaveDisplay = document.getElementById('octave-display') as HTMLElement;
-    this.sustainButton = document.getElementById('sustain-toggle') as HTMLButtonElement;
     this.waveformSelect = document.getElementById('waveform-select') as HTMLSelectElement;
     this.chordDisplay = document.getElementById('chord-display') as HTMLElement;
     this.notesDisplay = document.getElementById('notes-display') as HTMLElement;
+    this.vibratoIndicator = document.getElementById('vibrato-indicator') as HTMLElement;
+    this.sustainIndicator = document.getElementById('sustain-indicator') as HTMLElement;
     
     // New control elements (may not exist yet)
     this.tuningSlider = document.getElementById('tuning-slider') as HTMLInputElement;
     this.tuningValue = document.getElementById('tuning-value') as HTMLElement;
     this.volumeSlider = document.getElementById('volume-slider') as HTMLInputElement;
-    this.eqSlider = document.getElementById('eq-slider') as HTMLInputElement;
     
     this.init();
   }
@@ -73,7 +74,6 @@ class DComposeApp {
   private async init(): Promise<void> {
     this.setupEventListeners();
     this.setupVisualizer();
-    this.setupTuningMarkers();
     this.render();
   }
   
@@ -97,60 +97,9 @@ class DComposeApp {
     });
   }
   
-  /**
-   * Create clickable tuning markers alongside the slider
-   * These are reference points - the slider is continuous
-   */
-  private setupTuningMarkers(): void {
-    const markersContainer = document.getElementById('tuning-markers');
-    if (!markersContainer) return;
-    
-    markersContainer.innerHTML = '';
-    
-    for (const marker of TUNING_MARKERS) {
-      // Position on vertical slider (inverted: higher value = higher position)
-      const position = ((marker.fifth - FIFTH_MIN) / (FIFTH_MAX - FIFTH_MIN)) * 100;
-      
-      const markerEl = document.createElement('div');
-      markerEl.className = 'tuning-marker';
-      markerEl.style.bottom = `${position}%`;
-      markerEl.innerHTML = `<span class="marker-name">${marker.name}</span>`;
-      markerEl.title = `${marker.fifth.toFixed(2)} cents - ${marker.description}`;
-      
-      // Click to jump to this tuning value
-      markerEl.addEventListener('click', () => {
-        this.setTuning(marker.fifth);
-      });
-      
-      markersContainer.appendChild(markerEl);
-    }
-  }
-  
   private async ensureAudioReady(): Promise<void> {
     if (!this.synth.isInitialized()) {
       await this.synth.init();
-    }
-  }
-  
-  /**
-   * Set tuning - updates synth AND visualizer
-   */
-  private setTuning(fifthCents: number): void {
-    this.synth.setFifth(fifthCents);
-    
-    // Update visualizer layout to match new tuning
-    if (this.visualizer) {
-      this.visualizer.setGenerator([fifthCents, 1200]);
-    }
-    
-    // Update slider position
-    if (this.tuningSlider) {
-      this.tuningSlider.value = fifthCents.toString();
-    }
-    
-    // Update display value
-    if (this.tuningValue) {
-      this.tuningValue.textContent = fifthCents.toFixed(1);
     }
   }
   
@@ -166,40 +115,6 @@ class DComposeApp {
     this.canvas.addEventListener('pointerleave', this.handlePointerUp.bind(this));
     this.canvas.addEventListener('pointercancel', this.handlePointerUp.bind(this));
     this.canvas.addEventListener('touchstart', (e) => e.preventDefault(), { passive: false });
-    
-    // Octave controls
-    // Octave controls (Y-axis shift, ±12 semitones per step)
-    document.getElementById('octave-down')?.addEventListener('click', () => {
-      this.octaveOffset = Math.max(-4, this.octaveOffset - 1);
-      this.octaveDisplay.textContent = this.octaveOffset.toString();
-    });
-    
-    document.getElementById('octave-up')?.addEventListener('click', () => {
-      this.octaveOffset = Math.min(4, this.octaveOffset + 1);
-      this.octaveDisplay.textContent = this.octaveOffset.toString();
-    });
-    
-    // Transpose controls (X-axis shift, ±7 semitones per step = circle of fifths)
-    // Same logic as octave, just different axis. No duped code - both are just offsets.
-    const transposeDisplay = document.getElementById('transpose-display');
-    
-    document.getElementById('transpose-down')?.addEventListener('click', () => {
-      this.transposeOffset = Math.max(-7, this.transposeOffset - 1);
-      if (transposeDisplay) transposeDisplay.textContent = this.transposeOffset.toString();
-    });
-    
-    document.getElementById('transpose-up')?.addEventListener('click', () => {
-      this.transposeOffset = Math.min(7, this.transposeOffset + 1);
-      if (transposeDisplay) transposeDisplay.textContent = this.transposeOffset.toString();
-    });
-    
-    // Sustain toggle (button click - Alt key is the primary method)
-    this.sustainButton?.addEventListener('click', () => {
-      const newSustain = !this.synth.getSustain();
-      this.synth.setSustain(newSustain);
-      this.sustainButton.textContent = `Sustain: ${newSustain ? 'ON' : 'OFF'}`;
-      this.sustainButton.classList.toggle('active', newSustain);
-    });
     
     // Waveform selector
     this.waveformSelect?.addEventListener('change', () => {
@@ -227,51 +142,55 @@ class DComposeApp {
         if (this.tuningValue) {
           this.tuningValue.textContent = value.toFixed(1);
         }
-        // Show nearest tuning marker
+        // Show nearest tuning marker with color-coded cents offset
         if (nearestMarkerDisplay) {
-          const { marker, distance } = findNearestMarker(value);
-          if (distance < 2) {
+          const { marker } = findNearestMarker(value);
+          const offset = value - marker.fifth;
+          const absOffset = Math.abs(offset);
+          
+          // Color coding based on distance from exact TET
+          if (absOffset < 0.1) {
+            // Exact match (within 0.1 cents) - green
             nearestMarkerDisplay.textContent = `= ${marker.name}`;
-            nearestMarkerDisplay.style.color = 'var(--accent-primary)';
+            nearestMarkerDisplay.style.color = '#88ff88';
+          } else if (absOffset < 1.0) {
+            // Very close (within 1 cent) - yellow
+            nearestMarkerDisplay.textContent = `${marker.name} ${offset > 0 ? '+' : ''}${offset.toFixed(1)}¢`;
+            nearestMarkerDisplay.style.color = '#ffff88';
           } else {
-            nearestMarkerDisplay.textContent = `≈ ${marker.name} (${distance > 0 ? '+' : ''}${(value - marker.fifth).toFixed(1)}¢)`;
+            // Further away - white/secondary
+            nearestMarkerDisplay.textContent = `≈ ${marker.name} (${offset > 0 ? '+' : ''}${offset.toFixed(1)}¢)`;
             nearestMarkerDisplay.style.color = 'var(--text-secondary)';
           }
         }
       });
+      
+      // Double-click to snap to nearest TET marker
+      this.tuningSlider.addEventListener('dblclick', () => {
+        const currentValue = parseFloat(this.tuningSlider!.value);
+        const { marker } = findNearestMarker(currentValue);
+        
+        // Snap to exact marker value
+        this.tuningSlider!.value = marker.fifth.toString();
+        this.synth.setFifth(marker.fifth);
+        if (this.visualizer) {
+          this.visualizer.setGenerator([marker.fifth, 1200]);
+        }
+        if (this.tuningValue) {
+          this.tuningValue.textContent = marker.fifth.toFixed(1);
+        }
+        if (nearestMarkerDisplay) {
+          nearestMarkerDisplay.textContent = `= ${marker.name}`;
+          nearestMarkerDisplay.style.color = 'var(--accent-primary)';
+        }
+      });
+      
     }
     
     // Volume slider
     if (this.volumeSlider) {
       this.volumeSlider.addEventListener('input', () => {
         this.synth.setMasterVolume(parseFloat(this.volumeSlider!.value));
-      });
-    }
-    
-    // EQ/Tone slider
-    if (this.eqSlider) {
-      this.eqSlider.addEventListener('input', () => {
-        this.synth.setEQ(parseFloat(this.eqSlider!.value));
-      });
-    }
-    
-    // === Visualizer scale controls (decimal inputs) ===
-    const scaleXInput = document.getElementById('scale-x-input') as HTMLInputElement;
-    const scaleYInput = document.getElementById('scale-y-input') as HTMLInputElement;
-    
-    if (scaleXInput) {
-      scaleXInput.addEventListener('input', () => {
-        if (!this.visualizer) return;
-        const { scaleY } = this.visualizer.getScale();
-        this.visualizer.setScale(parseFloat(scaleXInput.value) || 1, scaleY);
-      });
-    }
-    
-    if (scaleYInput) {
-      scaleYInput.addEventListener('input', () => {
-        if (!this.visualizer) return;
-        const { scaleX } = this.visualizer.getScale();
-        this.visualizer.setScale(scaleX, parseFloat(scaleYInput.value) || 1);
       });
     }
     
@@ -284,12 +203,46 @@ class DComposeApp {
       });
     }
     
-    // A4 Reference Hz input
-    const a4HzInput = document.getElementById('a4-hz-input') as HTMLInputElement;
-    if (a4HzInput) {
-      a4HzInput.addEventListener('input', () => {
-        const hz = parseFloat(a4HzInput.value) || 440;
-        this.synth.setA4Hz(hz);
+    // D4 Reference Hz input
+    const d4HzInput = document.getElementById('d4-hz-input') as HTMLInputElement;
+    const d4NoteInput = document.getElementById('d4-note-input') as HTMLInputElement;
+    
+    if (d4HzInput) {
+      d4HzInput.addEventListener('input', () => {
+        const hz = parseFloat(d4HzInput.value) || 293.66;
+        this.synth.setD4Hz(hz);
+        if (this.visualizer) {
+          this.visualizer.setD4Hz(hz);
+        }
+        
+        // Update note name input (Hz → Note)
+        if (d4NoteInput) {
+          const noteName = Note.fromFreq(hz);
+          d4NoteInput.value = noteName || '';
+        }
+      });
+    }
+    
+    // D4 Reference Note Name input
+    if (d4NoteInput) {
+      d4NoteInput.addEventListener('input', () => {
+        const noteName = d4NoteInput.value.trim().toUpperCase();
+        if (!noteName) return;
+        
+        // Convert note name to frequency using Tonal.js
+        const freq = Note.freq(noteName);
+        if (freq && freq >= 100 && freq <= 2000) {
+          const hz = Math.round(freq * 100) / 100; // Round to 2 decimals
+          this.synth.setD4Hz(hz);
+          if (this.visualizer) {
+            this.visualizer.setD4Hz(hz);
+          }
+          
+          // Update Hz input
+          if (d4HzInput) {
+            d4HzInput.value = hz.toFixed(2);
+          }
+        }
       });
     }
     
@@ -307,10 +260,17 @@ class DComposeApp {
   }
   
   private async handleKeyDown(event: KeyboardEvent): Promise<void> {
+    // Skip if typing in input field
+    const target = event.target as HTMLElement;
+    if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT') {
+      return;
+    }
+    
+    // Use event.code (PHYSICAL key position) - works on ALL layouts
     const code = event.code;
     
-    // Prevent default for ALL keys to avoid browser shortcuts (Ctrl+W, Alt+Tab, etc.)
-    // EXCEPT for F-keys, Escape, and system shortcuts we explicitly want to allow
+    // Prevent default for most keys to avoid browser shortcuts
+    // Allow F5, F11, F12, Escape
     const allowDefault = ['F5', 'F11', 'F12', 'Escape'].includes(code);
     if (!allowDefault) {
       event.preventDefault();
@@ -319,27 +279,42 @@ class DComposeApp {
     if (this.keyRepeat.has(code)) return;
     this.keyRepeat.add(code);
     
-    // === Modifier row keys (Ctrl, Alt, Space) - NOT notes ===
+    // === Special keys ===
     
-    // Alt = HOLD for sustain
-    if (code === SPECIAL_KEYS.SUSTAIN || code === SPECIAL_KEYS.SUSTAIN_RIGHT) {
-      await this.ensureAudioReady();
-      this.synth.setSustain(true);
-      this.sustainButton.textContent = 'Sustain: ON';
-      this.sustainButton.classList.add('active');
-      return;
-    }
-    
-    // Space = HOLD for vibrato (only affects actively pressed notes, not sustained)
-    if (code === SPECIAL_KEYS.VIBRATO) {
+    // Space = HOLD for vibrato
+    if (code === 'Space') {
       await this.ensureAudioReady();
       this.synth.setVibrato(true);
+      if (this.vibratoIndicator) this.vibratoIndicator.style.display = 'inline';
       return;
     }
     
-    // Skip other modifier row keys (Ctrl, Meta/Win) - they do nothing
-    if (MODIFIER_ROW_KEYS.has(code)) {
+    // Alt = HOLD for sustain
+    if (code === 'AltLeft' || code === 'AltRight') {
+      await this.ensureAudioReady();
+      this.synth.setSustain(true);
+      if (this.sustainIndicator) this.sustainIndicator.style.display = 'inline';
       return;
+    }
+    
+    // Ctrl+ / Ctrl- = Zoom
+    if (event.ctrlKey || event.metaKey) {
+      if (code === 'Equal' || code === 'NumpadAdd') {
+        event.preventDefault();
+        if (this.visualizer) {
+          const { scaleX, scaleY } = this.visualizer.getScale();
+          this.visualizer.setScale(scaleX * 1.1, scaleY * 1.1);
+        }
+        return;
+      }
+      if (code === 'Minus' || code === 'NumpadSubtract') {
+        event.preventDefault();
+        if (this.visualizer) {
+          const { scaleX, scaleY } = this.visualizer.getScale();
+          this.visualizer.setScale(scaleX / 1.1, scaleY / 1.1);
+        }
+        return;
+      }
     }
     
     // === All other keys play notes ===
@@ -367,24 +342,19 @@ class DComposeApp {
     const code = event.code;
     this.keyRepeat.delete(code);
     
-    // === Modifier key releases ===
-    
-    // Alt release = sustain OFF (releases all sustained notes)
-    if (code === SPECIAL_KEYS.SUSTAIN || code === SPECIAL_KEYS.SUSTAIN_RIGHT) {
-      this.synth.setSustain(false);
-      this.sustainButton.textContent = 'Sustain: OFF';
-      this.sustainButton.classList.remove('active');
-      return;
-    }
+    // === Special key releases ===
     
     // Space release = vibrato OFF
-    if (code === SPECIAL_KEYS.VIBRATO) {
+    if (code === 'Space') {
       this.synth.setVibrato(false);
+      if (this.vibratoIndicator) this.vibratoIndicator.style.display = 'none';
       return;
     }
     
-    // Skip other modifier row keys
-    if (MODIFIER_ROW_KEYS.has(code)) {
+    // Alt release = sustain OFF
+    if (code === 'AltLeft' || code === 'AltRight') {
+      this.synth.setSustain(false);
+      if (this.sustainIndicator) this.sustainIndicator.style.display = 'none';
       return;
     }
     
@@ -406,6 +376,19 @@ class DComposeApp {
     await this.ensureAudioReady();
     this.canvas.setPointerCapture(event.pointerId);
     
+    // Check if clicking near golden line (D4 reference line)
+    const rect = this.canvas.getBoundingClientRect();
+    const clickY = event.clientY - rect.top;
+    const goldenLineY = this.visualizer?.getGoldenLineY();
+    
+    if (goldenLineY !== undefined && Math.abs(clickY - goldenLineY) < 10) {
+      // Start dragging golden line
+      this.draggingGoldenLine = true;
+      this.goldenLineDragStartY = clickY;
+      this.goldenLineDragStartHz = this.synth.getD4Hz();
+      return;
+    }
+    
     const button = this.getButtonAtPointer(event);
     if (button) {
       this.playPointerNote(event.pointerId, button.coordX, button.coordY);
@@ -414,6 +397,38 @@ class DComposeApp {
   }
   
   private handlePointerMove(event: PointerEvent): void {
+    // Handle golden line dragging
+    if (this.draggingGoldenLine) {
+      const rect = this.canvas.getBoundingClientRect();
+      const currentY = event.clientY - rect.top;
+      const deltaY = this.goldenLineDragStartY - currentY; // Inverted: up = increase Hz
+      
+      // Convert Y delta to Hz change (1 pixel = ~0.5 Hz)
+      const hzChange = deltaY * 0.5;
+      const newHz = Math.max(100, Math.min(2000, this.goldenLineDragStartHz + hzChange));
+      
+      // Update D4 Hz
+      this.synth.setD4Hz(newHz);
+      if (this.visualizer) {
+        this.visualizer.setD4Hz(newHz);
+      }
+      
+      // Update D4 Hz input if it exists
+      const d4HzInput = document.getElementById('d4-hz-input') as HTMLInputElement;
+      if (d4HzInput) {
+        d4HzInput.value = newHz.toFixed(2);
+      }
+      
+      // Update note name input if it exists
+      const d4NoteInput = document.getElementById('d4-note-input') as HTMLInputElement;
+      if (d4NoteInput) {
+        const noteName = Note.fromFreq(newHz);
+        d4NoteInput.value = noteName || '';
+      }
+      
+      return;
+    }
+    
     if (!this.pointerDown.has(event.pointerId)) return;
     
     const currentButton = this.pointerDown.get(event.pointerId);
@@ -434,6 +449,13 @@ class DComposeApp {
   }
   
   private handlePointerUp(event: PointerEvent): void {
+    // Reset golden line dragging
+    if (this.draggingGoldenLine) {
+      this.draggingGoldenLine = false;
+      this.canvas.releasePointerCapture(event.pointerId);
+      return;
+    }
+    
     const currentButton = this.pointerDown.get(event.pointerId);
     if (currentButton) {
       this.stopPointerNote(event.pointerId, currentButton.coordX, currentButton.coordY);
