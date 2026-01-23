@@ -52,6 +52,13 @@ export class Synth {
   private sustain: boolean = false;
   private waveform: WaveformType = 'sawtooth';
   
+  // Vibrato (LFO modulating pitch)
+  private vibratoLFO: OscillatorNode | null = null;
+  private vibratoGain: GainNode | null = null;
+  private _vibratoEnabled: boolean = false;
+  private vibratoRate: number = 5; // Hz
+  private vibratoDepth: number = 10; // cents
+  
   // Tuning parameters (can be changed live!)
   private generator: [number, number] = [700, 1200]; // [fifth, octave] in cents
   private baseFreq: number = 293.66; // D4
@@ -208,6 +215,50 @@ export class Synth {
   
   getSustain(): boolean {
     return this.sustain;
+  }
+  
+  // === Vibrato ===
+  
+  /**
+   * Enable/disable vibrato (pitch modulation)
+   * Hold Space to add vibrato to all playing notes
+   */
+  setVibrato(enabled: boolean): void {
+    if (!this.context) return;
+    
+    this._vibratoEnabled = enabled;
+    
+    if (enabled) {
+      // Apply vibrato to all playing voices
+      for (const voice of this.voices.values()) {
+        const depthHz = voice.oscillator.frequency.value * (this.vibratoDepth / 1200);
+        
+        // Create LFO for this voice if not exists
+        if (!this.vibratoLFO) {
+          this.vibratoLFO = this.context.createOscillator();
+          this.vibratoLFO.type = 'sine';
+          this.vibratoLFO.frequency.value = this.vibratoRate;
+          this.vibratoLFO.start();
+          
+          this.vibratoGain = this.context.createGain();
+          this.vibratoGain.gain.value = 0;
+          this.vibratoLFO.connect(this.vibratoGain);
+        }
+        
+        // Ramp up vibrato depth
+        this.vibratoGain!.gain.setTargetAtTime(depthHz, this.context.currentTime, 0.1);
+        this.vibratoGain!.connect(voice.oscillator.frequency);
+      }
+    } else {
+      // Ramp down and disconnect vibrato
+      if (this.vibratoGain && this.context) {
+        this.vibratoGain.gain.setTargetAtTime(0, this.context.currentTime, 0.05);
+      }
+    }
+  }
+  
+  getVibrato(): boolean {
+    return this._vibratoEnabled;
   }
   
   // === Note Playing ===

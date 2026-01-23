@@ -44,11 +44,13 @@ const PHYSICAL_ROWS = [
   // IntlBackslash is the ISO key between LShift and Z (only on ISO keyboards)
   // ANSI keyboards don't have this key - it simply won't fire events
   ['IntlBackslash', 'KeyZ', 'KeyX', 'KeyC', 'KeyV', 'KeyB', 'KeyN', 'KeyM', 'Comma', 'Period', 'Slash'],
-  
-  // Row 4: Space bar row - Space is centered roughly under B-N area
-  // We map it to a single coordinate at its center position
-  [null, null, null, null, null, 'Space', null, null, null, null, null],
 ];
+
+// Special keys that are NOT notes (present on virtually every keyboard)
+export const SPECIAL_KEYS = {
+  SUSTAIN: 'CapsLock',  // Toggle sustain
+  VIBRATO: 'Space',     // Hold for vibrato
+};
 
 /**
  * Additional keys that can be optionally mapped

@@ -11,7 +11,7 @@
  * - Works with ANY keyboard layout (QWERTY, Dvorak, AZERTY, etc.) - uses physical key codes
  */
 
-import { getLayout, KeyboardLayout, KeyCoordinate } from './lib/keyboard-layouts';
+import { getLayout, KeyboardLayout, KeyCoordinate, SPECIAL_KEYS } from './lib/keyboard-layouts';
 import { Synth, WaveformType, TUNING_MARKERS, FIFTH_MIN, FIFTH_MAX, FIFTH_DEFAULT } from './lib/synth';
 import { KeyboardVisualizer } from './lib/keyboard-visualizer';
 import { detectChord, getActiveNoteNames } from './lib/chord-detector';
@@ -240,8 +240,26 @@ class DComposeApp {
     if (this.keyRepeat.has(code)) return;
     this.keyRepeat.add(code);
     
-    // ALL keys play notes - no keyboard shortcuts for settings
-    // Settings are controlled via UI only (mouse/touch)
+    // Special keys (on every keyboard)
+    if (code === SPECIAL_KEYS.SUSTAIN) {
+      // CapsLock = toggle sustain
+      event.preventDefault();
+      const newSustain = !this.synth.getSustain();
+      this.synth.setSustain(newSustain);
+      this.sustainButton.textContent = `Sustain: ${newSustain ? 'ON' : 'OFF'}`;
+      this.sustainButton.classList.toggle('active', newSustain);
+      return;
+    }
+    
+    if (code === SPECIAL_KEYS.VIBRATO) {
+      // Space = vibrato (hold)
+      event.preventDefault();
+      await this.ensureAudioReady();
+      this.synth.setVibrato(true);
+      return;
+    }
+    
+    // All other keys play notes
     const coord = this.currentLayout.keyMap[code] as KeyCoordinate | undefined;
     if (!coord) return;
     
@@ -262,6 +280,13 @@ class DComposeApp {
     const code = event.code;
     this.keyRepeat.delete(code);
     
+    // Special key release
+    if (code === SPECIAL_KEYS.VIBRATO) {
+      this.synth.setVibrato(false);
+      return;
+    }
+    
+    // Note release
     const noteData = this.activeNotes.get(code);
     if (!noteData) return;
     

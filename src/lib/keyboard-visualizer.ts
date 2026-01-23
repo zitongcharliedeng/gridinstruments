@@ -185,22 +185,66 @@ export class KeyboardVisualizer {
     const centerY = height / 2;
     const genY = generator[1] * this.genYFactor; // pixels per octave
     
+    // D4 = 293.66 Hz (our center reference)
+    const baseFreq = 293.66;
+    const baseOctave = 4;
+    
     this.ctx.strokeStyle = this.colors.pitchLine;
     this.ctx.lineWidth = 1;
     this.ctx.setLineDash([5, 10]);
     
-    // Draw octave lines
+    // Draw octave lines with labels
     for (let oct = -3; oct <= 3; oct++) {
       const y = centerY - oct * genY;
       if (y < 0 || y > height) continue;
       
       this.ctx.beginPath();
-      this.ctx.moveTo(0, y);
+      this.ctx.moveTo(40, y); // Start after label area
       this.ctx.lineTo(width, y);
       this.ctx.stroke();
+      
+      // Calculate frequency at this octave (D at each octave)
+      const octaveNum = baseOctave + oct;
+      const freq = baseFreq * Math.pow(2, oct);
+      
+      // Draw octave label on left side
+      this.ctx.setLineDash([]);
+      this.ctx.fillStyle = '#666677';
+      this.ctx.font = '10px Inter, sans-serif';
+      this.ctx.textAlign = 'left';
+      this.ctx.textBaseline = 'middle';
+      this.ctx.fillText(`D${octaveNum}`, 4, y);
+      this.ctx.fillStyle = '#555566';
+      this.ctx.font = '8px Inter, sans-serif';
+      this.ctx.fillText(`${freq.toFixed(0)}Hz`, 4, y + 10);
+      this.ctx.setLineDash([5, 10]);
     }
     
     this.ctx.setLineDash([]);
+    
+    // Draw reference line for A4=440Hz
+    // A is 3 fifths up from D, so pitch = 3 * fifth cents
+    // At octave 0 (relative to D4), A4 is at coordX=3, coordY=0
+    // But we need to find where A4 lands on screen
+    const a4PitchCents = 3 * generator[0]; // A is 3 fifths from D
+    const a4Y = centerY - (a4PitchCents * this.genYFactor);
+    
+    if (a4Y > 0 && a4Y < height) {
+      this.ctx.strokeStyle = '#886644';
+      this.ctx.lineWidth = 1;
+      this.ctx.setLineDash([2, 4]);
+      this.ctx.beginPath();
+      this.ctx.moveTo(40, a4Y);
+      this.ctx.lineTo(width, a4Y);
+      this.ctx.stroke();
+      this.ctx.setLineDash([]);
+      
+      // A4=440Hz label
+      this.ctx.fillStyle = '#aa8866';
+      this.ctx.font = 'bold 9px Inter, sans-serif';
+      this.ctx.textAlign = 'right';
+      this.ctx.fillText('A4=440', width - 4, a4Y - 4);
+    }
   }
   
   private drawButton(button: Button, radius: number): void {
