@@ -489,8 +489,9 @@ class DComposeApp {
   }
   
   private updateDisplay(): void {
+    // Apply BOTH transpose (X) and octave (Y) offsets to show the ACTUAL pitch being played
     const coords: Array<[number, number, number]> = Array.from(this.activeNotes.values()).map(
-      ({ coordX, coordY }) => [coordX, coordY + this.octaveOffset, 0]
+      ({ coordX, coordY }) => [coordX + this.transposeOffset, coordY + this.octaveOffset, 0]
     );
     
     const chords = detectChord(coords);
