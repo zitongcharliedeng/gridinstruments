@@ -3,10 +3,16 @@
  * 
  * A web-based isomorphic keyboard synthesizer with DCompose/Wicki-Hayden layout.
  * Play music with your computer keyboard or mouse - works on mobile with external keyboards!
+ * 
+ * Features:
+ * - Continuous tuning slider (syntonic temperament continuum)
+ * - Live tuning changes (notes update in real-time)
+ * - Volume and EQ controls
+ * - Works with ANY keyboard layout (QWERTY, Dvorak, AZERTY, etc.) - uses physical key codes
  */
 
 import { getLayout, KeyboardLayout, KeyCoordinate } from './lib/keyboard-layouts';
-import { Synth, WaveformType } from './lib/synth';
+import { Synth, WaveformType, TUNING_MARKERS, FIFTH_MIN, FIFTH_MAX, FIFTH_DEFAULT } from './lib/synth';
 import { KeyboardVisualizer } from './lib/keyboard-visualizer';
 import { detectChord, getActiveNoteNames } from './lib/chord-detector';
 
@@ -17,8 +23,6 @@ class DComposeApp {
   private octaveOffset: number = 0;
   
   // Track active notes - store VISUAL coordinates (without octave offset)
-  // Key = source identifier (keyCode or "mouse_pointerId")
-  // Value = { coordX, coordY } in VISUAL space (for highlighting)
   private activeNotes: Map<string, { coordX: number; coordY: number }> = new Map();
   private keyRepeat: Set<string> = new Set();
   
@@ -27,25 +31,35 @@ class DComposeApp {
   
   // DOM elements
   private canvas: HTMLCanvasElement;
-  private layoutSelect: HTMLSelectElement;
   private octaveDisplay: HTMLElement;
   private sustainButton: HTMLButtonElement;
   private waveformSelect: HTMLSelectElement;
   private chordDisplay: HTMLElement;
   private notesDisplay: HTMLElement;
   
+  // New control elements
+  private tuningSlider: HTMLInputElement | null = null;
+  private tuningValue: HTMLElement | null = null;
+  private volumeSlider: HTMLInputElement | null = null;
+  private eqSlider: HTMLInputElement | null = null;
+  
   constructor() {
     this.synth = new Synth();
-    this.currentLayout = getLayout('qwerty-us');
+    this.currentLayout = getLayout('standard'); // Physical layout - works for all keyboard types
     
     // Get DOM elements
     this.canvas = document.getElementById('keyboard-canvas') as HTMLCanvasElement;
-    this.layoutSelect = document.getElementById('layout-select') as HTMLSelectElement;
     this.octaveDisplay = document.getElementById('octave-display') as HTMLElement;
     this.sustainButton = document.getElementById('sustain-toggle') as HTMLButtonElement;
     this.waveformSelect = document.getElementById('waveform-select') as HTMLSelectElement;
     this.chordDisplay = document.getElementById('chord-display') as HTMLElement;
     this.notesDisplay = document.getElementById('notes-display') as HTMLElement;
+    
+    // New control elements (may not exist yet)
+    this.tuningSlider = document.getElementById('tuning-slider') as HTMLInputElement;
+    this.tuningValue = document.getElementById('tuning-value') as HTMLElement;
+    this.volumeSlider = document.getElementById('volume-slider') as HTMLInputElement;
+    this.eqSlider = document.getElementById('eq-slider') as HTMLInputElement;
     
     this.init();
   }
@@ -53,6 +67,7 @@ class DComposeApp {
   private async init(): Promise<void> {
     this.setupEventListeners();
     this.setupVisualizer();
+    this.setupTuningMarkers();
     this.render();
   }
   
@@ -76,9 +91,60 @@ class DComposeApp {
     });
   }
   
+  /**
+   * Create clickable tuning markers alongside the slider
+   * These are reference points - the slider is continuous
+   */
+  private setupTuningMarkers(): void {
+    const markersContainer = document.getElementById('tuning-markers');
+    if (!markersContainer) return;
+    
+    markersContainer.innerHTML = '';
+    
+    for (const marker of TUNING_MARKERS) {
+      // Position on vertical slider (inverted: higher value = higher position)
+      const position = ((marker.fifth - FIFTH_MIN) / (FIFTH_MAX - FIFTH_MIN)) * 100;
+      
+      const markerEl = document.createElement('div');
+      markerEl.className = 'tuning-marker';
+      markerEl.style.bottom = `${position}%`;
+      markerEl.innerHTML = `<span class="marker-name">${marker.name}</span>`;
+      markerEl.title = `${marker.fifth.toFixed(2)} cents - ${marker.description}`;
+      
+      // Click to jump to this tuning value
+      markerEl.addEventListener('click', () => {
+        this.setTuning(marker.fifth);
+      });
+      
+      markersContainer.appendChild(markerEl);
+    }
+  }
+  
   private async ensureAudioReady(): Promise<void> {
     if (!this.synth.isInitialized()) {
       await this.synth.init();
+    }
+  }
+  
+  /**
+   * Set tuning - updates synth AND visualizer
+   */
+  private setTuning(fifthCents: number): void {
+    this.synth.setFifth(fifthCents);
+    
+    // Update visualizer layout to match new tuning
+    if (this.visualizer) {
+      this.visualizer.setGenerator([fifthCents, 1200]);
+    }
+    
+    // Update slider position
+    if (this.tuningSlider) {
+      this.tuningSlider.value = fifthCents.toString();
+    }
+    
+    // Update display value
+    if (this.tuningValue) {
+      this.tuningValue.textContent = fifthCents.toFixed(1);
     }
   }
   
@@ -87,21 +153,13 @@ class DComposeApp {
     document.addEventListener('keydown', this.handleKeyDown.bind(this));
     document.addEventListener('keyup', this.handleKeyUp.bind(this));
     
-    // Mouse/touch events - full support for click, hold, and drag
+    // Mouse/touch events
     this.canvas.addEventListener('pointerdown', this.handlePointerDown.bind(this));
     this.canvas.addEventListener('pointermove', this.handlePointerMove.bind(this));
     this.canvas.addEventListener('pointerup', this.handlePointerUp.bind(this));
     this.canvas.addEventListener('pointerleave', this.handlePointerUp.bind(this));
     this.canvas.addEventListener('pointercancel', this.handlePointerUp.bind(this));
-    
-    // Prevent default touch behaviors on canvas
     this.canvas.addEventListener('touchstart', (e) => e.preventDefault(), { passive: false });
-    
-    // Layout selector
-    this.layoutSelect.addEventListener('change', () => {
-      this.currentLayout = getLayout(this.layoutSelect.value);
-      this.stopAllNotes();
-    });
     
     // Octave controls
     document.getElementById('octave-down')?.addEventListener('click', () => {
@@ -115,7 +173,7 @@ class DComposeApp {
     });
     
     // Sustain toggle
-    this.sustainButton.addEventListener('click', () => {
+    this.sustainButton?.addEventListener('click', () => {
       const newSustain = !this.synth.getSustain();
       this.synth.setSustain(newSustain);
       this.sustainButton.textContent = `Sustain: ${newSustain ? 'ON' : 'OFF'}`;
@@ -123,15 +181,56 @@ class DComposeApp {
     });
     
     // Waveform selector
-    this.waveformSelect.addEventListener('change', () => {
+    this.waveformSelect?.addEventListener('change', () => {
       this.synth.setWaveform(this.waveformSelect.value as WaveformType);
     });
+    
+    // === NEW CONTROLS ===
+    
+    // Tuning slider - CONTINUOUS from FIFTH_MIN to FIFTH_MAX
+    if (this.tuningSlider) {
+      this.tuningSlider.min = FIFTH_MIN.toString();
+      this.tuningSlider.max = FIFTH_MAX.toString();
+      this.tuningSlider.step = '0.1'; // Fine control
+      this.tuningSlider.value = FIFTH_DEFAULT.toString();
+      
+      // Real-time update while sliding
+      this.tuningSlider.addEventListener('input', () => {
+        const value = parseFloat(this.tuningSlider!.value);
+        this.synth.setFifth(value);
+        if (this.visualizer) {
+          this.visualizer.setGenerator([value, 1200]);
+        }
+        if (this.tuningValue) {
+          this.tuningValue.textContent = value.toFixed(1);
+        }
+      });
+    }
+    
+    // Volume slider
+    if (this.volumeSlider) {
+      this.volumeSlider.addEventListener('input', () => {
+        this.synth.setMasterVolume(parseFloat(this.volumeSlider!.value));
+      });
+    }
+    
+    // EQ/Tone slider
+    if (this.eqSlider) {
+      this.eqSlider.addEventListener('input', () => {
+        this.synth.setEQ(parseFloat(this.eqSlider!.value));
+      });
+    }
     
     // Prevent spacebar scroll
     document.addEventListener('keydown', (e) => {
       if (e.code === 'Space' && e.target === document.body) {
         e.preventDefault();
       }
+    });
+    
+    // Stop all notes when window loses focus (good UX)
+    window.addEventListener('blur', () => {
+      this.stopAllNotes();
     });
   }
   
@@ -170,14 +269,9 @@ class DComposeApp {
     await this.ensureAudioReady();
     
     const [coordX, coordY] = coord;
-    
-    // Create unique note ID for audio (includes octave offset)
     const audioNoteId = `key_${code}_${coordX}_${coordY + this.octaveOffset}`;
     
-    // Play note with octave offset applied to audio
     this.synth.playNote(audioNoteId, coordX, coordY, this.octaveOffset);
-    
-    // Store VISUAL coordinates (without octave offset) for highlighting
     this.activeNotes.set(code, { coordX, coordY });
     
     this.render();
@@ -192,8 +286,6 @@ class DComposeApp {
     if (!noteData) return;
     
     const { coordX, coordY } = noteData;
-    
-    // Stop the audio note (with octave offset that was used when playing)
     const audioNoteId = `key_${code}_${coordX}_${coordY + this.octaveOffset}`;
     this.synth.stopNote(audioNoteId);
     
@@ -204,8 +296,6 @@ class DComposeApp {
   
   private async handlePointerDown(event: PointerEvent): Promise<void> {
     await this.ensureAudioReady();
-    
-    // Capture pointer for drag support
     this.canvas.setPointerCapture(event.pointerId);
     
     const button = this.getButtonAtPointer(event);
@@ -216,27 +306,21 @@ class DComposeApp {
   }
   
   private handlePointerMove(event: PointerEvent): void {
-    // Only process if this pointer is down
     if (!this.pointerDown.has(event.pointerId)) return;
     
     const currentButton = this.pointerDown.get(event.pointerId);
     const newButton = this.getButtonAtPointer(event);
     
-    // Check if we moved to a different button
     const currentId = currentButton ? `${currentButton.coordX}_${currentButton.coordY}` : null;
     const newId = newButton ? `${newButton.coordX}_${newButton.coordY}` : null;
     
     if (currentId !== newId) {
-      // Stop old note if any
       if (currentButton) {
         this.stopPointerNote(event.pointerId, currentButton.coordX, currentButton.coordY);
       }
-      
-      // Play new note if any
       if (newButton) {
         this.playPointerNote(event.pointerId, newButton.coordX, newButton.coordY);
       }
-      
       this.pointerDown.set(event.pointerId, newButton);
     }
   }
@@ -246,18 +330,15 @@ class DComposeApp {
     if (currentButton) {
       this.stopPointerNote(event.pointerId, currentButton.coordX, currentButton.coordY);
     }
-    
     this.pointerDown.delete(event.pointerId);
     this.canvas.releasePointerCapture(event.pointerId);
   }
   
   private getButtonAtPointer(event: PointerEvent): { coordX: number; coordY: number } | null {
     if (!this.visualizer) return null;
-    
     const rect = this.canvas.getBoundingClientRect();
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
-    
     const button = this.visualizer.getButtonAtPoint(x, y);
     return button ? { coordX: button.coordX, coordY: button.coordY } : null;
   }
@@ -265,10 +346,7 @@ class DComposeApp {
   private playPointerNote(pointerId: number, coordX: number, coordY: number): void {
     const audioNoteId = `ptr_${pointerId}_${coordX}_${coordY + this.octaveOffset}`;
     this.synth.playNote(audioNoteId, coordX, coordY, this.octaveOffset);
-    
-    // Store VISUAL coordinates for highlighting
     this.activeNotes.set(`ptr_${pointerId}`, { coordX, coordY });
-    
     this.render();
     this.updateDisplay();
   }
@@ -276,14 +354,12 @@ class DComposeApp {
   private stopPointerNote(pointerId: number, coordX: number, coordY: number): void {
     const audioNoteId = `ptr_${pointerId}_${coordX}_${coordY + this.octaveOffset}`;
     this.synth.stopNote(audioNoteId);
-    
     this.activeNotes.delete(`ptr_${pointerId}`);
-    
     this.render();
     this.updateDisplay();
   }
   
-  private stopAllNotes(): void {
+  public stopAllNotes(): void {
     this.synth.stopAll();
     this.activeNotes.clear();
     this.keyRepeat.clear();
@@ -294,18 +370,14 @@ class DComposeApp {
   
   private render(): void {
     if (!this.visualizer) return;
-    
-    // Convert active notes to visual note IDs (using VISUAL coordinates)
     const activeNoteIds = Array.from(this.activeNotes.values()).map(
       ({ coordX, coordY }) => `${coordX}_${coordY}`
     );
-    
     this.visualizer.setActiveNotes(activeNoteIds);
     this.visualizer.render();
   }
   
   private updateDisplay(): void {
-    // Get coordinates with octave offset for correct note name display
     const coords: Array<[number, number, number]> = Array.from(this.activeNotes.values()).map(
       ({ coordX, coordY }) => [coordX, coordY + this.octaveOffset, 0]
     );
@@ -320,5 +392,8 @@ class DComposeApp {
 
 // Initialize app when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
-  new DComposeApp();
+  const app = new DComposeApp();
+  
+  // Expose for debugging and emergency stop
+  (window as unknown as { dcomposeApp: DComposeApp }).dcomposeApp = app;
 });

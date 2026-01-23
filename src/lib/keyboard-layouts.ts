@@ -1,13 +1,15 @@
 /**
- * Keyboard Layout Mappings
+ * Physical Keyboard to Isomorphic Coordinate Mapping
  * 
- * Maps physical keyboard keys to isomorphic coordinates [x, y]
- * where x = position along circle of fifths, y = octave offset
+ * This module uses a PHYSICAL-FIRST approach:
+ * 1. Define physical key positions as a 2D array
+ * 2. Apply a linear transformation to get isomorphic coordinates
+ * 3. Works with ANY logical layout (QWERTY, Dvorak, AZERTY, etc.) since we use KeyboardEvent.code
  * 
  * The DCompose/Wicki-Hayden layout:
  * - Moving right increases pitch by a fifth (700 cents)
  * - Moving up increases pitch by an octave (1200 cents)
- * - D is the central note (coordinate [0, 0])
+ * - D is the central note (coordinate [0, 0]) at KeyH
  */
 
 export type KeyCoordinate = [number, number]; // [x, y] where x=fifths, y=octave
@@ -17,213 +19,177 @@ export interface KeyboardLayout {
   keyMap: Record<string, KeyCoordinate>;
 }
 
-// Base Wicki-Hayden layout for US QWERTY
-// Row 4 (number row): higher octave
-// Row 3 (QWERTY): mid-high  
-// Row 2 (ASDF): middle
-// Row 1 (ZXCV): lower
-const baseWickiLayout: Record<string, KeyCoordinate> = {
-  // Bottom row (ZXCV) - lowest octave
-  'KeyZ': [-9, 4],
-  'KeyX': [-7, 3],
-  'KeyC': [-5, 2],
-  'KeyV': [-3, 1],
-  'KeyB': [-1, 0],
-  'KeyN': [1, -1],
-  'KeyM': [3, -2],
-  'Comma': [5, -3],
-  'Period': [7, -4],
-  'Slash': [9, -5],
+/**
+ * Physical keyboard layout definition
+ * Each row is an array of KeyboardEvent.code values
+ * null represents empty space (for row stagger alignment)
+ * 
+ * This covers the main alphanumeric section of a standard keyboard
+ * Works with: ANSI, ISO, 60%, 65%, TKL, Full-size keyboards
+ * Works with: QWERTY, Dvorak, Colemak, AZERTY, QWERTZ (all use same physical codes!)
+ */
+const PHYSICAL_ROWS = [
+  // Row 0: Number row (leftmost position)
+  ['Backquote', 'Digit1', 'Digit2', 'Digit3', 'Digit4', 'Digit5', 'Digit6', 'Digit7', 'Digit8', 'Digit9', 'Digit0', 'Minus', 'Equal'],
   
-  // Home row (ASDF)
-  'KeyA': [-10, 5],
-  'KeyS': [-8, 4],
-  'KeyD': [-6, 3],
-  'KeyF': [-4, 2],
-  'KeyG': [-2, 1],
-  'KeyH': [0, 0],   // D - center of the layout
-  'KeyJ': [2, -1],
-  'KeyK': [4, -2],
-  'KeyL': [6, -3],
-  'Semicolon': [8, -4],
-  'Quote': [10, -5],
+  // Row 1: Top letter row (QWERTY row) - stagger ~0.5 keys right
+  // Tab is a modifier, starts at position 0
+  [null, 'KeyQ', 'KeyW', 'KeyE', 'KeyR', 'KeyT', 'KeyY', 'KeyU', 'KeyI', 'KeyO', 'KeyP', 'BracketLeft', 'BracketRight', 'Backslash'],
   
-  // QWERTY row
-  'KeyQ': [-11, 6],
-  'KeyW': [-9, 5],
-  'KeyE': [-7, 4],
-  'KeyR': [-5, 3],
-  'KeyT': [-3, 2],
-  'KeyY': [-1, 1],
-  'KeyU': [1, 0],
-  'KeyI': [3, -1],
-  'KeyO': [5, -2],
-  'KeyP': [7, -3],
-  'BracketLeft': [9, -4],
-  'BracketRight': [11, -5],
+  // Row 2: Home row (ASDF row) - stagger ~0.75 keys right  
+  // CapsLock is a modifier at position 0
+  [null, 'KeyA', 'KeyS', 'KeyD', 'KeyF', 'KeyG', 'KeyH', 'KeyJ', 'KeyK', 'KeyL', 'Semicolon', 'Quote'],
   
-  // Number row - highest
-  'Digit1': [-12, 7],
-  'Digit2': [-10, 6],
-  'Digit3': [-8, 5],
-  'Digit4': [-6, 4],
-  'Digit5': [-4, 3],
-  'Digit6': [-2, 2],
-  'Digit7': [0, 1],
-  'Digit8': [2, 0],
-  'Digit9': [4, -1],
-  'Digit0': [6, -2],
-  'Minus': [8, -3],
-  'Equal': [10, -4],
+  // Row 3: Bottom letter row (ZXCV row)
+  // IntlBackslash is the ISO key between LShift and Z (only on ISO keyboards)
+  // ANSI keyboards don't have this key - it simply won't fire events
+  ['IntlBackslash', 'KeyZ', 'KeyX', 'KeyC', 'KeyV', 'KeyB', 'KeyN', 'KeyM', 'Comma', 'Period', 'Slash'],
+];
+
+/**
+ * Additional keys that can be optionally mapped
+ * These are on the edges/modifiers and may be useful for some users
+ */
+const EXTENDED_KEYS = {
+  // Function row (F1-F12)
+  functionRow: ['Escape', 'F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'F9', 'F10', 'F11', 'F12'],
+  
+  // Left-side modifiers (can be mapped as extra bass notes)
+  leftModifiers: ['Tab', 'CapsLock', 'ShiftLeft'],
+  
+  // Right-side keys (can be mapped as extra treble notes)  
+  rightModifiers: ['Backspace', 'Enter', 'ShiftRight'],
+  
+  // Numpad (for full-size keyboards)
+  numpad: [
+    ['NumLock', 'NumpadDivide', 'NumpadMultiply', 'NumpadSubtract'],
+    ['Numpad7', 'Numpad8', 'Numpad9', 'NumpadAdd'],
+    ['Numpad4', 'Numpad5', 'Numpad6'],
+    ['Numpad1', 'Numpad2', 'Numpad3', 'NumpadEnter'],
+    ['Numpad0', 'NumpadDecimal'],
+  ],
 };
 
-// QWERTY US Layout
-export const qwertyUS: KeyboardLayout = {
-  name: 'QWERTY (US)',
-  keyMap: { ...baseWickiLayout },
+/**
+ * Transformation from physical position to isomorphic coordinates
+ * 
+ * The DCompose layout uses a shear transformation:
+ * - Each step RIGHT in a row: +2 fifths (x), -1 octave offset (y)
+ * - Each step DOWN a row: +1 fifth (x), -1 octave offset (y)
+ * - Reference point: KeyH (physical ~col 6, row 2) → [0, 0]
+ * 
+ * Formula:
+ *   coordX = 2 * physX + 1 * physY + offsetX
+ *   coordY = -1 * physX + -1 * physY + offsetY
+ * 
+ * With KeyH at [0,0], solving for offsets:
+ *   offsetX = -14, offsetY = 8
+ */
+function physicalToIsomorphic(physX: number, physY: number): KeyCoordinate {
+  const coordX = 2 * physX + 1 * physY - 14;
+  const coordY = -1 * physX - 1 * physY + 8;
+  return [coordX, coordY];
+}
+
+/**
+ * Generate key map from physical layout
+ */
+function generateKeyMap(includeExtended: boolean = true): Record<string, KeyCoordinate> {
+  const keyMap: Record<string, KeyCoordinate> = {};
+  
+  // Process main alphanumeric keys
+  PHYSICAL_ROWS.forEach((row, physY) => {
+    row.forEach((code, physX) => {
+      if (code !== null) {
+        keyMap[code] = physicalToIsomorphic(physX, physY);
+      }
+    });
+  });
+  
+  if (includeExtended) {
+    // Add Tab (to the left of Q row, so physX = -1, physY = 1)
+    keyMap['Tab'] = physicalToIsomorphic(-1, 1);
+    
+    // Add CapsLock (to the left of home row, physX = -1, physY = 2)
+    keyMap['CapsLock'] = physicalToIsomorphic(-1, 2);
+    
+    // Add Backspace (after Equal, physX = 13, physY = 0)
+    keyMap['Backspace'] = physicalToIsomorphic(13, 0);
+    
+    // Add Enter (after Quote on ANSI, or same position on ISO)
+    // This is approximately physX = 12, physY = 2
+    keyMap['Enter'] = physicalToIsomorphic(12, 2);
+  }
+  
+  return keyMap;
+}
+
+/**
+ * Generate numpad key map
+ * Numpad uses a separate coordinate space, offset to the right
+ */
+function generateNumpadKeyMap(): Record<string, KeyCoordinate> {
+  const keyMap: Record<string, KeyCoordinate> = {};
+  const xOffset = 16; // Offset to put numpad to the right of main keys
+  
+  EXTENDED_KEYS.numpad.forEach((row, physY) => {
+    row.forEach((code, physX) => {
+      if (code) {
+        keyMap[code] = physicalToIsomorphic(physX + xOffset, physY);
+      }
+    });
+  });
+  
+  return keyMap;
+}
+
+/**
+ * Standard layout - works with all keyboard types
+ * ANSI, ISO, QWERTY, Dvorak, Colemak, AZERTY, QWERTZ - all use the same physical codes!
+ */
+export const standardLayout: KeyboardLayout = {
+  name: 'Standard',
+  keyMap: generateKeyMap(true),
 };
 
-// QWERTY UK Layout - has extra key (IntlBackslash) and different positions
-export const qwertyUK: KeyboardLayout = {
-  name: 'QWERTY (UK)',
+/**
+ * Minimal layout - only main alphanumeric keys
+ */
+export const minimalLayout: KeyboardLayout = {
+  name: 'Minimal',
+  keyMap: generateKeyMap(false),
+};
+
+/**
+ * Full layout - includes numpad for full-size keyboards
+ */
+export const fullLayout: KeyboardLayout = {
+  name: 'Full (with Numpad)',
   keyMap: {
-    ...baseWickiLayout,
-    // UK has IntlBackslash between left shift and Z
-    'IntlBackslash': [-10, 4],
-    // UK Quote is different position but same key
-    'Quote': [10, -5],
-    // UK has # key next to Enter
-    'Backslash': [12, -6],
+    ...generateKeyMap(true),
+    ...generateNumpadKeyMap(),
   },
 };
 
-// QWERTZ German Layout
-export const qwertzDE: KeyboardLayout = {
-  name: 'QWERTZ (DE)',
-  keyMap: {
-    // Bottom row
-    'KeyY': [-9, 4],  // Y and Z are swapped
-    'KeyX': [-7, 3],
-    'KeyC': [-5, 2],
-    'KeyV': [-3, 1],
-    'KeyB': [-1, 0],
-    'KeyN': [1, -1],
-    'KeyM': [3, -2],
-    'Comma': [5, -3],
-    'Period': [7, -4],
-    'Slash': [9, -5],
-    
-    // Home row
-    'KeyA': [-10, 5],
-    'KeyS': [-8, 4],
-    'KeyD': [-6, 3],
-    'KeyF': [-4, 2],
-    'KeyG': [-2, 1],
-    'KeyH': [0, 0],
-    'KeyJ': [2, -1],
-    'KeyK': [4, -2],
-    'KeyL': [6, -3],
-    'Semicolon': [8, -4],
-    'Quote': [10, -5],
-    
-    // QWERTZ row
-    'KeyQ': [-11, 6],
-    'KeyW': [-9, 5],
-    'KeyE': [-7, 4],
-    'KeyR': [-5, 3],
-    'KeyT': [-3, 2],
-    'KeyZ': [-1, 1],  // Z is here in QWERTZ
-    'KeyU': [1, 0],
-    'KeyI': [3, -1],
-    'KeyO': [5, -2],
-    'KeyP': [7, -3],
-    'BracketLeft': [9, -4],
-    'BracketRight': [11, -5],
-    
-    // Number row
-    'Digit1': [-12, 7],
-    'Digit2': [-10, 6],
-    'Digit3': [-8, 5],
-    'Digit4': [-6, 4],
-    'Digit5': [-4, 3],
-    'Digit6': [-2, 2],
-    'Digit7': [0, 1],
-    'Digit8': [2, 0],
-    'Digit9': [4, -1],
-    'Digit0': [6, -2],
-    'Minus': [8, -3],
-    'Equal': [10, -4],
-  },
-};
-
-// AZERTY French Layout
-export const azertyFR: KeyboardLayout = {
-  name: 'AZERTY (FR)',
-  keyMap: {
-    // Bottom row
-    'KeyW': [-9, 4],  // W is in Z position
-    'KeyX': [-7, 3],
-    'KeyC': [-5, 2],
-    'KeyV': [-3, 1],
-    'KeyB': [-1, 0],
-    'KeyN': [1, -1],
-    'Comma': [3, -2],  // Different punctuation positions
-    'Semicolon': [5, -3],
-    'Period': [7, -4],
-    'Slash': [9, -5],
-    
-    // Home row
-    'KeyQ': [-10, 5],  // Q is in A position
-    'KeyS': [-8, 4],
-    'KeyD': [-6, 3],
-    'KeyF': [-4, 2],
-    'KeyG': [-2, 1],
-    'KeyH': [0, 0],
-    'KeyJ': [2, -1],
-    'KeyK': [4, -2],
-    'KeyL': [6, -3],
-    'KeyM': [8, -4],   // M is here in AZERTY
-    'Quote': [10, -5],
-    
-    // AZERTY row (top letters)
-    'KeyA': [-11, 6],  // A is in Q position
-    'KeyZ': [-9, 5],   // Z is in W position
-    'KeyE': [-7, 4],
-    'KeyR': [-5, 3],
-    'KeyT': [-3, 2],
-    'KeyY': [-1, 1],
-    'KeyU': [1, 0],
-    'KeyI': [3, -1],
-    'KeyO': [5, -2],
-    'KeyP': [7, -3],
-    'BracketLeft': [9, -4],
-    'BracketRight': [11, -5],
-    
-    // Number row (AZERTY has symbols, need Shift for numbers)
-    'Digit1': [-12, 7],
-    'Digit2': [-10, 6],
-    'Digit3': [-8, 5],
-    'Digit4': [-6, 4],
-    'Digit5': [-4, 3],
-    'Digit6': [-2, 2],
-    'Digit7': [0, 1],
-    'Digit8': [2, 0],
-    'Digit9': [4, -1],
-    'Digit0': [6, -2],
-    'Minus': [8, -3],
-    'Equal': [10, -4],
-  },
-};
+// Legacy exports for backward compatibility
+export const qwertyUS = standardLayout;
+export const qwertyUK = standardLayout; // Same physical codes!
+export const qwertzDE = standardLayout; // Same physical codes!
+export const azertyFR = standardLayout; // Same physical codes!
 
 export const layouts: Record<string, KeyboardLayout> = {
-  'qwerty-us': qwertyUS,
-  'qwerty-uk': qwertyUK,
-  'qwertz': qwertzDE,
-  'azerty': azertyFR,
+  'standard': standardLayout,
+  'minimal': minimalLayout,
+  'full': fullLayout,
+  // Legacy aliases
+  'qwerty-us': standardLayout,
+  'qwerty-uk': standardLayout,
+  'qwertz': standardLayout,
+  'azerty': standardLayout,
 };
 
 export function getLayout(id: string): KeyboardLayout {
-  return layouts[id] || qwertyUS;
+  return layouts[id] || standardLayout;
 }
 
 /**
@@ -279,4 +245,36 @@ export function coordToFrequency(
 ): number {
   const cents = y * generator[1] + x * generator[0] + octaveOffset * 1200;
   return baseFreq * Math.pow(2, cents / 1200);
+}
+
+/**
+ * Get all physical key codes that are mapped
+ */
+export function getAllMappedKeys(): string[] {
+  return Object.keys(standardLayout.keyMap);
+}
+
+/**
+ * Check if a key code is mapped
+ */
+export function isKeyMapped(code: string): boolean {
+  return code in standardLayout.keyMap;
+}
+
+/**
+ * Debug: Print the key map in a readable format
+ */
+export function debugKeyMap(): void {
+  const map = standardLayout.keyMap;
+  const entries = Object.entries(map).sort((a, b) => {
+    // Sort by coordY desc, then coordX asc
+    if (a[1][1] !== b[1][1]) return b[1][1] - a[1][1];
+    return a[1][0] - b[1][0];
+  });
+  
+  console.log('Key Map (sorted by position):');
+  for (const [code, [x, y]] of entries) {
+    const note = getNoteNameFromCoord(x);
+    console.log(`  ${code.padEnd(15)} → [${x.toString().padStart(3)}, ${y.toString().padStart(2)}] = ${note}`);
+  }
 }

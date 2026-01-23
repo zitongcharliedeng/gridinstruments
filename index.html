@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DCompose Web - Isomorphic Keyboard Synthesizer</title>
-  <meta name="description" content="Play music with your computer keyboard using the DCompose/Wicki-Hayden isomorphic layout. Zero latency, works on mobile with external keyboards.">
+  <meta name="description" content="Play music with your computer keyboard using the DCompose/Wicki-Hayden isomorphic layout. Explore tunings from 7-TET to 5-TET on the syntonic temperament continuum.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -137,7 +137,92 @@
       font-size: 0.875rem;
     }
     
-    main {
+    /* Main layout with tuning slider on left */
+    .main-content {
+      flex: 1;
+      display: flex;
+      gap: 1rem;
+    }
+    
+    /* Tuning panel - left side */
+    .tuning-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      border: 1px solid var(--bg-tertiary);
+      padding: 1rem;
+      min-width: 180px;
+    }
+    
+    .tuning-panel h3 {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-secondary);
+      text-align: center;
+    }
+    
+    .tuning-slider-container {
+      display: flex;
+      flex: 1;
+      gap: 0.5rem;
+      min-height: 300px;
+    }
+    
+    /* Vertical slider */
+    .vertical-slider {
+      writing-mode: vertical-lr;
+      direction: rtl;
+      width: 24px;
+      height: 100%;
+      cursor: pointer;
+      accent-color: var(--accent-primary);
+    }
+    
+    /* Tuning markers alongside slider */
+    #tuning-markers {
+      position: relative;
+      flex: 1;
+      font-size: 0.7rem;
+    }
+    
+    .tuning-marker {
+      position: absolute;
+      left: 0;
+      right: 0;
+      cursor: pointer;
+      padding: 2px 4px;
+      color: var(--text-secondary);
+      transition: color 0.15s, background 0.15s;
+      border-radius: 4px;
+      white-space: nowrap;
+      transform: translateY(50%);
+    }
+    
+    .tuning-marker:hover {
+      color: var(--text-primary);
+      background: var(--bg-tertiary);
+    }
+    
+    .tuning-value-display {
+      text-align: center;
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--accent-primary);
+      padding: 0.5rem;
+      background: var(--bg-tertiary);
+      border-radius: 8px;
+    }
+    
+    .tuning-value-display span {
+      font-size: 0.7rem;
+      color: var(--text-secondary);
+    }
+    
+    /* Main area */
+    .main-area {
       flex: 1;
       display: flex;
       flex-direction: column;
@@ -161,6 +246,36 @@
     #keyboard-canvas {
       max-width: 100%;
       max-height: 100%;
+    }
+    
+    /* Audio controls panel */
+    .audio-controls {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    
+    .slider-control {
+      flex: 1;
+      min-width: 150px;
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      border: 1px solid var(--bg-tertiary);
+      padding: 1rem;
+    }
+    
+    .slider-control h3 {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-secondary);
+      margin-bottom: 0.5rem;
+    }
+    
+    .slider-control input[type="range"] {
+      width: 100%;
+      cursor: pointer;
+      accent-color: var(--accent-primary);
     }
     
     .info-panel {
@@ -246,8 +361,34 @@
       .controls {
         justify-content: center;
       }
+      
+      .main-content {
+        flex-direction: column;
+      }
+      
+      .tuning-panel {
+        flex-direction: row;
+        min-width: auto;
+        min-height: auto;
+      }
+      
+      .tuning-slider-container {
+        flex-direction: row;
+        min-height: auto;
+        height: 60px;
+      }
+      
+      .vertical-slider {
+        writing-mode: horizontal-tb;
+        direction: ltr;
+        width: 100%;
+        height: 24px;
+      }
+      
+      #tuning-markers {
+        display: none; /* Hide on mobile for simplicity */
+      }
     }
-    
   </style>
 </head>
 <body>
@@ -256,18 +397,9 @@
       <div class="logo">DCompose Web</div>
       <div class="controls">
         <div class="control-group">
-          <label>Layout</label>
-          <select id="layout-select">
-            <option value="qwerty-us">QWERTY (US)</option>
-            <option value="qwerty-uk">QWERTY (UK)</option>
-            <option value="qwertz">QWERTZ (DE)</option>
-            <option value="azerty">AZERTY (FR)</option>
-          </select>
-        </div>
-        <div class="control-group">
           <label>Octave</label>
           <div class="octave-controls">
-            <button id="octave-down">-</button>
+            <button id="octave-down">−</button>
             <span class="octave-display" id="octave-display">0</span>
             <button id="octave-up">+</button>
           </div>
@@ -276,6 +408,7 @@
           <button id="sustain-toggle">Sustain: OFF</button>
         </div>
         <div class="control-group">
+          <label>Wave</label>
           <select id="waveform-select">
             <option value="sawtooth">Sawtooth</option>
             <option value="sine">Sine</option>
@@ -286,27 +419,57 @@
       </div>
     </header>
     
-    <main>
-      <div class="keyboard-container">
-        <canvas id="keyboard-canvas"></canvas>
+    <div class="main-content">
+      <!-- Tuning slider panel (left) -->
+      <div class="tuning-panel">
+        <h3>Tuning (Fifth)</h3>
+        <div class="tuning-slider-container">
+          <input type="range" id="tuning-slider" class="vertical-slider" 
+                 min="650" max="750" step="0.1" value="700">
+          <div id="tuning-markers">
+            <!-- Markers populated by JS -->
+          </div>
+        </div>
+        <div class="tuning-value-display">
+          <span id="tuning-value">700.0</span> <span>cents</span>
+        </div>
       </div>
       
-      <div class="info-panel">
-        <div class="info-card">
-          <h3>Detected Chord</h3>
-          <div class="value" id="chord-display">-</div>
+      <!-- Main keyboard area -->
+      <div class="main-area">
+        <div class="keyboard-container">
+          <canvas id="keyboard-canvas"></canvas>
         </div>
-        <div class="info-card">
-          <h3>Active Notes</h3>
-          <div class="value" id="notes-display">-</div>
+        
+        <!-- Audio controls -->
+        <div class="audio-controls">
+          <div class="slider-control">
+            <h3>Volume</h3>
+            <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.3">
+          </div>
+          <div class="slider-control">
+            <h3>Tone (Bass ← → Treble)</h3>
+            <input type="range" id="eq-slider" min="-1" max="1" step="0.01" value="0">
+          </div>
+        </div>
+        
+        <div class="info-panel">
+          <div class="info-card">
+            <h3>Detected Chord</h3>
+            <div class="value" id="chord-display">-</div>
+          </div>
+          <div class="info-card">
+            <h3>Active Notes</h3>
+            <div class="value" id="notes-display">-</div>
+          </div>
+        </div>
+        
+        <div class="instructions">
+          <p><strong>How to play:</strong> Press keys on your keyboard. Works with ANY layout (QWERTY, Dvorak, AZERTY, etc.) - uses physical key positions.</p>
+          <p><kbd>Space</kbd> Toggle sustain | <kbd>+</kbd> / <kbd>-</kbd> Change octave | Drag the tuning slider to explore different temperaments!</p>
         </div>
       </div>
-      
-      <div class="instructions">
-        <p><strong>How to play:</strong> Press keys on your keyboard. The layout follows the DCompose/Wicki-Hayden isomorphic pattern.</p>
-        <p><kbd>Space</kbd> Toggle sustain | <kbd>+</kbd> / <kbd>-</kbd> Change octave | Connect a USB keyboard to your phone to play on mobile!</p>
-      </div>
-    </main>
+    </div>
     
     <footer>
       Based on <a href="https://www.toverlamp.org/static/wickisynth/wickisynth_lowlatency.html" target="_blank">WickiSynth</a> by Piers Titus van der Torren |

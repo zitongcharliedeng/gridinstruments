@@ -83,10 +83,19 @@ export class KeyboardVisualizer {
   
   /**
    * Set the tuning generator (for different TETs)
+   * This regenerates button positions to reflect the new pitch relationships
    */
   setGenerator(generator: [number, number]): void {
     this.options.generator = generator;
     this.generateButtons();
+    this.render();
+  }
+  
+  /**
+   * Get current generator
+   */
+  getGenerator(): [number, number] {
+    return [...this.options.generator] as [number, number];
   }
   
   private generateButtons(): void {
