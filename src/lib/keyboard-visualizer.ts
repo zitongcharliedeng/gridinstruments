@@ -105,10 +105,19 @@ export class KeyboardVisualizer {
   }
 
   setScale(scaleX: number, scaleY: number): void {
-    this.options.scaleX = Math.max(0.5, Math.min(2.0, scaleX));
-    this.options.scaleY = Math.max(0.5, Math.min(2.0, scaleY));
+    this.options.scaleX = Math.max(0.2, Math.min(5.0, scaleX));
+    this.options.scaleY = Math.max(0.2, Math.min(5.0, scaleY));
     this.generateButtons();
     this.render();
+  }
+
+  /** Uniform zoom: sets both scaleX and scaleY to the same value. */
+  setZoom(zoom: number): void {
+    this.setScale(zoom, zoom);
+  }
+
+  getZoom(): number {
+    return (this.options.scaleX + this.options.scaleY) / 2;
   }
 
   getScale(): { scaleX: number; scaleY: number } {
@@ -165,7 +174,7 @@ export class KeyboardVisualizer {
     const bSq = Math.max(0.001, (2 / 3) * a - a * a);
     const b = Math.sqrt(bSq);
 
-    const dPy   = height / 7;                   // ~7 visible octave rows
+    const dPy   = height / 3;                   // ~3 visible octave rows (zoomed in for playability)
     const dGenX  = Math.max(28, b * dPy);        // Striso X spread (min 28px for readability)
     const dGenY0 = a * dPy;                       // fifth Y lean (pitch-proportional)
     const dGenX1 = 0;                              // octave = pure vertical at DCompose

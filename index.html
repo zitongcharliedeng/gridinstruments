@@ -289,6 +289,12 @@
       color: var(--fg);
     }
     #nearest-marker { min-width: 80px; color: var(--dim); }
+    #zoom-reset {
+      font-family: var(--font); font-size: 14px; color: var(--dim);
+      background: var(--bg); border: 1px solid var(--border);
+      padding: 1px 6px; cursor: pointer; line-height: 1;
+    }
+    #zoom-reset:hover { color: var(--fg); border-color: var(--accent); }
 
     /* ── D4 reference ────────────────────────────────────────────── */
     #d4-section {
@@ -457,7 +463,7 @@
         </div>
 
         <button id="midi-settings-toggle">▼ MIDI</button>
-        <span class="header-quote" style="color:#b8960a;opacity:0.85;">"Musical instrument where notes that are mathematically more harmonious are closer together spatially — make it hard to suck!"</span>
+        <span class="header-quote" style="color:#b8960a;opacity:0.85;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;">tl;dr: notes that are mathematically more harmonious are closer together spatially — make it hard to suck!</span>
 
       </div>
     </header>
@@ -507,8 +513,14 @@
         <span class="skew-endpoint active" id="skew-label-right">DCompose</span>
       </div>
 
-    </div>
 
+      <div class="ctrl-group">
+        <span class="ctrl-label">Zoom</span>
+        <input type="range" id="zoom-slider" min="0.2" max="3" step="0.01" value="1">
+        <button id="zoom-reset" title="Reset to default key size for your screen">↻</button>
+      </div>
+
+    </div>
     <!-- D4 reference -->
     <div id="d4-section">
       <span class="ctrl-label">D4 Reference</span>

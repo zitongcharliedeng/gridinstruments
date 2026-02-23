@@ -50,6 +50,8 @@ class DComposeApp {
   private sustainIndicator: HTMLElement | null = null;
   private midiDeviceList: HTMLElement | null = null;
   private midiChannelModeSelect: HTMLSelectElement | null = null;
+  private zoomSlider: HTMLInputElement | null = null;
+  private defaultZoom: number = 1.0;
 
   constructor() {
     this.synth = new Synth();
@@ -68,6 +70,7 @@ class DComposeApp {
     this.sustainIndicator = document.getElementById('sustain-indicator') as HTMLElement;
     this.midiDeviceList = document.getElementById('midi-device-list') as HTMLElement;
     this.midiChannelModeSelect = document.getElementById('midi-channel-mode') as HTMLSelectElement;
+    this.zoomSlider = document.getElementById('zoom-slider') as HTMLInputElement;
 
     this.init();
   }
@@ -354,6 +357,26 @@ class DComposeApp {
       if (e.code === 'Space' && e.target === document.body) e.preventDefault();
     });
 
+
+    // Zoom slider
+    const zoomReset = document.getElementById('zoom-reset') as HTMLButtonElement;
+    // Mobile default: ~1.6x on touch (base is already 3x via dPy=height/3, so 1.6*3 ≈ 5x)
+    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    this.defaultZoom = isTouchDevice ? 1.6 : 1.0;
+    if (this.zoomSlider) {
+      this.zoomSlider.value = this.defaultZoom.toString();
+      this.visualizer?.setZoom(this.defaultZoom);
+      this.zoomSlider.addEventListener('input', () => {
+        const zoom = parseFloat(this.zoomSlider!.value);
+        this.visualizer?.setZoom(zoom);
+      });
+    }
+    zoomReset?.addEventListener('click', () => {
+      if (this.zoomSlider) {
+        this.zoomSlider.value = this.defaultZoom.toString();
+        this.visualizer?.setZoom(this.defaultZoom);
+      }
+    });
     window.addEventListener('blur', () => this.stopAllNotes());
 
     // Auto-return focus to body after using range/select controls so keyboard always works
