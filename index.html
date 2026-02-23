@@ -44,11 +44,18 @@
       padding: var(--gap);
     }
 
-    /* ── Title bar (centered, with GitHub button group) ────────── */
+    /* ── Title bar (floating overlay on history canvas) ─────── */
+    .history-wrapper {
+      position: relative;
+    }
     #title-bar {
+      position: absolute; top: 0; left: 0; right: 0;
       display: flex; justify-content: center; align-items: center; gap: 16px;
       padding: 4px 8px 2px;
+      z-index: 2;
+      pointer-events: none;
     }
+    #title-bar > * { pointer-events: auto; }
     .site-title {
       font-weight: 700; font-size: 13px; color: var(--dim); letter-spacing: 0.04em;
     }
@@ -73,15 +80,6 @@
     .gh-btn:hover { color: var(--fg); background: var(--subtle); }
     .gh-btn svg { width: 11px; height: 11px; fill: currentColor; flex-shrink: 0; }
     .gh-btn .star-icon { color: #cc9900; font-size: 13px; line-height: 1; }
-    .header-quote {
-      flex: 1; min-width: 0;
-      font-size: 10px; color: var(--dim); font-style: italic;
-      text-align: right; padding: 0 6px;
-      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-      opacity: 0.55;
-    }
-
-    /* ── Note history strip ─────────────────────────────────────── */
     #history-canvas {
       display: block;
       width: 100%;
@@ -261,35 +259,36 @@
     #controls-strip {
       display: flex;
       flex-wrap: wrap;
-      align-items: center;
-      gap: var(--gap);
+      align-items: flex-start;
+      gap: 12px;
       border: 1px solid var(--border);
       background: var(--subtle);
       padding: 6px 8px;
     }
 
-    .ctrl-section {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      flex-shrink: 0;
+    .tuning-section { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 300px; }
+    .tuning-row { display: flex; align-items: center; gap: 6px; }
+    .tuning-section #tuning-slider { flex: 1; min-width: 200px; }
+    .tet-presets { display: flex; flex-wrap: wrap; gap: 0; }
+    .tet-preset {
+      font-family: var(--font); font-size: 9px; color: var(--dim);
+      background: none; border: 1px solid var(--border);
+      padding: 2px 6px; cursor: pointer; white-space: nowrap;
     }
+    .tet-preset + .tet-preset { border-left: none; }
+    .tet-preset:hover { color: var(--fg); border-color: var(--accent); }
+    .tet-preset.active { color: #88ff88; border-color: #88ff8844; background: #88ff8810; }
 
+    .skew-section { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+    .skew-endpoint { font-size: 10px; color: var(--dim); white-space: nowrap; }
+    .skew-endpoint.active { color: var(--fg); }
+    .skew-section #skew-slider { width: 200px; }
     #tuning-value, #nearest-marker {
       font-size: 12px;
       min-width: 40px;
       color: var(--fg);
     }
     #nearest-marker { min-width: 80px; color: var(--dim); }
-
-    /* skew labels */
-    .skew-labels {
-      display: flex;
-      flex-direction: column;
-      font-size: 9px;
-      color: var(--dim);
-      line-height: 1.1;
-    }
 
     /* ── D4 reference ────────────────────────────────────────────── */
     #d4-section {
@@ -407,22 +406,23 @@
 <body>
   <div id="app">
 
-    <!-- Title bar: centered title + GitHub button group -->
-    <div id="title-bar">
-      <span class="site-title">DCompose Web</span>
-      <div class="gh-actions">
-        <span class="gh-mark"><svg viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></span>
-        <a class="gh-btn" href="https://github.com/zitongcharliedeng/dcompose-web" target="_blank" rel="noopener">
-          <span class="star-icon">☆</span> Star <span id="star-count-badge"></span>
-        </a>
-        <a class="gh-btn" href="https://github.com/zitongcharliedeng/dcompose-web/issues" target="_blank" rel="noopener">
-          <svg viewBox="0 0 16 16"><path d="M8 9.5a1.5 1.5 0 100 3 1.5 1.5 0 000-3zM8 0a8 8 0 100 16A8 8 0 008 0zm0 14.5a6.5 6.5 0 110-13 6.5 6.5 0 010 13zM9 4a1 1 0 00-2 0v4a1 1 0 002 0V4z"/></svg>
-          Report a bug
-        </a>
+    <!-- Title bar + history canvas wrapper (title floats over canvas) -->
+    <div class="history-wrapper">
+      <div id="title-bar">
+        <span class="site-title">DCompose Web</span>
+        <div class="gh-actions">
+          <span class="gh-mark"><svg viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></span>
+          <a class="gh-btn" href="https://github.com/zitongcharliedeng/dcompose-web" target="_blank" rel="noopener">
+            <span class="star-icon">☆</span> Star <span id="star-count-badge"></span>
+          </a>
+          <a class="gh-btn" href="https://github.com/zitongcharliedeng/dcompose-web/issues" target="_blank" rel="noopener">
+            <svg viewBox="0 0 16 16"><path d="M8 9.5a1.5 1.5 0 100 3 1.5 1.5 0 000-3zM8 0a8 8 0 100 16A8 8 0 008 0zm0 14.5a6.5 6.5 0 110-13 6.5 6.5 0 010 13zM9 4a1 1 0 00-2 0v4a1 1 0 002 0V4z"/></svg>
+            Report a bug
+          </a>
+        </div>
       </div>
+      <canvas id="history-canvas" height="220"></canvas>
     </div>
-    <!-- Note history: staff / waterfall / chord panel -->
-    <canvas id="history-canvas" height="220"></canvas>
 
     <!-- Header: title + controls -->
     <header>
@@ -456,8 +456,8 @@
           <span id="sustain-indicator">SUSTAIN</span>
         </div>
 
-        <span class="header-quote">“Musical instrument where notes that are mathematically more harmonious are closer together spatially — make it hard to suck!”</span>
         <button id="midi-settings-toggle">▼ MIDI</button>
+        <span class="header-quote" style="color:#b8960a;opacity:0.85;">"Musical instrument where notes that are mathematically more harmonious are closer together spatially — make it hard to suck!"</span>
 
       </div>
     </header>
@@ -489,22 +489,23 @@
 
     <!-- Controls strip: tuning + skew + spacing -->
     <div id="controls-strip">
-
-      <div class="ctrl-section">
-        <span class="ctrl-label">Fifth</span>
-        <input type="range" id="tuning-slider" min="650" max="750" step="0.1" value="700" style="width: 140px;">
-        <span id="tuning-value">700.0</span><span style="color:var(--dim);font-size:11px;">¢</span>
-        <span id="nearest-marker">= 12-TET</span>
-      </div>
-
-      <div class="ctrl-section" style="gap:4px;">
-        <div class="skew-labels">
-          <span>DCompose</span>
-          <span>MidiMech</span>
+      <div class="tuning-section">
+        <div class="tuning-row">
+          <span class="ctrl-label">Fifth</span>
+          <input type="range" id="tuning-slider" min="650" max="750" step="0.1" value="700">
+          <span id="tuning-value">700.0</span><span style="color:var(--dim);font-size:11px;">¢</span>
+          <span id="nearest-marker">= 12-TET</span>
         </div>
-        <input type="range" id="skew-slider" min="0" max="1" step="0.01" value="1" style="width: 80px;">
+        <div class="tet-presets" id="tet-presets">
+          <!-- populated by JS from TUNING_MARKERS -->
+        </div>
       </div>
 
+      <div class="skew-section">
+        <span class="skew-endpoint" id="skew-label-left">MidiMech</span>
+        <input type="range" id="skew-slider" min="0" max="1" step="0.01" value="1">
+        <span class="skew-endpoint active" id="skew-label-right">DCompose</span>
+      </div>
 
     </div>
 
