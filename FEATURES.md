@@ -2,7 +2,7 @@
 
 **This is the source of truth. Use it to prevent regressions.**
 
-Last updated: 2026-02-23 (zoom slider, MIT license, MidiMech cell fix, axes/transition/notation specs)
+Last updated: 2026-02-23 (enharmonic naming, axes coupling, tutorial/rhythm game vision)
 
 ---
 
@@ -302,8 +302,13 @@ These were prerequisites for the chord shape graffiti — all completed:
  [x] Quote takes remaining space on RIGHT, in golden/colored readable text
  [x] Quote text: `tl;dr: notes that are mathematically more harmonious are closer together spatially — make it hard to suck!`
 ### Note Naming (keyboard-layouts.ts)
- [x] No double-sharps or double-flats for |coordX| > 6
- [x] Wrap to enharmonic equivalents (pitch class lookup table)
+ [x] Circle-of-fifths spelling: F♯♯ instead of G, B♭♭ instead of A (proper enharmonic names)
+ [x] `getNoteNameFromCoord(x)` uses fifths-natural lookup + accidental counting
+ [x] `get12TETName(x)` returns the 12-TET pitch class name (for isBlackKey + brackets)
+ [x] `getCentDeviation(x, fifth)` computes cent offset from 12-TET
+ [x] Bracket sub-label on cells: `(G)` for 12-TET double-accidentals, `(F+18¢)` for non-12-TET
+ [x] Brackets only shown when cell is large enough (cellMin > 30px) and there's useful info
+ [x] Brackets dimmer (60% opacity) and smaller font (60% of main label)
 
 ### MidiMech Cell Shape Fix (keyboard-visualizer.ts)
  [x] Cell shape vectors (`hv1`, `hv2`) are separated from basis vectors (`genX`, `genY`)
@@ -463,3 +468,67 @@ Run before any release:
  [ ] Touch default zoom shows ~1–2 octaves (larger cells)
  [ ] Zoom slider does NOT steal keyboard focus
  [ ] MIT LICENSE file present in project root
+
+---
+
+## VISION: Tutorial / Rhythm Game Mode
+
+### Core Concept
+An osu!-like rhythm game that ACTUALLY teaches you an instrument you can freestyle on. Unlike osu! where score-grinding only improves your click accuracy, here competitive grinding makes you a virtuoso musician — improving your improvisation skills and music understanding through repetition, iteration, variation, and pattern recognition.
+
+### Inspirations
+ **RhythmTyper**: Typing rhythm game — merge concept with isomorphic instrument
+ **osu!**: Score-pushing, mods (nightcore, hardrock), competitive grinding
+ **Guitar Hero / Rocksmith**: Learn real instrument through games
+ The key insight: on an isomorphic layout, every chord shape is the SAME regardless of key. Grinding patterns transfers DIRECTLY to real musical skill.
+
+### Phase 1: Sequential Tutorial (no time constraint)
+ [ ] **QWERTY overlay mode**: Toggle to show the physical keyboard key label on each cell (e.g., "A", "W", "D") for the currently selected keyboard layout
+ [ ] **Song tutorial**: Pre-loaded songs (start with Rick Astley — Never Gonna Give You Up)
+ [ ] **Sequential play**: No timing pressure — just play the right notes in order
+ [ ] **Chord support**: When a step requires 3 notes simultaneously, all 3 must light up before advancing
+ [ ] **Visual cue**: Next note(s) to play are highlighted/pulsing on the grid; played notes light up green
+ [ ] **Progress indicator**: How far through the song you are
+
+### Phase 2: MIDI Import + Adaptive Layout
+ [ ] **MIDI file import**: Upload any .mid file, auto-convert to the isomorphic grid
+ [ ] **QWERTY-restricted mode**: Constrain imported MIDI to the smallest QWERTY box (for 60% keyboards)
+ [ ] **Adaptive pitch mapping**: Programmatically match pitches to whatever input the user has:
+  - Keyboard size (60%, 75%, full, with/without numpad)
+  - Touch screen dimensions (tablet, phone)
+  - MIDI controller key count
+ [ ] **Elegant API**: `TutorialEngine` class that takes a song (note sequence with optional timing) and an input method, producing a playable tutorial adapted to the user's device
+
+### Phase 3: Competitive Rhythm Game
+ [ ] **Timed mode**: osu!-style — notes scroll toward the grid, hit them on beat
+ [ ] **Scoring**: Accuracy + combo system
+ [ ] **Difficulty tiers**: Easy (melody only) → Medium (chords) → Hard (full arrangement) → Expert (original MIDI)
+ [ ] **Mods** (inspired by osu!):
+  - **Nightcore**: Speed up tempo
+  - **Hardrock (Inversion)**: Play the song's mirror image along the fourth axis — every major becomes minor and vice versa. You play the reflected shapes and melodies by flipping your perspective. (See minor chord hint below)
+  - **No-fail**: Practice mode, no combo break
+  - **Hidden**: Notes fade before reaching the hit zone
+ [ ] **Leaderboards**: Per-song scoring (local first, multiplayer later)
+
+### Phase 4: Multiplayer
+ [ ] **Competitive**: Two players, same song, split screen or networked
+ [ ] **Co-op**: Different parts of the arrangement assigned to different players
+ [ ] **Import & share**: Share MIDI-to-tutorial conversions as shareable links
+
+### Why This Matters
+Imagine if osu! actually taught you an instrument. All those score-pushing hours would ALSO make you a virtuoso musician. The isomorphic layout means patterns learned in one key transfer to ALL keys — grinding competitively directly improves your improvisation skills and understanding of music through repetition, iteration, variation, and noticing patterns.
+
+---
+
+## Pending: Minor Chord Graffiti Hint (Reflection Insight)
+
+### Hint Text for Minor Chord Shape
+Add to the minor chord graffiti overlay:
+
+> "It's a reflection of a major chord, neat huh? Try playing the reflected versions of your favourite songs by flipping your device upside down and playing the same shapes and melodies — like how osu! has mods, like nightcore, this could be the hardrock version of a song! You have to play its inverted version along the fourth axis."
+
+### Design Notes
+ [ ] This text should be scribbly/spray-painted like the other graffiti labels
+ [ ] The minor chord IS literally a reflection of the major chord across the fourth axis on the isomorphic grid
+ [ ] This connects directly to the "Hardrock" mod in the rhythm game (Phase 3)
+ [ ] The hint educates about the deep mathematical symmetry: major ↔ minor is just a geometric reflection
