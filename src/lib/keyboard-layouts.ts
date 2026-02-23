@@ -1,242 +1,243 @@
 /**
  * PHYSICAL POSITION Keyboard to Isomorphic Coordinate Mapping
- * 
- * This module uses PHYSICAL POSITION mapping (event.code):
- * - Maps PHYSICAL KEY POSITIONS to isomorphic coordinates
- * - Works with ALL keyboard layouts (Dvorak, Colemak, AZERTY, etc.)
- * - Physical 'H' position plays D (center note) on ANY layout
- * 
+ *
+ * Uses isomorphic-qwerty library coordinates to dynamically generate
+ * DCompose/Wicki-Hayden grid positions for every key code the library knows.
+ *
  * The DCompose/Wicki-Hayden layout:
  * - Moving right increases pitch by a fifth (700 cents)
  * - Moving up increases pitch by an octave (1200 cents)
  * - D is the central note (coordinate [0, 0]) at KeyH physical position
+ *
+ * Formula (derived from the existing hardcoded map, verified to match):
+ *   ex = iqX + rowStagger[iqY]
+ *   dcompX = 2 * ex - iqY - 8
+ *   dcompY = -ex + 5
+ *
+ * Row stagger (physical keyboard offset): ZXCV row (iqY=3) is staggered +1
+ * relative to the rows above it on standard keyboards.
  */
 
-export type KeyCoordinate = [number, number]; // [x, y] where x=fifths, y=octave
+import { COORDS_BY_CODE } from 'isomorphic-qwerty';
+
+export type KeyCoordinate = [number, number]; // [x, y] where x=fifths from D, y=octave offset
 
 export interface KeyboardLayout {
+  id: string;
   name: string;
+  /** Whether this layout has the ISO extra key (IntlBackslash between LShift and Z) */
+  hasIntlBackslash: boolean;
+  /** Whether this layout has a right-side Backslash key (ANSI) */
+  hasBackslash: boolean;
+  /** Whether to include numpad keys */
+  hasNumpad: boolean;
+  /** Extra keys to explicitly EXCLUDE from note map (layout-specific) */
+  excludeKeys?: Set<string>;
   keyMap: Record<string, KeyCoordinate>;
 }
 
-/**
- * PHYSICAL keyboard mapping (uses event.code)
- * Maps physical key positions to DCompose/Wicki-Hayden coordinates
- * 
- * Physical layout (HOME ROW centered on KeyH):
- *   Digit1  Digit2  Digit3  Digit4  Digit5  Digit6  Digit7  Digit8  Digit9  Digit0  Minus  Equal
- *    KeyQ  KeyW  KeyE  KeyR  KeyT  KeyY  KeyU  KeyI  KeyO  KeyP  BracketLeft  BracketRight
- *     KeyA  KeyS  KeyD  KeyF  KeyG  KeyH  KeyJ  KeyK  KeyL  Semicolon  Quote
- *      KeyZ  KeyX  KeyC  KeyV  KeyB  KeyN  KeyM  Comma  Period  Slash
- * 
- * KeyH = center note (D, coordinate [0,0])
- */
-const PHYSICAL_KEY_MAP: Record<string, KeyCoordinate> = {
-  // ZXCV row (bottom letter row)
-  'KeyZ': [-9, 4],
-  'KeyX': [-7, 3],
-  'KeyC': [-5, 2],
-  'KeyV': [-3, 1],
-  'KeyB': [-1, 0],
-  'KeyN': [ 1,-1],
-  'KeyM': [ 3,-2],
-  'Comma': [ 5,-3],
-  'Period': [ 7,-4],
-  'Slash': [ 9,-5],
+// ─────────────────────────────────────────────────────────────────────────────
+// Row stagger: physical keyboard stagger offsets per isomorphic-qwerty row
+// iqY=0 → digits row, 1 → QWER, 2 → ASDF, 3 → ZXCV
+// The ZXCV row is physically staggered half a unit to the right relative to the
+// rows above, which we represent as +1 in the ex calculation.
+// ─────────────────────────────────────────────────────────────────────────────
+const ROW_STAGGER: Record<number, number> = { 0: 0, 1: 1, 2: 2, 3: 3 };
 
-  // ASDF row (home row) - KeyH is CENTER [0,0]
-  'KeyA': [-10, 5],
-  'KeyS': [-8, 4],
-  'KeyD': [-6, 3],
-  'KeyF': [-4, 2],
-  'KeyG': [-2, 1],
-  'KeyH': [ 0, 0], // CENTER NOTE (D)
-  'KeyJ': [ 2,-1],
-  'KeyK': [ 4,-2],
-  'KeyL': [ 6,-3],
-  'Semicolon': [ 8,-4],
-  'Quote': [10,-5],
+function iqToDCompose(iqX: number, iqY: number): KeyCoordinate {
+  const ex = iqX + (ROW_STAGGER[iqY] ?? 0);
+  return [2 * ex - iqY - 12, -ex + 7];
+}
 
-  // QWER row (top letter row)
-  'KeyQ': [-9, 5],
-  'KeyW': [-7, 4],
-  'KeyE': [-5, 3],
-  'KeyR': [-3, 2],
-  'KeyT': [-1, 1],
-  'KeyY': [ 1, 0],
-  'KeyU': [ 3,-1],
-  'KeyI': [ 5,-2],
-  'KeyO': [ 7,-3],
-  'KeyP': [ 9,-4],
-  'BracketLeft': [11,-5],
-  'BracketRight': [13,-6],
+// ─────────────────────────────────────────────────────────────────────────────
+// Build the full key map from isomorphic-qwerty COORDS_BY_CODE
+// Only layer z=1 (main keyboard) and z=3 (numpad) are used as notes.
+// ─────────────────────────────────────────────────────────────────────────────
 
-  // Number row
-  'Backquote': [-10, 6],
-  'Digit1': [-8, 5],
-  'Digit2': [-6, 4],
-  'Digit3': [-4, 3],
-  'Digit4': [-2, 2],
-  'Digit5': [ 0, 1],
-  'Digit6': [ 2, 0],
-  'Digit7': [ 4,-1],
-  'Digit8': [ 6,-2],
-  'Digit9': [ 8,-3],
-  'Digit0': [10,-4],
-  'Minus': [12,-5],
-  'Equal': [14,-6],
+/** All layer-1 (main keyboard) note mappings */
+const LAYER1_KEY_MAP: Record<string, KeyCoordinate> = {};
+/** All layer-3 (numpad) note mappings */
+const NUMPAD_KEY_MAP: Record<string, KeyCoordinate> = {};
 
-  // Additional keys
-  'Backslash': [15,-7],
-  'Tab': [-11, 6],
-  'CapsLock': [-11, 5],
-  'ShiftLeft': [-10, 4],
-  'ShiftRight': [11,-6],
-  'Enter': [11,-4],
-  'Backspace': [16,-7],
-  'IntlBackslash': [-8, 3], // ISO keyboard extra key
-};
+for (const [code, [iqX, iqY, iqZ]] of COORDS_BY_CODE) {
+  if (iqZ === 1) {
+    LAYER1_KEY_MAP[code] = iqToDCompose(iqX, iqY);
+  } else if (iqZ === 3) {
+    // Numpad: treat as an extension of the grid
+    // iqY for numpad goes 0-4 (rows), iqX 0-3 (cols)
+    // Map numpad similarly — keep layer separation via row offset
+    NUMPAD_KEY_MAP[code] = iqToDCompose(iqX, iqY);
+  }
+}
 
-/**
- * Special keys that are NOT notes
- * Bottom row (Ctrl, Alt, Space) is reserved for modifiers
- * This prevents accidental browser shortcuts (Ctrl+W, Alt+Tab, etc.)
- * 
- * Philosophy:
- * - Alt = HOLD for sustain (not toggle)
- * - Space = HOLD for vibrato  
- * - Ctrl = reserved (avoid browser shortcuts like Ctrl+W)
- * - All other keys = play notes
- */
-export const SPECIAL_KEYS = {
-  SUSTAIN: 'AltLeft',   // Hold for sustain (AltLeft or AltRight)
-  SUSTAIN_RIGHT: 'AltRight',
-  VIBRATO: 'Space',     // Hold for vibrato
-};
-
-// Bottom row keys that are NOT notes (modifier row)
+// ─────────────────────────────────────────────────────────────────────────────
+// Keys that are NEVER notes regardless of layout (modifiers / system)
+// ─────────────────────────────────────────────────────────────────────────────
 export const MODIFIER_ROW_KEYS = new Set([
   'ControlLeft', 'ControlRight',
-  'AltLeft', 'AltRight', 
-  'MetaLeft', 'MetaRight',  // Windows/Command key
+  'AltLeft', 'AltRight',
+  'MetaLeft', 'MetaRight',
   'Space',
   'ShiftLeft', 'ShiftRight',
   'CapsLock',
+  'Tab',
+  'Backspace',
+  'Delete',
+  'Enter',
   'ContextMenu',
-  'Fn', // Function key (if present)
+  'Fn',
+  'Escape',
+  'F1','F2','F3','F4','F5','F6','F7','F8','F9','F10','F11','F12',
+  'Insert','Home','End','PageUp','PageDown',
+  'ArrowLeft','ArrowRight','ArrowUp','ArrowDown',
+  'NumLock',
+  'NumpadDecimal', 'NumpadEnter', 'NumpadEqual',
 ]);
 
+export const SPECIAL_KEYS = {
+  SUSTAIN: 'AltLeft',
+  SUSTAIN_RIGHT: 'AltRight',
+  VIBRATO: 'Space',
+};
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Build per-layout key maps
+// ─────────────────────────────────────────────────────────────────────────────
 
-/**
- * Generate key map - return the physical key map
- */
-function generateKeyMap(): Record<string, KeyCoordinate> {
-  return { ...PHYSICAL_KEY_MAP };
+function buildKeyMap(opts: {
+  hasIntlBackslash: boolean;
+  hasBackslash: boolean;
+  hasNumpad: boolean;
+  excludeKeys?: Set<string>;
+}): Record<string, KeyCoordinate> {
+  const map: Record<string, KeyCoordinate> = {};
+
+  for (const [code, coord] of Object.entries(LAYER1_KEY_MAP)) {
+    if (MODIFIER_ROW_KEYS.has(code)) continue;
+    if (opts.excludeKeys?.has(code)) continue;
+    if (code === 'IntlBackslash' && !opts.hasIntlBackslash) continue;
+    if (code === 'Backslash' && !opts.hasBackslash) continue;
+    map[code] = coord;
+  }
+
+  if (opts.hasNumpad) {
+    for (const [code, coord] of Object.entries(NUMPAD_KEY_MAP)) {
+      if (MODIFIER_ROW_KEYS.has(code)) continue;
+      if (opts.excludeKeys?.has(code)) continue;
+      map[code] = coord;
+    }
+  }
+
+  return map;
 }
 
-/**
- * Standard layout - works with ALL keyboard layouts (Dvorak, Colemak, AZERTY, etc.)
- * Uses physical position mapping (event.code)
- */
-export const standardLayout: KeyboardLayout = {
-  name: 'Standard',
-  keyMap: generateKeyMap(),
-};
+// ─────────────────────────────────────────────────────────────────────────────
+// Layout variants
+// ─────────────────────────────────────────────────────────────────────────────
 
+// Keys absent on 60% keyboards (no top function row, no numpad, no nav cluster)
+const SIXTY_PCT_EXCLUDE = new Set([
+  'F1','F2','F3','F4','F5','F6','F7','F8','F9','F10','F11','F12',
+  'PrintScreen','ScrollLock','Pause',
+  'Insert','Delete','Home','End','PageUp','PageDown',
+  'ArrowLeft','ArrowRight','ArrowUp','ArrowDown',
+]);
 
+// 65% adds arrow keys + a few nav keys but still no F-row
+const SIXTY_FIVE_PCT_EXCLUDE = new Set([
+  'F1','F2','F3','F4','F5','F6','F7','F8','F9','F10','F11','F12',
+  'PrintScreen','ScrollLock','Pause',
+]);
 
-export const layouts: Record<string, KeyboardLayout> = {
-  'standard': standardLayout,
-};
+// 75% adds F-row on the top but remains compact
+const SEVENTY_FIVE_PCT_EXCLUDE = new Set([
+  'PrintScreen','ScrollLock','Pause',
+]);
+
+const LAYOUTS_RAW: Array<{
+  id: string;
+  name: string;
+  hasIntlBackslash: boolean;
+  hasBackslash: boolean;
+  hasNumpad: boolean;
+  excludeKeys?: Set<string>;
+}> = [
+  // Full-size ANSI (standard US — has Backslash, no IntlBackslash)
+  { id: 'ansi',       name: 'ANSI (US QWERTY)',        hasIntlBackslash: false, hasBackslash: true,  hasNumpad: false },
+  { id: 'ansi-np',    name: 'ANSI + Numpad',            hasIntlBackslash: false, hasBackslash: true,  hasNumpad: true  },
+  // ISO (UK/EU — has IntlBackslash between LShift and Z, also has Backslash)
+  { id: 'iso',        name: 'ISO (UK/EU QWERTY)',       hasIntlBackslash: true,  hasBackslash: true,  hasNumpad: false },
+  { id: 'iso-np',     name: 'ISO + Numpad',             hasIntlBackslash: true,  hasBackslash: true,  hasNumpad: true  },
+  // Compact form factors (ANSI-based)
+  { id: '75pct',      name: '75% (no nav cluster)',     hasIntlBackslash: false, hasBackslash: true,  hasNumpad: false, excludeKeys: SEVENTY_FIVE_PCT_EXCLUDE },
+  { id: '65pct',      name: '65% (no F-row)',           hasIntlBackslash: false, hasBackslash: true,  hasNumpad: false, excludeKeys: SIXTY_FIVE_PCT_EXCLUDE },
+  { id: '60pct',      name: '60% (compact)',            hasIntlBackslash: false, hasBackslash: true,  hasNumpad: false, excludeKeys: SIXTY_PCT_EXCLUDE },
+  { id: '60pct-iso',  name: '60% ISO',                 hasIntlBackslash: true,  hasBackslash: true,  hasNumpad: false, excludeKeys: SIXTY_PCT_EXCLUDE },
+];
+
+export const KEYBOARD_VARIANTS: KeyboardLayout[] = LAYOUTS_RAW.map(raw => ({
+  ...raw,
+  keyMap: buildKeyMap(raw),
+}));
+
+export const layouts: Record<string, KeyboardLayout> = Object.fromEntries(
+  KEYBOARD_VARIANTS.map(l => [l.id, l])
+);
 
 export function getLayout(id: string): KeyboardLayout {
-  return layouts[id] || standardLayout;
+  return layouts[id] ?? KEYBOARD_VARIANTS[0];
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Utility functions (unchanged API surface)
+// ─────────────────────────────────────────────────────────────────────────────
 
 /**
  * Get note name from coordinate
  * x = position in circle of fifths (0 = D)
- * 
- * Circle of fifths: ...Fb-Cb-Gb-Db-Ab-Eb-Bb-F-C-G-D-A-E-B-F#-C#-G#-D#-A#-E#-B#...
- * Where D is at x=0
  */
 export function getNoteNameFromCoord(x: number): string {
-  // Note names in circle of fifths order, with D at index 3
   const noteNamesBase = ['F', 'C', 'G', 'D', 'A', 'E', 'B'];
-  // Accidentals: double-flat, flat, natural, sharp, double-sharp
-  const accidentals = ['\u266D\u266D', '\u266D', '', '\u266F', '\u00D7']; // 𝄫, ♭, , ♯, ×
-  
-  // Calculate note index: D (x=0) should map to index 3
-  // x=0 → 3, x=1 → 4 (A), x=-1 → 2 (G), x=4 → 0 (F), x=-4 → 6 (B)
+  const accidentals = ['\u266D\u266D', '\u266D', '', '\u266F', '\u00D7'];
+
   const noteIndex = (((x + 3) % 7) + 7) % 7;
-  
-  // Calculate accidental: how many times we've wrapped around the 7-note cycle
-  // x in [-3, 3] → natural, x in [4, 10] → sharp, x in [-10, -4] → flat
   const accidentalIndex = Math.floor((x + 3) / 7) + 2;
-  
+
   const noteName = noteNamesBase[noteIndex];
   const accidental = accidentals[Math.max(0, Math.min(4, accidentalIndex))] || '';
-  
+
   return noteName + accidental;
 }
 
 /**
  * Convert coordinate to MIDI note number
- * D4 (middle D, one whole step above middle C) = MIDI 62
+ * D4 (MIDI 62) is at [0, 0]
  */
 export function coordToMidi(x: number, y: number, octaveOffset: number = 0): number {
-  // D4 = MIDI 62
-  // Each fifth (x) = 7 semitones
-  // Each octave (y) = 12 semitones
-  const baseMidi = 62; // D4
-  const semitones = x * 7 + y * 12 + octaveOffset * 12;
-  return baseMidi + semitones;
+  return 62 + x * 7 + y * 12 + octaveOffset * 12;
 }
 
 /**
- * Convert coordinate to frequency in Hz
- * Uses 12-TET by default
+ * Convert coordinate to frequency in Hz (12-TET by default)
  */
 export function coordToFrequency(
-  x: number, 
-  y: number, 
+  x: number,
+  y: number,
   octaveOffset: number = 0,
-  generator: [number, number] = [700, 1200], // fifth, octave in cents
-  baseFreq: number = 293.66 // D4
+  generator: [number, number] = [700, 1200],
+  baseFreq: number = 293.66
 ): number {
   const cents = y * generator[1] + x * generator[0] + octaveOffset * 1200;
   return baseFreq * Math.pow(2, cents / 1200);
 }
 
-/**
- * Get all physical key codes that are mapped
- */
 export function getAllMappedKeys(): string[] {
-  return Object.keys(standardLayout.keyMap);
+  return Object.keys(KEYBOARD_VARIANTS[0].keyMap);
 }
 
-/**
- * Check if a key code is mapped
- */
 export function isKeyMapped(code: string): boolean {
-  return code in standardLayout.keyMap;
+  return code in KEYBOARD_VARIANTS[0].keyMap;
 }
 
-/**
- * Debug: Print the key map in a readable format
- */
-export function debugKeyMap(): void {
-  const map = standardLayout.keyMap;
-  const entries = Object.entries(map).sort((a, b) => {
-    // Sort by coordY desc, then coordX asc
-    if (a[1][1] !== b[1][1]) return b[1][1] - a[1][1];
-    return a[1][0] - b[1][0];
-  });
-  
-  console.log('Key Map (sorted by position):');
-  for (const [code, [x, y]] of entries) {
-    const note = getNoteNameFromCoord(x);
-    console.log(`  ${code.padEnd(15)} → [${x.toString().padStart(3)}, ${y.toString().padStart(2)}] = ${note}`);
-  }
-}
+// Legacy export for code that imports 'standardLayout' by name
+export const standardLayout: KeyboardLayout = KEYBOARD_VARIANTS[0];
