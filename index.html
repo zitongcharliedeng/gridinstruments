@@ -439,16 +439,16 @@
       position: absolute;
       pointer-events: none;
       mix-blend-mode: screen;
-      filter: url(#spray-roughen);
+
       z-index: 5;
     }
     .graffiti-label {
       font-family: var(--font);
-      font-size: 11px;
+      font-size: 14px;
       font-style: italic;
       fill: #FFD700;
-      opacity: 0.7;
-      filter: url(#spray-roughen);
+      opacity: 0.9;
+
     }
   </style>
 </head>
@@ -505,7 +505,7 @@
           <span id="sustain-indicator">SUSTAIN</span>
         </div>
 
-        <button id="midi-settings-toggle">▼ MIDI</button>
+        <button id="midi-settings-toggle">⚙ MIDI</button>
         <span class="header-quote" style="color:#b8960a;opacity:0.85;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;">tl;dr: notes that are mathematically more harmonious are closer together spatially — make it hard to suck!</span>
 
       </div>
@@ -546,24 +546,22 @@
             <div class="tuning-thumb-badge" id="tuning-thumb-badge">700.0¢</div>
             <div class="tet-presets" id="tet-presets"></div>
           </div>
-          <div class="tuning-readout">
-            <span id="tuning-value">700.0</span><span style="color:var(--dim);font-size:11px;">¢</span>
-            <span id="nearest-marker">= 12-TET</span>
-          </div>
+
         </div>
       </div>
 
       <div class="skew-section">
-        <span class="skew-endpoint" id="skew-label-left">MidiMech</span>
-        <input type="range" id="skew-slider" min="0" max="1" step="0.01" value="1">
-        <span class="skew-endpoint active" id="skew-label-right">DCompose</span>
+        <span class="skew-endpoint active" id="skew-label-left">MidiMech</span>
+        <input type="range" id="skew-slider" min="0" max="1" step="0.01" value="0">
+        <span id="skew-value" style="font-size:10px;color:var(--dim);min-width:24px;text-align:center;">0.00</span>
+        <span class="skew-endpoint" id="skew-label-right">DCompose</span>
       </div>
 
 
       <div class="ctrl-group">
         <span class="ctrl-label">Zoom</span>
         <input type="range" id="zoom-slider" min="0.2" max="3" step="0.01" value="1">
-        <button id="zoom-reset" title="Reset to default key size for your screen">↻</button>
+        <button id="zoom-reset" title="Aims to match keysize to standard keyboard key size">↻</button>
       </div>
 
     </div>

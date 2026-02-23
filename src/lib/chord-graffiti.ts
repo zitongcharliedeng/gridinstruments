@@ -155,30 +155,6 @@ function renderOverlay(
   });
   svg.appendChild(triNode);
 
-  // Draw parallelogram outlines for each chord tone
-  shape.forEach((_coord, i) => {
-    const center = cellCenters[i];
-    const inset = 0.85; // slightly inset from full cell
-    const hv1i = { x: cellHv1.x * inset, y: cellHv1.y * inset };
-    const hv2i = { x: cellHv2.x * inset, y: cellHv2.y * inset };
-
-    const corners: [number, number][] = [
-      [center.x - hv1i.x - hv2i.x + offsetX, center.y - hv1i.y - hv2i.y + offsetY],
-      [center.x + hv1i.x - hv2i.x + offsetX, center.y + hv1i.y - hv2i.y + offsetY],
-      [center.x + hv1i.x + hv2i.x + offsetX, center.y + hv1i.y + hv2i.y + offsetY],
-      [center.x - hv1i.x + hv2i.x + offsetX, center.y - hv1i.y + hv2i.y + offsetY],
-    ];
-
-    const cellNode = rc.polygon(corners, {
-      roughness: 1.8,
-      stroke: '#FFD700',
-      strokeWidth: 1.5,
-      fill: i === 0 ? 'rgba(255, 200, 0, 0.15)' : 'rgba(255, 200, 0, 0.08)',
-      fillStyle: 'solid',
-      seed: seed + i + 1,
-    });
-    svg.appendChild(cellNode);
-  });
 
   // Label text
   const textEl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
@@ -194,8 +170,8 @@ function renderOverlay(
     hintEl.setAttribute('x', String(padding));
     hintEl.setAttribute('y', String(Math.ceil(svgH) - 6));
     hintEl.classList.add('graffiti-label');
-    hintEl.style.fontSize = '8px';
-    hintEl.style.opacity = '0.5';
+    hintEl.style.fontSize = '10px';
+    hintEl.style.opacity = '0.7';
     hintEl.textContent = hint;
     svg.appendChild(hintEl);
   }

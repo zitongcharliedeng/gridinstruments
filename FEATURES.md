@@ -363,14 +363,46 @@ when the skew slider changes.
 ## Pending: Smooth Transition (No Gaps at Intermediate Skew)
 
 ### Design Intent
-At intermediate skew values (e.g., 0.3–0.7), the cell tiling may develop gaps or overlaps
-because cell shape vectors interpolate differently from basis vectors.
+At intermediate skew values (e.g., 0.3–0.7), the cell tiling develops gaps or overlaps
+because cell shape vectors (cellHv1, cellHv2) are interpolated INDEPENDENTLY from the
+basis vectors. This breaks the mathematical tiling constraint.
+
+### Root Cause (keyboard-visualizer.ts `getSpacing()` lines 217-244)
+At MidiMech (t=0), cells tile along wholetone/fourth. At DCompose (t=1), cells tile along
+fifth/octave. These are two different fundamental domains of the SAME lattice.
+Linear interpolation of cell vectors between them does NOT maintain tiling at intermediate t.
+
+**Proof**: At t=0, fifth = 1×cellTileV1 + 1×cellTileV2. At t=1, fifth = 1×cellTileV1 + 0×cellTileV2.
+At intermediate t, the coefficient is (1, 1-t) which is NOT integer → cells don't tile.
+
+### Fix Formula
+Always derive cell half-vectors from the CURRENT interpolated basis as wholetone/fourth:
+```typescript
+// wholetone = 2*fifth - octave  (pure horizontal at MidiMech, diagonal at DCompose)
+// fourth   = -fifth + octave   (pure vertical at MidiMech, diagonal at DCompose)
+// These ALWAYS tile because they're the reduced basis of the coordinate lattice.
+const cellHv1 = {
+  x: (2 * genX - genX1) / 2,
+  y: -(2 * genY0 - genY1) / 2,
+};
+const cellHv2 = {
+  x: (-genX + genX1) / 2,
+  y: (genY0 - genY1) / 2,
+};
+```
+
+### Verification
+- At t=0 (MidiMech): gives rectangles aligned to wholetone/fourth ✓
+- At t=1 (DCompose): gives wholetone/fourth parallelograms (correct tiling) ✓
+- At ALL intermediate t: tiles perfectly (reduced basis is always valid) ✓
 
 ### Specifications
  [ ] No gaps between cells at ANY skew value (0.0 to 1.0)
  [ ] No overlaps between cells at ANY skew value
  [ ] Cell edges always touch (continuous surface, CELL_INSET=0.93 mortar only)
  [ ] Parallelogram shape interpolation is smooth and continuous
+ [ ] Replace lines 217-244 in getSpacing() with wholetone/fourth derivation
+ [ ] Transition from MidiMech to DCompose has no 'holes' or disconnected cells
 
 ---
 
@@ -412,6 +444,123 @@ cent deviation underneath in brackets. In 12-TET, names are standard (no bracket
  [x] Minor chord hint text: "it's a reflection of a major chord, neat huh?"
  [x] Returns `update()` function from `createChordGraffiti()` for re-rendering on any parameter change
  [x] Verified via headless Playwright screenshots at DCompose (skew=1.0), MidiMech (skew=0.0), and mid-transition (skew=0.5)
+---
+
+## Pending: Fix Chord Graffiti Shape and Readability
+
+### Known Issues
+1. Per-cell parallelogram outlines (lines 158-181 in chord-graffiti.ts) create ugly 'connected squares' appearance
+2. Major chord shape doesn't look like opposite/reflection of minor chord
+3. Text labels use SVG displacement filter → wiggly and unreadable
+4. Font size 11px with 0.7 opacity → too small and dim
+5. Hint text at 8px is microscopic
+
+### Fix Specifications
+ [ ] Remove per-cell parallelogram outlines (keep ONLY the triangle connecting 3 chord tone centers)
+ [ ] Major triad triangle: points UP (root at bottom-left, maj3 at top, p5 at bottom-right)
+ [ ] Minor triad triangle: points DOWN (reflection of major across fourth axis)
+ [ ] Remove `filter: url(#spray-roughen)` from `.graffiti-overlay` CSS
+ [ ] Remove `filter: url(#spray-roughen)` from `.graffiti-label` CSS
+ [ ] Increase graffiti label font size to 14px, opacity to 0.9
+ [ ] Increase hint text font size to 10px, opacity to 0.7
+ [ ] Text must be clean and readable — no wiggly displacement effects
+
+---
+
+## Pending: Remove Redundant Canvas/HTML Elements
+
+### Design Intent
+Several UI elements now duplicate information shown by the improved TET slider thumb badge
+and white Circle of Fifths axis. Remove them to declutter.
+
+### Elements to Remove
+ [ ] `drawCircleOfFifthsLabels()` — bottom x-axis note row (lines 478-507 in keyboard-visualizer.ts)
+ [ ] `drawTuningMarkersInline()` — purple tuning markers at bottom (lines 443-476)
+ [ ] Canvas tuning label at top (`12-TET (700.0¢)` box, lines 339-356)
+ [ ] HTML `.tuning-readout` div with `#tuning-value` and `#nearest-marker` (index.html lines 549-552)
+ [ ] Remove the call sites in `drawPitchLines()` (lines 357-358)
+
+---
+
+## Pending: MidiMech as Default View
+
+### Design Intent
+MidiMech (skew=0.0) should be the default view when the page loads, not DCompose (skew=1.0).
+MidiMech is the more intuitive starting layout with horizontal wholetone rows and vertical fourths.
+
+### Specifications
+ [ ] Change `value="1"` to `value="0"` on `#skew-slider` in index.html
+ [ ] Update main.ts initialization to match (if any hardcoded defaults)
+ [ ] Left endpoint label ('MidiMech') should have `.active` class on load
+ [ ] Right endpoint label ('DCompose') should NOT have `.active` class on load
+
+---
+
+## Pending: Restore Numerical Axis Values
+
+### Design Intent
+After removing redundant bottom labels, the axes need their own numerical markers.
+Pitch axis needs Hz/octave markers. CoF axis needs note names along the axis line.
+
+### Specifications
+ [ ] **CoF axis**: Note names (D, A, E, B, F♯, ...) placed along the Circle of Fifths axis line
+ [ ] **Pitch axis**: Octave markers (C2, C3, D4, C5, etc.) along the Pitch axis line
+ [ ] Labels rotate with axes when skew changes (coupled to grid geometry)
+ [ ] Labels are small, semi-transparent, and don't obscure grid cells
+ [ ] Origin marker (D4 + Hz) remains at center intersection
+
+---
+
+## Pending: UI Polish Fixes
+
+### MIDI Settings Button
+ [ ] Rename from `▼ MIDI` to `⚙ MIDI` (cog icon implies settings)
+ [ ] Toggle text: open = `⚙ MIDI settings`, closed = `⚙ MIDI`
+ [ ] Button hugs left side of header (already positioned correctly)
+
+### Zoom Reset Tooltip
+ [ ] `title="Aims to match keysize to standard keyboard key size"` on `#zoom-reset`
+
+### TET Slider Preset Spacing
+ [ ] Increase stagger threshold from 3% to 5% of slider range
+ [ ] Prevents overlapping labels at 694-702¢ cluster (19-TET, Meantone, 31-TET, 12-TET, Pythagorean, 53-TET)
+
+### Skew Slider Units/Labels
+ [ ] Display current value (0.0–1.0) or descriptive text within/near the slider
+ [ ] Consider showing intermediate layout name or percentage
+
+---
+
+## Pending: MPE Support + Pressure-Sensitive Touch
+
+### MPE (MIDI Polyphonic Expression)
+ [ ] Per-note pitch bend on channels 2-16
+ [ ] Per-note aftertouch (CC 74 / pressure)
+ [ ] Manager channel on ch 1 for global controls
+ [ ] Configuration UI in MIDI settings panel
+
+### Pressure-Sensitive Touchscreen
+ [ ] Map `PointerEvent.pressure` to velocity on note-on
+ [ ] Map `PointerEvent.pressure` changes to expression/aftertouch
+ [ ] Fallback to fixed velocity (0.7) when pressure API unavailable
+ [ ] Works alongside MPE output for pressure → MIDI CC mapping
+
+---
+
+## Pending: Assertion Spec Consolidation (Deferred)
+
+### Design Intent
+The 56+ atomic user assertions accumulated over development sessions contain overlapping,
+contradictory, and superseded requirements. Later ideas override earlier ones. Consolidate
+into a single clean spec to prevent regressions.
+
+### Process
+ [ ] Group all assertions by topic (grid rendering, UI layout, MIDI, axes, colors, etc.)
+ [ ] Where later requests supersede earlier ones, keep only the latest
+ [ ] Flag genuine merge conflicts (unclear which wins) for user decision
+ [ ] Produce unified spec entries in this FEATURES.md
+ [ ] Remove/archive the raw assertion list after consolidation
+
 ---
 
 ## Pending: Touch Screen Smart Defaults
@@ -463,6 +612,16 @@ Run before any release:
  [ ] Touch default zoom shows ~1–2 octaves (larger cells)
  [ ] Zoom slider does NOT steal keyboard focus
  [ ] MIT LICENSE file present in project root
+- [ ] MidiMech is default view on page load (skew=0.0)
+- [ ] No redundant tuning labels (no purple markers, no bottom note row, no canvas tuning box, no HTML readout)
+- [ ] Chord graffiti shapes are clean triangles (no per-cell parallelogram outlines)
+- [ ] Graffiti labels are non-wiggly and readable (14px, no SVG displacement filter)
+- [ ] MIDI button shows ⚙ icon
+- [ ] Zoom reset tooltip mentions 'standard keyboard key size'
+- [ ] TET slider presets don't overlap at 694-702¢ cluster
+- [ ] Skew slider shows units or descriptive value
+- [ ] No pixel gaps at intermediate skew values (0.0 to 1.0)
+- [ ] Axes show numerical values (note names on CoF, octaves on Pitch)
 
 ---
 

@@ -10,7 +10,6 @@
 
 import { getNoteNameFromCoord, get12TETName, getCentDeviation } from './keyboard-layouts';
 import { cellColors } from './note-colors';
-import { TUNING_MARKERS, findNearestMarker } from './synth';
 
 export interface VisualizerOptions {
   width: number;
@@ -215,30 +214,20 @@ export class KeyboardVisualizer {
     const genX1 = (mGenX1 + t * (dGenX1 - mGenX1)) * scaleX;
     const genY1 = (mGenY1 + t * (dGenY1 - mGenY1)) * scaleY;
     // ── Cell half-vectors (parallelogram shape) ─────────────────────────
-    // At DCompose (t=1): cells tile along fifth and octave directions
-    //   hv1_d = half-fifth = (dGenX/2, -dGenY0/2)
-    //   hv2_d = half-octave = (0, -dGenY1/2)
-    // At MidiMech (t=0): cells tile along wholetone (horizontal) and fourth (vertical)
-    //   wholetone = 2*fifth − octave → screen (mCS, 0)  → hv1_m = (mCS/2, 0)
-    //   fourth = −fifth + octave     → screen (0, -mCS) → hv2_m = (0, -mCS/2)
-    // Interpolate cell shape between layouts.
-    const dHv1x = dGenX * scaleX / 2;
-    const dHv1y = -dGenY0 * scaleY / 2;
-    const dHv2x = 0;
-    const dHv2y = -dGenY1 * scaleY / 2;
-
-    const mHv1x = mCS * scaleX / 2;
-    const mHv1y = 0;
-    const mHv2x = 0;
-    const mHv2y = -mCS * scaleY / 2;
-
+    // Derive tiling vectors from the CURRENT interpolated basis vectors.
+    // wholetone = 2*fifth − octave  → always the horizontal-ish cell axis
+    // fourth    = −fifth + octave   → always the vertical-ish cell axis
+    // These ALWAYS tile because they're the reduced basis of the lattice.
+    // At t=0 (MidiMech): wholetone is pure horizontal, fourth is pure vertical → rectangles.
+    // At t=1 (DCompose): wholetone and fourth are both diagonal → parallelograms.
+    // At ANY intermediate t: still tiles perfectly (reduced basis is always valid).
     const cellHv1 = {
-      x: mHv1x + t * (dHv1x - mHv1x),
-      y: mHv1y + t * (dHv1y - mHv1y),
+      x: (2 * genX - genX1) / 2,           // half-wholetone x
+      y: -(2 * genY0 - genY1) / 2,         // half-wholetone y
     };
     const cellHv2 = {
-      x: mHv2x + t * (dHv2x - mHv2x),
-      y: mHv2y + t * (dHv2y - mHv2y),
+      x: (-genX + genX1) / 2,              // half-fourth x
+      y: (genY0 - genY1) / 2,              // half-fourth y
     };
 
     return { genX, genY0, genX1, genY1, cellHv1, cellHv2 };
@@ -313,7 +302,7 @@ export class KeyboardVisualizer {
   }
 
   private drawPitchLines(): void {
-    const { width, height, generator } = this.options;
+    const { width, height } = this.options;
     const { genX, genY0, genX1, genY1 } = this.getSpacing();
     const centerX = width / 2;
     const centerY = height / 2;
@@ -336,26 +325,49 @@ export class KeyboardVisualizer {
     this.ctx.textBaseline = 'bottom';
     this.ctx.fillText(`D4 ${this.options.d4Hz.toFixed(0)}Hz`, centerX + 6, centerY - 4);
 
-    // ── Tuning label ──────────────────────────────────────────────
-    const currentFifth = generator[0];
-    const { marker } = findNearestMarker(currentFifth);
-    const isExact = Math.abs(currentFifth - marker.fifth) < 0.5;
-    const labelText = isExact
-      ? `${marker.name} (${currentFifth.toFixed(1)}¢)`
-      : `5th = ${currentFifth.toFixed(1)}¢`;
-    this.ctx.font = 'bold 13px "JetBrains Mono", monospace';
-    const textWidth = this.ctx.measureText(labelText).width;
-    this.ctx.fillStyle = '#0a0a0a';
-    this.ctx.fillRect(centerX - textWidth / 2 - 8, 2, textWidth + 16, 20);
-    this.ctx.strokeStyle = '#333300';
-    this.ctx.lineWidth = 1;
-    this.ctx.strokeRect(centerX - textWidth / 2 - 8, 2, textWidth + 16, 20);
-    this.ctx.fillStyle = '#887744';
+    // ── Axis note/octave labels ─────────────────────────────────────────
+    this.drawAxisNoteLabels(centerX, centerY, genX, -genY0, genX1, -genY1);
+  }
+
+
+  /** Place note names along CoF axis and octave names along Pitch axis. */
+  private drawAxisNoteLabels(
+    cx: number, cy: number,
+    cofDx: number, cofDy: number,
+    pitchDx: number, pitchDy: number,
+  ): void {
+    this.ctx.save();
+    this.ctx.font = '9px "JetBrains Mono", monospace';
     this.ctx.textAlign = 'center';
-    this.ctx.textBaseline = 'top';
-    this.ctx.fillText(labelText, centerX, 5);
-    this.drawCircleOfFifthsLabels(centerX, genX);
-    this.drawTuningMarkersInline(centerX, genX);
+    this.ctx.textBaseline = 'middle';
+
+    // Circle of Fifths axis: note names at each fifth step
+    for (let i = -7; i <= 7; i++) {
+      if (i === 0) continue; // skip origin (D4 marker is there)
+      const x = cx + i * cofDx;
+      const y = cy + i * cofDy;
+      const { width: w, height: h } = this.options;
+      if (x < 10 || x > w - 10 || y < 10 || y > h - 10) continue;
+      const dist = Math.max(Math.abs(i) / 7, 0);
+      this.ctx.fillStyle = `rgba(255, 255, 255, ${0.4 - dist * 0.25})`;
+      const noteName = getNoteNameFromCoord(i);
+      this.ctx.fillText(noteName, x, y - 10);
+    }
+
+    // Pitch axis: octave labels at each octave step
+    for (let j = -3; j <= 3; j++) {
+      if (j === 0) continue;
+      const x = cx + j * pitchDx;
+      const y = cy + j * pitchDy;
+      const { width: w, height: h } = this.options;
+      if (x < 10 || x > w - 10 || y < 10 || y > h - 10) continue;
+      const dist = Math.abs(j) / 3;
+      this.ctx.fillStyle = `rgba(255, 255, 255, ${0.4 - dist * 0.2})`;
+      const octave = 4 + j; // D4 is origin
+      this.ctx.fillText(`oct ${octave}`, x + 12, y);
+    }
+
+    this.ctx.restore();
   }
 
   /** Draw a labeled axis line through center with arrowhead at the positive end. */
@@ -440,71 +452,6 @@ export class KeyboardVisualizer {
     this.ctx.restore();
   }
 
-  private drawTuningMarkersInline(centerX: number, genX: number): void {
-    const { width, height, generator } = this.options;
-    const currentFifth = generator[0];
-    const markerY = height - 16;
-
-    this.ctx.textAlign = 'center';
-    this.ctx.textBaseline = 'bottom';
-
-    for (const marker of TUNING_MARKERS) {
-      const centerFifth = 700;
-      const gridColumn = (marker.fifth - centerFifth) / currentFifth;
-      const x = centerX + gridColumn * genX;
-
-      if (x < 20 || x > width - 20) continue;
-
-      const isCurrent = Math.abs(marker.fifth - currentFifth) < 2;
-
-      if (isCurrent) {
-        this.ctx.fillStyle = '#6644aa';
-        this.ctx.font = 'bold 10px "JetBrains Mono", monospace';
-        this.ctx.beginPath();
-        this.ctx.moveTo(x, markerY + 2);
-        this.ctx.lineTo(x - 3, markerY + 6);
-        this.ctx.lineTo(x + 3, markerY + 6);
-        this.ctx.closePath();
-        this.ctx.fill();
-      } else {
-        this.ctx.fillStyle = '#333333';
-        this.ctx.font = '8px "JetBrains Mono", monospace';
-      }
-
-      this.ctx.fillText(marker.name, x, markerY);
-    }
-  }
-
-  private drawCircleOfFifthsLabels(centerX: number, genX: number): void {
-    const { width, height } = this.options;
-    const labelY = height - 4;
-
-    this.ctx.textAlign = 'center';
-    this.ctx.textBaseline = 'bottom';
-
-    for (let i = -9; i <= 9; i++) {
-      const x = centerX + i * genX;
-      if (x < 30 || x > width - 30) continue;
-
-      const noteName = getNoteNameFromCoord(i);
-
-      if (i === 0) {
-        this.ctx.fillStyle = '#ffffff';
-        this.ctx.font = 'bold 26px "JetBrains Mono", monospace';
-      } else if (Math.abs(i) <= 2) {
-        this.ctx.fillStyle = '#cccccc';
-        this.ctx.font = 'bold 18px "JetBrains Mono", monospace';
-      } else if (Math.abs(i) <= 5) {
-        this.ctx.fillStyle = '#888888';
-        this.ctx.font = 'bold 14px "JetBrains Mono", monospace';
-      } else {
-        this.ctx.fillStyle = '#444444';
-        this.ctx.font = '12px "JetBrains Mono", monospace';
-      }
-
-      this.ctx.fillText(noteName, x, labelY);
-    }
-  }
 
   private drawCell(button: Button): void {
     const { x, y, coordX, coordY, noteName, isBlackKey } = button;

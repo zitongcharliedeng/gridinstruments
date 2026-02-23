@@ -234,6 +234,8 @@ class DComposeApp {
         const val = parseFloat(this.skewSlider!.value);
         this.visualizer?.setSkewFactor(val);
         this.updateGraffiti?.();
+        const skewValue = document.getElementById('skew-value');
+        if (skewValue) skewValue.textContent = val.toFixed(2);
         // Highlight active endpoint label
         const leftLabel = document.getElementById('skew-label-left');
         const rightLabel = document.getElementById('skew-label-right');
@@ -315,7 +317,7 @@ class DComposeApp {
         const mark = document.createElement('div');
         mark.className = 'tet-preset-mark';
         // Stagger labels that are too close to previous (< 3% of range)
-        if (Math.abs(pct - lastPct) < 3) mark.classList.add('stagger');
+        if (Math.abs(pct - lastPct) < 5) mark.classList.add('stagger');
         mark.style.left = `${pct}%`;
 
         const tick = document.createElement('div');
@@ -383,7 +385,7 @@ class DComposeApp {
     const midiPanel = document.getElementById('midi-settings-panel');
     midiToggle?.addEventListener('click', () => {
       const isOpen = midiPanel?.classList.toggle('open');
-      if (midiToggle) midiToggle.textContent = isOpen ? '▲ MIDI settings' : '▼ MIDI settings';
+      if (midiToggle) midiToggle.textContent = isOpen ? '⚙ MIDI settings' : '⚙ MIDI';
     });
 
     // Prevent space scroll
