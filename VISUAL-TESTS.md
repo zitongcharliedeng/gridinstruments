@@ -78,6 +78,9 @@ This is the initial page load state. No user interaction needed.
 - [ ] `CS-06` Skew slider shows "MidiMech" on left end, "DCompose" on right end
 - [ ] `CS-07` Skew slider is at least 200px wide
 - [ ] `CS-08` Skew slider is at the DCompose end (right/max) at default
+ [ ] `CS-09` Zoom slider visible in controls strip (range input)
+ [ ] `CS-10` Zoom reset button (↻) visible next to zoom slider
+ [ ] `CS-11` Default zoom shows approximately 3–4 octaves on desktop (1920x1080)
 
 ### Chord Shape Graffiti
 - [ ] `CG-01` At least one major chord triangle shape (yellow, spray-painted) is visible on the page

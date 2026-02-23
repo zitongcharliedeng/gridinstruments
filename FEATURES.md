@@ -2,7 +2,7 @@
 
 **This is the source of truth. Use it to prevent regressions.**
 
-Last updated: 2026-02-23 (TET slider overhaul, skew slider overhaul, chord shape graffiti, visual test spec)
+Last updated: 2026-02-23 (zoom slider, MIT license, MidiMech cell fix, axes/transition/notation specs)
 
 ---
 
@@ -280,35 +280,145 @@ From the [MidiMech cheat sheet](https://github.com/flipcoder/mech-theory):
 
 ---
 
-## Pending Rendering Fixes
+## Completed Rendering Fixes
 
-These fixes from the previous session are prerequisites for the chord shape graffiti:
-
+These were prerequisites for the chord shape graffiti — all completed:
 ### Color System (note-colors.ts)
-- [ ] Switch from fifths-based hue to **chromatic** hue mapping: `hue = pitchClass * 30 + 329`
-- [ ] D = 29 deg (red), E = 89 deg (yellow), G = 179 deg (cyan), A = 239 deg (blue)
-- [ ] Adjacent grid cells (fifths = 7 semitones apart) differ by 210 deg hue — maximum contrast
-- [ ] Adjacent semitones (C/C#) differ by 30 deg — similar but distinguishable
-
+ [x] Switch from fifths-based hue to **chromatic** hue mapping: `hue = pitchClass * 30 + 329`
+ [x] D = 29 deg (red), E = 89 deg (yellow), G = 179 deg (cyan), A = 239 deg (blue)
+ [x] Adjacent grid cells (fifths = 7 semitones apart) differ by 210 deg hue — maximum contrast
+ [x] Adjacent semitones (C/C#) differ by 30 deg — similar but distinguishable
 ### Grid/Axis Rendering (keyboard-visualizer.ts)
-- [ ] **Render order**: Grid cells FIRST, then axes ON TOP (currently reversed)
-- [ ] **Axis lines**: Two prominent white lines through center — CoF axis and Pitch axis
-- [ ] **Pitch axis skews** with the MidiMech slider (follows genX1, -genY1 direction)
-- [ ] **Grid fade-out**: Cells near canvas edges get decreasing alpha (vignette effect)
-- [ ] **Grid beneath axes**: Cells never cover axis lines or labels
-
+ [x] **Render order**: Grid cells FIRST, then axes ON TOP
+ [x] **Axis lines**: Two prominent white lines through center — CoF axis and Pitch axis
+ [x] **Pitch axis skews** with the MidiMech slider (follows genX1, -genY1 direction)
+ [x] **Grid fade-out**: Cells near canvas edges get decreasing alpha (vignette effect)
+ [x] **Grid beneath axes**: Cells never cover axis lines or labels
 ### Title Bar (index.html)
-- [ ] Title bar (DCompose Web + GitHub buttons) should **float/overlay** on the history canvas using `position: absolute` — NOT take its own row
-- [ ] `z-index` above the canvas, centered horizontally
-
+ [x] Title bar (DCompose Web + GitHub buttons) **floats/overlays** on the history canvas using `position: absolute` — does NOT take its own row
+ [x] `z-index` above the canvas, centered horizontally
 ### Header Layout (index.html)
-- [ ] MIDI button pinned to LEFT of header
-- [ ] Quote takes remaining space on RIGHT, in golden/colored readable text
-
+ [x] MIDI button pinned to LEFT of header
+ [x] Quote takes remaining space on RIGHT, in golden/colored readable text
+ [x] Quote text: `tl;dr: notes that are mathematically more harmonious are closer together spatially — make it hard to suck!`
 ### Note Naming (keyboard-layouts.ts)
-- [ ] No double-sharps or double-flats for |coordX| > 6
-- [ ] Wrap to enharmonic equivalents
+ [x] No double-sharps or double-flats for |coordX| > 6
+ [x] Wrap to enharmonic equivalents (pitch class lookup table)
 
+### MidiMech Cell Shape Fix (keyboard-visualizer.ts)
+ [x] Cell shape vectors (`hv1`, `hv2`) are separated from basis vectors (`genX`, `genY`)
+ [x] MidiMech (skew=0): cells align to wholetone (horizontal) + fourth (vertical) = upright rectangles
+ [x] DCompose (skew=1): cells align to fifth + octave = ~69° parallelograms
+ [x] `getSpacing()` returns interpolated `cellHv1`/`cellHv2` separately from basis vectors
+
+---
+
+## Zoom Slider (`keyboard-visualizer.ts`, `main.ts`)
+
+### Design Intent
+Default grid was too zoomed out — notes too small for fingers on touch screens and too spread for
+desktop. Added a zoom slider so users can adjust, with smart defaults per device.
+
+### Specifications
+ [x] `#zoom-slider` input (range 0.2–3.0, step 0.1)
+ [x] `#zoom-reset` button (↻ icon) resets to device-appropriate default
+ [x] Touch devices default to 1.6x zoom (~5x effective with base `dPy=height/3`)
+ [x] Desktop defaults to 1.0x zoom (~3 octaves visible)
+ [x] `setZoom(z)` / `getZoom()` API on `KeyboardVisualizer`
+ [x] Base cell size: `dPy = height / 3` (was `height / 7` — 2.33x larger base)
+ [x] Auto-blur on pointerup/change to preserve keyboard focus
+
+### Regression Notes
+ Zoom × base must show 3–4 octaves on desktop and 1–2 on phone at default
+ Reset button tooltip: "aims to match the keysize to the standard keyboard key size"
+
+---
+
+## License
+
+ [x] MIT License — `LICENSE` file in project root
+ [x] Copyright (c) 2026 zitongcharliedeng
+ [x] Open source, forks welcome, credit required via license terms
+
+---
+
+## Pending: Axes Coupled to Grid Skew
+
+### Design Intent
+The X axis = Circle of Fifths, the Y axis = Pitch. Both axes must rotate/stretch with the grid
+when the skew slider changes. Currently the Y axis is static vertical — wrong under MidiMech skew.
+
+### Specifications
+ [ ] **X axis label**: "Circle of Fifths →" with arrow indicating direction
+ [ ] **Y axis label**: "Pitch ↑" with arrow indicating direction
+ [ ] **Y axis rotates** with the grid: at DCompose it's vertical, at MidiMech it leans with the pitch direction
+ [ ] **White axes**: Both axis lines must be white (#fff), prominent, with visible labels
+ [ ] **Remove redundant D4 line**: The golden D4 line and separate pitch line should merge into the Y axis
+ [ ] **Remove redundant pitch line**: The pitch direction is the Y axis — no separate indicator needed
+ [ ] **Units on axes**: CoF axis shows fifths, Pitch axis shows octaves or semitones
+ [ ] **Grid beneath axes**: Grid cells MUST NOT cover axis lines or labels (already implemented, but coupled rotation is new)
+
+---
+
+## Pending: Smooth Transition (No Gaps at Intermediate Skew)
+
+### Design Intent
+At intermediate skew values (e.g., 0.3–0.7), the cell tiling may develop gaps or overlaps
+because cell shape vectors interpolate differently from basis vectors.
+
+### Specifications
+ [ ] No gaps between cells at ANY skew value (0.0 to 1.0)
+ [ ] No overlaps between cells at ANY skew value
+ [ ] Cell edges always touch (continuous surface, CELL_INSET=0.93 mortar only)
+ [ ] Parallelogram shape interpolation is smooth and continuous
+
+---
+
+## Pending: Enhanced Note Naming (Double-Flat/Sharp with Cents Bracket)
+
+### Design Intent
+For non-12-TET tunings, note names should show accurate enharmonic spelling with
+cent deviation underneath in brackets. In 12-TET, names are standard (no brackets).
+
+### Specifications
+ [ ] Primary label: enharmonic note name using double-flats/sharps when accurate (e.g., `B𝄫`)
+ [ ] Bracket underneath: equivalent pitch with cent deviation, e.g. `(A - 3¢)` or `(A + 7¢)`
+ [ ] In 12-TET: standard names only, no brackets (deviation is 0)
+ [ ] Use best notation for each TET (whatever is most readable/accurate)
+
+---
+
+## Pending: TET Slider Improvements
+
+### Specifications
+ [ ] Preset button positions aligned to their TRUE position on the slider scale (proportional to fifth value)
+ [ ] Vertical tick marks jutting up from preset buttons to their slider positions (timeline style)
+ [ ] Current fifth value shown INSIDE the slider track (using color tricks, not compromising thumb)
+
+---
+
+## Known Bug: MIDI Octave Offset on First Load
+
+ [ ] On first page load in DCompose mode, MIDI input plays one octave low
+ [ ] Toggling skew slider to MidiMech and back fixes it permanently for session
+ [ ] Only affects MIDI input, NOT keyboard input
+ [ ] Root cause: likely `midiToCoord()` initialization timing or synth state race condition
+
+---
+
+## Pending: Chord Graffiti Dynamic Rendering
+
+ [ ] Chord shapes computed from SAME grid engine (not hardcoded SVGs)
+ [ ] When skew slider changes, graffiti geometry matches current grid state exactly
+ [ ] Position in top-left and bottom-right of graph (available whitespace)
+
+---
+
+## Pending: Touch Screen Smart Defaults
+
+ [ ] Default key size matches standard physical keyboard key size relative to the touch screen dimensions
+ [ ] Additional zoom slider for fine-tuning (already implemented — just needs smart default calibration)
+ [ ] Buttons should not be so zoomed out they're hard to press on tablet-size screens
 ---
 
 ## Regression Checklist
@@ -347,3 +457,9 @@ Run before any release:
 - [ ] Chord shapes update dynamically when skew slider changes
 - [ ] Chord graffiti labels ("psst... major chord") are readable
 - [ ] Graffiti overlays do not block interaction (pointer-events: none)
+ [ ] Zoom slider visible in controls strip (range 0.2–3.0)
+ [ ] Zoom reset button (↻) resets to device default
+ [ ] Desktop default zoom shows ~3–4 octaves
+ [ ] Touch default zoom shows ~1–2 octaves (larger cells)
+ [ ] Zoom slider does NOT steal keyboard focus
+ [ ] MIT LICENSE file present in project root
