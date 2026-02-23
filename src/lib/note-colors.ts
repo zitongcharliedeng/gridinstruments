@@ -1,14 +1,13 @@
 /**
- * OKLCH-based note colors — perceptually uniform, fifths-based hue mapping.
+ * OKLCH-based note colors — perceptually uniform, chromatic hue mapping.
  *
- * D = red (root). Each perfect-fifth step = 30° on the OKLCH hue wheel.
- * The circle of fifths maps directly onto the hue circle, so harmonically
- * related notes are adjacent in color (D→A = red→orange) while adjacent
- * semitones are ~180° apart (maximally contrasting).
+ * D = red (root). Each semitone step = 30° on the OKLCH hue wheel.
+ * Adjacent grid cells (fifths apart = 7 semitones) differ by 210° — maximum
+ * contrast on the hue circle.
  *
  * Hue table (D=29° OKLCH red):
- *   D=29°  A=59°  E=89°  B=119°  F#=149°  C#=179°
- *   Ab=209° Eb=239° Bb=269° F=299° C=329° G=359°
+ *   C=329° C♯=359° D=29°  E♭=59°  E=89°   F=119°
+ *   F♯=149° G=179° A♭=209° A=239° B♭=269° B=299°
  */
 
 // ── OKLCH → sRGB conversion ──────────────────────────────────────────────
@@ -52,13 +51,22 @@ function oklch(L: number, C: number, H: number): string {
   return rgbToHex(...oklchToRgb(L, C, H));
 }
 
-// ── Fifths-based hue mapping ─────────────────────────────────────────────
+// ── Chromatic hue mapping ────────────────────────────────────────────────
+// Each semitone = 30° on the OKLCH hue wheel.
+// Adjacent grid cells (fifths apart = 7 semitones) differ by 210° = max contrast.
 
-/** OKLCH hue for perceptual red (D anchor). */
-const D_HUE = 29;
+/** OKLCH hue for a pitch class (0=C). Each semitone = 30°, anchored so D=29°. */
+function pcHue(pc: number): number {
+  return (pc * 30 + 329) % 360;
+}
 
-/** Hue step per circle-of-fifths position (360° / 12 notes). */
-const FIFTH_STEP = 30;
+/** OKLCH hue for a circle-of-fifths coordinate (D=0). */
+function chromaticHue(coordX: number): number {
+  const pc = ((2 + coordX * 7) % 12 + 12) % 12;
+  return pcHue(pc);
+}
+
+// ── Circle-of-fifths lookup (used by midiToCoord) ───────────────────────
 
 /** Circle-of-fifths position for each pitch class (0=C..11=B). D=0. */
 const COF_FROM_PC: readonly number[] = [
@@ -75,16 +83,6 @@ const COF_FROM_PC: readonly number[] = [
   -4,  // A#/Bb
    3,  // B
 ];
-
-/** OKLCH hue for a circle-of-fifths position (D=0). */
-function cofHue(coordX: number): number {
-  return ((coordX * FIFTH_STEP + D_HUE) % 360 + 360) % 360;
-}
-
-/** OKLCH hue for a pitch class (0=C). */
-function pcHue(pc: number): number {
-  return cofHue(COF_FROM_PC[pc]);
-}
 
 // ── Pre-computed arrays (indexed by pitch class 0=C..11=B) ───────────────
 
@@ -112,7 +110,7 @@ export function noteColor(midiNote: number, alpha = 1): string {
  * Vivid color for a DCompose coordX (circle-of-fifths position, D=0).
  */
 export function colorFromCoordX(coordX: number): string {
-  return oklch(0.72, 0.19, cofHue(coordX));
+  return oklch(0.72, 0.19, chromaticHue(coordX));
 }
 
 /**
@@ -130,7 +128,7 @@ export function cellColors(
   coordX: number,
   state: 'active' | 'sustained' | 'white' | 'black'
 ): { fill: string; text: string } {
-  const h = cofHue(coordX);
+  const h = chromaticHue(coordX);
   switch (state) {
     case 'active':
       return { fill: oklch(0.72, 0.19, h), text: '#ffffff' };
