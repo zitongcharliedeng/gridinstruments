@@ -245,11 +245,22 @@ class DComposeApp {
       this.tuningSlider.step = '0.1';
       this.tuningSlider.value = FIFTH_DEFAULT.toString();
 
+      const thumbBadge = document.getElementById('tuning-thumb-badge');
+      const range = FIFTH_MAX - FIFTH_MIN;
+
+      const updateThumbBadge = (value: number) => {
+        if (!thumbBadge) return;
+        const pct = ((value - FIFTH_MIN) / range) * 100;
+        thumbBadge.style.left = `${pct}%`;
+        thumbBadge.textContent = `${value.toFixed(1)}\u00a2`;
+      };
+      updateThumbBadge(FIFTH_DEFAULT);
       this.tuningSlider.addEventListener('input', () => {
         const value = parseFloat(this.tuningSlider!.value);
         this.synth.setFifth(value);
         this.visualizer?.setGenerator([value, 1200]);
         if (this.tuningValue) this.tuningValue.textContent = value.toFixed(1);
+        updateThumbBadge(value);
         if (nearestMarkerDisplay) {
           const { marker } = findNearestMarker(value);
           const offset = value - marker.fifth;
@@ -258,10 +269,10 @@ class DComposeApp {
             nearestMarkerDisplay.textContent = `= ${marker.name}`;
             nearestMarkerDisplay.style.color = '#88ff88';
           } else if (absOffset < 1.0) {
-            nearestMarkerDisplay.textContent = `${marker.name} ${offset > 0 ? '+' : ''}${offset.toFixed(1)}¢`;
+            nearestMarkerDisplay.textContent = `${marker.name} ${offset > 0 ? '+' : ''}${offset.toFixed(1)}\u00a2`;
             nearestMarkerDisplay.style.color = '#ffff88';
           } else {
-            nearestMarkerDisplay.textContent = `≈ ${marker.name} (${offset > 0 ? '+' : ''}${offset.toFixed(1)}¢)`;
+            nearestMarkerDisplay.textContent = `\u2248 ${marker.name} (${offset > 0 ? '+' : ''}${offset.toFixed(1)}\u00a2)`;
             nearestMarkerDisplay.style.color = '#888';
           }
         }
@@ -286,25 +297,42 @@ class DComposeApp {
       });
     }
 
-    // Populate TET preset buttons
+    // Populate TET preset buttons — positioned proportionally along slider
     const presetsContainer = document.getElementById('tet-presets');
     if (presetsContainer) {
-      for (const marker of TUNING_MARKERS) {
+      const sliderRange = FIFTH_MAX - FIFTH_MIN;
+      // Sort by fifth value for stagger detection
+      const sortedMarkers = [...TUNING_MARKERS].sort((a, b) => a.fifth - b.fifth);
+      let lastPct = -Infinity;
+      for (const marker of sortedMarkers) {
+        const pct = ((marker.fifth - FIFTH_MIN) / sliderRange) * 100;
+        const mark = document.createElement('div');
+        mark.className = 'tet-preset-mark';
+        // Stagger labels that are too close to previous (< 3% of range)
+        if (Math.abs(pct - lastPct) < 3) mark.classList.add('stagger');
+        mark.style.left = `${pct}%`;
+
+        const tick = document.createElement('div');
+        tick.className = 'tet-tick';
         const btn = document.createElement('button');
         btn.className = 'tet-preset';
         btn.dataset.fifth = marker.fifth.toString();
         btn.textContent = marker.name;
-        btn.title = marker.description;
+        btn.title = `${marker.description} (${marker.fifth.toFixed(2)}\u00a2)`;
         btn.addEventListener('click', () => {
           if (this.tuningSlider) {
             this.tuningSlider.value = marker.fifth.toString();
             this.tuningSlider.dispatchEvent(new Event('input'));
           }
         });
-        presetsContainer.appendChild(btn);
+
+        mark.appendChild(tick);
+        mark.appendChild(btn);
+        presetsContainer.appendChild(mark);
+        lastPct = pct;
       }
       // Mark initial active preset (12-TET at 700)
-      presetsContainer.querySelector('[data-fifth="700"]')?.classList.add('active');
+      presetsContainer.querySelector('.tet-preset[data-fifth="700"]')?.classList.add('active');
     }
 
     // Volume

@@ -266,18 +266,61 @@
       padding: 6px 8px;
     }
 
-    .tuning-section { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 300px; }
+    .tuning-section { display: flex; flex-direction: column; gap: 0; flex: 1; min-width: 300px; }
     .tuning-row { display: flex; align-items: center; gap: 6px; }
-    .tuning-section #tuning-slider { flex: 1; min-width: 200px; }
-    .tet-presets { display: flex; flex-wrap: wrap; gap: 0; }
-    .tet-preset {
-      font-family: var(--font); font-size: 9px; color: var(--dim);
-      background: none; border: 1px solid var(--border);
-      padding: 2px 6px; cursor: pointer; white-space: nowrap;
+    .tuning-readout { display: flex; align-items: baseline; gap: 4px; flex-shrink: 0; }
+    .tuning-slider-area {
+      position: relative;
+      flex: 1;
+      min-width: 200px;
+      padding-bottom: 22px;
     }
-    .tet-preset + .tet-preset { border-left: none; }
-    .tet-preset:hover { color: var(--fg); border-color: var(--accent); }
-    .tet-preset.active { color: #88ff88; border-color: #88ff8844; background: #88ff8810; }
+    .tuning-slider-area #tuning-slider {
+      width: 100%;
+      margin: 0;
+    }
+    .tuning-thumb-badge {
+      position: absolute;
+      top: -12px;
+      font-size: 9px;
+      color: var(--bg);
+      background: var(--fg);
+      padding: 0 3px;
+      transform: translateX(-50%);
+      pointer-events: none;
+      white-space: nowrap;
+      z-index: 2;
+      line-height: 1.4;
+    }
+    .tet-presets {
+      position: absolute;
+      left: 0; right: 0;
+      top: 20px;
+      height: 22px;
+      pointer-events: none;
+    }
+    .tet-preset-mark {
+      position: absolute;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      pointer-events: auto;
+    }
+    .tet-tick {
+      width: 1px;
+      height: 5px;
+      background: var(--border);
+    }
+    .tet-preset-mark.stagger .tet-tick { height: 14px; }
+    .tet-preset {
+      font-family: var(--font); font-size: 8px; color: var(--dim);
+      background: none; border: none;
+      padding: 0 1px; cursor: pointer; white-space: nowrap;
+      line-height: 1.2;
+    }
+    .tet-preset:hover { color: var(--fg); }
+    .tet-preset.active { color: #88ff88; }
 
     .skew-section { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
     .skew-endpoint { font-size: 10px; color: var(--dim); white-space: nowrap; }
@@ -498,12 +541,15 @@
       <div class="tuning-section">
         <div class="tuning-row">
           <span class="ctrl-label">Fifth</span>
-          <input type="range" id="tuning-slider" min="650" max="750" step="0.1" value="700">
-          <span id="tuning-value">700.0</span><span style="color:var(--dim);font-size:11px;">¢</span>
-          <span id="nearest-marker">= 12-TET</span>
-        </div>
-        <div class="tet-presets" id="tet-presets">
-          <!-- populated by JS from TUNING_MARKERS -->
+          <div class="tuning-slider-area">
+            <input type="range" id="tuning-slider" min="650" max="750" step="0.1" value="700">
+            <div class="tuning-thumb-badge" id="tuning-thumb-badge">700.0¢</div>
+            <div class="tet-presets" id="tet-presets"></div>
+          </div>
+          <div class="tuning-readout">
+            <span id="tuning-value">700.0</span><span style="color:var(--dim);font-size:11px;">¢</span>
+            <span id="nearest-marker">= 12-TET</span>
+          </div>
         </div>
       </div>
 
