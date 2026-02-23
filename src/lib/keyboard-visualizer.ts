@@ -294,95 +294,35 @@ export class KeyboardVisualizer {
 
   private drawPitchLines(): void {
     const { width, height, generator } = this.options;
-    const { genX, genX1, genY1 } = this.getSpacing();
+    const { genX, genY0, genX1, genY1 } = this.getSpacing();
     const centerX = width / 2;
     const centerY = height / 2;
-    const octavePixels = genY1; // genY1 = octave size in pixels
+    // ── Circle of Fifths axis ─────────────────────────────────────
+    // Screen direction for increasing fifths (coordX): (genX, -genY0)
+    this.drawAxisLine(centerX, centerY, genX, -genY0, 'Circle of Fifths');
 
-    const baseOctave = 4;
+    // ── Pitch (octave) axis ───────────────────────────────────────
+    // Screen direction for increasing octaves (coordY): (genX1, -genY1)
+    this.drawAxisLine(centerX, centerY, genX1, -genY1, 'Pitch');
 
-    this.ctx.strokeStyle = '#1a1a1a';
-    this.ctx.lineWidth = 1;
-    this.ctx.setLineDash([5, 10]);
-
-    for (let oct = -3; oct <= 3; oct++) {
-      const y = centerY - oct * octavePixels;
-      if (y < 0 || y > height) continue;
-
-      this.ctx.beginPath();
-      this.ctx.moveTo(40, y);
-      this.ctx.lineTo(width, y);
-      this.ctx.stroke();
-
-      const octaveNum = baseOctave + oct;
-      const freq = 293.66 * Math.pow(2, oct);
-
-      this.ctx.setLineDash([]);
-      this.ctx.fillStyle = '#333';
-      this.ctx.font = '10px "JetBrains Mono", monospace';
-      this.ctx.textAlign = 'left';
-      this.ctx.textBaseline = 'middle';
-      this.ctx.fillText(`D${octaveNum}`, 4, y);
-      this.ctx.fillStyle = '#222';
-      this.ctx.font = '8px "JetBrains Mono", monospace';
-      this.ctx.fillText(`${freq.toFixed(0)}Hz`, 4, y + 10);
-      this.ctx.setLineDash([5, 10]);
-    }
-
-    this.ctx.setLineDash([]);
-
-    // D4 center line
-    const d4Y = centerY;
-    if (d4Y > 0 && d4Y < height) {
-      this.ctx.strokeStyle = '#2a1e0a';
-      this.ctx.lineWidth = 1;
-      this.ctx.setLineDash([2, 4]);
-      this.ctx.beginPath();
-      this.ctx.moveTo(40, d4Y);
-      this.ctx.lineTo(width, d4Y);
-      this.ctx.stroke();
-      this.ctx.setLineDash([]);
-
-      this.ctx.fillStyle = '#553322';
-      this.ctx.font = 'bold 9px "JetBrains Mono", monospace';
-      this.ctx.textAlign = 'right';
-      this.ctx.fillText(`D4=${this.options.d4Hz.toFixed(2)}Hz`, width - 4, d4Y - 4);
-    }
-
-    // Circle-of-Fifths axis (vertical D column — always vertical)
-    this.ctx.strokeStyle = '#2a2a0a';
-    this.ctx.lineWidth = 1;
-    this.ctx.setLineDash([6, 3]);
+    // ── Origin marker (D4) ────────────────────────────────────────
+    this.ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
     this.ctx.beginPath();
-    this.ctx.moveTo(centerX, 25);
-    this.ctx.lineTo(centerX, height - 40);
-    this.ctx.stroke();
-    this.ctx.setLineDash([]);
+    this.ctx.arc(centerX, centerY, 3, 0, Math.PI * 2);
+    this.ctx.fill();
+    this.ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+    this.ctx.font = 'bold 9px "JetBrains Mono", monospace';
+    this.ctx.textAlign = 'left';
+    this.ctx.textBaseline = 'bottom';
+    this.ctx.fillText(`D4 ${this.options.d4Hz.toFixed(0)}Hz`, centerX + 6, centerY - 4);
 
-    // Pitch axis (follows octave/pitch direction — tilts with skew)
-    const paxLen = Math.sqrt(genX1 * genX1 + genY1 * genY1);
-    if (paxLen > 0.01) {
-      const t = Math.max(width, height);
-      const nx = genX1 / paxLen;
-      const ny = -genY1 / paxLen;
-      this.ctx.strokeStyle = '#1a2a3a';
-      this.ctx.lineWidth = 1;
-      this.ctx.setLineDash([4, 6]);
-      this.ctx.beginPath();
-      this.ctx.moveTo(centerX - nx * t, centerY - ny * t);
-      this.ctx.lineTo(centerX + nx * t, centerY + ny * t);
-      this.ctx.stroke();
-      this.ctx.setLineDash([]);
-    }
-
-    // Tuning label
+    // ── Tuning label ──────────────────────────────────────────────
     const currentFifth = generator[0];
     const { marker } = findNearestMarker(currentFifth);
     const isExact = Math.abs(currentFifth - marker.fifth) < 0.5;
     const labelText = isExact
       ? `${marker.name} (${currentFifth.toFixed(1)}¢)`
       : `5th = ${currentFifth.toFixed(1)}¢`;
-
     this.ctx.font = 'bold 13px "JetBrains Mono", monospace';
     const textWidth = this.ctx.measureText(labelText).width;
     this.ctx.fillStyle = '#0a0a0a';
@@ -394,9 +334,90 @@ export class KeyboardVisualizer {
     this.ctx.textAlign = 'center';
     this.ctx.textBaseline = 'top';
     this.ctx.fillText(labelText, centerX, 5);
-
     this.drawCircleOfFifthsLabels(centerX, genX);
     this.drawTuningMarkersInline(centerX, genX);
+  }
+
+  /** Draw a labeled axis line through center with arrowhead at the positive end. */
+  private drawAxisLine(
+    cx: number, cy: number,
+    dx: number, dy: number,
+    label: string
+  ): void {
+    const len = Math.sqrt(dx * dx + dy * dy);
+    if (len < 0.01) return;
+
+    const { width, height } = this.options;
+    const nx = dx / len;
+    const ny = dy / len;
+    const ext = Math.sqrt(width * width + height * height);
+
+    // Axis line (white, semi-transparent)
+    this.ctx.save();
+    this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+    this.ctx.lineWidth = 1.5;
+    this.ctx.beginPath();
+    this.ctx.moveTo(cx - nx * ext, cy - ny * ext);
+    this.ctx.lineTo(cx + nx * ext, cy + ny * ext);
+    this.ctx.stroke();
+
+    // Find where positive direction hits canvas edge (with margin)
+    const margin = 60;
+    const candidates: number[] = [];
+    if (nx > 0.001) candidates.push((width - margin - cx) / nx);
+    if (nx < -0.001) candidates.push((margin - cx) / nx);
+    if (ny > 0.001) candidates.push((height - margin - cy) / ny);
+    if (ny < -0.001) candidates.push((margin - cy) / ny);
+    const positiveCandidates = candidates.filter(t => t > 0);
+    const tMax = positiveCandidates.length > 0
+      ? Math.min(...positiveCandidates)
+      : ext * 0.4;
+
+    const tipX = cx + nx * tMax;
+    const tipY = cy + ny * tMax;
+
+    // Arrowhead (filled triangle)
+    const arrowLen = 12;
+    const arrowHalf = Math.PI / 7;
+    const angle = Math.atan2(ny, nx);
+
+    this.ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+    this.ctx.beginPath();
+    this.ctx.moveTo(tipX, tipY);
+    this.ctx.lineTo(
+      tipX - arrowLen * Math.cos(angle - arrowHalf),
+      tipY - arrowLen * Math.sin(angle - arrowHalf)
+    );
+    this.ctx.lineTo(
+      tipX - arrowLen * Math.cos(angle + arrowHalf),
+      tipY - arrowLen * Math.sin(angle + arrowHalf)
+    );
+    this.ctx.closePath();
+    this.ctx.fill();
+
+    // Label near arrowhead, offset perpendicular to axis
+    const labelDist = 28;
+    const lx = tipX - nx * labelDist;
+    const ly = tipY - ny * labelDist;
+    const perpX = -ny;
+    const perpY = nx;
+    const perpOff = 14;
+
+    this.ctx.font = 'bold 11px "JetBrains Mono", monospace';
+    this.ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+    this.ctx.textAlign = 'center';
+    this.ctx.textBaseline = 'middle';
+    // Rotate text to follow axis direction (keep readable left-to-right)
+    this.ctx.save();
+    this.ctx.translate(lx + perpX * perpOff, ly + perpY * perpOff);
+    let textAngle = angle;
+    if (textAngle > Math.PI / 2) textAngle -= Math.PI;
+    if (textAngle < -Math.PI / 2) textAngle += Math.PI;
+    this.ctx.rotate(textAngle);
+    this.ctx.fillText(label, 0, 0);
+    this.ctx.restore();
+
+    this.ctx.restore();
   }
 
   private drawTuningMarkersInline(centerX: number, genX: number): void {
