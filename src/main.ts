@@ -1,506 +1,529 @@
 /**
- * DCompose Web - Main Application
- * 
- * A web-based isomorphic keyboard synthesizer with DCompose/Wicki-Hayden layout.
- * Play music with your computer keyboard or mouse - works on mobile with external keyboards!
- * 
- * Features:
- * - Continuous tuning slider (syntonic temperament continuum)
- * - Live tuning changes (notes update in real-time)
- * - Volume and EQ controls
- * - Works with ANY keyboard layout (QWERTY, Dvorak, AZERTY, etc.) - uses physical key codes
+ * DCompose Web — Main Application
+ *
+ * Wires together:
+ * - Web MIDI input (MidiInput) with per-device management
+ * - Isomorphic keyboard (KeyboardVisualizer) with skew slider
+ * - Note history + waterfall + chord panel (NoteHistoryVisualizer)
+ * - Keyboard layout dropdown (isomorphic-qwerty variants)
+ * - Web Audio synth (Synth)
  */
 
-import { getLayout, KeyboardLayout, KeyCoordinate } from './lib/keyboard-layouts';
+import { getLayout, KEYBOARD_VARIANTS, KeyboardLayout, KeyCoordinate } from './lib/keyboard-layouts';
 import { Synth, WaveformType, FIFTH_MIN, FIFTH_MAX, FIFTH_DEFAULT, findNearestMarker } from './lib/synth';
 import { KeyboardVisualizer } from './lib/keyboard-visualizer';
+import { NoteHistoryVisualizer } from './lib/note-history-visualizer';
+import { MidiInput, MidiDeviceInfo, MidiChannelMode } from './lib/midi-input';
+import { midiToCoord } from './lib/note-colors';
 import { Note } from 'tonal';
-import { detectChord, getActiveNoteNames } from './lib/chord-detector';
+import { createChordGraffiti } from './lib/chord-graffiti';
 
 class DComposeApp {
   private synth: Synth;
   private visualizer: KeyboardVisualizer | null = null;
+  private historyVisualizer: NoteHistoryVisualizer | null = null;
+  private midi: MidiInput;
   private currentLayout: KeyboardLayout;
-  
-  // Pitch offset system removed - all transposition now via D4 Hz
-  // Kept as 0 for backward compatibility with existing code
+
   private octaveOffset: number = 0;
   private transposeOffset: number = 0;
-  
-  // Track active notes - store VISUAL coordinates (without offsets applied)
-  // vibratoOnPress: whether vibrato was active when key was pressed (for sustained note retention)
+
+  // Active notes keyed by the input source string (keyboard code or pointer id)
   private activeNotes: Map<string, { coordX: number; coordY: number; vibratoOnPress: boolean }> = new Map();
   private keyRepeat: Set<string> = new Set();
-  
-  // Mouse/touch state
+
   private pointerDown: Map<number, { coordX: number; coordY: number } | null> = new Map();
   private draggingGoldenLine: boolean = false;
   private goldenLineDragStartY: number = 0;
   private goldenLineDragStartHz: number = 293.66;
-  
-  // DOM elements
+
+  // DOM
   private canvas: HTMLCanvasElement;
+  private historyCanvas: HTMLCanvasElement;
   private waveformSelect: HTMLSelectElement;
-  private chordDisplay: HTMLElement;
-  private notesDisplay: HTMLElement;
-  private vibratoIndicator: HTMLElement | null = null;
-  private sustainIndicator: HTMLElement | null = null;
-  
-  // New control elements
+  private layoutSelect: HTMLSelectElement | null = null;
+  private skewSlider: HTMLInputElement | null = null;
   private tuningSlider: HTMLInputElement | null = null;
   private tuningValue: HTMLElement | null = null;
   private volumeSlider: HTMLInputElement | null = null;
-  
+  private vibratoIndicator: HTMLElement | null = null;
+  private sustainIndicator: HTMLElement | null = null;
+  private midiDeviceList: HTMLElement | null = null;
+  private midiChannelModeSelect: HTMLSelectElement | null = null;
+
   constructor() {
     this.synth = new Synth();
-    this.currentLayout = getLayout('standard'); // Physical layout - works for all keyboard types
-    
-    // Get DOM elements
+    this.midi = new MidiInput();
+    this.currentLayout = getLayout('ansi');
+
     this.canvas = document.getElementById('keyboard-canvas') as HTMLCanvasElement;
+    this.historyCanvas = document.getElementById('history-canvas') as HTMLCanvasElement;
     this.waveformSelect = document.getElementById('waveform-select') as HTMLSelectElement;
-    this.chordDisplay = document.getElementById('chord-display') as HTMLElement;
-    this.notesDisplay = document.getElementById('notes-display') as HTMLElement;
-    this.vibratoIndicator = document.getElementById('vibrato-indicator') as HTMLElement;
-    this.sustainIndicator = document.getElementById('sustain-indicator') as HTMLElement;
-    
-    // New control elements (may not exist yet)
+    this.layoutSelect = document.getElementById('layout-select') as HTMLSelectElement;
+    this.skewSlider = document.getElementById('skew-slider') as HTMLInputElement;
     this.tuningSlider = document.getElementById('tuning-slider') as HTMLInputElement;
     this.tuningValue = document.getElementById('tuning-value') as HTMLElement;
     this.volumeSlider = document.getElementById('volume-slider') as HTMLInputElement;
-    
+    this.vibratoIndicator = document.getElementById('vibrato-indicator') as HTMLElement;
+    this.sustainIndicator = document.getElementById('sustain-indicator') as HTMLElement;
+    this.midiDeviceList = document.getElementById('midi-device-list') as HTMLElement;
+    this.midiChannelModeSelect = document.getElementById('midi-channel-mode') as HTMLSelectElement;
+
     this.init();
   }
-  
+
   private async init(): Promise<void> {
-    this.setupEventListeners();
     this.setupVisualizer();
+    this.setupHistoryVisualizer();
+    this.setupEventListeners();
+    await this.midi.init();
+    this.setupMidiListeners();
+    // Chord shape graffiti overlays
+    createChordGraffiti({ container: document.getElementById('app')! });
     this.render();
   }
-  
+
+  // ─── Visualizer setup ───────────────────────────────────────────────────
+
   private setupVisualizer(): void {
     const container = this.canvas.parentElement;
     if (!container) return;
-    
     const rect = container.getBoundingClientRect();
-    const width = Math.min(rect.width - 32, 900);
-    const height = Math.min(rect.height - 32, 400);
-    
+    const width = Math.max(rect.width - 2, 300);
+    const height = Math.max(rect.height - 2, 200);
+
     this.visualizer = new KeyboardVisualizer(this.canvas, { width, height });
-    
+
     window.addEventListener('resize', () => {
-      if (!this.visualizer) return;
-      const newRect = container.getBoundingClientRect();
-      this.visualizer.resize(
-        Math.min(newRect.width - 32, 900),
-        Math.min(newRect.height - 32, 400)
+      if (!this.visualizer || !container) return;
+      const r = container.getBoundingClientRect();
+      this.visualizer.resize(Math.max(r.width - 2, 300), Math.max(r.height - 2, 200));
+    });
+  }
+
+  private setupHistoryVisualizer(): void {
+    if (!this.historyCanvas) return;
+    this.historyVisualizer = new NoteHistoryVisualizer(this.historyCanvas);
+    this.historyVisualizer.start();
+
+    window.addEventListener('resize', () => {
+      if (!this.historyVisualizer || !this.historyCanvas) return;
+      this.historyVisualizer.resize(
+        this.historyCanvas.parentElement?.clientWidth ?? 900,
+        220
       );
     });
   }
-  
-  private async ensureAudioReady(): Promise<void> {
-    if (!this.synth.isInitialized()) {
-      await this.synth.init();
+
+  // ─── MIDI ───────────────────────────────────────────────────────────────
+
+  private setupMidiListeners(): void {
+    this.midi.onNoteOn((note, velocity, _channel) => {
+      this.handleMidiNoteOn(note, velocity);
+    });
+    this.midi.onNoteOff((note, _velocity, _channel) => {
+      this.handleMidiNoteOff(note);
+    });
+    this.midi.onStatusChange((devices) => {
+      this.updateMidiDevicePanel(devices);
+      // MIDI status is shown in the MIDI settings panel; no need to duplicate in history canvas
+    });
+  }
+
+  private async handleMidiNoteOn(midiNote: number, _velocity: number): Promise<void> {
+    await this.ensureAudioReady();
+    const [coordX, coordY] = midiToCoord(midiNote);
+    const noteKey = `midi_${midiNote}`;
+    const audioNoteId = `midi_${midiNote}_${coordX}_${coordY}`;
+    const vibratoActive = this.synth.getVibrato();
+
+    this.synth.playNote(audioNoteId, coordX, coordY, 0, vibratoActive);
+    this.activeNotes.set(noteKey, { coordX, coordY, vibratoOnPress: vibratoActive });
+    this.historyVisualizer?.noteOn(coordX, coordY, midiNote);
+    this.render();
+  }
+
+  private handleMidiNoteOff(midiNote: number): void {
+    const noteKey = `midi_${midiNote}`;
+    const noteData = this.activeNotes.get(noteKey);
+    if (!noteData) return;
+    const { coordX, coordY } = noteData;
+    const audioNoteId = `midi_${midiNote}_${coordX}_${coordY}`;
+    this.synth.stopNote(audioNoteId);
+    this.activeNotes.delete(noteKey);
+    this.historyVisualizer?.noteOff(coordX, coordY);
+    this.render();
+  }
+
+  private updateMidiDevicePanel(devices: MidiDeviceInfo[]): void {
+    if (!this.midiDeviceList) return;
+    this.midiDeviceList.innerHTML = '';
+
+    if (devices.length === 0) {
+      this.midiDeviceList.innerHTML = '<span class="midi-no-devices">No MIDI devices detected</span>';
+      return;
+    }
+
+    for (const device of devices) {
+      const row = document.createElement('label');
+      row.className = 'midi-device-row';
+
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.checked = device.enabled;
+      cb.addEventListener('change', () => {
+        this.midi.setDeviceEnabled(device.id, cb.checked);
+      });
+
+      const dot = document.createElement('span');
+      dot.className = `midi-dot ${device.connected ? 'connected' : 'disconnected'}`;
+
+      const name = document.createElement('span');
+      name.className = 'midi-device-name';
+      name.textContent = device.name + (device.manufacturer ? ` (${device.manufacturer})` : '');
+
+      row.appendChild(cb);
+      row.appendChild(dot);
+      row.appendChild(name);
+      this.midiDeviceList.appendChild(row);
     }
   }
-  
+
+  // ─── Event listeners ────────────────────────────────────────────────────
+
   private setupEventListeners(): void {
-    // Keyboard events
     document.addEventListener('keydown', this.handleKeyDown.bind(this));
     document.addEventListener('keyup', this.handleKeyUp.bind(this));
-    
-    // Mouse/touch events
+
     this.canvas.addEventListener('pointerdown', this.handlePointerDown.bind(this));
     this.canvas.addEventListener('pointermove', this.handlePointerMove.bind(this));
     this.canvas.addEventListener('pointerup', this.handlePointerUp.bind(this));
     this.canvas.addEventListener('pointerleave', this.handlePointerUp.bind(this));
     this.canvas.addEventListener('pointercancel', this.handlePointerUp.bind(this));
     this.canvas.addEventListener('touchstart', (e) => e.preventDefault(), { passive: false });
-    
-    // Waveform selector
+
     this.waveformSelect?.addEventListener('change', () => {
       this.synth.setWaveform(this.waveformSelect.value as WaveformType);
     });
-    
-    // === NEW CONTROLS ===
-    
-    // Tuning slider - CONTINUOUS from FIFTH_MIN to FIFTH_MAX
+
+    // Keyboard layout dropdown
+    if (this.layoutSelect) {
+      // Populate options
+      for (const variant of KEYBOARD_VARIANTS) {
+        const opt = document.createElement('option');
+        opt.value = variant.id;
+        opt.textContent = variant.name;
+        this.layoutSelect.appendChild(opt);
+      }
+      this.layoutSelect.value = 'ansi';
+      this.layoutSelect.addEventListener('change', () => {
+        this.currentLayout = getLayout(this.layoutSelect!.value);
+      });
+    }
+
+    // DCompose ↔ MidiMech skew slider
+    if (this.skewSlider) {
+      this.skewSlider.addEventListener('input', () => {
+        this.visualizer?.setSkewFactor(parseFloat(this.skewSlider!.value));
+      });
+    }
+
+    // Tuning slider
     const nearestMarkerDisplay = document.getElementById('nearest-marker');
-    
     if (this.tuningSlider) {
       this.tuningSlider.min = FIFTH_MIN.toString();
       this.tuningSlider.max = FIFTH_MAX.toString();
-      this.tuningSlider.step = '0.1'; // Fine control
+      this.tuningSlider.step = '0.1';
       this.tuningSlider.value = FIFTH_DEFAULT.toString();
-      
-      // Real-time update while sliding
+
       this.tuningSlider.addEventListener('input', () => {
         const value = parseFloat(this.tuningSlider!.value);
         this.synth.setFifth(value);
-        if (this.visualizer) {
-          this.visualizer.setGenerator([value, 1200]);
-        }
-        if (this.tuningValue) {
-          this.tuningValue.textContent = value.toFixed(1);
-        }
-        // Show nearest tuning marker with color-coded cents offset
+        this.visualizer?.setGenerator([value, 1200]);
+        if (this.tuningValue) this.tuningValue.textContent = value.toFixed(1);
         if (nearestMarkerDisplay) {
           const { marker } = findNearestMarker(value);
           const offset = value - marker.fifth;
           const absOffset = Math.abs(offset);
-          
-          // Color coding based on distance from exact TET
           if (absOffset < 0.1) {
-            // Exact match (within 0.1 cents) - green
             nearestMarkerDisplay.textContent = `= ${marker.name}`;
             nearestMarkerDisplay.style.color = '#88ff88';
           } else if (absOffset < 1.0) {
-            // Very close (within 1 cent) - yellow
             nearestMarkerDisplay.textContent = `${marker.name} ${offset > 0 ? '+' : ''}${offset.toFixed(1)}¢`;
             nearestMarkerDisplay.style.color = '#ffff88';
           } else {
-            // Further away - white/secondary
             nearestMarkerDisplay.textContent = `≈ ${marker.name} (${offset > 0 ? '+' : ''}${offset.toFixed(1)}¢)`;
-            nearestMarkerDisplay.style.color = 'var(--text-secondary)';
+            nearestMarkerDisplay.style.color = '#888';
           }
         }
       });
-      
-      // Double-click to snap to nearest TET marker
+
       this.tuningSlider.addEventListener('dblclick', () => {
         const currentValue = parseFloat(this.tuningSlider!.value);
         const { marker } = findNearestMarker(currentValue);
-        
-        // Snap to exact marker value
         this.tuningSlider!.value = marker.fifth.toString();
         this.synth.setFifth(marker.fifth);
-        if (this.visualizer) {
-          this.visualizer.setGenerator([marker.fifth, 1200]);
-        }
-        if (this.tuningValue) {
-          this.tuningValue.textContent = marker.fifth.toFixed(1);
-        }
+        this.visualizer?.setGenerator([marker.fifth, 1200]);
+        if (this.tuningValue) this.tuningValue.textContent = marker.fifth.toFixed(1);
         if (nearestMarkerDisplay) {
           nearestMarkerDisplay.textContent = `= ${marker.name}`;
-          nearestMarkerDisplay.style.color = 'var(--accent-primary)';
+          nearestMarkerDisplay.style.color = '#88ff88';
         }
       });
-      
     }
-    
-    // Volume slider
-    if (this.volumeSlider) {
-      this.volumeSlider.addEventListener('input', () => {
-        this.synth.setMasterVolume(parseFloat(this.volumeSlider!.value));
-      });
-    }
-    
-    // Button spacing is auto-calculated, but user can adjust the gap percentage
+
+    // Volume
+    this.volumeSlider?.addEventListener('input', () => {
+      this.synth.setMasterVolume(parseFloat(this.volumeSlider!.value));
+    });
+
+    // Button spacing
     const spacingInput = document.getElementById('spacing-input') as HTMLInputElement;
-    if (spacingInput) {
-      spacingInput.addEventListener('input', () => {
-        if (!this.visualizer) return;
-        this.visualizer.setButtonSpacing(parseFloat(spacingInput.value) || 0);
-      });
-    }
-    
-    // D4 Reference Hz input
+    spacingInput?.addEventListener('input', () => {
+      this.visualizer?.setButtonSpacing(parseFloat(spacingInput.value) || 0);
+    });
+
+    // D4 Hz reference inputs
     const d4HzInput = document.getElementById('d4-hz-input') as HTMLInputElement;
     const d4NoteInput = document.getElementById('d4-note-input') as HTMLInputElement;
-    
-    if (d4HzInput) {
-      d4HzInput.addEventListener('input', () => {
-        const hz = parseFloat(d4HzInput.value) || 293.66;
+
+    d4HzInput?.addEventListener('input', () => {
+      const hz = parseFloat(d4HzInput.value) || 293.66;
+      this.synth.setD4Hz(hz);
+      this.visualizer?.setD4Hz(hz);
+      if (d4NoteInput) d4NoteInput.value = Note.fromFreq(hz) || '';
+    });
+
+    d4NoteInput?.addEventListener('input', () => {
+      const freq = Note.freq(d4NoteInput.value.trim().toUpperCase());
+      if (freq && freq >= 100 && freq <= 2000) {
+        const hz = Math.round(freq * 100) / 100;
         this.synth.setD4Hz(hz);
-        if (this.visualizer) {
-          this.visualizer.setD4Hz(hz);
-        }
-        
-        // Update note name input (Hz → Note)
-        if (d4NoteInput) {
-          const noteName = Note.fromFreq(hz);
-          d4NoteInput.value = noteName || '';
-        }
-      });
-    }
-    
-    // D4 Reference Note Name input
-    if (d4NoteInput) {
-      d4NoteInput.addEventListener('input', () => {
-        const noteName = d4NoteInput.value.trim().toUpperCase();
-        if (!noteName) return;
-        
-        // Convert note name to frequency using Tonal.js
-        const freq = Note.freq(noteName);
-        if (freq && freq >= 100 && freq <= 2000) {
-          const hz = Math.round(freq * 100) / 100; // Round to 2 decimals
-          this.synth.setD4Hz(hz);
-          if (this.visualizer) {
-            this.visualizer.setD4Hz(hz);
-          }
-          
-          // Update Hz input
-          if (d4HzInput) {
-            d4HzInput.value = hz.toFixed(2);
-          }
-        }
-      });
-    }
-    
-    // Prevent spacebar scroll
-    document.addEventListener('keydown', (e) => {
-      if (e.code === 'Space' && e.target === document.body) {
-        e.preventDefault();
+        this.visualizer?.setD4Hz(hz);
+        if (d4HzInput) d4HzInput.value = hz.toFixed(2);
       }
     });
-    
-    // Stop all notes when window loses focus (good UX)
-    window.addEventListener('blur', () => {
-      this.stopAllNotes();
+
+    // MIDI channel mode
+    this.midiChannelModeSelect?.addEventListener('change', () => {
+      this.midi.setChannelMode(this.midiChannelModeSelect!.value as MidiChannelMode);
+    });
+
+    // MIDI settings toggle
+    const midiToggle = document.getElementById('midi-settings-toggle');
+    const midiPanel = document.getElementById('midi-settings-panel');
+    midiToggle?.addEventListener('click', () => {
+      const isOpen = midiPanel?.classList.toggle('open');
+      if (midiToggle) midiToggle.textContent = isOpen ? '▲ MIDI settings' : '▼ MIDI settings';
+    });
+
+    // Prevent space scroll
+    document.addEventListener('keydown', (e) => {
+      if (e.code === 'Space' && e.target === document.body) e.preventDefault();
+    });
+
+    window.addEventListener('blur', () => this.stopAllNotes());
+
+    // Auto-return focus to body after using range/select controls so keyboard always works
+    document.querySelectorAll<HTMLElement>('select, input[type="range"]').forEach(el => {
+      el.addEventListener('pointerup', () => setTimeout(() => el.blur(), 0));
+      el.addEventListener('change', () => setTimeout(() => el.blur(), 0));
     });
   }
-  
+
+  // ─── Keyboard input ─────────────────────────────────────────────────────
+
   private async handleKeyDown(event: KeyboardEvent): Promise<void> {
-    // Skip if typing in input field
     const target = event.target as HTMLElement;
-    if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT') {
-      return;
+    if (target.tagName === 'TEXTAREA') return;
+    if (target.tagName === 'INPUT') {
+      const t = (target as HTMLInputElement).type;
+      if (t === 'text' || t === 'number') return;
     }
-    
-    // Use event.code (PHYSICAL key position) - works on ALL layouts
+
     const code = event.code;
-    
-    // Prevent default for most keys to avoid browser shortcuts
-    // Allow F5, F11, F12, Escape
     const allowDefault = ['F5', 'F11', 'F12', 'Escape'].includes(code);
-    if (!allowDefault) {
-      event.preventDefault();
-    }
-    
+    if (!allowDefault) event.preventDefault();
+
     if (this.keyRepeat.has(code)) return;
     this.keyRepeat.add(code);
-    
-    // === Special keys ===
-    
-    // Space = HOLD for vibrato
+
     if (code === 'Space') {
       await this.ensureAudioReady();
       this.synth.setVibrato(true);
       if (this.vibratoIndicator) this.vibratoIndicator.style.display = 'inline';
       return;
     }
-    
-    // Alt = HOLD for sustain
     if (code === 'AltLeft' || code === 'AltRight') {
       await this.ensureAudioReady();
       this.synth.setSustain(true);
       if (this.sustainIndicator) this.sustainIndicator.style.display = 'inline';
       return;
     }
-    
-    // Ctrl+ / Ctrl- = Zoom
-    if (event.ctrlKey || event.metaKey) {
-      if (code === 'Equal' || code === 'NumpadAdd') {
-        event.preventDefault();
-        if (this.visualizer) {
-          const { scaleX, scaleY } = this.visualizer.getScale();
-          this.visualizer.setScale(scaleX * 1.1, scaleY * 1.1);
-        }
-        return;
+    if ((event.ctrlKey || event.metaKey) && (code === 'Equal' || code === 'NumpadAdd')) {
+      event.preventDefault();
+      if (this.visualizer) {
+        const { scaleX, scaleY } = this.visualizer.getScale();
+        this.visualizer.setScale(scaleX * 1.1, scaleY * 1.1);
       }
-      if (code === 'Minus' || code === 'NumpadSubtract') {
-        event.preventDefault();
-        if (this.visualizer) {
-          const { scaleX, scaleY } = this.visualizer.getScale();
-          this.visualizer.setScale(scaleX / 1.1, scaleY / 1.1);
-        }
-        return;
-      }
+      return;
     }
-    
-    // === All other keys play notes ===
+    if ((event.ctrlKey || event.metaKey) && (code === 'Minus' || code === 'NumpadSubtract')) {
+      event.preventDefault();
+      if (this.visualizer) {
+        const { scaleX, scaleY } = this.visualizer.getScale();
+        this.visualizer.setScale(scaleX / 1.1, scaleY / 1.1);
+      }
+      return;
+    }
+
     const coord = this.currentLayout.keyMap[code] as KeyCoordinate | undefined;
     if (!coord) return;
-    
+
     await this.ensureAudioReady();
-    
     const [coordX, coordY] = coord;
-    // Apply transpose offset (fifths) AND octave offset
     const effectiveCoordX = coordX + this.transposeOffset;
-    const audioNoteId = `key_${code}_${effectiveCoordX}_${coordY + this.octaveOffset}`;
-    
-    // Track if vibrato is active when this note starts (for sustained note vibrato retention)
+    const effectiveCoordY = coordY + this.octaveOffset;
+    const audioNoteId = `key_${code}_${effectiveCoordX}_${effectiveCoordY}`;
     const vibratoActive = this.synth.getVibrato();
-    
+
     this.synth.playNote(audioNoteId, effectiveCoordX, coordY, this.octaveOffset, vibratoActive);
     this.activeNotes.set(code, { coordX, coordY, vibratoOnPress: vibratoActive });
-    
+
+    // MIDI note for history panel
+    const midiNote = 62 + effectiveCoordX * 7 + effectiveCoordY * 12;
+    this.historyVisualizer?.noteOn(effectiveCoordX, effectiveCoordY, midiNote);
+
     this.render();
-    this.updateDisplay();
   }
-  
+
   private handleKeyUp(event: KeyboardEvent): void {
     const code = event.code;
     this.keyRepeat.delete(code);
-    
-    // === Special key releases ===
-    
-    // Space release = vibrato OFF
+
     if (code === 'Space') {
       this.synth.setVibrato(false);
       if (this.vibratoIndicator) this.vibratoIndicator.style.display = 'none';
       return;
     }
-    
-    // Alt release = sustain OFF
     if (code === 'AltLeft' || code === 'AltRight') {
       this.synth.setSustain(false);
       if (this.sustainIndicator) this.sustainIndicator.style.display = 'none';
       return;
     }
-    
-    // === Note release ===
+
     const noteData = this.activeNotes.get(code);
     if (!noteData) return;
-    
     const { coordX, coordY } = noteData;
     const effectiveCoordX = coordX + this.transposeOffset;
-    const audioNoteId = `key_${code}_${effectiveCoordX}_${coordY + this.octaveOffset}`;
+    const effectiveCoordY = coordY + this.octaveOffset;
+    const audioNoteId = `key_${code}_${effectiveCoordX}_${effectiveCoordY}`;
     this.synth.stopNote(audioNoteId);
-    
     this.activeNotes.delete(code);
+    this.historyVisualizer?.noteOff(effectiveCoordX, effectiveCoordY);
     this.render();
-    this.updateDisplay();
   }
-  
+
+  // ─── Pointer input ──────────────────────────────────────────────────────
+
   private async handlePointerDown(event: PointerEvent): Promise<void> {
     await this.ensureAudioReady();
     this.canvas.setPointerCapture(event.pointerId);
-    
-    // Check if clicking near golden line (D4 reference line)
+
     const rect = this.canvas.getBoundingClientRect();
     const clickY = event.clientY - rect.top;
     const goldenLineY = this.visualizer?.getGoldenLineY();
-    
+
     if (goldenLineY !== undefined && Math.abs(clickY - goldenLineY) < 10) {
-      // Start dragging golden line
       this.draggingGoldenLine = true;
       this.goldenLineDragStartY = clickY;
       this.goldenLineDragStartHz = this.synth.getD4Hz();
       return;
     }
-    
+
     const button = this.getButtonAtPointer(event);
-    if (button) {
-      this.playPointerNote(event.pointerId, button.coordX, button.coordY);
-    }
+    if (button) this.playPointerNote(event.pointerId, button.coordX, button.coordY);
     this.pointerDown.set(event.pointerId, button);
   }
-  
+
   private handlePointerMove(event: PointerEvent): void {
-    // Handle golden line dragging
     if (this.draggingGoldenLine) {
       const rect = this.canvas.getBoundingClientRect();
-      const currentY = event.clientY - rect.top;
-      const deltaY = this.goldenLineDragStartY - currentY; // Inverted: up = increase Hz
-      
-      // Convert Y delta to Hz change (1 pixel = ~0.5 Hz)
-      const hzChange = deltaY * 0.5;
-      const newHz = Math.max(100, Math.min(2000, this.goldenLineDragStartHz + hzChange));
-      
-      // Update D4 Hz
+      const deltaY = this.goldenLineDragStartY - (event.clientY - rect.top);
+      const newHz = Math.max(100, Math.min(2000, this.goldenLineDragStartHz + deltaY * 0.5));
       this.synth.setD4Hz(newHz);
-      if (this.visualizer) {
-        this.visualizer.setD4Hz(newHz);
-      }
-      
-      // Update D4 Hz input if it exists
+      this.visualizer?.setD4Hz(newHz);
       const d4HzInput = document.getElementById('d4-hz-input') as HTMLInputElement;
-      if (d4HzInput) {
-        d4HzInput.value = newHz.toFixed(2);
-      }
-      
-      // Update note name input if it exists
+      if (d4HzInput) d4HzInput.value = newHz.toFixed(2);
       const d4NoteInput = document.getElementById('d4-note-input') as HTMLInputElement;
-      if (d4NoteInput) {
-        const noteName = Note.fromFreq(newHz);
-        d4NoteInput.value = noteName || '';
-      }
-      
+      if (d4NoteInput) d4NoteInput.value = Note.fromFreq(newHz) || '';
       return;
     }
-    
+
     if (!this.pointerDown.has(event.pointerId)) return;
-    
     const currentButton = this.pointerDown.get(event.pointerId);
     const newButton = this.getButtonAtPointer(event);
-    
     const currentId = currentButton ? `${currentButton.coordX}_${currentButton.coordY}` : null;
     const newId = newButton ? `${newButton.coordX}_${newButton.coordY}` : null;
-    
+
     if (currentId !== newId) {
-      if (currentButton) {
-        this.stopPointerNote(event.pointerId, currentButton.coordX, currentButton.coordY);
-      }
-      if (newButton) {
-        this.playPointerNote(event.pointerId, newButton.coordX, newButton.coordY);
-      }
+      if (currentButton) this.stopPointerNote(event.pointerId, currentButton.coordX, currentButton.coordY);
+      if (newButton) this.playPointerNote(event.pointerId, newButton.coordX, newButton.coordY);
       this.pointerDown.set(event.pointerId, newButton);
     }
   }
-  
+
   private handlePointerUp(event: PointerEvent): void {
-    // Reset golden line dragging
     if (this.draggingGoldenLine) {
       this.draggingGoldenLine = false;
       this.canvas.releasePointerCapture(event.pointerId);
       return;
     }
-    
     const currentButton = this.pointerDown.get(event.pointerId);
-    if (currentButton) {
-      this.stopPointerNote(event.pointerId, currentButton.coordX, currentButton.coordY);
-    }
+    if (currentButton) this.stopPointerNote(event.pointerId, currentButton.coordX, currentButton.coordY);
     this.pointerDown.delete(event.pointerId);
     this.canvas.releasePointerCapture(event.pointerId);
   }
-  
+
   private getButtonAtPointer(event: PointerEvent): { coordX: number; coordY: number } | null {
     if (!this.visualizer) return null;
     const rect = this.canvas.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
-    const button = this.visualizer.getButtonAtPoint(x, y);
-    return button ? { coordX: button.coordX, coordY: button.coordY } : null;
+    return this.visualizer.getButtonAtPoint(event.clientX - rect.left, event.clientY - rect.top);
   }
-  
+
   private playPointerNote(pointerId: number, coordX: number, coordY: number): void {
     const effectiveCoordX = coordX + this.transposeOffset;
-    const audioNoteId = `ptr_${pointerId}_${effectiveCoordX}_${coordY + this.octaveOffset}`;
+    const effectiveCoordY = coordY + this.octaveOffset;
+    const audioNoteId = `ptr_${pointerId}_${effectiveCoordX}_${effectiveCoordY}`;
     const vibratoActive = this.synth.getVibrato();
     this.synth.playNote(audioNoteId, effectiveCoordX, coordY, this.octaveOffset, vibratoActive);
     this.activeNotes.set(`ptr_${pointerId}`, { coordX, coordY, vibratoOnPress: vibratoActive });
+    const midiNote = 62 + effectiveCoordX * 7 + effectiveCoordY * 12;
+    this.historyVisualizer?.noteOn(effectiveCoordX, effectiveCoordY, midiNote);
     this.render();
-    this.updateDisplay();
   }
-  
+
   private stopPointerNote(pointerId: number, coordX: number, coordY: number): void {
     const effectiveCoordX = coordX + this.transposeOffset;
-    const audioNoteId = `ptr_${pointerId}_${effectiveCoordX}_${coordY + this.octaveOffset}`;
+    const effectiveCoordY = coordY + this.octaveOffset;
+    const audioNoteId = `ptr_${pointerId}_${effectiveCoordX}_${effectiveCoordY}`;
     this.synth.stopNote(audioNoteId);
     this.activeNotes.delete(`ptr_${pointerId}`);
+    this.historyVisualizer?.noteOff(effectiveCoordX, effectiveCoordY);
     this.render();
-    this.updateDisplay();
   }
-  
+
   public stopAllNotes(): void {
     this.synth.stopAll();
+    this.historyVisualizer?.clearAll();
     this.activeNotes.clear();
     this.keyRepeat.clear();
     this.pointerDown.clear();
     this.render();
-    this.updateDisplay();
   }
-  
+
+  // ─── Render ─────────────────────────────────────────────────────────────
+
   private render(): void {
     if (!this.visualizer) return;
     const activeNoteIds = Array.from(this.activeNotes.values()).map(
@@ -509,25 +532,13 @@ class DComposeApp {
     this.visualizer.setActiveNotes(activeNoteIds);
     this.visualizer.render();
   }
-  
-  private updateDisplay(): void {
-    // Apply BOTH transpose (X) and octave (Y) offsets to show the ACTUAL pitch being played
-    const coords: Array<[number, number, number]> = Array.from(this.activeNotes.values()).map(
-      ({ coordX, coordY }) => [coordX + this.transposeOffset, coordY + this.octaveOffset, 0]
-    );
-    
-    const chords = detectChord(coords);
-    this.chordDisplay.textContent = chords.length > 0 ? chords.slice(0, 3).join(' / ') : '-';
-    
-    const noteNames = getActiveNoteNames(coords);
-    this.notesDisplay.textContent = noteNames.length > 0 ? noteNames.join(', ') : '-';
+
+  private async ensureAudioReady(): Promise<void> {
+    if (!this.synth.isInitialized()) await this.synth.init();
   }
 }
 
-// Initialize app when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
   const app = new DComposeApp();
-  
-  // Expose for debugging and emergency stop
   (window as unknown as { dcomposeApp: DComposeApp }).dcomposeApp = app;
 });
