@@ -197,16 +197,9 @@ export function getLayout(id: string): KeyboardLayout {
  * x = position in circle of fifths (0 = D)
  */
 export function getNoteNameFromCoord(x: number): string {
-  const noteNamesBase = ['F', 'C', 'G', 'D', 'A', 'E', 'B'];
-  const accidentals = ['\u266D\u266D', '\u266D', '', '\u266F', '\u00D7'];
-
-  const noteIndex = (((x + 3) % 7) + 7) % 7;
-  const accidentalIndex = Math.floor((x + 3) / 7) + 2;
-
-  const noteName = noteNamesBase[noteIndex];
-  const accidental = accidentals[Math.max(0, Math.min(4, accidentalIndex))] || '';
-
-  return noteName + accidental;
+  const PITCH_CLASS_NAMES = ['C', 'C\u266F', 'D', 'E\u266D', 'E', 'F', 'F\u266F', 'G', 'A\u266D', 'A', 'B\u266D', 'B'];
+  const pc = ((2 + x * 7) % 12 + 12) % 12;
+  return PITCH_CLASS_NAMES[pc];
 }
 
 /**
