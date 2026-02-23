@@ -225,16 +225,16 @@ export class KeyboardVisualizer {
     this.ctx.fillStyle = '#000';
     this.ctx.fillRect(0, 0, width, height);
 
-    this.drawPitchLines();
-
     for (const button of this.buttons) {
       this.drawCell(button);
     }
+
+    this.drawPitchLines();
   }
 
   private drawPitchLines(): void {
     const { width, height, generator } = this.options;
-    const { genX, genY1 } = this.getSpacing();
+    const { genX, genX1, genY1 } = this.getSpacing();
     const centerX = width / 2;
     const centerY = height / 2;
     const octavePixels = genY1; // genY1 = octave size in pixels
@@ -289,7 +289,7 @@ export class KeyboardVisualizer {
       this.ctx.fillText(`D4=${this.options.d4Hz.toFixed(2)}Hz`, width - 4, d4Y - 4);
     }
 
-    // Center vertical line (D column)
+    // Circle-of-Fifths axis (vertical D column — always vertical)
     this.ctx.strokeStyle = '#2a2a0a';
     this.ctx.lineWidth = 1;
     this.ctx.setLineDash([6, 3]);
@@ -298,6 +298,22 @@ export class KeyboardVisualizer {
     this.ctx.lineTo(centerX, height - 40);
     this.ctx.stroke();
     this.ctx.setLineDash([]);
+
+    // Pitch axis (follows octave/pitch direction — tilts with skew)
+    const paxLen = Math.sqrt(genX1 * genX1 + genY1 * genY1);
+    if (paxLen > 0.01) {
+      const t = Math.max(width, height);
+      const nx = genX1 / paxLen;
+      const ny = -genY1 / paxLen;
+      this.ctx.strokeStyle = '#1a2a3a';
+      this.ctx.lineWidth = 1;
+      this.ctx.setLineDash([4, 6]);
+      this.ctx.beginPath();
+      this.ctx.moveTo(centerX - nx * t, centerY - ny * t);
+      this.ctx.lineTo(centerX + nx * t, centerY + ny * t);
+      this.ctx.stroke();
+      this.ctx.setLineDash([]);
+    }
 
     // Tuning label
     const currentFifth = generator[0];
@@ -413,6 +429,12 @@ export class KeyboardVisualizer {
     const px = (a: number, b: number) => x + a * h1x + b * h2x;
     const py = (a: number, b: number) => y + a * h1y + b * h2y;
 
+    // Vignette: fade cells near canvas edges
+    const { width: cw, height: ch } = this.options;
+    const distFrac = Math.max(Math.abs(x - cw / 2) / (cw / 2), Math.abs(y - ch / 2) / (ch / 2));
+    const fade = Math.max(0, 1 - Math.pow(distFrac, 2));
+    this.ctx.globalAlpha = fade;
+
     this.ctx.beginPath();
     this.ctx.moveTo(px(-1, -1), py(-1, -1)); // bottom-left
     this.ctx.lineTo(px( 1, -1), py( 1, -1)); // bottom-right
@@ -432,6 +454,7 @@ export class KeyboardVisualizer {
     this.ctx.textAlign = 'center';
     this.ctx.textBaseline = 'middle';
     this.ctx.fillText(noteName, x, y);
+    this.ctx.globalAlpha = 1;
   }
 
   resize(width: number, height: number): void {
