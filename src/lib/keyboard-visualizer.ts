@@ -1,37 +1,46 @@
 /**
  * DCompose/Wicki-Hayden Keyboard Visualizer
- * 
- * Renders an isomorphic grid layout matching the original WickiSynth:
- * - Vertical axis = pitch height (same pitch = same height)
- * - Horizontal axis = circle of fifths
- * - Proper spacing showing the musical relationships
+ *
+ * Renders an isomorphic grid as a tiling of parallelograms.
+ * - Every pixel on the canvas maps to exactly one cell (Voronoi = parallelogram partition).
+ * - No gaps, no overlaps — a continuous discrete space.
+ * - CELL_INSET shrinks inactive cells to reveal black background as "mortar".
+ * - skewFactor: 1.0 = full DCompose diagonal, 0.0 = MidiMech (octave axis leans right, pitch ↗).
  */
 
 import { getNoteNameFromCoord } from './keyboard-layouts';
+import { cellColors } from './note-colors';
 import { TUNING_MARKERS, findNearestMarker } from './synth';
 
 export interface VisualizerOptions {
   width: number;
   height: number;
   generator: [number, number]; // [fifth, octave] in cents
-  d4Hz: number; // Current D4 reference frequency
-  // Scale factors for zoom control (can be set via decimal input or drag)
-  scaleX: number; // Horizontal spacing multiplier (1.0 = default)
-  scaleY: number; // Vertical spacing multiplier (1.0 = default)
-  // Spacing between buttons (0 = touching, 0.1 = 10% gap, etc.)
-  // Button radius is AUTO-CALCULATED to be as large as possible without overlap
-  buttonSpacing: number;
+  d4Hz: number;
+  scaleX: number;
+  scaleY: number;
+  buttonSpacing: number; // kept for API compat, not used in rendering
+  /**
+   * DCompose ↔ MidiMech skew factor.
+   * 1.0 = full DCompose diagonal skew (default)
+   * 0.0 = MidiMech orthogonal rows (horizontal rows, no diagonal)
+   */
+  skewFactor: number;
 }
 
 interface Button {
-  x: number;
-  y: number;
-  coordX: number;  // circle of fifths position (0 = D)
-  coordY: number;  // octave offset
+  x: number;    // screen center X
+  y: number;    // screen center Y
+  coordX: number;
+  coordY: number;
   noteName: string;
   isBlackKey: boolean;
-  pitchCents: number; // pitch in cents from D
+  pitchCents: number;
 }
+
+// Fraction of cell size used for inactive cells.
+// Gap = 1 - CELL_INSET appears as black "mortar" between cells.
+const CELL_INSET = 0.93;
 
 export class KeyboardVisualizer {
   private canvas: HTMLCanvasElement;
@@ -39,52 +48,38 @@ export class KeyboardVisualizer {
   private buttons: Button[] = [];
   private activeNotes: Set<string> = new Set();
   private sustainedNotes: Set<string> = new Set();
-  
+
+  // Half-vectors for parallelogram cells (computed in generateButtons)
+  private hv1 = { x: 0, y: 0 }; // half-step in coordX direction
+  private hv2 = { x: 0, y: 0 }; // half-step in coordY direction
+
   private options: VisualizerOptions = {
     width: 900,
     height: 400,
-    generator: [700, 1200], // 12-TET: fifth=700cents, octave=1200cents
-    d4Hz: 293.66, // Default D4 frequency
-    scaleX: 1.0, // Horizontal zoom (1.0 = default)
-    scaleY: 1.0, // Vertical zoom (1.0 = default)
-    buttonSpacing: 0.35, // 35% gap between buttons to prevent overlap
+    generator: [700, 1200],
+    d4Hz: 293.66,
+    scaleX: 1.0,
+    scaleY: 1.0,
+    buttonSpacing: 0,
+    skewFactor: 1.0,
   };
-  
-  // Layout parameters - TRUE 1:1 ISOMETRIC GRID
-  // Both axes use the same cents-per-pixel ratio (baseGenYFactor)
-  // This makes genX = genY[0] at all tunings → truly isometric layout
-  private baseGenYFactor = 0.07; // cents-per-pixel ratio for BOTH axes
-  
-  // Cached auto-calculated button radius
-  private calculatedButtonRadius: number = 15;
-  
-  // Colors
-  private colors = {
-    background: '#1a1a2e',
-    whiteKey: '#f0f0f8',
-    blackKey: '#2a2a3e',
-    whiteKeyText: '#1a1a2e',
-    blackKeyText: '#f0f0f8',
-    activeKey: '#22c55e',
-    activeKeyText: '#ffffff',
-    sustainedKey: '#f59e0b',
-    pitchLine: '#333344',
-  };
-  
+
+  private baseGenYFactor = 0.07;
+
   constructor(canvas: HTMLCanvasElement, options?: Partial<VisualizerOptions>) {
     this.canvas = canvas;
     const ctx = canvas.getContext('2d');
     if (!ctx) throw new Error('Could not get canvas context');
     this.ctx = ctx;
-    
+
     if (options) {
       this.options = { ...this.options, ...options };
     }
-    
+
     this.setupCanvas();
     this.generateButtons();
   }
-  
+
   private setupCanvas(): void {
     const dpr = window.devicePixelRatio || 1;
     this.canvas.width = this.options.width * dpr;
@@ -93,189 +88,113 @@ export class KeyboardVisualizer {
     this.canvas.style.height = `${this.options.height}px`;
     this.ctx.scale(dpr, dpr);
   }
-  
-  /**
-   * Set the tuning generator (for different TETs)
-   * This regenerates button positions to reflect the new pitch relationships
-   */
+
   setGenerator(generator: [number, number]): void {
     this.options.generator = generator;
     this.generateButtons();
     this.render();
   }
-  
-  /**
-   * Set the D4 reference frequency
-   */
+
   setD4Hz(hz: number): void {
     this.options.d4Hz = hz;
     this.render();
   }
-  
-  /**
-   * Get current generator
-   */
+
   getGenerator(): [number, number] {
     return [...this.options.generator] as [number, number];
   }
-  
-  /**
-   * Set zoom/scale factors
-   * scaleX affects horizontal spacing (circle of fifths)
-   * scaleY affects vertical spacing (pitch)
-   */
+
   setScale(scaleX: number, scaleY: number): void {
     this.options.scaleX = Math.max(0.5, Math.min(2.0, scaleX));
     this.options.scaleY = Math.max(0.5, Math.min(2.0, scaleY));
     this.generateButtons();
     this.render();
   }
-  
-  /**
-   * Get current scale factors
-   */
+
   getScale(): { scaleX: number; scaleY: number } {
     return { scaleX: this.options.scaleX, scaleY: this.options.scaleY };
   }
-  
-  /**
-   * Set button spacing (0 = touching, 0.1 = 10% gap)
-   * Button radius is auto-calculated to maximize size without overlap
-   */
-  setButtonSpacing(spacing: number): void {
-    this.options.buttonSpacing = Math.max(0, Math.min(0.5, spacing));
+
+  setButtonSpacing(_spacing: number): void {
+    // No-op: gap is determined by CELL_INSET, not a spacing parameter
+    this.render();
+  }
+
+  getButtonSpacing(): number {
+    return 0;
+  }
+
+  // Kept for API compat (used by NoteHistoryVisualizer waterfall golden line)
+  getButtonRadius(): number {
+    return Math.min(
+      Math.abs(this.hv1.x) + Math.abs(this.hv2.x),
+      Math.abs(this.hv1.y) + Math.abs(this.hv2.y),
+    );
+  }
+
+  /** Set the DCompose↔MidiMech skew factor (0–1). Triggers re-render. */
+  setSkewFactor(f: number): void {
+    this.options.skewFactor = Math.max(0, Math.min(1, f));
     this.generateButtons();
     this.render();
   }
-  
-  /**
-   * Get current button spacing
-   */
-  getButtonSpacing(): number {
-    return this.options.buttonSpacing;
+
+  getSkewFactor(): number {
+    return this.options.skewFactor;
   }
-  
-  /**
-   * Get current auto-calculated button radius
-   */
-  getButtonRadius(): number {
-    return this.calculatedButtonRadius;
-  }
-  
-  /**
-   * Get Y position of the golden line (D4 reference line)
-   * Returns undefined if line is not visible
-   */
+
   getGoldenLineY(): number | undefined {
     const { height } = this.options;
-    const { genYFactor } = this.getSpacing();
     const centerY = height / 2;
-    
-    // D is at the center (0 fifths from D), so pitch = 0 cents
-    const d4PitchCents = 0;
-    const d4Y = centerY - (d4PitchCents * genYFactor);
-    
-    // Only return if visible on screen
-    if (d4Y > 0 && d4Y < height) {
-      return d4Y;
-    }
+    if (centerY > 0 && centerY < height) return centerY;
     return undefined;
   }
-  
-  /**
-   * Get effective spacing values (base * scale)
-   * genYFactor auto-adjusts based on fifth size to maintain visual stability
-   */
-  private getSpacing(): { genX: number; genYFactor: number } {
-    // TRUE 1:1 SCALE: Both axes use the same cents-per-pixel ratio
-    // Both X and Y scale proportionally with fifth size
-    // This makes the grid truly isometric - 1 cent = 1 cent on both axes
-    const currentFifth = this.options.generator[0];
-    
-    // Use the SAME scaling factor for both axes (no inverse adjustment)
-    // genX and genY[0] will be equal at all tunings → TRUE 1:1 ratio
-    const genX = currentFifth * this.baseGenYFactor * this.options.scaleX;
-    const genYFactor = this.baseGenYFactor * this.options.scaleY;
-    
-    return {
-      genX,
-      genYFactor,
-    };
+
+  private getSpacing(): { genX: number; genY0: number; genX1: number; genY1: number } {
+    const { generator, skewFactor, scaleX, scaleY } = this.options;
+    const f = this.baseGenYFactor;
+    const baseSkew = generator[0] * f;
+    const genX  = generator[0] * f * scaleX;               // X per coordX step (constant)
+    const genY0 = baseSkew * scaleY * skewFactor;           // Y lean of coordX axis (DCompose diagonal)
+    const genX1 = baseSkew * scaleX * (1 - skewFactor);     // X lean of coordY axis (MidiMech diagonal)
+    const genY1 = generator[1] * f * scaleY;                // Y per coordY step (constant)
+    return { genX, genY0, genX1, genY1 };
   }
-  
-  /**
-   * Calculate optimal button radius to maximize size without overlap
-   * Based on the minimum distance between any two adjacent buttons
-   */
-  private calculateOptimalButtonRadius(genX: number, genY: [number, number]): number {
-    // In the DCompose grid, adjacent buttons can be:
-    // 1. Same column, adjacent octave: vertical distance = genY[1]
-    // 2. Adjacent column (same pitch level): horizontal distance = genX, vertical = genY[0]
-    //    The actual distance is sqrt(genX² + genY[0]²)
-    
-    // Calculate distances for different neighbor relationships
-    const verticalDist = Math.abs(genY[1]); // octave neighbor
-    const diagonalDist = Math.sqrt(genX * genX + genY[0] * genY[0]); // fifth neighbor
-    
-    // Minimum distance between any two neighbors
-    const minDist = Math.min(verticalDist, diagonalDist);
-    
-    // Maximum radius = half the min distance, minus spacing
-    const spacing = this.options.buttonSpacing;
-    const maxRadius = (minDist / 2) * (1 - spacing);
-    
-    // Clamp to reasonable bounds
-    return Math.max(6, Math.min(40, maxRadius));
-  }
-  
+
   private generateButtons(): void {
     this.buttons = [];
-    
-    const { width, height, generator } = this.options;
-    const { genX, genYFactor } = this.getSpacing();
+
+    const { width, height } = this.options;
+    const { genX, genY0, genX1, genY1 } = this.getSpacing();
     const centerX = width / 2;
     const centerY = height / 2;
-    
-    // Calculate y offsets based on generator (pitch in cents)
-    const genY: [number, number] = [
-      generator[0] * genYFactor, // y offset per fifth
-      generator[1] * genYFactor, // y offset per octave
-    ];
-    
-    // AUTO-CALCULATE button radius to maximize size without overlap
-    this.calculatedButtonRadius = this.calculateOptimalButtonRadius(genX, genY);
-    const buttonRadius = this.calculatedButtonRadius;
-    
-    // Generate grid - i = circle of fifths, j = octave
-    // Range to cover visible area with good density
-    const iRange = 9;   // -9 to +9 in circle of fifths (covers Fb to B#)
-    const jRange = 4;   // -4 to +4 octaves
-    
+
+    // Parallelogram half-vectors:
+    //   hv1 = half-step along coordX direction  → (genX/2, -genY0/2)
+    //   hv2 = half-step along coordY direction  → (genX1/2, -genY1/2)
+    //   At skew=1 (DCompose): hv2.x=0 (octave vertical), hv1.y≠0 (fifth leans up)
+    //   At skew=0 (MidiMech): hv1.y=0 (fifth horizontal), hv2.x≠0 (octave leans right)
+    this.hv1 = { x: genX / 2,   y: -genY0 / 2 };
+    this.hv2 = { x: genX1 / 2,  y: -genY1 / 2 };
+
+    const iRange = 12;
+    const jRange = 5;
+
     for (let i = -iRange; i <= iRange; i++) {
       for (let j = -jRange; j <= jRange; j++) {
-        // Calculate screen position (matching original WickiSynth formula)
-        // X position: each fifth moves right by genX pixels
-        // Y position: pitch determines height (higher pitch = higher on screen)
-        const screenX = centerX + i * genX;
-        const screenY = centerY - (i * genY[0] + j * genY[1]);
-        
-        // Calculate pitch in cents from center (D)
-        const pitchCents = i * generator[0] + j * generator[1];
-        
-        // Only include buttons that are on screen (with margins for labels)
-        const padding = buttonRadius * 2;
-        const topMargin = 30;    // Space for tuning label at top
-        const bottomMargin = 45; // Space for X-axis labels at bottom
-        if (screenX < -padding || screenX > width + padding) continue;
-        if (screenY < topMargin - padding || screenY > height - bottomMargin + padding) continue;
-        
+        const screenX = centerX + i * genX + j * genX1;
+        const screenY = centerY - (i * genY0 + j * genY1);
+
+        // Broad cull — keep cells whose center is near the canvas
+        const margin = (Math.abs(this.hv1.x) + Math.abs(this.hv2.x) + Math.abs(this.hv1.y) + Math.abs(this.hv2.y)) * 2;
+        if (screenX < -margin || screenX > width + margin) continue;
+        if (screenY < -margin || screenY > height + margin) continue;
+
+        const pitchCents = i * this.options.generator[0] + j * this.options.generator[1];
         const noteName = getNoteNameFromCoord(i);
-        
-        // Determine if it's a "black key" based on note name
-        // Black keys are sharps and flats (have accidentals)
-        const isBlackKey = noteName.includes('\u266F') || noteName.includes('\u266D') || 
-                          noteName.includes('#') || noteName.includes('b');
-        
+        const isBlackKey = noteName.includes('♯') || noteName.includes('♭') ||
+                           noteName.includes('#') || noteName.includes('b');
+
         this.buttons.push({
           x: screenX,
           y: screenY,
@@ -287,90 +206,75 @@ export class KeyboardVisualizer {
         });
       }
     }
-    
-    // Sort buttons by y position (draw lower pitch first for proper overlap)
-    this.buttons.sort((a, b) => b.y - a.y);
+
+    // Sort back to front (lower Y = further back) so active cells render on top
+    this.buttons.sort((a, b) => a.y - b.y);
   }
-  
+
   setActiveNotes(noteIds: string[]): void {
     this.activeNotes = new Set(noteIds);
   }
-  
+
   setSustainedNotes(noteIds: string[]): void {
     this.sustainedNotes = new Set(noteIds);
   }
-  
-  /**
-   * Render the keyboard
-   */
+
   render(): void {
     const { width, height } = this.options;
-    const buttonRadius = this.calculatedButtonRadius;
-    
-    // Clear
-    this.ctx.fillStyle = this.colors.background;
+
+    this.ctx.fillStyle = '#000';
     this.ctx.fillRect(0, 0, width, height);
-    
-    // Draw horizontal pitch lines (same pitch = same height)
+
     this.drawPitchLines();
-    
-    // Draw buttons
+
     for (const button of this.buttons) {
-      this.drawButton(button, buttonRadius);
+      this.drawCell(button);
     }
   }
-  
+
   private drawPitchLines(): void {
     const { width, height, generator } = this.options;
-    const { genX, genYFactor } = this.getSpacing();
+    const { genX, genY1 } = this.getSpacing();
     const centerX = width / 2;
     const centerY = height / 2;
-    const octavePixels = generator[1] * genYFactor; // pixels per octave
-    
-    // D4 = 293.66 Hz (our center reference)
-    const baseFreq = 293.66;
+    const octavePixels = genY1; // genY1 = octave size in pixels
+
     const baseOctave = 4;
-    
-    this.ctx.strokeStyle = this.colors.pitchLine;
+
+    this.ctx.strokeStyle = '#1a1a1a';
     this.ctx.lineWidth = 1;
     this.ctx.setLineDash([5, 10]);
-    
-    // Draw octave lines with labels (Y-axis)
+
     for (let oct = -3; oct <= 3; oct++) {
       const y = centerY - oct * octavePixels;
       if (y < 0 || y > height) continue;
-      
+
       this.ctx.beginPath();
-      this.ctx.moveTo(40, y); // Start after label area
+      this.ctx.moveTo(40, y);
       this.ctx.lineTo(width, y);
       this.ctx.stroke();
-      
-      // Calculate frequency at this octave (D at each octave)
+
       const octaveNum = baseOctave + oct;
-      const freq = baseFreq * Math.pow(2, oct);
-      
-      // Draw octave label on left side
+      const freq = 293.66 * Math.pow(2, oct);
+
       this.ctx.setLineDash([]);
-      this.ctx.fillStyle = '#666677';
-      this.ctx.font = '10px Inter, sans-serif';
+      this.ctx.fillStyle = '#333';
+      this.ctx.font = '10px "JetBrains Mono", monospace';
       this.ctx.textAlign = 'left';
       this.ctx.textBaseline = 'middle';
       this.ctx.fillText(`D${octaveNum}`, 4, y);
-      this.ctx.fillStyle = '#555566';
-      this.ctx.font = '8px Inter, sans-serif';
+      this.ctx.fillStyle = '#222';
+      this.ctx.font = '8px "JetBrains Mono", monospace';
       this.ctx.fillText(`${freq.toFixed(0)}Hz`, 4, y + 10);
       this.ctx.setLineDash([5, 10]);
     }
-    
+
     this.ctx.setLineDash([]);
-    
-    // Draw reference line for current D4 Hz (HORIZONTAL - Y-axis)
-    // D is at the center (0 fifths from D), so pitch = 0 cents
-    const d4PitchCents = 0; // D is the center reference
-    const d4Y = centerY - (d4PitchCents * genYFactor);
-    
+
+    // D4 center line
+    const d4Y = centerY;
     if (d4Y > 0 && d4Y < height) {
-      this.ctx.strokeStyle = '#886644';
+      this.ctx.strokeStyle = '#2a1e0a';
       this.ctx.lineWidth = 1;
       this.ctx.setLineDash([2, 4]);
       this.ctx.beginPath();
@@ -378,95 +282,67 @@ export class KeyboardVisualizer {
       this.ctx.lineTo(width, d4Y);
       this.ctx.stroke();
       this.ctx.setLineDash([]);
-      
-      // D4 label with current Hz value
-      const d4HzValue = this.options.d4Hz.toFixed(2);
-      this.ctx.fillStyle = '#aa8866';
-      this.ctx.font = 'bold 9px Inter, sans-serif';
+
+      this.ctx.fillStyle = '#553322';
+      this.ctx.font = 'bold 9px "JetBrains Mono", monospace';
       this.ctx.textAlign = 'right';
-      this.ctx.fillText(`D4=${d4HzValue}Hz`, width - 4, d4Y - 4);
+      this.ctx.fillText(`D4=${this.options.d4Hz.toFixed(2)}Hz`, width - 4, d4Y - 4);
     }
-    
-    // Draw reference line for current Fifth size (VERTICAL - X-axis)
-    // This is THE key indicator - the X-axis fifth spacing IS the tuning
-    const centerLineX = centerX;
-    
-    // Draw vertical line through entire grid
-    this.ctx.strokeStyle = '#bb9966';
-    this.ctx.lineWidth = 2;
+
+    // Center vertical line (D column)
+    this.ctx.strokeStyle = '#2a2a0a';
+    this.ctx.lineWidth = 1;
     this.ctx.setLineDash([6, 3]);
     this.ctx.beginPath();
-    this.ctx.moveTo(centerLineX, 25);
-    this.ctx.lineTo(centerLineX, height - 50);
+    this.ctx.moveTo(centerX, 25);
+    this.ctx.lineTo(centerX, height - 40);
     this.ctx.stroke();
     this.ctx.setLineDash([]);
-    
-    // Fifth label - PROMINENT at top of canvas
+
+    // Tuning label
     const currentFifth = generator[0];
     const { marker } = findNearestMarker(currentFifth);
     const isExact = Math.abs(currentFifth - marker.fifth) < 0.5;
-    
-    // Draw label box background
-    const labelText = isExact 
+    const labelText = isExact
       ? `${marker.name} (${currentFifth.toFixed(1)}¢)`
       : `5th = ${currentFifth.toFixed(1)}¢`;
-    
-    this.ctx.font = 'bold 14px Inter, sans-serif';
+
+    this.ctx.font = 'bold 13px "JetBrains Mono", monospace';
     const textWidth = this.ctx.measureText(labelText).width;
-    
-    // Draw background rectangle for visibility
-    this.ctx.fillStyle = 'rgba(30, 30, 50, 0.9)';
-    this.ctx.fillRect(centerLineX - textWidth/2 - 8, 2, textWidth + 16, 22);
-    this.ctx.strokeStyle = '#bb9966';
+    this.ctx.fillStyle = '#0a0a0a';
+    this.ctx.fillRect(centerX - textWidth / 2 - 8, 2, textWidth + 16, 20);
+    this.ctx.strokeStyle = '#333300';
     this.ctx.lineWidth = 1;
-    this.ctx.strokeRect(centerLineX - textWidth/2 - 8, 2, textWidth + 16, 22);
-    
-    // Draw text
-    this.ctx.fillStyle = '#ffcc88';
+    this.ctx.strokeRect(centerX - textWidth / 2 - 8, 2, textWidth + 16, 20);
+    this.ctx.fillStyle = '#887744';
     this.ctx.textAlign = 'center';
     this.ctx.textBaseline = 'top';
-    this.ctx.fillText(labelText, centerLineX, 6);
-    
-    // Draw circle of fifths labels at bottom (X-axis)
+    this.ctx.fillText(labelText, centerX, 5);
+
     this.drawCircleOfFifthsLabels(centerX, genX);
-    
-    // Draw tuning markers inline with grid
     this.drawTuningMarkersInline(centerX, genX);
   }
-  
-  /**
-   * Draw tuning markers inline with the circle of fifths grid
-   * Each marker appears at its corresponding X position based on fifth size
-   */
+
   private drawTuningMarkersInline(centerX: number, genX: number): void {
     const { width, height, generator } = this.options;
-    const currentFifth = generator[0]; // Current fifth size in cents
-    const markerY = height - 20; // Position inline with grid X-axis (slightly above circle-of-fifths labels)
-    
+    const currentFifth = generator[0];
+    const markerY = height - 16;
+
     this.ctx.textAlign = 'center';
     this.ctx.textBaseline = 'bottom';
-    
+
     for (const marker of TUNING_MARKERS) {
-      // Calculate X position based on circle-of-fifths grid
-      // Each column in the grid represents one step in the circle of fifths
-      // The current tuning's fifth size determines the spacing
-      // Position: i = (marker.fifth - currentFifth) / currentFifth gives the grid column
-      const centerFifth = 700; // 12-TET reference (D is at center)
+      const centerFifth = 700;
       const gridColumn = (marker.fifth - centerFifth) / currentFifth;
       const x = centerX + gridColumn * genX;
-      
-      // Only draw if on screen
+
       if (x < 20 || x > width - 20) continue;
-      
-      // Highlight current tuning
+
       const isCurrent = Math.abs(marker.fifth - currentFifth) < 2;
-      
+
       if (isCurrent) {
-        // Current tuning - bold and highlighted
-        this.ctx.fillStyle = '#aa88ff';
-        this.ctx.font = 'bold 10px Inter, sans-serif';
-        
-        // Draw arrow pointing to it
+        this.ctx.fillStyle = '#6644aa';
+        this.ctx.font = 'bold 10px "JetBrains Mono", monospace';
         this.ctx.beginPath();
         this.ctx.moveTo(x, markerY + 2);
         this.ctx.lineTo(x - 3, markerY + 6);
@@ -474,108 +350,90 @@ export class KeyboardVisualizer {
         this.ctx.closePath();
         this.ctx.fill();
       } else {
-        // Other markers - subtle
-        this.ctx.fillStyle = '#555566';
-        this.ctx.font = '8px Inter, sans-serif';
+        this.ctx.fillStyle = '#333333';
+        this.ctx.font = '8px "JetBrains Mono", monospace';
       }
-      
+
       this.ctx.fillText(marker.name, x, markerY);
     }
   }
-  
-  /**
-   * Draw circle of fifths labels at the bottom of the visualizer
-   * Shows note names for each column (Bb, F, C, G, D, A, E, B, F#, etc.)
-   */
+
   private drawCircleOfFifthsLabels(centerX: number, genX: number): void {
     const { width, height } = this.options;
-    const labelY = height - 10; // Position at bottom edge, in the reserved margin area
-    
+    const labelY = height - 4;
+
     this.ctx.textAlign = 'center';
     this.ctx.textBaseline = 'bottom';
-    
-    // Draw labels for visible columns - HUGE VISIBLE FONTS
+
     for (let i = -9; i <= 9; i++) {
       const x = centerX + i * genX;
       if (x < 30 || x > width - 30) continue;
-      
+
       const noteName = getNoteNameFromCoord(i);
-      
-      // Highlight D (center) with VERY LARGE text, others still readable
+
       if (i === 0) {
-        // D is CENTER - make it HUGE and BRIGHT
         this.ctx.fillStyle = '#ffffff';
-        this.ctx.font = 'bold 28px Inter, sans-serif';
+        this.ctx.font = 'bold 26px "JetBrains Mono", monospace';
       } else if (Math.abs(i) <= 2) {
-        // Nearby notes (G, A, C, E) - large and bright
-        this.ctx.fillStyle = '#ffffff';
-        this.ctx.font = 'bold 20px Inter, sans-serif';
+        this.ctx.fillStyle = '#cccccc';
+        this.ctx.font = 'bold 18px "JetBrains Mono", monospace';
       } else if (Math.abs(i) <= 5) {
-        // Medium distance - visible
-        this.ctx.fillStyle = '#ddddee';
-        this.ctx.font = 'bold 16px Inter, sans-serif';
+        this.ctx.fillStyle = '#888888';
+        this.ctx.font = 'bold 14px "JetBrains Mono", monospace';
       } else {
-        // Far notes - still readable
-        this.ctx.fillStyle = '#bbbbcc';
-        this.ctx.font = '14px Inter, sans-serif';
+        this.ctx.fillStyle = '#444444';
+        this.ctx.font = '12px "JetBrains Mono", monospace';
       }
-      
+
       this.ctx.fillText(noteName, x, labelY);
     }
   }
-  
-  private drawButton(button: Button, radius: number): void {
+
+  private drawCell(button: Button): void {
     const { x, y, coordX, coordY, noteName, isBlackKey } = button;
     const noteId = `${coordX}_${coordY}`;
-    
+
     const isActive = this.activeNotes.has(noteId);
     const isSustained = this.sustainedNotes.has(noteId) && !isActive;
-    
-    // Determine colors
-    let fillColor: string;
-    let textColor: string;
-    let strokeColor: string;
-    
-    if (isActive) {
-      fillColor = this.colors.activeKey;
-      textColor = this.colors.activeKeyText;
-      strokeColor = '#16a34a';
-    } else if (isSustained) {
-      fillColor = this.colors.sustainedKey;
-      textColor = this.colors.activeKeyText;
-      strokeColor = '#d97706';
-    } else if (isBlackKey) {
-      fillColor = this.colors.blackKey;
-      textColor = this.colors.blackKeyText;
-      strokeColor = '#444455';
-    } else {
-      fillColor = this.colors.whiteKey;
-      textColor = this.colors.whiteKeyText;
-      strokeColor = '#888899';
-    }
-    
-    // Draw button circle
+
+    const state = isActive ? 'active' as const
+      : isSustained ? 'sustained' as const
+      : isBlackKey ? 'black' as const
+      : 'white' as const;
+    const { fill: fillColor, text: textColor } = cellColors(coordX, state);
+
+    const { hv1, hv2 } = this;
+    const s = isActive ? 1.0 : CELL_INSET;
+
+    // 4 corners of the parallelogram cell, scaled by s around center
+    const h1x = hv1.x * s, h1y = hv1.y * s;
+    const h2x = hv2.x * s, h2y = hv2.y * s;
+
+    // corners: ±hv1 ± hv2
+    const px = (a: number, b: number) => x + a * h1x + b * h2x;
+    const py = (a: number, b: number) => y + a * h1y + b * h2y;
+
     this.ctx.beginPath();
-    this.ctx.arc(x, y, radius, 0, Math.PI * 2);
+    this.ctx.moveTo(px(-1, -1), py(-1, -1)); // bottom-left
+    this.ctx.lineTo(px( 1, -1), py( 1, -1)); // bottom-right
+    this.ctx.lineTo(px( 1,  1), py( 1,  1)); // top-right
+    this.ctx.lineTo(px(-1,  1), py(-1,  1)); // top-left
+    this.ctx.closePath();
     this.ctx.fillStyle = fillColor;
     this.ctx.fill();
-    
-    // Draw border
-    this.ctx.strokeStyle = strokeColor;
-    this.ctx.lineWidth = isActive || isSustained ? 3 : 1.5;
-    this.ctx.stroke();
-    
-    // Draw note name
+
+    // Note label — size from full cell span, not half-vectors
+    const cellW = (Math.abs(hv1.x) + Math.abs(hv2.x)) * 2;
+    const cellH = (Math.abs(hv1.y) + Math.abs(hv2.y)) * 2;
+    const cellMin = Math.min(cellW, cellH);
+    const fontSize = Math.max(10, Math.min(22, cellMin * 0.38));
     this.ctx.fillStyle = textColor;
-    this.ctx.font = `bold ${radius * 0.85}px Inter, sans-serif`;
+    this.ctx.font = `bold ${fontSize}px "JetBrains Mono", monospace`;
     this.ctx.textAlign = 'center';
     this.ctx.textBaseline = 'middle';
     this.ctx.fillText(noteName, x, y);
   }
-  
-  /**
-   * Resize the visualizer
-   */
+
   resize(width: number, height: number): void {
     this.options.width = width;
     this.options.height = height;
@@ -583,42 +441,67 @@ export class KeyboardVisualizer {
     this.generateButtons();
     this.render();
   }
-  
-  /**
-   * Get note ID from coordinates
-   */
+
   static getNoteId(coordX: number, coordY: number): string {
     return `${coordX}_${coordY}`;
   }
-  
+
   /**
-   * Find button at screen coordinates (for mouse/touch)
+   * Find the button nearest to screen coordinates using the exact parallelogram
+   * Voronoi partition — O(N) nearest-neighbor, no dead zones.
    */
   getButtonAtPoint(screenX: number, screenY: number): { coordX: number; coordY: number; noteId: string } | null {
-    const radius = this.calculatedButtonRadius;
-    
-    // Search in reverse order (top buttons drawn last, so check them first)
-    for (let i = this.buttons.length - 1; i >= 0; i--) {
-      const button = this.buttons[i];
-      const dx = screenX - button.x;
-      const dy = screenY - button.y;
-      const distance = Math.sqrt(dx * dx + dy * dy);
-      
-      if (distance <= radius) {
-        return {
-          coordX: button.coordX,
-          coordY: button.coordY,
-          noteId: `${button.coordX}_${button.coordY}`,
-        };
+    if (this.buttons.length === 0) return null;
+
+    // Use parallelogram metric: solve 2×2 linear system for grid coords.
+    // Screen: x = cx + i*genX + j*genX1,  y = cy - (i*genY0 + j*genY1)
+    const { genX, genY0, genX1, genY1 } = this.getSpacing();
+    const { width, height } = this.options;
+    const dx = screenX - width / 2;
+    const dy = -(screenY - height / 2); // flip Y: screen Y↓ vs coord Y↑
+    // Solve: dx = i*genX + j*genX1,  dy = i*genY0 + j*genY1
+    const det = genX * genY1 - genX1 * genY0;
+    const iFloat = det !== 0 ? (dx * genY1 - genX1 * dy) / det : 0;
+    const jFloat = det !== 0 ? (genX * dy - dx * genY0) / det : 0;
+
+    // Check integer neighbours (±1 in each direction due to rounding)
+    let nearest = this.buttons[0];
+    let nearestDist = Infinity;
+
+    const iRound = Math.round(iFloat);
+    const jRound = Math.round(jFloat);
+
+    for (const button of this.buttons) {
+      if (Math.abs(button.coordX - iRound) > 2 || Math.abs(button.coordY - jRound) > 2) continue;
+      const bx = screenX - button.x;
+      const by = screenY - button.y;
+      const dist = bx * bx + by * by;
+      if (dist < nearestDist) {
+        nearestDist = dist;
+        nearest = button;
       }
     }
-    
-    return null;
+
+    // Fallback: full scan if restricted search missed everything
+    if (nearestDist === Infinity) {
+      for (const button of this.buttons) {
+        const bx = screenX - button.x;
+        const by = screenY - button.y;
+        const dist = bx * bx + by * by;
+        if (dist < nearestDist) {
+          nearestDist = dist;
+          nearest = button;
+        }
+      }
+    }
+
+    return {
+      coordX: nearest.coordX,
+      coordY: nearest.coordY,
+      noteId: `${nearest.coordX}_${nearest.coordY}`,
+    };
   }
-  
-  /**
-   * Get all buttons
-   */
+
   getButtons(): Button[] {
     return this.buttons;
   }
