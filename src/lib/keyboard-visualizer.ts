@@ -64,7 +64,7 @@ export class KeyboardVisualizer {
     skewFactor: 1.0,
   };
 
-  private baseGenYFactor = 0.07;
+  // (spacing is computed dynamically from canvas size and generator ratio)
 
   constructor(canvas: HTMLCanvasElement, options?: Partial<VisualizerOptions>) {
     this.canvas = canvas;
@@ -150,35 +150,86 @@ export class KeyboardVisualizer {
     return undefined;
   }
 
-  private getSpacing(): { genX: number; genY0: number; genX1: number; genY1: number } {
-    const { generator, skewFactor, scaleX, scaleY } = this.options;
-    const f = this.baseGenYFactor;
-    const baseSkew = generator[0] * f;
-    const genX  = generator[0] * f * scaleX;               // X per coordX step (constant)
-    const genY0 = baseSkew * scaleY * skewFactor;           // Y lean of coordX axis (DCompose diagonal)
-    const genX1 = baseSkew * scaleX * (1 - skewFactor);     // X lean of coordY axis (MidiMech diagonal)
-    const genY1 = generator[1] * f * scaleY;                // Y per coordY step (constant)
-    return { genX, genY0, genX1, genY1 };
+  private getSpacing(): {
+    genX: number; genY0: number; genX1: number; genY1: number;
+    cellHv1: { x: number; y: number }; cellHv2: { x: number; y: number };
+  } {
+    const { generator, skewFactor, scaleX, scaleY, height } = this.options;
+    const t = skewFactor;
+    // From WickiSynth by Piers Titus van der Torren.
+    //   a = gen[0]/gen[1]  (fifth/octave ratio, ~0.583 for 12-TET)
+    //   b = sqrt(2a/3 − a²) (horizontal spread for Wicki hex-like tiling)
+    // The fifth vector leans at ~69° from horizontal (Striso angle).
+    // genY1 = py = octave step in pixels (controls visible range).
+    const a = generator[0] / generator[1];
+    const bSq = Math.max(0.001, (2 / 3) * a - a * a);
+    const b = Math.sqrt(bSq);
+
+    const dPy   = height / 7;                   // ~7 visible octave rows
+    const dGenX  = Math.max(28, b * dPy);        // Striso X spread (min 28px for readability)
+    const dGenY0 = a * dPy;                       // fifth Y lean (pitch-proportional)
+    const dGenX1 = 0;                              // octave = pure vertical at DCompose
+    const dGenY1 = dPy;                            // octave step
+    // In (fifth, octave) coordinates:
+    //   Fifth  = 1 wholetone-cell right + 1 fourth-cell up  → (mCS, mCS)
+    //   Octave = 1 wholetone-cell right + 2 fourth-cells up → (mCS, 2·mCS)
+    // This makes: wholetone = (2·fifth − octave) → pure horizontal,
+    //             fourth   = (−fifth + octave)  → pure vertical.
+    const mCS    = dPy * 0.5;
+    const mGenX  = mCS;
+    const mGenY0 = mCS;
+    const mGenX1 = mCS;
+    const mGenY1 = 2 * mCS;
+    // ── Interpolate basis vectors ────────────────────────────────────────
+    const genX  = (mGenX  + t * (dGenX  - mGenX))  * scaleX;
+    const genY0 = (mGenY0 + t * (dGenY0 - mGenY0)) * scaleY;
+    const genX1 = (mGenX1 + t * (dGenX1 - mGenX1)) * scaleX;
+    const genY1 = (mGenY1 + t * (dGenY1 - mGenY1)) * scaleY;
+    // ── Cell half-vectors (parallelogram shape) ─────────────────────────
+    // At DCompose (t=1): cells tile along fifth and octave directions
+    //   hv1_d = half-fifth = (dGenX/2, -dGenY0/2)
+    //   hv2_d = half-octave = (0, -dGenY1/2)
+    // At MidiMech (t=0): cells tile along wholetone (horizontal) and fourth (vertical)
+    //   wholetone = 2*fifth − octave → screen (mCS, 0)  → hv1_m = (mCS/2, 0)
+    //   fourth = −fifth + octave     → screen (0, -mCS) → hv2_m = (0, -mCS/2)
+    // Interpolate cell shape between layouts.
+    const dHv1x = dGenX * scaleX / 2;
+    const dHv1y = -dGenY0 * scaleY / 2;
+    const dHv2x = 0;
+    const dHv2y = -dGenY1 * scaleY / 2;
+
+    const mHv1x = mCS * scaleX / 2;
+    const mHv1y = 0;
+    const mHv2x = 0;
+    const mHv2y = -mCS * scaleY / 2;
+
+    const cellHv1 = {
+      x: mHv1x + t * (dHv1x - mHv1x),
+      y: mHv1y + t * (dHv1y - mHv1y),
+    };
+    const cellHv2 = {
+      x: mHv2x + t * (dHv2x - mHv2x),
+      y: mHv2y + t * (dHv2y - mHv2y),
+    };
+
+    return { genX, genY0, genX1, genY1, cellHv1, cellHv2 };
   }
 
   private generateButtons(): void {
     this.buttons = [];
 
     const { width, height } = this.options;
-    const { genX, genY0, genX1, genY1 } = this.getSpacing();
+    const { genX, genY0, genX1, genY1, cellHv1, cellHv2 } = this.getSpacing();
     const centerX = width / 2;
     const centerY = height / 2;
+    // Cell half-vectors: at MidiMech = wholetone/fourth aligned (upright rectangle),
+    // at DCompose = fifth/octave aligned (leaning parallelogram).
+    // Interpolated by getSpacing().
+    this.hv1 = cellHv1;
+    this.hv2 = cellHv2;
 
-    // Parallelogram half-vectors:
-    //   hv1 = half-step along coordX direction  → (genX/2, -genY0/2)
-    //   hv2 = half-step along coordY direction  → (genX1/2, -genY1/2)
-    //   At skew=1 (DCompose): hv2.x=0 (octave vertical), hv1.y≠0 (fifth leans up)
-    //   At skew=0 (MidiMech): hv1.y=0 (fifth horizontal), hv2.x≠0 (octave leans right)
-    this.hv1 = { x: genX / 2,   y: -genY0 / 2 };
-    this.hv2 = { x: genX1 / 2,  y: -genY1 / 2 };
-
-    const iRange = 12;
-    const jRange = 5;
+    const iRange = 20;
+    const jRange = 12;
 
     for (let i = -iRange; i <= iRange; i++) {
       for (let j = -jRange; j <= jRange; j++) {
