@@ -152,6 +152,26 @@ export class KeyboardVisualizer {
     return this.options.skewFactor;
   }
 
+
+  /**
+   * Public grid geometry for external consumers (e.g. chord graffiti).
+   * Returns cell half-vectors (parallelogram shape) and canvas dimensions.
+   */
+  getGridGeometry(): {
+    cellHv1: { x: number; y: number };
+    cellHv2: { x: number; y: number };
+    width: number;
+    height: number;
+  } {
+    const { cellHv1, cellHv2 } = this.getSpacing();
+    return {
+      cellHv1: { ...cellHv1 },
+      cellHv2: { ...cellHv2 },
+      width: this.options.width,
+      height: this.options.height,
+    };
+  }
+
   getGoldenLineY(): number | undefined {
     const { height } = this.options;
     const centerY = height / 2;

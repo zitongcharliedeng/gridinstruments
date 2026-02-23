@@ -52,6 +52,7 @@ class DComposeApp {
   private midiChannelModeSelect: HTMLSelectElement | null = null;
   private zoomSlider: HTMLInputElement | null = null;
   private defaultZoom: number = 1.0;
+  private updateGraffiti: (() => void) | null = null;
 
   constructor() {
     this.synth = new Synth();
@@ -81,8 +82,11 @@ class DComposeApp {
     this.setupEventListeners();
     await this.midi.init();
     this.setupMidiListeners();
-    // Chord shape graffiti overlays
-    createChordGraffiti({ container: document.getElementById('app')! });
+    // Chord shape graffiti overlays (dynamic — reads grid geometry from visualizer)
+    const keyboardContainer = document.getElementById('keyboard-container');
+    if (keyboardContainer && this.visualizer) {
+      this.updateGraffiti = createChordGraffiti({ container: keyboardContainer, visualizer: this.visualizer });
+    }
     this.render();
   }
 
@@ -229,6 +233,7 @@ class DComposeApp {
       this.skewSlider.addEventListener('input', () => {
         const val = parseFloat(this.skewSlider!.value);
         this.visualizer?.setSkewFactor(val);
+        this.updateGraffiti?.();
         // Highlight active endpoint label
         const leftLabel = document.getElementById('skew-label-left');
         const rightLabel = document.getElementById('skew-label-right');
@@ -259,6 +264,7 @@ class DComposeApp {
         const value = parseFloat(this.tuningSlider!.value);
         this.synth.setFifth(value);
         this.visualizer?.setGenerator([value, 1200]);
+        this.updateGraffiti?.();
         if (this.tuningValue) this.tuningValue.textContent = value.toFixed(1);
         updateThumbBadge(value);
         if (nearestMarkerDisplay) {
@@ -397,6 +403,7 @@ class DComposeApp {
       this.zoomSlider.addEventListener('input', () => {
         const zoom = parseFloat(this.zoomSlider!.value);
         this.visualizer?.setZoom(zoom);
+        this.updateGraffiti?.();
       });
     }
     zoomReset?.addEventListener('click', () => {
