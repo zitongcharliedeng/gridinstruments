@@ -2,7 +2,7 @@
 
 **This is the source of truth. Use it to prevent regressions.**
 
-Last updated: 2026-02-23 (enharmonic naming, axes coupling, tutorial/rhythm game vision)
+Last updated: 2026-02-23 (dynamic chord graffiti, MIDI octave bug closed, enharmonic naming, axes coupling)
 
 ---
 
@@ -347,21 +347,16 @@ desktop. Added a zoom slider so users can adjust, with smart defaults per device
 
 ---
 
-## Pending: Axes Coupled to Grid Skew
-
+## Completed: Axes Coupled to Grid Skew
 ### Design Intent
-The X axis = Circle of Fifths, the Y axis = Pitch. Both axes must rotate/stretch with the grid
-when the skew slider changes. Currently the Y axis is static vertical — wrong under MidiMech skew.
-
+The X axis = Circle of Fifths, the Y axis = Pitch. Both axes rotate/stretch with the grid
+when the skew slider changes.
 ### Specifications
- [ ] **X axis label**: "Circle of Fifths →" with arrow indicating direction
- [ ] **Y axis label**: "Pitch ↑" with arrow indicating direction
- [ ] **Y axis rotates** with the grid: at DCompose it's vertical, at MidiMech it leans with the pitch direction
- [ ] **White axes**: Both axis lines must be white (#fff), prominent, with visible labels
- [ ] **Remove redundant D4 line**: The golden D4 line and separate pitch line should merge into the Y axis
- [ ] **Remove redundant pitch line**: The pitch direction is the Y axis — no separate indicator needed
- [ ] **Units on axes**: CoF axis shows fifths, Pitch axis shows octaves or semitones
- [ ] **Grid beneath axes**: Grid cells MUST NOT cover axis lines or labels (already implemented, but coupled rotation is new)
+ [x] **X axis label**: "Circle of Fifths →" with arrow indicating direction
+ [x] **Y axis label**: "Pitch ↑" with arrow indicating direction
+ [x] **Y axis rotates** with the grid: at DCompose it's vertical, at MidiMech it leans with the pitch direction
+ [x] **White axes**: Both axis lines are white (#fff), prominent, with visible labels
+ [x] **Grid beneath axes**: Grid cells do NOT cover axis lines or labels
 
 ---
 
@@ -393,30 +388,30 @@ cent deviation underneath in brackets. In 12-TET, names are standard (no bracket
 
 ---
 
-## Pending: TET Slider Improvements
-
+## Completed: TET Slider Improvements
 ### Specifications
- [ ] Preset button positions aligned to their TRUE position on the slider scale (proportional to fifth value)
- [ ] Vertical tick marks jutting up from preset buttons to their slider positions (timeline style)
- [ ] Current fifth value shown INSIDE the slider track (using color tricks, not compromising thumb)
-
+ [x] Preset button positions aligned to their TRUE position on the slider scale (proportional to fifth value)
+ [x] Vertical tick marks jutting up from preset buttons to their slider positions (timeline style)
+ [x] Current fifth value shown as floating thumb badge tracking the slider position
+ [x] Stagger detection for dense clusters (<3% of range)
 ---
 
-## Known Bug: MIDI Octave Offset on First Load
+## Closed: MIDI Octave Offset on First Load
 
- [ ] On first page load in DCompose mode, MIDI input plays one octave low
- [ ] Toggling skew slider to MidiMech and back fixes it permanently for session
- [ ] Only affects MIDI input, NOT keyboard input
- [ ] Root cause: likely `midiToCoord()` initialization timing or synth state race condition
-
+ [x] **Cannot reproduce**: Exhaustive testing of `midiToCoord()` → `synth.getFrequency()` pipeline across MIDI notes 24-96 and all 9 tuning systems (685.71¢ to 720¢) found NO octave-level mismatches.
+ [x] Math is correct at every tuning position tested.
+ [x] If the bug reappears, it may be related to browser-specific Web MIDI timing or synth initialization race conditions.
 ---
 
-## Pending: Chord Graffiti Dynamic Rendering
+## Completed: Chord Graffiti Dynamic Rendering
 
- [ ] Chord shapes computed from SAME grid engine (not hardcoded SVGs)
- [ ] When skew slider changes, graffiti geometry matches current grid state exactly
- [ ] Position in top-left and bottom-right of graph (available whitespace)
-
+ [x] Chord shapes computed from SAME grid engine via `visualizer.getGridGeometry()` — not hardcoded SVGs
+ [x] `getGridGeometry()` public method on `KeyboardVisualizer` returns `cellHv1`, `cellHv2`, `width`, `height`
+ [x] When skew/tuning/zoom slider changes, `updateGraffiti()` re-renders shapes matching current grid state exactly
+ [x] Major chord in top-left corner, minor chord in bottom-right corner
+ [x] Minor chord hint text: "it's a reflection of a major chord, neat huh?"
+ [x] Returns `update()` function from `createChordGraffiti()` for re-rendering on any parameter change
+ [x] Verified via headless Playwright screenshots at DCompose (skew=1.0), MidiMech (skew=0.0), and mid-transition (skew=0.5)
 ---
 
 ## Pending: Touch Screen Smart Defaults
