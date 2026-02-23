@@ -29,3 +29,6 @@ npm-debug.log*
 
 # Tool directories
 .sisyphus/
+
+# Stale nested clone
+dcompose-web/
