@@ -8,7 +8,7 @@
  * - skewFactor: 1.0 = full DCompose diagonal, 0.0 = MidiMech (octave axis leans right, pitch ↗).
  */
 
-import { getNoteNameFromCoord } from './keyboard-layouts';
+import { getNoteNameFromCoord, get12TETName, getCentDeviation } from './keyboard-layouts';
 import { cellColors } from './note-colors';
 import { TUNING_MARKERS, findNearestMarker } from './synth';
 
@@ -252,8 +252,8 @@ export class KeyboardVisualizer {
 
         const pitchCents = i * this.options.generator[0] + j * this.options.generator[1];
         const noteName = getNoteNameFromCoord(i);
-        const isBlackKey = noteName.includes('♯') || noteName.includes('♭') ||
-                           noteName.includes('#') || noteName.includes('b');
+        const tetName = get12TETName(i);
+        const isBlackKey = tetName.includes('\u266F') || tetName.includes('\u266D');
 
         this.buttons.push({
           x: screenX,
@@ -533,8 +533,36 @@ export class KeyboardVisualizer {
     this.ctx.fillStyle = textColor;
     this.ctx.font = `bold ${fontSize}px "JetBrains Mono", monospace`;
     this.ctx.textAlign = 'center';
-    this.ctx.textBaseline = 'middle';
-    this.ctx.fillText(noteName, x, y);
+    // Bracket sub-label: show 12-TET equivalent ± cents when useful
+    const fifth = this.options.generator[0];
+    const tetName = get12TETName(coordX);
+    const deviation = getCentDeviation(coordX, fifth);
+    const hasBracket = noteName !== tetName || Math.abs(deviation) >= 0.5;
+
+    if (hasBracket && cellMin > 30) {
+      // Two-line: main name above center, bracket below
+      this.ctx.textBaseline = 'bottom';
+      this.ctx.fillText(noteName, x, y);
+      // Bracket sub-label (smaller, dimmer)
+      const subSize = Math.max(7, fontSize * 0.6);
+      this.ctx.font = `${subSize}px "JetBrains Mono", monospace`;
+      this.ctx.fillStyle = textColor;
+      this.ctx.globalAlpha = fade * 0.6;
+      this.ctx.textBaseline = 'top';
+      let bracket: string;
+      if (Math.abs(deviation) < 0.5) {
+        bracket = `(${tetName})`;
+      } else if (noteName === tetName) {
+        bracket = `(${deviation > 0 ? '+' : ''}${deviation.toFixed(0)}¢)`;
+      } else {
+        bracket = `(${tetName}${deviation > 0 ? '+' : ''}${deviation.toFixed(0)}¢)`;
+      }
+      this.ctx.fillText(bracket, x, y + 1);
+    } else {
+      // Single-line centered
+      this.ctx.textBaseline = 'middle';
+      this.ctx.fillText(noteName, x, y);
+    }
     this.ctx.globalAlpha = 1;
   }
 

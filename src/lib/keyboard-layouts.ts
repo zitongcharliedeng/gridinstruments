@@ -193,13 +193,39 @@ export function getLayout(id: string): KeyboardLayout {
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Get note name from coordinate
+ * Get note name from coordinate using circle-of-fifths spelling.
+ * Returns proper enharmonic names: F♯♯ instead of G, B♭♭ instead of A, etc.
  * x = position in circle of fifths (0 = D)
  */
+// Natural notes in order of fifths: F(-3) C(-2) G(-1) D(0) A(1) E(2) B(3)
+const FIFTHS_NATURALS = ['F', 'C', 'G', 'D', 'A', 'E', 'B'];
 export function getNoteNameFromCoord(x: number): string {
-  const PITCH_CLASS_NAMES = ['C', 'C\u266F', 'D', 'E\u266D', 'E', 'F', 'F\u266F', 'G', 'A\u266D', 'A', 'B\u266D', 'B'];
+  const baseIndex = ((x + 3) % 7 + 7) % 7;
+  const baseName = FIFTHS_NATURALS[baseIndex];
+  const accidentals = Math.floor((x + 3) / 7);
+  if (accidentals === 0) return baseName;
+  if (accidentals > 0) return baseName + '\u266F'.repeat(accidentals);
+  return baseName + '\u266D'.repeat(-accidentals);
+}
+
+/**
+ * Get the 12-TET equivalent name for a circle-of-fifths position.
+ * Used for bracket notation and isBlackKey determination.
+ */
+const PITCH_CLASS_12TET = ['C', 'C\u266F', 'D', 'E\u266D', 'E', 'F', 'F\u266F', 'G', 'A\u266D', 'A', 'B\u266D', 'B'];
+
+export function get12TETName(x: number): string {
   const pc = ((2 + x * 7) % 12 + 12) % 12;
-  return PITCH_CLASS_NAMES[pc];
+  return PITCH_CLASS_12TET[pc];
+}
+
+/**
+ * Cent deviation from 12-TET for a given circle-of-fifths position.
+ * Positive = sharper than 12-TET, negative = flatter.
+ * Assumes pure octaves (1200¢).
+ */
+export function getCentDeviation(x: number, fifth: number): number {
+  return x * (fifth - 700);
 }
 
 /**
