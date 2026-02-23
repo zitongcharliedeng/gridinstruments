@@ -3,358 +3,434 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DCompose Web - Isomorphic Keyboard Synthesizer</title>
-  <meta name="description" content="Play music with your computer keyboard using the DCompose/Wicki-Hayden isomorphic layout. Explore tunings from 7-TET to 5-TET on the syntonic temperament continuum.">
+  <title>DCompose Web — Isomorphic Keyboard Synthesizer</title>
+  <meta name="description" content="Live MIDI & keyboard isomorphic synthesizer. DCompose/Wicki-Hayden layout. Explore tunings from 7-TET to 5-TET on the syntonic temperament continuum.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
   <style>
-    * {
+    *, *::before, *::after {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
     }
-    
+
     :root {
-      --bg-primary: #0f0f1a;
-      --bg-secondary: #1a1a2e;
-      --bg-tertiary: #252542;
-      --text-primary: #e8e8f0;
-      --text-secondary: #9090a0;
-      --accent-primary: #6366f1;
-      --accent-secondary: #8b5cf6;
-      --note-white: #f8f8fc;
-      --note-black: #2a2a3e;
-      --note-active: #22c55e;
-      --note-sustained: #f59e0b;
+      --bg: #000;
+      --fg: #fff;
+      --dim: #666;
+      --subtle: #222;
+      --border: #333;
+      --accent: #888;
+      --gap: 8px;
+      --font: 'JetBrains Mono', 'Courier New', monospace;
     }
-    
-    body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      background: var(--bg-primary);
-      color: var(--text-primary);
+
+    html, body {
+      background: var(--bg);
+      color: var(--fg);
+      font-family: var(--font);
+      font-size: 13px;
+      line-height: 1.4;
       min-height: 100vh;
       overflow-x: hidden;
     }
-    
+
     #app {
       display: flex;
       flex-direction: column;
       min-height: 100vh;
-      padding: 1rem;
-      gap: 1rem;
+      gap: var(--gap);
+      padding: var(--gap);
     }
-    
+
+    /* ── Title bar (centered, with GitHub button group) ────────── */
+    #title-bar {
+      display: flex; justify-content: center; align-items: center; gap: 16px;
+      padding: 4px 8px 2px;
+    }
+    .site-title {
+      font-weight: 700; font-size: 13px; color: var(--dim); letter-spacing: 0.04em;
+    }
+    .gh-actions {
+      display: inline-flex; align-items: stretch;
+      border: 1px solid var(--border);
+    }
+    .gh-mark {
+      display: inline-flex; align-items: center;
+      padding: 2px 6px;
+      border-right: 1px solid var(--border);
+      background: var(--subtle);
+    }
+    .gh-mark svg { width: 14px; height: 14px; fill: var(--dim); }
+    .gh-btn {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 2px 8px;
+      font-family: var(--font); font-size: 10px; color: var(--dim);
+      text-decoration: none;
+    }
+    .gh-btn + .gh-btn { border-left: 1px solid var(--border); }
+    .gh-btn:hover { color: var(--fg); background: var(--subtle); }
+    .gh-btn svg { width: 11px; height: 11px; fill: currentColor; flex-shrink: 0; }
+    .gh-btn .star-icon { color: #cc9900; font-size: 13px; line-height: 1; }
+    .header-quote {
+      flex: 1; min-width: 0;
+      font-size: 10px; color: var(--dim); font-style: italic;
+      text-align: right; padding: 0 6px;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      opacity: 0.55;
+    }
+
+    /* ── Note history strip ─────────────────────────────────────── */
+    #history-canvas {
+      display: block;
+      width: 100%;
+      height: 220px;
+      border: 1px solid var(--border);
+    }
+
+    /* ── Header ─────────────────────────────────────────────────── */
     header {
       display: flex;
       flex-wrap: wrap;
       align-items: center;
-      justify-content: space-between;
-      gap: 1rem;
-      padding: 0.75rem 1rem;
-      background: var(--bg-secondary);
-      border-radius: 12px;
-      border: 1px solid var(--bg-tertiary);
+      gap: var(--gap);
+      padding: 6px 8px;
+      border: 1px solid var(--border);
+      background: var(--subtle);
     }
-    
-    .logo {
-      font-size: 1.25rem;
-      font-weight: 700;
-      background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-    
-    .controls {
+
+    /* (logo moved to #title-bar) */
+
+    .header-controls {
       display: flex;
       flex-wrap: wrap;
       align-items: center;
-      gap: 0.75rem;
+      gap: var(--gap);
+      flex: 1;
     }
-    
-    .control-group {
+
+    .ctrl-group {
       display: flex;
       align-items: center;
-      gap: 0.5rem;
+      gap: 5px;
+      flex-shrink: 0;
     }
-    
-    .control-group label {
-      font-size: 0.75rem;
+
+    .ctrl-label {
+      font-size: 11px;
+      color: var(--dim);
       text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: var(--text-secondary);
+      letter-spacing: 0.06em;
+      white-space: nowrap;
     }
-    
-    select, button {
-      font-family: inherit;
-      font-size: 0.875rem;
-      padding: 0.5rem 0.75rem;
-      background: var(--bg-tertiary);
-      color: var(--text-primary);
-      border: 1px solid transparent;
-      border-radius: 8px;
+
+    select, input[type="range"], input[type="number"], input[type="text"] {
+      font-family: var(--font);
+      font-size: 12px;
+      background: var(--bg);
+      color: var(--fg);
+      border: 1px solid var(--border);
+      padding: 3px 6px;
+      appearance: none;
+      -webkit-appearance: none;
       cursor: pointer;
-      transition: all 0.15s ease;
-    }
-    
-    select:hover, button:hover {
-      background: var(--bg-primary);
-      border-color: var(--accent-primary);
-    }
-    
-    select:focus, button:focus {
       outline: none;
-      border-color: var(--accent-primary);
-      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
     }
-    
-    button.active {
-      background: var(--accent-primary);
-      color: white;
+    select:focus, input:focus {
+      border-color: var(--accent);
     }
-    
-    .octave-controls {
-      display: flex;
-      align-items: center;
-      gap: 0.25rem;
+    select option {
+      background: var(--bg);
     }
-    
-    .octave-controls button {
-      width: 2rem;
-      height: 2rem;
+
+    input[type="range"] {
       padding: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 600;
-    }
-    
-    .octave-display {
-      min-width: 2rem;
-      text-align: center;
-      font-weight: 600;
-      font-size: 0.875rem;
-    }
-    
-    /* Main layout - full width */
-    .main-content {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-    }
-    
-    /* Tuning panel - horizontal below keyboard */
-    .tuning-panel-horizontal {
-      background: var(--bg-secondary);
-      border-radius: 12px;
-      border: 1px solid var(--bg-tertiary);
-      padding: 1rem;
-    }
-    
-    .tuning-controls {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 1rem;
-    }
-    
-    .tuning-controls h3 {
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: var(--text-secondary);
-      margin: 0;
-      flex-shrink: 0;
-    }
-    
-    /* Horizontal slider */
-    .horizontal-slider {
-      flex: 1;
-      height: 24px;
+      height: 18px;
+      accent-color: var(--fg);
+      border: none;
       cursor: pointer;
-      accent-color: var(--accent-primary);
-      margin: 0 1rem;
     }
-    
-    .tuning-value-display {
-      text-align: right;
-      font-size: 1.25rem;
-      font-weight: 600;
-      color: var(--accent-primary);
-      flex-shrink: 0;
-      min-width: 120px;
+
+    /* Status indicators */
+    #vibrato-indicator,
+    #sustain-indicator {
+      display: none;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      padding: 2px 6px;
+      border: 1px solid var(--border);
     }
-    
-    .tuning-value-display span {
-      font-size: 0.7rem;
-      color: var(--text-secondary);
+    #vibrato-indicator { color: #88aaff; border-color: #88aaff44; }
+    #sustain-indicator { color: #ffcc44; border-color: #ffcc4444; }
+
+    /* ── MIDI settings panel ─────────────────────────────────────── */
+    #midi-settings-toggle {
+      font-family: var(--font);
+      font-size: 11px;
+      color: var(--dim);
+      background: var(--bg);
+      border: 1px solid var(--border);
+      padding: 3px 8px;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
     }
-    
-    /* Main area */
-    .main-area {
-      flex: 1;
-      display: flex;
+    #midi-settings-toggle:hover { color: var(--fg); border-color: var(--accent); }
+
+    #midi-settings-panel {
+      display: none;
+      border: 1px solid var(--border);
+      background: var(--subtle);
+      padding: 8px 12px;
+      gap: 8px;
       flex-direction: column;
-      gap: 1rem;
     }
-    
-    .keyboard-container {
-      flex: 1;
-      background: var(--bg-secondary);
-      border-radius: 12px;
-      border: 1px solid var(--bg-tertiary);
-      padding: 1rem;
+    #midi-settings-panel.open {
+      display: flex;
+    }
+
+    .midi-panel-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .midi-channel-group {
       display: flex;
       align-items: center;
-      justify-content: center;
-      min-height: 400px;
+      gap: 6px;
+    }
+
+    #midi-device-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .midi-device-row {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    .midi-device-row input[type="checkbox"] {
+      width: 14px;
+      height: 14px;
+      cursor: pointer;
+      accent-color: var(--fg);
+      border: 1px solid var(--border);
+      background: var(--bg);
+      padding: 0;
+    }
+
+    .midi-dot {
+      width: 7px;
+      height: 7px;
+      display: inline-block;
+      flex-shrink: 0;
+    }
+    .midi-dot.connected    { background: #22cc44; }
+    .midi-dot.disconnected { background: #666; }
+
+    .midi-device-name { color: var(--fg); }
+    .midi-no-devices  { color: var(--dim); font-size: 11px; }
+
+    /* ── Keyboard canvas ─────────────────────────────────────────── */
+    #keyboard-container {
+      flex: 1;
+      border: 1px solid var(--border);
+      min-height: 380px;
       position: relative;
       overflow: hidden;
-    }
-    
-    #keyboard-canvas {
-      max-width: 100%;
-      max-height: 100%;
-    }
-    
-    /* Audio controls panel */
-    .audio-controls {
       display: flex;
-      gap: 1rem;
-      flex-wrap: wrap;
+      align-items: stretch;
     }
-    
-    .slider-control {
-      flex: 1;
-      min-width: 150px;
-      background: var(--bg-secondary);
-      border-radius: 12px;
-      border: 1px solid var(--bg-tertiary);
-      padding: 1rem;
-    }
-    
-    .slider-control h3 {
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: var(--text-secondary);
-      margin-bottom: 0.5rem;
-    }
-    
-    .slider-control input[type="range"] {
+
+    #keyboard-canvas {
+      display: block;
       width: 100%;
-      cursor: pointer;
-      accent-color: var(--accent-primary);
+      height: 100%;
     }
-    
-    .info-panel {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1rem;
+
+    /* ── Controls strip ──────────────────────────────────────────── */
+    #controls-strip {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--gap);
+      border: 1px solid var(--border);
+      background: var(--subtle);
+      padding: 6px 8px;
     }
-    
-    .info-card {
-      background: var(--bg-secondary);
-      border-radius: 12px;
-      border: 1px solid var(--bg-tertiary);
-      padding: 1rem;
+
+    .ctrl-section {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      flex-shrink: 0;
     }
-    
-    .info-card h3 {
-      font-size: 0.75rem;
+
+    #tuning-value, #nearest-marker {
+      font-size: 12px;
+      min-width: 40px;
+      color: var(--fg);
+    }
+    #nearest-marker { min-width: 80px; color: var(--dim); }
+
+    /* skew labels */
+    .skew-labels {
+      display: flex;
+      flex-direction: column;
+      font-size: 9px;
+      color: var(--dim);
+      line-height: 1.1;
+    }
+
+    /* ── D4 reference ────────────────────────────────────────────── */
+    #d4-section {
+      border: 1px solid var(--border);
+      background: var(--subtle);
+      padding: 6px 10px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
+    }
+
+    #d4-section .ctrl-label { white-space: nowrap; }
+
+    input[type="number"] {
+      width: 90px;
+    }
+    input[type="text"] {
+      width: 60px;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: var(--text-secondary);
-      margin-bottom: 0.5rem;
     }
-    
-    .info-card .value {
-      font-size: 1.5rem;
-      font-weight: 600;
+
+    .d4-hint {
+      font-size: 10px;
+      color: var(--dim);
     }
-    
-    #chord-display {
-      color: var(--accent-secondary);
+
+    /* ── About section ───────────────────────────────────────────── */
+    #about {
+      border: 1px solid var(--border);
+      background: var(--subtle);
+      padding: 12px 14px;
     }
-    
-    #notes-display {
-      font-size: 1rem;
-      color: var(--text-primary);
-      word-break: break-word;
+
+    #about h2 {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--dim);
+      margin-bottom: 10px;
     }
-    
-    footer {
-      text-align: center;
-      padding: 1rem;
-      font-size: 0.75rem;
-      color: var(--text-secondary);
+
+    .about-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 12px;
     }
-    
-    footer a {
-      color: var(--accent-primary);
+
+    .about-col h3 {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--dim);
+      margin-bottom: 6px;
+    }
+
+    .about-links {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .about-links a {
+      color: var(--fg);
       text-decoration: none;
+      font-size: 12px;
     }
-    
-    footer a:hover {
-      text-decoration: underline;
+    .about-links a:hover { text-decoration: underline; }
+    .about-links a::before { content: '→ '; color: var(--dim); }
+
+    /* ── Footer ──────────────────────────────────────────────────── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 8px;
+      font-size: 11px;
+      color: var(--dim);
+      text-align: center;
     }
-    
-    .instructions {
-      background: var(--bg-secondary);
-      border-radius: 12px;
-      border: 1px solid var(--bg-tertiary);
-      padding: 1rem;
-      font-size: 0.875rem;
-      color: var(--text-secondary);
+    footer a { color: var(--dim); text-decoration: none; }
+    footer a:hover { color: var(--fg); text-decoration: underline; }
+
+    /* ── Instructions ────────────────────────────────────────────── */
+    #instructions {
+      font-size: 11px;
+      color: var(--dim);
+      border: 1px solid var(--border);
+      padding: 8px 12px;
+      line-height: 1.7;
     }
-    
-    .instructions p {
-      margin-bottom: 0.5rem;
+    #instructions kbd {
+      background: var(--subtle);
+      border: 1px solid var(--border);
+      padding: 1px 4px;
+      font-family: var(--font);
+      font-size: 10px;
     }
-    
-    .instructions kbd {
-      display: inline-block;
-      padding: 0.125rem 0.375rem;
-      background: var(--bg-tertiary);
-      border-radius: 4px;
-      font-family: monospace;
-      font-size: 0.8em;
+    /* Chord shape graffiti overlays */
+    .graffiti-overlay {
+      position: absolute;
+      pointer-events: none;
+      mix-blend-mode: screen;
+      filter: url(#spray-roughen);
+      z-index: 5;
     }
-    
-    @media (max-width: 768px) {
-      header {
-        flex-direction: column;
-        align-items: stretch;
-      }
-      
-      .controls {
-        justify-content: center;
-      }
-      
-      .tuning-controls {
-        flex-direction: column;
-        align-items: stretch;
-      }
-      
-      .horizontal-slider {
-        margin: 0.5rem 0;
-      }
-      
-      .tuning-value-display {
-        text-align: center;
-      }
+    .graffiti-label {
+      font-family: var(--font);
+      font-size: 11px;
+      font-style: italic;
+      fill: #FFD700;
+      opacity: 0.7;
+      filter: url(#spray-roughen);
     }
   </style>
 </head>
 <body>
   <div id="app">
+
+    <!-- Title bar: centered title + GitHub button group -->
+    <div id="title-bar">
+      <span class="site-title">DCompose Web</span>
+      <div class="gh-actions">
+        <span class="gh-mark"><svg viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></span>
+        <a class="gh-btn" href="https://github.com/zitongcharliedeng/dcompose-web" target="_blank" rel="noopener">
+          <span class="star-icon">☆</span> Star <span id="star-count-badge"></span>
+        </a>
+        <a class="gh-btn" href="https://github.com/zitongcharliedeng/dcompose-web/issues" target="_blank" rel="noopener">
+          <svg viewBox="0 0 16 16"><path d="M8 9.5a1.5 1.5 0 100 3 1.5 1.5 0 000-3zM8 0a8 8 0 100 16A8 8 0 008 0zm0 14.5a6.5 6.5 0 110-13 6.5 6.5 0 010 13zM9 4a1 1 0 00-2 0v4a1 1 0 002 0V4z"/></svg>
+          Report a bug
+        </a>
+      </div>
+    </div>
+    <!-- Note history: staff / waterfall / chord panel -->
+    <canvas id="history-canvas" height="220"></canvas>
+
+    <!-- Header: title + controls -->
     <header>
-      <div class="logo">DCompose Web</div>
-      <div class="controls">
-        <div class="control-group">
-          <label>Wave</label>
+      <!-- logo moved to title-bar -->
+      <div class="header-controls">
+
+        <div class="ctrl-group">
+          <span class="ctrl-label">Wave</span>
           <select id="waveform-select">
             <option value="sawtooth">Sawtooth</option>
             <option value="sine">Sine</option>
@@ -362,86 +438,157 @@
             <option value="triangle">Triangle</option>
           </select>
         </div>
-        <div class="control-group">
-          <label>Volume</label>
-          <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.3" style="width: 120px; accent-color: var(--accent-primary);">
+
+        <div class="ctrl-group">
+          <span class="ctrl-label">Layout</span>
+          <select id="layout-select">
+            <!-- populated by JS from KEYBOARD_VARIANTS -->
+          </select>
         </div>
-        <div class="control-group">
-          <span id="vibrato-indicator" style="display: none; font-size: 0.75rem; font-weight: 600; color: var(--accent-primary); background: rgba(99, 102, 241, 0.15); padding: 0.25rem 0.5rem; border-radius: 6px;">VIBRATO</span>
-          <span id="sustain-indicator" style="display: none; font-size: 0.75rem; font-weight: 600; color: var(--note-sustained); background: rgba(245, 158, 11, 0.15); padding: 0.25rem 0.5rem; border-radius: 6px;">SUSTAIN</span>
+
+        <div class="ctrl-group">
+          <span class="ctrl-label">Vol</span>
+          <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.3" style="width: 80px;">
         </div>
+
+        <div class="ctrl-group">
+          <span id="vibrato-indicator">VIBRATO</span>
+          <span id="sustain-indicator">SUSTAIN</span>
+        </div>
+
+        <span class="header-quote">“Musical instrument where notes that are mathematically more harmonious are closer together spatially — make it hard to suck!”</span>
+        <button id="midi-settings-toggle">▼ MIDI</button>
+
       </div>
     </header>
-    
-    <div class="main-content">
-      <!-- Main keyboard area -->
-      <div class="main-area">
-        <div class="keyboard-container">
-          <canvas id="keyboard-canvas"></canvas>
+
+    <!-- MIDI settings panel (collapsible accordion) -->
+    <div id="midi-settings-panel">
+      <div class="midi-panel-row">
+        <span class="ctrl-label">Devices:</span>
+        <div id="midi-device-list">
+          <span class="midi-no-devices">No MIDI devices detected</span>
         </div>
-        
-        <!-- Tuning slider (horizontal, below keyboard) -->
-        <div class="tuning-panel-horizontal">
-          <div class="tuning-controls">
-            <h3>Fifth Size</h3>
-            <input type="range" id="tuning-slider" class="horizontal-slider" 
-                   min="650" max="750" step="0.1" value="700">
-            <div class="tuning-value-display" style="text-align: center; margin-top: 0.25rem;">
-              <span id="tuning-value" style="font-size: 1.1rem; font-weight: bold;">700.0</span> <span style="font-size: 0.9rem;">cents</span>
-              <span id="nearest-marker" style="font-size: 0.9rem; margin-left: 0.5rem; color: var(--accent-primary);">= 12-TET</span>
-            </div>
-          </div>
-        </div>
-        
-        <!-- D4 Reference Control -->
-        <div class="audio-controls">
-          <div class="slider-control">
-            <h3>D4 Reference</h3>
-            <div style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
-              <div style="flex: 1;">
-                <label style="font-size: 0.75rem; color: var(--text-secondary); display: block; margin-bottom: 0.25rem;">Note Name</label>
-                <input type="text" id="d4-note-input" placeholder="D4" value="D4" style="width: 100%; padding: 0.5rem; background: var(--bg-tertiary); color: var(--text-primary); border: 1px solid transparent; border-radius: 8px; text-transform: uppercase;">
-              </div>
-              <div style="flex: 1;">
-                <label style="font-size: 0.75rem; color: var(--text-secondary); display: block; margin-bottom: 0.25rem;">Frequency (Hz)</label>
-                <input type="number" id="d4-hz-input" min="100" max="2000" step="1" value="293.66" style="width: 100%; padding: 0.5rem; background: var(--bg-tertiary); color: var(--text-primary); border: 1px solid transparent; border-radius: 8px;">
-              </div>
-            </div>
-            <div style="font-size: 0.7rem; color: var(--text-secondary); line-height: 1.4;">
-              <div>D2: 73.42 Hz | D3: 146.83 Hz</div>
-              <div><strong>D4: 293.66 Hz</strong> (default)</div>
-              <div>D5: 587.33 Hz | D6: 1174.66 Hz</div>
-              <div style="margin-top: 0.25rem; font-style: italic;">Double for +1 octave, Half for -1 octave</div>
-            </div>
-          </div>
-        </div>
-        
-        <div class="info-panel">
-          <div class="info-card">
-            <h3>Detected Chord</h3>
-            <div class="value" id="chord-display">-</div>
-          </div>
-          <div class="info-card">
-            <h3>Active Notes</h3>
-            <div class="value" id="notes-display">-</div>
-          </div>
-        </div>
-        
-        <div class="instructions">
-          <p><strong>How to play:</strong> ALL letter/number keys play notes on the isomorphic grid. Works with ANY layout (QWERTY, Dvorak, AZERTY, etc.).</p>
-          <p><kbd>Alt</kbd> Hold for sustain | <kbd>Space</kbd> Hold for vibrato | Bottom row (Ctrl/Alt/Space) = modifiers, not notes.</p>
-          <p>Transpose shifts left/right on circle of fifths. Octave shifts up/down in pitch.</p>
+      </div>
+      <div class="midi-panel-row">
+        <div class="midi-channel-group">
+          <span class="ctrl-label">Channel mode:</span>
+          <select id="midi-channel-mode">
+            <option value="omni">Omni (all channels)</option>
+            <option value="chPerNote">ChPerNote (MPE)</option>
+            <option value="chPerRow">ChPerRow (ch=row)</option>
+          </select>
         </div>
       </div>
     </div>
-    
+
+    <!-- Keyboard canvas -->
+    <div id="keyboard-container">
+      <canvas id="keyboard-canvas"></canvas>
+    </div>
+
+    <!-- Controls strip: tuning + skew + spacing -->
+    <div id="controls-strip">
+
+      <div class="ctrl-section">
+        <span class="ctrl-label">Fifth</span>
+        <input type="range" id="tuning-slider" min="650" max="750" step="0.1" value="700" style="width: 140px;">
+        <span id="tuning-value">700.0</span><span style="color:var(--dim);font-size:11px;">¢</span>
+        <span id="nearest-marker">= 12-TET</span>
+      </div>
+
+      <div class="ctrl-section" style="gap:4px;">
+        <div class="skew-labels">
+          <span>DCompose</span>
+          <span>MidiMech</span>
+        </div>
+        <input type="range" id="skew-slider" min="0" max="1" step="0.01" value="1" style="width: 80px;">
+      </div>
+
+
+    </div>
+
+    <!-- D4 reference -->
+    <div id="d4-section">
+      <span class="ctrl-label">D4 Reference</span>
+      <div class="ctrl-group">
+        <span class="ctrl-label">Note</span>
+        <input type="text" id="d4-note-input" placeholder="D4" value="D4">
+      </div>
+      <div class="ctrl-group">
+        <span class="ctrl-label">Hz</span>
+        <input type="number" id="d4-hz-input" min="100" max="2000" step="1" value="293.66">
+      </div>
+      <span class="d4-hint">D2: 73.42 · D3: 146.83 · <strong>D4: 293.66</strong> · D5: 587.33</span>
+    </div>
+
+    <!-- Instructions -->
+    <div id="instructions">
+      <strong>Play:</strong> All letter/number keys play notes on the isomorphic grid (any physical layout).
+      <kbd>Space</kbd> = vibrato hold &nbsp;|&nbsp; <kbd>Alt</kbd> = sustain hold &nbsp;|&nbsp;
+      <kbd>Ctrl +/-</kbd> = zoom.
+      Drag the golden D-line on the keyboard to retune. Double-click Fifth slider to snap to nearest TET.
+    </div>
+
+    <!-- About -->
+    <section id="about">
+      <h2>About</h2>
+      <div class="about-grid">
+
+        <div class="about-col">
+          <h3>Isomorphic Layout</h3>
+          <div class="about-links">
+            <a href="https://en.wikipedia.org/wiki/Wicki%E2%80%93Hayden_note_layout" target="_blank" rel="noopener">Wicki–Hayden (Wikipedia)</a>
+            <a href="https://www.striso.org/the-note-layout/" target="_blank" rel="noopener">Striso note layout</a>
+            <a href="https://github.com/flipcoder/midimech" target="_blank" rel="noopener">MidiMech</a>
+            <a href="https://www.toverlamp.org/static/wickisynth/wickisynth_lowlatency.html" target="_blank" rel="noopener">WickiSynth (original)</a>
+          </div>
+        </div>
+
+        <div class="about-col">
+          <h3>Creator</h3>
+          <div class="about-links">
+            <a href="https://github.com/zitongcharliedeng" target="_blank" rel="noopener">GitHub — zitongcharliedeng</a>
+            <a href="https://www.youtube.com/@zitongcharliedeng" target="_blank" rel="noopener">YouTube</a>
+            <a href="https://www.instagram.com/zitongcharliedeng" target="_blank" rel="noopener">Instagram</a>
+            <a href="https://www.tiktok.com/@zitongcharliedeng" target="_blank" rel="noopener">TikTok</a>
+          </div>
+        </div>
+
+        <div class="about-col">
+          <h3>This Project</h3>
+          <div class="about-links">
+            <a href="https://github.com/zitongcharliedeng/dcompose-web" target="_blank" rel="noopener">Source code (GitHub)</a>
+            <a href="https://github.com/zitongcharliedeng/dcompose-web/blob/main/FEATURES.md" target="_blank" rel="noopener">Feature list</a>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
     <footer>
-      Based on <a href="https://www.toverlamp.org/static/wickisynth/wickisynth_lowlatency.html" target="_blank">WickiSynth</a> by Piers Titus van der Torren |
-      Inspired by <a href="https://github.com/flipcoder/midimech" target="_blank">MIDImech</a> and <a href="https://www.striso.org/the-note-layout/" target="_blank">Striso</a> |
+      Based on <a href="https://www.toverlamp.org/static/wickisynth/wickisynth_lowlatency.html" target="_blank">WickiSynth</a> by Piers Titus van der Torren ·
+      Inspired by <a href="https://github.com/flipcoder/midimech" target="_blank">MIDImech</a> and <a href="https://www.striso.org/the-note-layout/" target="_blank">Striso</a> ·
       <a href="https://github.com/zitongcharliedeng/dcompose-web" target="_blank">GitHub</a>
     </footer>
+
   </div>
-  
+
   <script type="module" src="/src/main.ts"></script>
+  <script>
+    fetch('https://api.github.com/repos/zitongcharliedeng/dcompose-web')
+      .then(r => r.json()).then(d => {
+        const el = document.getElementById('star-count-badge');
+        if (el && typeof d.stargazers_count === 'number') el.textContent = d.stargazers_count.toLocaleString();
+      }).catch(() => {});
+  </script>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <filter id="spray-roughen" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB">
+        <feTurbulence type="turbulence" baseFrequency="0.05 0.07" numOctaves="4" seed="3" result="noise"/>
+        <feDisplacementMap in="SourceGraphic" in2="noise" scale="8" xChannelSelector="R" yChannelSelector="G"/>
+      </filter>
+    </defs>
+  </svg>
 </body>
 </html>
