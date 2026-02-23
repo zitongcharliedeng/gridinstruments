@@ -10,7 +10,7 @@
  */
 
 import { getLayout, KEYBOARD_VARIANTS, KeyboardLayout, KeyCoordinate } from './lib/keyboard-layouts';
-import { Synth, WaveformType, FIFTH_MIN, FIFTH_MAX, FIFTH_DEFAULT, findNearestMarker } from './lib/synth';
+import { Synth, WaveformType, FIFTH_MIN, FIFTH_MAX, FIFTH_DEFAULT, findNearestMarker, TUNING_MARKERS } from './lib/synth';
 import { KeyboardVisualizer } from './lib/keyboard-visualizer';
 import { NoteHistoryVisualizer } from './lib/note-history-visualizer';
 import { MidiInput, MidiDeviceInfo, MidiChannelMode } from './lib/midi-input';
@@ -224,7 +224,13 @@ class DComposeApp {
     // DCompose ↔ MidiMech skew slider
     if (this.skewSlider) {
       this.skewSlider.addEventListener('input', () => {
-        this.visualizer?.setSkewFactor(parseFloat(this.skewSlider!.value));
+        const val = parseFloat(this.skewSlider!.value);
+        this.visualizer?.setSkewFactor(val);
+        // Highlight active endpoint label
+        const leftLabel = document.getElementById('skew-label-left');
+        const rightLabel = document.getElementById('skew-label-right');
+        if (leftLabel) leftLabel.classList.toggle('active', val < 0.25);
+        if (rightLabel) rightLabel.classList.toggle('active', val > 0.75);
       });
     }
 
@@ -256,6 +262,11 @@ class DComposeApp {
             nearestMarkerDisplay.style.color = '#888';
           }
         }
+        // Sync active TET preset button
+        document.querySelectorAll('.tet-preset').forEach(b => {
+          const btn = b as HTMLElement;
+          btn.classList.toggle('active', Math.abs(Number(btn.dataset.fifth) - value) < 0.1);
+        });
       });
 
       this.tuningSlider.addEventListener('dblclick', () => {
@@ -270,6 +281,27 @@ class DComposeApp {
           nearestMarkerDisplay.style.color = '#88ff88';
         }
       });
+    }
+
+    // Populate TET preset buttons
+    const presetsContainer = document.getElementById('tet-presets');
+    if (presetsContainer) {
+      for (const marker of TUNING_MARKERS) {
+        const btn = document.createElement('button');
+        btn.className = 'tet-preset';
+        btn.dataset.fifth = marker.fifth.toString();
+        btn.textContent = marker.name;
+        btn.title = marker.description;
+        btn.addEventListener('click', () => {
+          if (this.tuningSlider) {
+            this.tuningSlider.value = marker.fifth.toString();
+            this.tuningSlider.dispatchEvent(new Event('input'));
+          }
+        });
+        presetsContainer.appendChild(btn);
+      }
+      // Mark initial active preset (12-TET at 700)
+      presetsContainer.querySelector('[data-fifth="700"]')?.classList.add('active');
     }
 
     // Volume
