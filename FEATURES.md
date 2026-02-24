@@ -2,7 +2,7 @@
 
 **This is the source of truth. Use it to prevent regressions.**
 
-Last updated: 2026-02-23 (dynamic chord graffiti, MIDI octave bug closed, enharmonic naming, axes coupling)
+Last updated: 2026-02-24 (touch lag fix, zoom coupling fix, Ctrl passthrough, game-like status indicators, editable tuning badge, latencyHint, dead code cleanup)
 
 ---
 
@@ -115,9 +115,11 @@ Last updated: 2026-02-23 (dynamic chord graffiti, MIDI octave bug closed, enharm
 ## Tuning System
 
 ### Continuous Tuning Slider (`tuning-slider`)
-- [x] Range: 650-750 cents (fifth size), step 0.1 cents
-- [x] Live frequency updates in real-time
-- [x] Double-click snaps to nearest named TET
+ [x] Range: **683–722 cents** (fifth size), step 0.01 cents — covers all TET presets (7-TET=685.71¢ to 5-TET=720¢)
+ [x] Display badge (`#tuning-thumb-badge`, `<span>`) — read-only, positioned above slider track
+ [x] One-way sync: slider → badge (badge displays current value as textContent)
+ [x] Live frequency updates in real-time
+ [x] Double-click snaps to nearest named TET
 
 ### Reference Markers (in `synth.ts`)
 - [x] 12-TET (700 cents), Pythagorean (701.96 cents), 1/4-comma Meantone (696.58 cents)
@@ -126,10 +128,15 @@ Last updated: 2026-02-23 (dynamic chord graffiti, MIDI octave bug closed, enharm
 - [x] `findNearestMarker(fifth)` function
 - [x] `nearest-marker` span shows exact or approximate match
 
-### D4 Hz Reference
-- [x] `d4-hz-input` (number) + `d4-note-input` (text) — cross-updating
-- [x] Default: D4 = 293.66 Hz
-- [x] Dragging golden D-line on keyboard canvas also retunes
+### D Ref Control (`#d4-ref-input`)
+ [x] **Single text input only** — no slider, no separate Hz/note inputs
+ [x] Accepts: raw Hz value (e.g. `293.66`) OR note name with octave (e.g. `D4`, `G#5`, `Bb3`)
+ [x] Note names parsed case-insensitively; sharps (`#`) and flats (`b`) supported
+ [x] `#d4-ref-hint` span shows bracket annotation next to the input:
+  - Exact note: `[D4]`
+  - Off-pitch: `[+14¢ from G#4]` (rounded to nearest cent)
+ [x] Default: D4 = 293.66 Hz, hint = `[D4]`
+ [x] Dragging golden D-line on keyboard canvas also updates input and hint
 
 ## Audio
 
@@ -158,6 +165,8 @@ src/lib/keyboard-visualizer.ts   canvas keyboard, skew slider, nearest-neighbor 
 src/lib/note-history-visualizer.ts  3-panel top strip (staff / waterfall / chord)
 src/lib/chord-detector.ts        chord detection (unchanged)
 src/lib/synth.ts                 Web Audio, tuning, vibrato, sustain (unchanged)
+src/lib/mpe-output.ts             MPE channel allocator (legacy, kept for test imports)
+src/lib/mpe-service.ts            MPE service — standalone, configurable, replaces MpeOutput
 src/main.ts                      wiring layer
 index.html                       UI structure + JetBrains Mono styling
 VISUAL-TESTS.md                  visual regression test invariants
@@ -237,24 +246,23 @@ skewFactor = 1.0 (DCompose):
 ### Design Intent
 Spray-painted yellow chord shape diagrams scattered around the site as **educational decoration**. The shapes teach newcomers that on an isomorphic layout, a major chord is always a triangle and a minor chord is always an inverted triangle — regardless of key. This is the core insight that makes isomorphic layouts "hard to suck" at.
 
-### Chord Geometry (MidiMech Grid Coordinates)
-From the [MidiMech cheat sheet](https://github.com/flipcoder/mech-theory):
-
+### Chord Geometry (Cell-Grid Coordinates: Wholetone × Fourth)
+The cell tiling uses wholetone (200¢) and fourth (500¢) as its reduced basis.
+wholetone = 2·fifth − octave, fourth = −fifth + octave.
 **Major triad (triangle pointing UP):**
 ```
-[ ][M][ ]   row 1
-[R][ ][5]   row 0
+    [P5]     fourth=1
+[R]    [M3]  fourth=0
+ wt=0  wt=1  wt=2
 ```
-- Root `R` at (0,0), Major 3rd `M` at (1,1), Perfect 5th `5` at (2,0)
-- Intervals: root -> +4 semitones (maj3) -> +3 semitones (min3) -> root
-
+- Root `R` at (0,0)=0¢, Major 3rd `M3` at (2,0)=400¢, Perfect 5th `P5` at (1,1)=700¢
 **Minor triad (triangle pointing DOWN):**
 ```
-[m][ ][5]   row 1
-[ ][R][ ]   row 0
+[m3]   [P5]  fourth=1
+    [R]      fourth=0
+ wt=-1 wt=0  wt=1
 ```
-- Root `R` at (1,0), Minor 3rd `m` at (0,1), Perfect 5th `5` at (2,1)
-- Intervals: root -> +3 semitones (min3) -> +4 semitones (maj3) -> root
+- Root `R` at (0,0)=0¢, Minor 3rd `m3` at (-1,1)=300¢, Perfect 5th `P5` at (1,1)=700¢
 
 ### Rendering Requirements
 - [ ] **Dynamic rendering**: Chord shapes are computed from the SAME grid engine that renders the keyboard (not hardcoded SVGs). When the skew slider changes, the chord shape geometry matches the current grid state exactly.
@@ -347,62 +355,33 @@ desktop. Added a zoom slider so users can adjust, with smart defaults per device
 
 ---
 
-## Completed: Axes Coupled to Grid Skew
+## Completed: Axes Coupled to Grid Skew (Gradient-Based)
 ### Design Intent
-The X axis = Circle of Fifths, the Y axis = Pitch. Both axes rotate/stretch with the grid
-when the skew slider changes.
+The CoF axis = iso-pitch direction (⊥ to pitch gradient), Pitch axis = pitch gradient direction.
+At DCompose (skew=1): CoF is horizontal, Pitch is vertical. At MidiMech (skew=0): both diagonal.
 ### Specifications
- [x] **X axis label**: "Circle of Fifths →" with arrow indicating direction
- [x] **Y axis label**: "Pitch ↑" with arrow indicating direction
- [x] **Y axis rotates** with the grid: at DCompose it's vertical, at MidiMech it leans with the pitch direction
- [x] **White axes**: Both axis lines are white (#fff), prominent, with visible labels
+ [x] **CoF axis**: Drawn along iso-pitch direction `(octave*genX - fifth*genX1, fifth*genY1 - octave*genY0)`
+ [x] **Pitch axis**: Drawn along pitch gradient `(fifth*genY1 - octave*genY0, fifth*genX1 - octave*genX)`
+ [x] **Fifth index lines**: Perpendicular tick marks at each fifth step along CoF axis, labeled with note names
+ [x] **Octave labels**: Projected onto Pitch axis line at each octave step
+ [x] **White axes**: Both axis lines are white (#fff), prominent, with visible labels and arrowheads
  [x] **Grid beneath axes**: Grid cells do NOT cover axis lines or labels
+ [x] **Origin marker**: D4 + Hz at center intersection
 
 ---
 
-## Pending: Smooth Transition (No Gaps at Intermediate Skew)
+## Completed: Smooth Transition (No Gaps at Intermediate Skew)
 
-### Design Intent
-At intermediate skew values (e.g., 0.3–0.7), the cell tiling develops gaps or overlaps
-because cell shape vectors (cellHv1, cellHv2) are interpolated INDEPENDENTLY from the
-basis vectors. This breaks the mathematical tiling constraint.
-
-### Root Cause (keyboard-visualizer.ts `getSpacing()` lines 217-244)
-At MidiMech (t=0), cells tile along wholetone/fourth. At DCompose (t=1), cells tile along
-fifth/octave. These are two different fundamental domains of the SAME lattice.
-Linear interpolation of cell vectors between them does NOT maintain tiling at intermediate t.
-
-**Proof**: At t=0, fifth = 1×cellTileV1 + 1×cellTileV2. At t=1, fifth = 1×cellTileV1 + 0×cellTileV2.
-At intermediate t, the coefficient is (1, 1-t) which is NOT integer → cells don't tile.
-
-### Fix Formula
-Always derive cell half-vectors from the CURRENT interpolated basis as wholetone/fourth:
-```typescript
-// wholetone = 2*fifth - octave  (pure horizontal at MidiMech, diagonal at DCompose)
-// fourth   = -fifth + octave   (pure vertical at MidiMech, diagonal at DCompose)
-// These ALWAYS tile because they're the reduced basis of the coordinate lattice.
-const cellHv1 = {
-  x: (2 * genX - genX1) / 2,
-  y: -(2 * genY0 - genY1) / 2,
-};
-const cellHv2 = {
-  x: (-genX + genX1) / 2,
-  y: (genY0 - genY1) / 2,
-};
-```
-
-### Verification
-- At t=0 (MidiMech): gives rectangles aligned to wholetone/fourth ✓
-- At t=1 (DCompose): gives wholetone/fourth parallelograms (correct tiling) ✓
-- At ALL intermediate t: tiles perfectly (reduced basis is always valid) ✓
-
+### Implementation
+Cell half-vectors are now derived from the CURRENT interpolated basis vectors as wholetone/fourth
+(reduced basis), guaranteeing perfect tiling at ALL skew values. The fix is in `getSpacing()` lines 216-231.
 ### Specifications
- [ ] No gaps between cells at ANY skew value (0.0 to 1.0)
- [ ] No overlaps between cells at ANY skew value
- [ ] Cell edges always touch (continuous surface, CELL_INSET=0.93 mortar only)
- [ ] Parallelogram shape interpolation is smooth and continuous
- [ ] Replace lines 217-244 in getSpacing() with wholetone/fourth derivation
- [ ] Transition from MidiMech to DCompose has no 'holes' or disconnected cells
+ [x] No gaps between cells at ANY skew value (0.0 to 1.0)
+ [x] No overlaps between cells at ANY skew value
+ [x] Cell edges always touch (continuous surface, CELL_INSET=0.93 mortar only)
+ [x] Parallelogram shape interpolation is smooth and continuous
+ [x] Replace lines 217-244 in getSpacing() with wholetone/fourth derivation
+ [x] Transition from MidiMech to DCompose has no 'holes' or disconnected cells
 
 ---
 
@@ -413,7 +392,7 @@ For non-12-TET tunings, note names should show accurate enharmonic spelling with
 cent deviation underneath in brackets. In 12-TET, names are standard (no brackets).
 
 ### Specifications
- [ ] Primary label: enharmonic note name using double-flats/sharps when accurate (e.g., `B𝄫`)
+ [x] Primary label: enharmonic note name using double-flats/sharps with proper glyphs (♯, ♭, 𝄪, 𝄫)
  [ ] Bracket underneath: equivalent pitch with cent deviation, e.g. `(A - 3¢)` or `(A + 7¢)`
  [ ] In 12-TET: standard names only, no brackets (deviation is 0)
  [ ] Use best notation for each TET (whatever is most readable/accurate)
@@ -446,104 +425,236 @@ cent deviation underneath in brackets. In 12-TET, names are standard (no bracket
  [x] Verified via headless Playwright screenshots at DCompose (skew=1.0), MidiMech (skew=0.0), and mid-transition (skew=0.5)
 ---
 
-## Pending: Fix Chord Graffiti Shape and Readability
+## Completed: Fix Chord Graffiti Shape and Readability
 
-### Known Issues
-1. Per-cell parallelogram outlines (lines 158-181 in chord-graffiti.ts) create ugly 'connected squares' appearance
-2. Major chord shape doesn't look like opposite/reflection of minor chord
-3. Text labels use SVG displacement filter → wiggly and unreadable
-4. Font size 11px with 0.7 opacity → too small and dim
-5. Hint text at 8px is microscopic
-
-### Fix Specifications
- [ ] Remove per-cell parallelogram outlines (keep ONLY the triangle connecting 3 chord tone centers)
- [ ] Major triad triangle: points UP (root at bottom-left, maj3 at top, p5 at bottom-right)
- [ ] Minor triad triangle: points DOWN (reflection of major across fourth axis)
- [ ] Remove `filter: url(#spray-roughen)` from `.graffiti-overlay` CSS
- [ ] Remove `filter: url(#spray-roughen)` from `.graffiti-label` CSS
- [ ] Increase graffiti label font size to 14px, opacity to 0.9
- [ ] Increase hint text font size to 10px, opacity to 0.7
- [ ] Text must be clean and readable — no wiggly displacement effects
+### Fixed Issues
+ [x] Removed per-cell parallelogram outlines (keep ONLY the triangle connecting 3 chord tone centers)
+ [x] Updated shape coordinates to **root position** in (fifth, octave) cell coords:
+     `MAJOR_SHAPE=[[0,0],[4,-2],[1,0]]` (D, F#, A = ▲), `MINOR_SHAPE=[[0,0],[-3,2],[1,0]]` (D, F, A = ▽)
+ [x] Major triad triangle points UP (▲ = root position), minor points DOWN (▽ = root position)
+ [x] Removed `filter: url(#spray-roughen)` from `.graffiti-overlay` and `.graffiti-label` CSS
+ [x] Increased graffiti label font size to 14px, opacity to 0.9
+ [x] Increased hint text font size to 10px, opacity to 0.7
+ [x] Text is clean and readable — no wiggly displacement effects
 
 ---
 
-## Pending: Remove Redundant Canvas/HTML Elements
+## Completed: Remove Redundant Canvas/HTML Elements
 
-### Design Intent
-Several UI elements now duplicate information shown by the improved TET slider thumb badge
-and white Circle of Fifths axis. Remove them to declutter.
-
-### Elements to Remove
- [ ] `drawCircleOfFifthsLabels()` — bottom x-axis note row (lines 478-507 in keyboard-visualizer.ts)
- [ ] `drawTuningMarkersInline()` — purple tuning markers at bottom (lines 443-476)
- [ ] Canvas tuning label at top (`12-TET (700.0¢)` box, lines 339-356)
- [ ] HTML `.tuning-readout` div with `#tuning-value` and `#nearest-marker` (index.html lines 549-552)
- [ ] Remove the call sites in `drawPitchLines()` (lines 357-358)
+### Implementation
+All redundant elements removed:
+ [x] `drawCircleOfFifthsLabels()` — removed from keyboard-visualizer.ts
+ [x] `drawTuningMarkersInline()` — removed from keyboard-visualizer.ts
+ [x] Canvas tuning label at top — removed (no longer rendered)
+ [x] HTML `.tuning-readout` div with `#tuning-value` and `#nearest-marker` — CSS and JS references removed
+ [x] Call sites in `drawPitchLines()` — removed (replaced by gradient-based axis system)
 
 ---
 
-## Pending: MidiMech as Default View
+## Completed: MidiMech as Default View
 
-### Design Intent
-MidiMech (skew=0.0) should be the default view when the page loads, not DCompose (skew=1.0).
-MidiMech is the more intuitive starting layout with horizontal wholetone rows and vertical fourths.
+### Implementation
+MidiMech (skew=0.0) is now the default view on page load.
+ [x] HTML slider `#skew-slider` defaults to `value="0"` (index.html)
+ [x] keyboard-visualizer.ts `skewFactor` default changed from 1.0 to 0
+ [x] Left endpoint label ('MidiMech') has `.active` class on load
+ [x] Right endpoint label ('DCompose') does NOT have `.active` class on load
 
+---
+
+## Completed: Restore Numerical Axis Values
+
+### Implementation
+Note names and octave labels are now projected from actual grid positions onto the conceptual
+axis lines using dot-product projection. This ensures labels stay on the axis line at any skew.
 ### Specifications
- [ ] Change `value="1"` to `value="0"` on `#skew-slider` in index.html
- [ ] Update main.ts initialization to match (if any hardcoded defaults)
- [ ] Left endpoint label ('MidiMech') should have `.active` class on load
- [ ] Right endpoint label ('DCompose') should NOT have `.active` class on load
-
----
-
-## Pending: Restore Numerical Axis Values
-
-### Design Intent
-After removing redundant bottom labels, the axes need their own numerical markers.
-Pitch axis needs Hz/octave markers. CoF axis needs note names along the axis line.
-
-### Specifications
- [ ] **CoF axis**: Note names (D, A, E, B, F♯, ...) placed along the Circle of Fifths axis line
- [ ] **Pitch axis**: Octave markers (C2, C3, D4, C5, etc.) along the Pitch axis line
- [ ] Labels rotate with axes when skew changes (coupled to grid geometry)
- [ ] Labels are small, semi-transparent, and don't obscure grid cells
- [ ] Origin marker (D4 + Hz) remains at center intersection
-
+ [x] **CoF axis**: Note names (D, A, E, B, F♯, ...) with perpendicular tick marks at each fifth step
+ [x] **Pitch axis**: Octave markers (oct 1 through oct 7) projected onto the Pitch axis line
+ [x] Labels projected from grid positions onto conceptual axes — always on the axis line
+ [x] Labels are small (9px), semi-transparent (fading at edges), don't obscure grid cells
+ [x] Origin marker (D4 + Hz) at center intersection
 ---
 
 ## Pending: UI Polish Fixes
-
-### MIDI Settings Button
- [ ] Rename from `▼ MIDI` to `⚙ MIDI` (cog icon implies settings)
- [ ] Toggle text: open = `⚙ MIDI settings`, closed = `⚙ MIDI`
- [ ] Button hugs left side of header (already positioned correctly)
-
+ [x] Rename from `▼ MIDI` to `⚙ MIDI` (cog icon implies settings)
+ [x] Toggle text: open = `⚙ MIDI settings`, closed = `⚙ MIDI`
+ [x] Button hugs left side of header (already positioned correctly)
 ### Zoom Reset Tooltip
- [ ] `title="Aims to match keysize to standard keyboard key size"` on `#zoom-reset`
-
+ [x] `title="Aims to match keysize to standard keyboard key size"` on `#zoom-reset`
 ### TET Slider Preset Spacing
- [ ] Increase stagger threshold from 3% to 5% of slider range
- [ ] Prevents overlapping labels at 694-702¢ cluster (19-TET, Meantone, 31-TET, 12-TET, Pythagorean, 53-TET)
+ [x] Increase stagger threshold from 3% to 5% of slider range
+ [x] Prevents overlapping labels at 694-702¢ cluster
 
-### Skew Slider Units/Labels
- [ ] Display current value (0.0–1.0) or descriptive text within/near the slider
- [ ] Consider showing intermediate layout name or percentage
+### Skew Slider Value Display
+ [x] `#skew-value` badge shows current value (0.00–1.00) next to slider
+ [x] Value integrated directly into slider track (skew-thumb-badge, modern design)
 
 ---
 
-## Pending: MPE Support + Pressure-Sensitive Touch
+## Completed: Slider UI Overhaul
+
+### Design Intent
+All sliders need to be self-explanatory, with proper units, readable labels, and modern design.
+Currently the controls are cramped and labels are ambiguous.
+
+### Fifth (Generator) Slider
+ [x] Rename label from `FIFTH` to `Fifth (¢)` — units visible
+ [ ] Center the label above the slider
+ [ ] Widen indentation lines — they should extend into the black bar area
+ [ ] Spread out TET preset labels — currently too cramped at 694-702¢ cluster
+ [x] Alternate labels above/below the slider for dense regions (staggered labels flip above)
+ [ ] TET indentation marks should visually intersect with the fifth scale
+ [ ] Consider single-line layout with alternating top/bottom labels
+
+### Skew (Layout) Slider
+ [x] Show MidiMech value directly in the slider track (skew-thumb-badge)
+ [x] Integrate DCompose/MidiMech labels into the slider itself (skew-slider-area wrapper)
+ [x] Modern slider design — value visible within the track (thumb badge overlay)
+
+### General Slider Principles
+ [ ] Every slider must have units (¢, Hz, %, etc.)
+ [ ] Every slider must be OBVIOUS what it controls at a glance
+ [ ] Consider modern slider patterns: value-in-track, colored fill, integrated labels
+ [ ] Single-line layouts where possible to save vertical space
+---
+
+## Completed: MPE Support + Pressure-Sensitive Touch
 
 ### MPE (MIDI Polyphonic Expression)
- [ ] Per-note pitch bend on channels 2-16
- [ ] Per-note aftertouch (CC 74 / pressure)
- [ ] Manager channel on ch 1 for global controls
- [ ] Configuration UI in MIDI settings panel
+ [x] Per-note pitch bend on channels 2-16
+ [x] Per-note aftertouch (CC 74 / pressure)
+ [x] Manager channel on ch 1 for global controls
+ [x] Configuration UI in MIDI settings panel
 
 ### Pressure-Sensitive Touchscreen
- [ ] Map `PointerEvent.pressure` to velocity on note-on
- [ ] Map `PointerEvent.pressure` changes to expression/aftertouch
- [ ] Fallback to fixed velocity (0.7) when pressure API unavailable
- [ ] Works alongside MPE output for pressure → MIDI CC mapping
+ [x] Map `PointerEvent.pressure` to velocity on note-on
+ [x] Map `PointerEvent.pressure` changes to expression/aftertouch
+ [x] Fallback to fixed velocity (0.7) when pressure API unavailable
+ [x] Works alongside MPE output for pressure → MIDI CC mapping
+
+---
+
+## Completed: Touch & Performance Fixes (Feb 23 2026)
+
+### Bug 1: Touch Screen Lag
+ [x] `handlePointerDown` made synchronous (only async if AudioContext uninitialized)
+ [x] `getBoundingClientRect()` cached in `cachedCanvasRect` (invalidated on resize)
+ [x] `render()` RAF-throttled with `renderScheduled` flag (prevents stacking frames)
+
+### Bug 2: D4→G2 Pitch Drift on Touch
+ [x] Golden line drag restricted to mouse only (`event.pointerType === 'mouse'`)
+ [x] Touch near canvas center no longer hijacks D4 cell
+
+### Bug 3: Fifth Index Lines Misaligned at MidiMech
+ [x] Changed from CoF-axis projection to actual cell center positions (`cx + i*fifthDx`)
+ [x] Tick marks now align correctly at all skew values (0.0 to 1.0)
+
+---
+
+## Completed: MPE Pitch Bend Sensitivity (Feb 23 2026)
+
+ [x] Added `sendPitchBendSensitivity(chIdx, semitones)` method to `MpeOutput`
+ [x] After MCM, sends RPN 0x00/0x00 (Pitch Bend Sensitivity) on manager channel AND all 15 member channels
+ [x] Default `_bendRange = 48` (±24 semitones) — synths previously defaulted to ±2, causing wrong pitches
+ [x] Sends null RPN (127/127) after each PBS set to prevent accidental RPN edits
+
+---
+
+## Completed: Strict TypeScript ESLint Config (Feb 23 2026)
+
+ [x] Installed `eslint`, `@eslint/js`, `typescript-eslint` as devDependencies
+ [x] Created `eslint.config.mjs` with `strictTypeChecked` + `stylisticTypeChecked` configs
+ [x] Rules: no `as` assertions (never), no `any`, no `!` non-null assertions, explicit return types
+ [x] Rules: strict boolean expressions, exhaustive switches, no floating promises
+ [x] Added `"lint": "eslint src/"` script to package.json
+ [x] Current state: 233 violations across 17 rules (informational — for future refactors, not blocking)
+ [x] Top violations: `restrict-template-expressions` (68), `consistent-type-assertions` (32), `no-inferrable-types` (29)
+
+---
+
+## Completed: Touch Event Reliability Fix (Feb 24 2026)
+
+### Root Cause
+`touch-action: none` was missing from `#keyboard-canvas` and `#keyboard-container`.
+Without it the browser adds ~300ms tap delay and fires `pointercancel` when a scroll gesture
+begins — causing stuck notes and missed inputs on mobile.
+
+### Specifications
+ [x] `touch-action: none` added to `#keyboard-container` CSS
+ [x] `touch-action: none` added to `#keyboard-canvas` CSS
+ [x] `-webkit-tap-highlight-color: transparent` added to both elements
+ [x] `user-select: none` added to both elements
+ [x] `setPointerCapture()` call wrapped in `try/catch` for iOS Safari compatibility
+ [x] `AudioContext` created with `{ latencyHint: 'interactive' }` for minimum output latency (`synth.ts`)
+ [x] Redundant `touchstart → preventDefault` listener removed from `main.ts`
+
+---
+
+## Completed: Zoom Coupling Fix (Feb 24 2026)
+
+### Problem
+Zoom keyboard shortcuts called `visualizer.setScale()` directly but never updated
+`zoomSlider.value` nor called `updateGraffiti()` — causing the slider and graffiti
+overlays to desync from the visible zoom level.
+
+### Specifications
+ [x] Zoom hotkeys changed from `Ctrl+=/−` to `Shift+=/−` (Ctrl now fully passes through to browser)
+ [x] Zoom hotkeys use `visualizer.setZoom()` API (same path as the slider)
+ [x] `zoomSlider.value` updated in sync with every hotkey zoom change
+ [x] `updateGraffiti?.()` called after every hotkey zoom change
+ [x] `updateSliderFill(zoomSlider)` called to keep the CSS fill indicator in sync
+
+---
+
+## Completed: Ctrl Passthrough (Feb 24 2026)
+
+### Problem
+`event.preventDefault()` fired for ALL keys before the Ctrl check — swallowing Ctrl+C,
+Ctrl+V, Ctrl+Z, etc. and making the browser's native keyboard shortcuts unusable.
+
+### Specifications
+ [x] Early return `if (event.ctrlKey || event.metaKey) return;` at top of `handleKeyDown`
+ [x] Ctrl and Meta (Cmd on macOS) always pass through to the browser unchanged
+ [x] Only `Shift` and `Space` are application modifier keys
+
+---
+
+## Completed: Game-Like Status Indicators (Feb 24 2026)
+
+### Design Intent
+Vibrato (Space) and Sustain (Alt) indicators moved from the header controls strip to a
+game-like overlay inside the keyboard canvas — positioned bottom-left, always visible,
+never consuming header space.
+
+### Specifications
+ [x] `.status-indicators` container: `position: absolute; bottom: 12px; left: 12px; z-index: 10`
+    inside `#keyboard-container` (not the header)
+ [x] Each `.status-indicator` hidden by default (`display: none`)
+ [x] Active state via `classList.add('active')` → `.status-indicator.active { display: inline-block }`
+ [x] `#vibrato-indicator`: blue (`#88aaff`), tooltip `"Hold Space for vibrato"`
+ [x] `#sustain-indicator`: gold (`#ffcc44`), tooltip `"Hold Alt for sustain"`
+ [x] Vibrato and sustain are **hold-mode only** (active while key held, off on release — never toggle)
+ [x] `#instructions` div removed from bottom of page; hotkey documentation lives in indicator tooltips only
+ [x] Header ctrl-group for indicators replaced with a comment (no visible change to header layout)
+
+---
+
+## Completed: Editable Tuning Thumb Badge (Feb 24 2026)
+
+> **Superseded**: Badge is now a display-only `<span>` with `pointer-events: none`. The editable badge was removed because it blocked slider interaction.
+
+### Design Intent (Historical)
+The floating thumb badge on the fifth slider is directly editable — click it and type a
+precise fifth value without using the slider.
+
+### Specifications (Historical)
+ [x] `#tuning-thumb-badge` changed from `<div>` to `<input type="number" min="683" max="722" step="0.01">`
+ [x] JS cast to `HTMLInputElement | null`; `.value` used instead of `.textContent`
+ [x] `input` event listener on the badge: updates `synth.setFifth()`, `visualizer.setGenerator()`,
+    `updateGraffiti?.()`, and clamps + syncs the main tuning slider
+ [x] Dead `#fifth-custom-input` event listeners removed from `main.ts` (HTML element was already removed)
+ [x] CSS: `pointer-events: auto; cursor: text; width: 58px; border: none; outline: none; text-align: center`
+    (was `pointer-events: none`)
 
 ---
 
@@ -588,7 +699,7 @@ Run before any release:
 - [ ] MIDI settings panel opens/closes on toggle click
 - [ ] Per-device checkbox changes enabled state
 - [ ] Volume slider changes loudness
-- [ ] D4 Hz input + note name input cross-update correctly
+ [ ] D ref input accepts Hz (e.g. 293.66) and note names (e.g. D4, G#5, Bb3)
 - [ ] Sliders (volume, skew, tuning) do NOT steal keyboard focus — notes still play after interacting
 - [ ] No pixel gaps or dead zones on keyboard canvas (parallelogram cells, CELL_INSET=0.93)
 - [ ] JetBrains Mono visible (not fallback monospace)
@@ -622,6 +733,11 @@ Run before any release:
 - [ ] Skew slider shows units or descriptive value
 - [ ] No pixel gaps at intermediate skew values (0.0 to 1.0)
 - [ ] Axes show numerical values (note names on CoF, octaves on Pitch)
+ [ ] D ref input exists as `#d4-ref-input` (type=text), no slider element `#d4-hz-slider`
+ [ ] D ref hint `#d4-ref-hint` shows `[D4]` on load
+ [ ] Fifth slider range is 683–722¢ (not 650–750)
+ [x] Tuning badge `#tuning-thumb-badge` (input[type=number]) is editable and syncs bidirectionally with slider
+ [ ] Chord graffiti major triangle = root position (▲), minor = root position (▽)
 
 ---
 

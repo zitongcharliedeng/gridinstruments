@@ -56,11 +56,9 @@
       pointer-events: none;
     }
     #title-bar > * { pointer-events: auto; }
-    .site-title {
-      font-weight: 700; font-size: 13px; color: var(--dim); letter-spacing: 0.04em;
-    }
+    .site-title { font-weight: 700; font-size: 13px; color: #fff; letter-spacing: 0.04em; vertical-align: middle; }
     .gh-actions {
-      display: inline-flex; align-items: stretch;
+      display: inline-flex; align-items: center;
       border: 1px solid var(--border);
     }
     .gh-mark {
@@ -69,17 +67,17 @@
       border-right: 1px solid var(--border);
       background: var(--subtle);
     }
-    .gh-mark svg { width: 14px; height: 14px; fill: var(--dim); }
+    .gh-mark svg { width: 14px; height: 14px; fill: #fff; }
     .gh-btn {
       display: inline-flex; align-items: center; gap: 4px;
       padding: 2px 8px;
-      font-family: var(--font); font-size: 10px; color: var(--dim);
+      font-family: var(--font); font-size: 10px; color: #fff;
       text-decoration: none;
     }
     .gh-btn + .gh-btn { border-left: 1px solid var(--border); }
     .gh-btn:hover { color: var(--fg); background: var(--subtle); }
     .gh-btn svg { width: 11px; height: 11px; fill: currentColor; flex-shrink: 0; }
-    .gh-btn .star-icon { color: #cc9900; font-size: 13px; line-height: 1; }
+    .gh-btn .star-icon { color: #fff; font-size: 13px; line-height: 1; display: inline-flex; align-items: center; }
     #history-canvas {
       display: block;
       width: 100%;
@@ -122,6 +120,7 @@
       letter-spacing: 0.06em;
       white-space: nowrap;
     }
+    .header-controls .ctrl-label { color: #fff; }
 
     select, input[type="range"], input[type="number"], input[type="text"] {
       font-family: var(--font);
@@ -145,21 +144,96 @@
     input[type="range"] {
       padding: 0;
       height: 18px;
-      accent-color: var(--fg);
       border: none;
       cursor: pointer;
+      background: var(--border);
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 3px;
+      height: 18px;
+      background: var(--fg);
+      cursor: pointer;
+    }
+    input[type="range"]::-moz-range-thumb {
+      width: 3px;
+      height: 18px;
+      background: var(--fg);
+      cursor: pointer;
+      border: none;
+      border-radius: 0;
     }
 
-    /* Status indicators */
-    #vibrato-indicator,
-    #sustain-indicator {
-      display: none;
+    .slider-track {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .slider-track input[type="range"] {
+      width: 100%;
+      margin: 0;
+    }
+    .slider-label-overlay {
+      position: absolute;
+      left: 0;
+      bottom: 100%;
+      font-size: 9px;
+      color: #fff;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      pointer-events: none;
+      z-index: 1;
+      white-space: nowrap;
+      line-height: 1;
+    }
+    .slider-value-badge {
+      position: absolute;
+      bottom: 100%;
+      transform: translateX(-50%);
+      font-size: 9px;
+      color: #fff;
+      background: none;
+      padding: 0 3px;
+      white-space: nowrap;
+      z-index: 2;
+      line-height: 14px;
+      height: 14px;
+      pointer-events: none;
+      text-align: center;
+      font-family: var(--font);
+    }
+    .slider-reset {
+      font-family: var(--font); font-size: 14px; color: var(--dim);
+      background: var(--bg); border: 1px solid var(--border);
+      width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; padding: 0;
+      cursor: pointer; line-height: 1;
+    }
+    .slider-reset:hover { color: var(--fg); border-color: var(--accent); }
+
+    /* Status indicators — canvas overlay (bottom-left, game-style) */
+    .status-indicators {
+      position: absolute;
+      bottom: 12px;
+      left: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      z-index: 10;
+      pointer-events: none;
+    }
+    .status-indicator {
+      display: inline-block;
+      opacity: 0.3;
       font-size: 11px;
       font-weight: 700;
       letter-spacing: 0.1em;
-      padding: 2px 6px;
-      border: 1px solid var(--border);
+      padding: 2px 8px;
+      border: 1px solid;
+      cursor: default;
+      pointer-events: auto;
+      transition: opacity 0.15s;
     }
+    .status-indicator.active { opacity: 1; }
     #vibrato-indicator { color: #88aaff; border-color: #88aaff44; }
     #sustain-indicator { color: #ffcc44; border-color: #ffcc4444; }
 
@@ -174,6 +248,9 @@
       cursor: pointer;
       text-transform: uppercase;
       letter-spacing: 0.06em;
+      display: inline-flex;
+      align-items: center;
+      line-height: 1;
     }
     #midi-settings-toggle:hover { color: var(--fg); border-color: var(--accent); }
 
@@ -194,12 +271,6 @@
       flex-wrap: wrap;
       align-items: center;
       gap: 16px;
-    }
-
-    .midi-channel-group {
-      display: flex;
-      align-items: center;
-      gap: 6px;
     }
 
     #midi-device-list {
@@ -247,19 +318,27 @@
       overflow: hidden;
       display: flex;
       align-items: stretch;
+      touch-action: none;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      -webkit-touch-callout: none;
     }
 
     #keyboard-canvas {
       display: block;
       width: 100%;
       height: 100%;
+      touch-action: none;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      -webkit-touch-callout: none;
     }
 
     /* ── Controls strip ──────────────────────────────────────────── */
     #controls-strip {
       display: flex;
       flex-wrap: wrap;
-      align-items: flex-start;
+      align-items: center;
       gap: 12px;
       border: 1px solid var(--border);
       background: var(--subtle);
@@ -268,36 +347,24 @@
 
     .tuning-section { display: flex; flex-direction: column; gap: 0; flex: 1; min-width: 300px; }
     .tuning-row { display: flex; align-items: center; gap: 6px; }
-    .tuning-readout { display: flex; align-items: baseline; gap: 4px; flex-shrink: 0; }
+
     .tuning-slider-area {
       position: relative;
       flex: 1;
       min-width: 200px;
-      padding-bottom: 22px;
+      padding-top: 0;
+      padding-bottom: 0;
+      margin-bottom: 28px;
     }
-    .tuning-slider-area #tuning-slider {
+    .tuning-slider-area .slider-track {
       width: 100%;
-      margin: 0;
-    }
-    .tuning-thumb-badge {
-      position: absolute;
-      top: -12px;
-      font-size: 9px;
-      color: var(--bg);
-      background: var(--fg);
-      padding: 0 3px;
-      transform: translateX(-50%);
-      pointer-events: none;
-      white-space: nowrap;
-      z-index: 2;
-      line-height: 1.4;
     }
     .tet-presets {
       position: absolute;
       left: 0; right: 0;
-      top: 20px;
-      height: 22px;
+      top: 100%;
       pointer-events: none;
+      overflow: visible;
     }
     .tet-preset-mark {
       position: absolute;
@@ -306,64 +373,54 @@
       flex-direction: column;
       align-items: center;
       pointer-events: auto;
+      top: 0;
     }
     .tet-tick {
-      width: 1px;
-      height: 5px;
-      background: var(--border);
+      width: 2px;
+      height: 10px;
+      background: #888;
+      margin-top: 0;
     }
-    .tet-preset-mark.stagger .tet-tick { height: 14px; }
     .tet-preset {
-      font-family: var(--font); font-size: 8px; color: var(--dim);
-      background: none; border: none;
-      padding: 0 1px; cursor: pointer; white-space: nowrap;
+      font-family: var(--font);
+      font-size: 11px;
+      color: #ccc;
+      background: none;
+      border: none;
+      padding: 1px 2px;
+      cursor: pointer;
+      white-space: nowrap;
       line-height: 1.2;
     }
-    .tet-preset:hover { color: var(--fg); }
+    .tet-preset:hover { color: #fff; }
     .tet-preset.active { color: #88ff88; }
 
-    .skew-section { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-    .skew-endpoint { font-size: 10px; color: var(--dim); white-space: nowrap; }
-    .skew-endpoint.active { color: var(--fg); }
-    .skew-section #skew-slider { width: 200px; }
-    #tuning-value, #nearest-marker {
-      font-size: 12px;
-      min-width: 40px;
-      color: var(--fg);
-    }
-    #nearest-marker { min-width: 80px; color: var(--dim); }
-    #zoom-reset {
-      font-family: var(--font); font-size: 14px; color: var(--dim);
-      background: var(--bg); border: 1px solid var(--border);
-      padding: 1px 6px; cursor: pointer; line-height: 1;
-    }
-    #zoom-reset:hover { color: var(--fg); border-color: var(--accent); }
-
-    /* ── D4 reference ────────────────────────────────────────────── */
-    #d4-section {
-      border: 1px solid var(--border);
-      background: var(--subtle);
-      padding: 6px 10px;
+    .skew-section { display: flex; align-items: center; gap: 0; flex-shrink: 0; }
+    .skew-slider-area {
+      position: relative;
       display: flex;
-      flex-wrap: wrap;
       align-items: center;
-      gap: 12px;
+      gap: 0;
     }
-
-    #d4-section .ctrl-label { white-space: nowrap; }
+    .skew-endpoint {
+      font-size: 10px; color: var(--dim); white-space: nowrap;
+      padding: 0 6px;
+      line-height: 1;
+      transition: color 0.15s;
+    }
+    .skew-endpoint.active { color: var(--fg); font-weight: 500; }
+    .skew-section .slider-track { width: 120px; }
 
     input[type="number"] {
-      width: 90px;
+      width: 70px;
     }
     input[type="text"] {
-      width: 60px;
+      width: 48px;
       text-transform: uppercase;
     }
 
-    .d4-hint {
-      font-size: 10px;
-      color: var(--dim);
-    }
+    .d-ref-group .slider-track { width: 140px; }
+    .d-ref-group #d4-ref-input { text-transform: none; width: 70px; }
 
     /* ── About section ───────────────────────────────────────────── */
     #about {
@@ -475,9 +532,9 @@
 
     <!-- Header: title + controls -->
     <header>
+      <button id="midi-settings-toggle"><span style="display:inline-flex;align-items:center;line-height:0">⚙</span> MIDI</button>
       <!-- logo moved to title-bar -->
       <div class="header-controls">
-
         <div class="ctrl-group">
           <span class="ctrl-label">Wave</span>
           <select id="waveform-select">
@@ -496,16 +553,16 @@
         </div>
 
         <div class="ctrl-group">
-          <span class="ctrl-label">Vol</span>
-          <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.3" style="width: 80px;">
+          <div class="slider-track" style="width:80px">
+            <span class="slider-label-overlay">VOL (dB)</span>
+            <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.3" title="Master volume">
+            <span class="slider-value-badge" id="volume-thumb-badge">-10.5</span>
+          </div>
+          <button class="slider-reset" id="volume-reset" title="Reset volume to default (0.3)">↻</button>
         </div>
 
-        <div class="ctrl-group">
-          <span id="vibrato-indicator">VIBRATO</span>
-          <span id="sustain-indicator">SUSTAIN</span>
-        </div>
+        <!-- indicators moved to canvas overlay -->
 
-        <button id="midi-settings-toggle">⚙ MIDI</button>
         <span class="header-quote" style="color:#b8960a;opacity:0.85;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;">tl;dr: notes that are mathematically more harmonious are closer together spatially — make it hard to suck!</span>
 
       </div>
@@ -514,83 +571,93 @@
     <!-- MIDI settings panel (collapsible accordion) -->
     <div id="midi-settings-panel">
       <div class="midi-panel-row">
-        <span class="ctrl-label">Devices:</span>
+        <span class="ctrl-label">INPUT Devices:</span>
         <div id="midi-device-list">
           <span class="midi-no-devices">No MIDI devices detected</span>
         </div>
       </div>
-      <div class="midi-panel-row">
-        <div class="midi-channel-group">
-          <span class="ctrl-label">Channel mode:</span>
-          <select id="midi-channel-mode">
-            <option value="omni">Omni (all channels)</option>
-            <option value="chPerNote">ChPerNote (MPE)</option>
-            <option value="chPerRow">ChPerRow (ch=row)</option>
-          </select>
-        </div>
+      <div class="midi-panel-row" id="mpe-output-row">
+        <span class="ctrl-label" style="color:#fff">MPE Output:</span>
+        <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;">
+          <input type="checkbox" id="mpe-enabled" style="width:14px;height:14px;cursor:pointer;accent-color:#fff;">
+          Enable
+        </label>
+        <select id="mpe-output-select" style="min-width:120px;" disabled>
+          <option value="">No MIDI outputs</option>
+        </select>
       </div>
     </div>
 
     <!-- Keyboard canvas -->
     <div id="keyboard-container">
       <canvas id="keyboard-canvas"></canvas>
+      <div class="status-indicators">
+        <span id="vibrato-indicator" class="status-indicator" title="Vibrato: hold Space">VIBRATO</span>
+        <span id="sustain-indicator" class="status-indicator" title="Sustain: hold R or Left Shift">SUSTAIN</span>
+      </div>
     </div>
 
-    <!-- Controls strip: tuning + skew + spacing -->
+    <!-- Controls strip: tuning + skew + zoom + d-ref -->
     <div id="controls-strip">
       <div class="tuning-section">
         <div class="tuning-row">
-          <span class="ctrl-label">Fifth</span>
           <div class="tuning-slider-area">
-            <input type="range" id="tuning-slider" min="650" max="750" step="0.1" value="700">
-            <div class="tuning-thumb-badge" id="tuning-thumb-badge">700.0¢</div>
+            <div class="slider-track">
+              <span class="slider-label-overlay">FIFTHS TUNING (cents)</span>
+              <input type="range" id="tuning-slider" min="683" max="722" step="0.01" value="700" title="Fifth interval size in cents">
+              <span class="slider-value-badge" id="tuning-thumb-badge">700</span>
+            </div>
             <div class="tet-presets" id="tet-presets"></div>
           </div>
+          <button class="slider-reset" id="tuning-reset" title="Reset to 12-TET (700¢)">↻</button>
 
         </div>
       </div>
 
       <div class="skew-section">
-        <span class="skew-endpoint active" id="skew-label-left">MidiMech</span>
-        <input type="range" id="skew-slider" min="0" max="1" step="0.01" value="0">
-        <span id="skew-value" style="font-size:10px;color:var(--dim);min-width:24px;text-align:center;">0.00</span>
-        <span class="skew-endpoint" id="skew-label-right">DCompose</span>
+        <div class="skew-slider-area">
+          <span class="skew-endpoint active" id="skew-label-left">MidiMech</span>
+          <div class="slider-track">
+            <span class="slider-label-overlay">Skew</span>
+            <input type="range" id="skew-slider" min="0" max="1" step="0.01" value="0" title="Layout skew: 0=MidiMech, 1=DCompose">
+            <span class="slider-value-badge" id="skew-thumb-badge">0.00</span>
+          </div>
+          <span class="skew-endpoint" id="skew-label-right">DCompose</span>
+        </div>
+        <button class="slider-reset" id="skew-reset" title="Reset to MidiMech (0)">↻</button>
       </div>
 
 
       <div class="ctrl-group">
-        <span class="ctrl-label">Zoom</span>
-        <input type="range" id="zoom-slider" min="0.2" max="3" step="0.01" value="1">
-        <button id="zoom-reset" title="Aims to match keysize to standard keyboard key size">↻</button>
+        <div class="slider-track" style="width:120px">
+          <span class="slider-label-overlay">Zoom (x)</span>
+          <input type="range" id="zoom-slider" min="0.2" max="3" step="0.01" value="1" title="Grid zoom level">
+          <span class="slider-value-badge" id="zoom-thumb-badge">1.00</span>
+        </div>
+        <button class="slider-reset" id="zoom-reset" title="Aims to match keysize to standard keyboard key size">↻</button>
       </div>
 
-    </div>
-    <!-- D4 reference -->
-    <div id="d4-section">
-      <span class="ctrl-label">D4 Reference</span>
-      <div class="ctrl-group">
-        <span class="ctrl-label">Note</span>
-        <input type="text" id="d4-note-input" placeholder="D4" value="D4">
+      <div class="ctrl-group d-ref-group" style="position:relative;">
+        <span class="slider-label-overlay">D REF (Hz)</span>
+        <input type="text" id="d4-ref-input" value="293.66" style="width:70px; text-transform:none;">
+        <span id="d4-ref-hint" style="color: #fff; font-size: 11px; margin-left: 4px;"></span>
+        <button id="d4-ref-reset" class="slider-reset" title="Reset to D4 (293.66 Hz)">↻</button>
       </div>
-      <div class="ctrl-group">
-        <span class="ctrl-label">Hz</span>
-        <input type="number" id="d4-hz-input" min="100" max="2000" step="1" value="293.66">
-      </div>
-      <span class="d4-hint">D2: 73.42 · D3: 146.83 · <strong>D4: 293.66</strong> · D5: 587.33</span>
     </div>
 
-    <!-- Instructions -->
-    <div id="instructions">
-      <strong>Play:</strong> All letter/number keys play notes on the isomorphic grid (any physical layout).
-      <kbd>Space</kbd> = vibrato hold &nbsp;|&nbsp; <kbd>Alt</kbd> = sustain hold &nbsp;|&nbsp;
-      <kbd>Ctrl +/-</kbd> = zoom.
-      Drag the golden D-line on the keyboard to retune. Double-click Fifth slider to snap to nearest TET.
-    </div>
+    <!-- Instructions removed: hotkeys shown as canvas overlay status effects -->
 
     <!-- About -->
     <section id="about">
       <h2>About</h2>
       <div class="about-grid">
+
+        <div class="about-col">
+          <h3>About</h3>
+          <p style='font-size: 12px; color: var(--dim); line-height: 1.5;'>
+            DCompose Web makes isomorphic keyboard layouts accessible to everyone — no special hardware needed. Explore tunings, discover harmonic patterns, and play music in ways traditional keyboards can't offer.
+          </p>
+        </div>
 
         <div class="about-col">
           <h3>Isomorphic Layout</h3>
@@ -605,18 +672,9 @@
         <div class="about-col">
           <h3>Creator</h3>
           <div class="about-links">
-            <a href="https://github.com/zitongcharliedeng" target="_blank" rel="noopener">GitHub — zitongcharliedeng</a>
             <a href="https://www.youtube.com/@zitongcharliedeng" target="_blank" rel="noopener">YouTube</a>
             <a href="https://www.instagram.com/zitongcharliedeng" target="_blank" rel="noopener">Instagram</a>
             <a href="https://www.tiktok.com/@zitongcharliedeng" target="_blank" rel="noopener">TikTok</a>
-          </div>
-        </div>
-
-        <div class="about-col">
-          <h3>This Project</h3>
-          <div class="about-links">
-            <a href="https://github.com/zitongcharliedeng/dcompose-web" target="_blank" rel="noopener">Source code (GitHub)</a>
-            <a href="https://github.com/zitongcharliedeng/dcompose-web/blob/main/FEATURES.md" target="_blank" rel="noopener">Feature list</a>
           </div>
         </div>
 

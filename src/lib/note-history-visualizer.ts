@@ -129,11 +129,22 @@ export class NoteHistoryVisualizer {
     const rightW = Math.floor(width * 0.27);
     const centerW = width - leftW - rightW;
 
-    this.ctx.fillStyle = '#0d0d1a';
+    this.ctx.fillStyle = '#0d0d0d';
     this.ctx.fillRect(0, 0, width, height);
 
+    // Empty state — single centered message across full canvas
+    if (this.history.length === 0 && this.activeNotes.size === 0) {
+      const ctx = this.ctx;
+      ctx.fillStyle = '#555';
+      ctx.font = "48px 'JetBrains Mono', monospace";
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('Play a note', width / 2, height / 2);
+      return;
+    }
+
     // Dividers
-    this.ctx.strokeStyle = '#2a2a4a';
+    this.ctx.strokeStyle = '#2a2a2a';
     this.ctx.lineWidth = 1;
     this.ctx.beginPath();
     this.ctx.moveTo(leftW, 0); this.ctx.lineTo(leftW, height);
@@ -159,7 +170,7 @@ export class NoteHistoryVisualizer {
     const lineSpacing = staffH / (lineCount + 3); // a bit extra for ledger lines
     const staffTop = padY + lineSpacing * 1.5; // offset down to allow ledger lines above
 
-    ctx.strokeStyle = '#444466';
+    ctx.strokeStyle = '#444444';
     ctx.lineWidth = 1;
     for (let l = 0; l < lineCount; l++) {
       const ly = staffTop + l * lineSpacing;
@@ -170,8 +181,8 @@ export class NoteHistoryVisualizer {
     }
 
     // Draw treble clef symbol (simplified: just label)
-    ctx.fillStyle = '#666688';
-    ctx.font = 'bold 11px Inter, sans-serif';
+    ctx.fillStyle = '#999999';
+    ctx.font = 'bold 28px \'JetBrains Mono\', monospace';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText('𝄞', x + padX / 2 + 3, staffTop + lineSpacing * 2);
@@ -184,13 +195,7 @@ export class NoteHistoryVisualizer {
       if (now - n.endTime < 1000) allNotes.push(n.midiNote);
     }
 
-    if (allNotes.length === 0) {
-      ctx.fillStyle = '#333355';
-      ctx.font = '10px Inter, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText('play a note', x + w / 2, h / 2);
-      return;
-    }
+    if (allNotes.length === 0) return;
 
     // Draw note heads
     // Staff mapping: treble clef B4=line0 top, G4=line2, E4=line4 bottom
@@ -214,7 +219,7 @@ export class NoteHistoryVisualizer {
         const topLine = staffTop;
         let ly = topLine - lineSpacing;
         while (ly > ny - lineSpacing * 0.1) {
-          ctx.strokeStyle = '#444466';
+          ctx.strokeStyle = '#444444';
           ctx.lineWidth = 1;
           ctx.beginPath();
           ctx.moveTo(x + padX * 1.5, ly);
@@ -227,7 +232,7 @@ export class NoteHistoryVisualizer {
         const bottomLine = staffTop + (lineCount - 1) * lineSpacing;
         let ly = bottomLine + lineSpacing;
         while (ly < ny + lineSpacing * 0.1) {
-          ctx.strokeStyle = '#444466';
+          ctx.strokeStyle = '#444444';
           ctx.lineWidth = 1;
           ctx.beginPath();
           ctx.moveTo(x + padX * 1.5, ly);
@@ -250,8 +255,8 @@ export class NoteHistoryVisualizer {
 
       // Note name label
       const noteName = this.midiToNoteName(midi);
-      ctx.fillStyle = isActive ? '#ffffff' : '#aaaacc';
-      ctx.font = `bold ${Math.max(8, r * 0.9)}px Inter, sans-serif`;
+      ctx.fillStyle = isActive ? '#ffffff' : '#aaaaaa';
+      ctx.font = `bold ${Math.max(8, r * 0.9)}px 'JetBrains Mono', monospace`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(noteName, x + w / 2, ny);
@@ -287,8 +292,10 @@ export class NoteHistoryVisualizer {
     const pad = 8;
 
     // Background
-    ctx.fillStyle = '#0a0a18';
+    ctx.fillStyle = '#0a0a0a';
     ctx.fillRect(x, 0, w, h);
+
+    if (this.history.length === 0 && this.activeNotes.size === 0) return;
 
     const midiRange = this.MIDI_MAX - this.MIDI_MIN;
     const noteH = (h - pad * 2) / midiRange;
@@ -332,7 +339,7 @@ export class NoteHistoryVisualizer {
       if (bw > 20) {
         const noteName = this.midiToNoteName(note.midiNote);
         ctx.fillStyle = '#ffffffcc';
-        ctx.font = `bold ${Math.max(9, noteH * 0.75)}px Inter, sans-serif`;
+        ctx.font = `bold ${Math.max(9, noteH * 0.75)}px 'JetBrains Mono', monospace`;
         ctx.textAlign = 'left';
         ctx.textBaseline = 'middle';
         ctx.fillText(noteName, Math.max(nx + 2, x + 2), ny + noteH / 2);
@@ -340,7 +347,7 @@ export class NoteHistoryVisualizer {
     }
 
     // Time ruler: subtle gridlines every 0.5s
-    ctx.strokeStyle = '#222244';
+    ctx.strokeStyle = '#222222';
     ctx.lineWidth = 1;
     ctx.setLineDash([2, 4]);
     for (let t = 0; t <= this.HISTORY_WINDOW_MS; t += 500) {
@@ -381,7 +388,7 @@ export class NoteHistoryVisualizer {
       const firstNote = [...this.activeNotes.values()][0];
       const chordColor = firstNote ? noteColor(firstNote.midiNote, 1) : '#6366f1';
 
-      ctx.font = `bold ${Math.min(42, w * 0.28)}px Inter, sans-serif`;
+      ctx.font = `bold ${Math.min(42, w * 0.28)}px 'JetBrains Mono', monospace`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillStyle = chordColor;
@@ -389,15 +396,15 @@ export class NoteHistoryVisualizer {
 
       // Alternate chord names
       if (chords.length > 1) {
-        ctx.font = `${Math.min(14, w * 0.1)}px Inter, sans-serif`;
-        ctx.fillStyle = '#666688';
+        ctx.font = `${Math.min(14, w * 0.1)}px 'JetBrains Mono', monospace`;
+        ctx.fillStyle = '#888888';
         ctx.fillText(chords.slice(1, 3).join(' / '), x + w / 2, chordY + 28);
       }
     } else {
-      ctx.font = `bold ${Math.min(28, w * 0.2)}px Inter, sans-serif`;
+      ctx.font = `bold ${Math.min(28, w * 0.2)}px 'JetBrains Mono', monospace`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillStyle = '#222244';
+      ctx.fillStyle = '#222222';
       ctx.fillText('—', x + w / 2, chordY);
     }
 
@@ -416,7 +423,7 @@ export class NoteHistoryVisualizer {
     for (let i = 0; i < noteNames.length && i < 8; i++) {
       const ny = noteListY + i * lineH;
       const midi = sortedNotes[i].midiNote;
-      ctx.font = `${Math.min(14, lineH * 0.8)}px Inter, sans-serif`;
+      ctx.font = `${Math.min(14, lineH * 0.8)}px 'JetBrains Mono', monospace`;
       ctx.fillStyle = noteColor(midi, 0.9);
       ctx.fillText(noteNames[i], x + w / 2, ny);
     }

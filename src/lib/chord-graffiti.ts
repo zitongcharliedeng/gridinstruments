@@ -1,13 +1,13 @@
 import rough from 'roughjs';
 import type { KeyboardVisualizer } from './keyboard-visualizer';
 
-// Chord shapes in grid coordinates (coordX, coordY)
-// These are the MidiMech "mech-theory" shapes on the isomorphic grid.
-// coordX = circle-of-fifths steps, coordY = octave steps.
-// Major: root(0,0) + maj3(2,-1) + p5(1,0)  — triangle pointing "up" in grid space
-// Minor: root(1,0) + min3(0,1)  + p5(2,1)  — triangle pointing "down" (reflection)
-const MAJOR_SHAPE: [number, number][] = [[0, 0], [2, -1], [1, 0]];
-const MINOR_SHAPE: [number, number][] = [[1, 0], [0, 1], [2, 1]];
+// Chord shapes in fifth/octave grid coordinates (fifth steps, octave steps).
+// coordX = fifth steps, coordY = octave steps.
+// Root position shapes (cleanest ▲/▽ geometry):
+// Major (D, F#, A): root(0,0) + M3(4,-2) + P5(1,0)  — triangle pointing "up" ▲
+// Minor (D, F, A):  root(0,0) + m3(-3,2)  + P5(1,0)  — triangle pointing "down" ▽
+const MAJOR_SHAPE: [number, number][] = [[0, 0], [4, -2], [1, 0]];
+const MINOR_SHAPE: [number, number][] = [[0, 0], [-3, 2], [1, 0]];
 
 // Minor chord hint text (from FEATURES.md spec)
 const MINOR_HINT = "it's a reflection of a major chord, neat huh?";
@@ -19,6 +19,8 @@ interface GraffitiConfig {
   visualizer: KeyboardVisualizer;
 }
 
+type ButtonLike = { x: number; y: number; coordX: number; coordY: number };
+
 /**
  * Create dynamic chord graffiti overlays on the keyboard canvas.
  * Positions in top-left (major) and bottom-right (minor) corners.
@@ -27,22 +29,34 @@ interface GraffitiConfig {
 export function createChordGraffiti(config: GraffitiConfig): () => void {
   const { container, visualizer } = config;
 
-  // Ensure container is positioned for absolute children
   const cs = getComputedStyle(container);
   if (cs.position === 'static') {
     container.style.position = 'relative';
   }
 
-  // Create the two overlay SVGs
-  const majorSvg = createSvgElement();
-  const minorSvg = createSvgElement();
-  container.appendChild(majorSvg);
-  container.appendChild(minorSvg);
+  const svg = createSvgElement();
+  container.appendChild(svg);
 
   function update(): void {
     const geo = visualizer.getGridGeometry();
-    renderOverlay(majorSvg, MAJOR_SHAPE, 'psst... this is a major chord', geo, 'top-left', 42);
-    renderOverlay(minorSvg, MINOR_SHAPE, '...and this is minor', geo, 'bottom-right', 77, MINOR_HINT);
+    const buttons = visualizer.getButtons();
+    const { width, height } = geo;
+
+    svg.setAttribute('width', String(width));
+    svg.setAttribute('height', String(height));
+    svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+
+    const majorRoot = findCornerRoot(buttons, MAJOR_SHAPE, width, height, 'top-left');
+    const minorRoot = findCornerRoot(buttons, MINOR_SHAPE, width, height, 'bottom-right');
+
+    if (majorRoot) {
+      renderChord(svg, MAJOR_SHAPE, majorRoot, buttons, 'psst... this is a major chord', 42);
+    }
+    if (minorRoot) {
+      renderChord(svg, MINOR_SHAPE, minorRoot, buttons, '...and this is minor', 77, MINOR_HINT);
+    }
   }
 
   update();
@@ -52,93 +66,89 @@ export function createChordGraffiti(config: GraffitiConfig): () => void {
 function createSvgElement(): SVGSVGElement {
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   svg.classList.add('graffiti-overlay');
+  svg.style.position = 'absolute';
+  svg.style.top = '0';
+  svg.style.left = '0';
+  svg.style.pointerEvents = 'none';
   svg.style.overflow = 'visible';
   return svg;
 }
 
 type Corner = 'top-left' | 'bottom-right';
 
-interface GridGeometry {
-  cellHv1: { x: number; y: number };
-  cellHv2: { x: number; y: number };
-  width: number;
-  height: number;
+function findCornerRoot(
+  buttons: ButtonLike[],
+  shape: [number, number][],
+  width: number,
+  height: number,
+  corner: Corner,
+): ButtonLike | null {
+  const targetX = corner === 'top-left' ? 0 : width;
+  const targetY = corner === 'top-left' ? 0 : height;
+
+  const byCoord = new Map<string, ButtonLike>();
+  for (const b of buttons) {
+    byCoord.set(`${b.coordX}_${b.coordY}`, b);
+  }
+
+  let bestRoot: ButtonLike | null = null;
+  let bestDist = Infinity;
+
+  for (const root of buttons) {
+    const noteButtons: ButtonLike[] = [];
+    let allFound = true;
+    for (const [dx, dy] of shape) {
+      const key = `${root.coordX + dx}_${root.coordY + dy}`;
+      const nb = byCoord.get(key);
+      if (!nb) { allFound = false; break; }
+      noteButtons.push(nb);
+    }
+    if (!allFound) continue;
+
+    const cx = noteButtons.reduce((s, b) => s + b.x, 0) / noteButtons.length;
+    const cy = noteButtons.reduce((s, b) => s + b.y, 0) / noteButtons.length;
+
+    const margin = 20;
+    const allOnScreen = noteButtons.every(
+      b => b.x >= margin && b.x <= width - margin && b.y >= margin && b.y <= height - margin,
+    );
+    if (!allOnScreen) continue;
+
+    const dist = (cx - targetX) ** 2 + (cy - targetY) ** 2;
+    if (dist < bestDist) {
+      bestDist = dist;
+      bestRoot = root;
+    }
+  }
+
+  return bestRoot;
 }
 
-function renderOverlay(
+function renderChord(
   svg: SVGSVGElement,
   shape: [number, number][],
+  root: ButtonLike,
+  buttons: ButtonLike[],
   label: string,
-  geo: GridGeometry,
-  corner: Corner,
   seed: number,
   hint?: string,
 ): void {
-  // Clear previous content
-  while (svg.firstChild) svg.removeChild(svg.firstChild);
-
-  const { cellHv1, cellHv2 } = geo;
-
-  // Full cell vectors (2× half-vectors)
-  const cv1 = { x: cellHv1.x * 2, y: cellHv1.y * 2 };
-  const cv2 = { x: cellHv2.x * 2, y: cellHv2.y * 2 };
-
-  // Compute bounding box of the chord shape in pixel space
-  const cellCenters = shape.map(([cx, cy]) => ({
-    x: cx * cv1.x + cy * cv2.x,
-    y: cx * cv1.y + cy * cv2.y,
-  }));
-
-  // Include the parallelogram extents of each cell for bounding box
-  const allCorners: { x: number; y: number }[] = [];
-  for (const c of cellCenters) {
-    allCorners.push(
-      { x: c.x - cellHv1.x - cellHv2.x, y: c.y - cellHv1.y - cellHv2.y },
-      { x: c.x + cellHv1.x - cellHv2.x, y: c.y + cellHv1.y - cellHv2.y },
-      { x: c.x + cellHv1.x + cellHv2.x, y: c.y + cellHv1.y + cellHv2.y },
-      { x: c.x - cellHv1.x + cellHv2.x, y: c.y - cellHv1.y + cellHv2.y },
-    );
+  const byCoord = new Map<string, ButtonLike>();
+  for (const b of buttons) {
+    byCoord.set(`${b.coordX}_${b.coordY}`, b);
   }
 
-  const minX = Math.min(...allCorners.map(p => p.x));
-  const maxX = Math.max(...allCorners.map(p => p.x));
-  const minY = Math.min(...allCorners.map(p => p.y));
-  const maxY = Math.max(...allCorners.map(p => p.y));
-
-  const padding = 20;
-  const labelHeight = hint ? 38 : 22;
-  const svgW = (maxX - minX) + padding * 2;
-  const svgH = (maxY - minY) + padding * 2 + labelHeight;
-
-  svg.setAttribute('width', String(Math.ceil(svgW)));
-  svg.setAttribute('height', String(Math.ceil(svgH)));
-  svg.setAttribute('viewBox', `0 0 ${Math.ceil(svgW)} ${Math.ceil(svgH)}`);
-
-  // Offset so shape is centered in the SVG with padding
-  const offsetX = padding - minX;
-  const offsetY = padding - minY;
-
-  // Position the SVG in the chosen corner of the keyboard container
-  const margin = 16;
-  if (corner === 'top-left') {
-    svg.style.left = `${margin}px`;
-    svg.style.top = `${margin}px`;
-    svg.style.right = '';
-    svg.style.bottom = '';
-  } else {
-    svg.style.left = '';
-    svg.style.top = '';
-    svg.style.right = `${margin}px`;
-    svg.style.bottom = `${margin + 24}px`; // extra clearance above bottom axis labels
+  const notePositions: { x: number; y: number }[] = [];
+  for (const [dx, dy] of shape) {
+    const key = `${root.coordX + dx}_${root.coordY + dy}`;
+    const nb = byCoord.get(key);
+    if (!nb) return;
+    notePositions.push({ x: nb.x, y: nb.y });
   }
 
   const rc = rough.svg(svg);
 
-  // Draw triangle connecting the three chord tone centers
-  const triPoints = cellCenters.map(c => [
-    c.x + offsetX,
-    c.y + offsetY,
-  ] as [number, number]);
+  const triPoints = notePositions.map(p => [p.x, p.y] as [number, number]);
 
   const triNode = rc.polygon(triPoints, {
     roughness: 2.5,
@@ -155,20 +165,24 @@ function renderOverlay(
   });
   svg.appendChild(triNode);
 
+  const cx = notePositions.reduce((s, p) => s + p.x, 0) / notePositions.length;
+  const cy = notePositions.reduce((s, p) => s + p.y, 0) / notePositions.length;
 
-  // Label text
+  const labelY = cy + (hint ? 14 : 8);
+
   const textEl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-  textEl.setAttribute('x', String(padding));
-  textEl.setAttribute('y', String(Math.ceil(svgH) - (hint ? 24 : 6)));
+  textEl.setAttribute('x', String(Math.round(cx)));
+  textEl.setAttribute('y', String(Math.round(labelY)));
+  textEl.setAttribute('text-anchor', 'middle');
   textEl.classList.add('graffiti-label');
   textEl.textContent = label;
   svg.appendChild(textEl);
 
-  // Optional hint text (smaller, below main label)
   if (hint) {
     const hintEl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-    hintEl.setAttribute('x', String(padding));
-    hintEl.setAttribute('y', String(Math.ceil(svgH) - 6));
+    hintEl.setAttribute('x', String(Math.round(cx)));
+    hintEl.setAttribute('y', String(Math.round(labelY + 14)));
+    hintEl.setAttribute('text-anchor', 'middle');
     hintEl.classList.add('graffiti-label');
     hintEl.style.fontSize = '10px';
     hintEl.style.opacity = '0.7';

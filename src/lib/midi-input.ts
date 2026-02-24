@@ -11,6 +11,7 @@
 
 export type MidiNoteCallback = (note: number, velocity: number, channel: number) => void;
 export type MidiStatusCallback = (devices: MidiDeviceInfo[]) => void;
+export type MidiExpressionCallback = (channel: number, value: number) => void;
 
 export type MidiChannelMode = 'omni' | 'chPerNote' | 'chPerRow';
 
@@ -32,6 +33,9 @@ export class MidiInput {
   private noteOnCallbacks: MidiNoteCallback[] = [];
   private noteOffCallbacks: MidiNoteCallback[] = [];
   private statusCallbacks: MidiStatusCallback[] = [];
+  private pitchBendCallbacks: MidiExpressionCallback[] = [];
+  private slideCallbacks: MidiExpressionCallback[] = [];
+  private pressureCallbacks: MidiExpressionCallback[] = [];
 
   // Settings
   private channelMode: MidiChannelMode = 'omni';
@@ -169,6 +173,19 @@ export class MidiInput {
       for (const cb of this.noteOnCallbacks) cb(note, velocity, channel);
     } else if (type === 0x80 || (type === 0x90 && velocity === 0)) {
       for (const cb of this.noteOffCallbacks) cb(note, velocity, channel);
+    } else if (type === 0xE0) {
+      // Pitch bend: 14-bit value from LSB (data[1]) and MSB (data[2])
+      const raw = (data[2] << 7) | data[1];
+      const normalized = raw / 8191.5 - 1; // range -1..+1
+      for (const cb of this.pitchBendCallbacks) cb(channel, normalized);
+    } else if (type === 0xB0 && note === 74) {
+      // CC74 (slide / timbre)
+      const normalized = velocity / 127;
+      for (const cb of this.slideCallbacks) cb(channel, normalized);
+    } else if (type === 0xD0) {
+      // Channel pressure (aftertouch)
+      const normalized = data[1] / 127;
+      for (const cb of this.pressureCallbacks) cb(channel, normalized);
     }
   }
 
@@ -179,6 +196,10 @@ export class MidiInput {
 
   /** Called whenever device list or enabled state changes */
   onStatusChange(cb: MidiStatusCallback): void { this.statusCallbacks.push(cb); }
+
+  onPitchBend(cb: MidiExpressionCallback): void { this.pitchBendCallbacks.push(cb); }
+  onSlide(cb: MidiExpressionCallback): void { this.slideCallbacks.push(cb); }
+  onPressure(cb: MidiExpressionCallback): void { this.pressureCallbacks.push(cb); }
 
   removeNoteOn(cb: MidiNoteCallback): void {
     this.noteOnCallbacks = this.noteOnCallbacks.filter(c => c !== cb);

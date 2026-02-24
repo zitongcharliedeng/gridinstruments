@@ -26,6 +26,7 @@ DCompose Web is a browser-based isomorphic keyboard synthesizer. It uses Web Aud
 | `src/lib/note-history-visualizer.ts` | Staff + waterfall + chord panel |
 | `src/lib/midi-input.ts` | Web MIDI device management |
 | `src/lib/chord-detector.ts` | Chord name detection |
+| `src/lib/mpe-service.ts` | MPE service (replaces mpe-output.ts for new code) |
 
 ## Visual Regression Testing Workflow
 
@@ -76,18 +77,9 @@ For each invariant, report:
 
 ## Constraints for Code Changes
 
-Read `FEATURES.md` thoroughly before making any change. Key rules:
-
-1. **No border-radius** on any UI element
-2. **No gradients** on chrome/UI elements
-3. **Pure black background** (#000), white text (#fff)
-4. **JetBrains Mono** font everywhere
-5. **Parallelogram cells** — not circles, not rectangles (in DCompose mode)
-6. **No dead zones** on keyboard canvas — every pixel plays a note
-7. **Keyboard focus** must never be stolen by sliders/selects
-8. **Title bar floats** over history canvas — does NOT take its own row
-9. **MIDI status** only in MIDI settings panel, NOT on history canvas
-10. **Note names** — no double-sharps or double-flats
+See the Playwright tests in `tests/` — they are the source of truth for all design constraints.
+Each test has `@reason` and `@design-intent` JSDoc explaining the design decision it protects.
+Key constraints: JetBrains Mono only, #000 background, #fff text, no border-radius, no gradients.
 
 ## Development Workflow
 

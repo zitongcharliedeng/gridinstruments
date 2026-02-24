@@ -21,8 +21,8 @@ export interface VisualizerOptions {
   buttonSpacing: number; // kept for API compat, not used in rendering
   /**
    * DCompose ↔ MidiMech skew factor.
-   * 1.0 = full DCompose diagonal skew (default)
-   * 0.0 = MidiMech orthogonal rows (horizontal rows, no diagonal)
+   * 1.0 = full DCompose diagonal skew
+   * 0.0 = MidiMech orthogonal rows (default)
    */
   skewFactor: number;
 }
@@ -52,6 +52,11 @@ export class KeyboardVisualizer {
   private hv1 = { x: 0, y: 0 }; // half-step in coordX direction
   private hv2 = { x: 0, y: 0 }; // half-step in coordY direction
 
+  // W3C CSS reference pixel: 1 CSS px = 1/96 inch. Hardcoded because
+  // measureCssPxPerInch() always returns 96/devicePixelRatio (not physical DPI).
+  private readonly cssPxPerInch: number = 96;
+
+
   private options: VisualizerOptions = {
     width: 900,
     height: 400,
@@ -60,7 +65,7 @@ export class KeyboardVisualizer {
     scaleX: 1.0,
     scaleY: 1.0,
     buttonSpacing: 0,
-    skewFactor: 1.0,
+    skewFactor: 0,
   };
 
   // (spacing is computed dynamically from canvas size and generator ratio)
@@ -78,6 +83,20 @@ export class KeyboardVisualizer {
     this.setupCanvas();
     this.generateButtons();
   }
+
+  /** Binary-search actual screen DPI via CSS media queries, then convert to CSS px/inch. */
+  // @ts-ignore TS6133 — kept for potential future use (task requirement)
+  private static measureCssPxPerInch(): number {
+    let lo = 50, hi = 800;
+    while (hi - lo > 1) {
+      const mid = Math.floor((lo + hi) / 2);
+      if (window.matchMedia(`(min-resolution: ${mid}dpi)`).matches) lo = mid;
+      else hi = mid;
+    }
+    // CSS px/inch = physicalDPI / devicePixelRatio
+    return lo / (window.devicePixelRatio || 1);
+  }
+
 
   private setupCanvas(): void {
     const dpr = window.devicePixelRatio || 1;
@@ -182,7 +201,7 @@ export class KeyboardVisualizer {
     genX: number; genY0: number; genX1: number; genY1: number;
     cellHv1: { x: number; y: number }; cellHv2: { x: number; y: number };
   } {
-    const { generator, skewFactor, scaleX, scaleY, height } = this.options;
+    const { generator, skewFactor, scaleX, scaleY } = this.options;
     const t = skewFactor;
     // From WickiSynth by Piers Titus van der Torren.
     //   a = gen[0]/gen[1]  (fifth/octave ratio, ~0.583 for 12-TET)
@@ -193,7 +212,15 @@ export class KeyboardVisualizer {
     const bSq = Math.max(0.001, (2 / 3) * a - a * a);
     const b = Math.sqrt(bSq);
 
-    const dPy   = height / 3;                   // ~3 visible octave rows (zoomed in for playability)
+    // Physical key size: 18 mm (standard isomorphic keyboard key).
+    // The canvas context is pre-scaled by window.devicePixelRatio in setupCanvas(),
+    // so all drawing coordinates here are CSS pixels (1 CSS px ≡ 1/96 inch by W3C spec).
+    // Formula: KEY_MM / MM_PER_INCH * CSS_DPI_REFERENCE = 18/25.4*96 ≈ 68 CSS px per half-span.
+    // dPy is the full cell span (2 × half), so dPy = 2 × 68 = 136 CSS px.
+    const KEY_SIZE_MM  = 23.5;  // mm — tuned for ~178 CSS px full cell span
+    const MM_PER_INCH  = 25.4;
+    // CSS px/inch = 96 (W3C reference pixel, hardcoded above)
+    const dPy = 2 * Math.round(KEY_SIZE_MM / MM_PER_INCH * this.cssPxPerInch);
     const dGenX  = Math.max(28, b * dPy);        // Striso X spread (min 28px for readability)
     const dGenY0 = a * dPy;                       // fifth Y lean (pitch-proportional)
     const dGenX1 = 0;                              // octave = pure vertical at DCompose
@@ -306,14 +333,24 @@ export class KeyboardVisualizer {
     const { genX, genY0, genX1, genY1 } = this.getSpacing();
     const centerX = width / 2;
     const centerY = height / 2;
+    const fifth = this.options.generator[0];
+    const octave = this.options.generator[1];
+
+    // ── Conceptual axes from pitch gradient ──────────────────────
+    // The pitch gradient in screen space gives the direction of steepest
+    // pitch increase. Its perpendicular is the iso-pitch direction:
+    // movement through the Circle of Fifths at constant pitch.
+    //   At DCompose (skew=1): CoF = horizontal, Pitch = vertical.
+    //   At MidiMech (skew=0): both axes are diagonal.
+    const cofDx = octave * genX - fifth * genX1;     // iso-pitch (⊥ gradient)
+    const cofDy = fifth * genY1 - octave * genY0;
+    const pitchDx = fifth * genY1 - octave * genY0;  // pitch gradient
+    const pitchDy = fifth * genX1 - octave * genX;
     // ── Circle of Fifths axis ─────────────────────────────────────
-    // Screen direction for increasing fifths (coordX): (genX, -genY0)
-    this.drawAxisLine(centerX, centerY, genX, -genY0, 'Circle of Fifths');
+    this.drawAxisLine(centerX, centerY, cofDx, cofDy, 'Circle of Fifths');
 
-    // ── Pitch (octave) axis ───────────────────────────────────────
-    // Screen direction for increasing octaves (coordY): (genX1, -genY1)
-    this.drawAxisLine(centerX, centerY, genX1, -genY1, 'Pitch');
-
+    // ── Pitch axis ───────────────────────────────────────────────
+    this.drawAxisLine(centerX, centerY, pitchDx, pitchDy, 'Pitch');
     // ── Origin marker (D4) ────────────────────────────────────────
     this.ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
     this.ctx.beginPath();
@@ -324,47 +361,113 @@ export class KeyboardVisualizer {
     this.ctx.textAlign = 'left';
     this.ctx.textBaseline = 'bottom';
     this.ctx.fillText(`D4 ${this.options.d4Hz.toFixed(0)}Hz`, centerX + 6, centerY - 4);
+    // ── Fifth index lines + note labels along CoF axis ─────────
+    this.drawFifthIndexLines(
+      centerX, centerY,
+      cofDx, cofDy, pitchDx, pitchDy,
+      genX, -genY0,
+    );
 
-    // ── Axis note/octave labels ─────────────────────────────────────────
-    this.drawAxisNoteLabels(centerX, centerY, genX, -genY0, genX1, -genY1);
+    // ── Octave labels along Pitch axis ──────────────────────────
+    this.drawOctaveLabels(
+      centerX, centerY,
+      pitchDx, pitchDy,
+      genX1, -genY1,
+    );
   }
 
 
-  /** Place note names along CoF axis and octave names along Pitch axis. */
-  private drawAxisNoteLabels(
+  /**
+   * Draw perpendicular index lines at each fifth step along the CoF axis,
+   * labeled with the fifth name. Shows that all notes of the same fifth
+   * (e.g. all D's) lie on the same iso-pitch line.
+   */
+  private drawFifthIndexLines(
     cx: number, cy: number,
     cofDx: number, cofDy: number,
     pitchDx: number, pitchDy: number,
+    fifthDx: number, fifthDy: number,
   ): void {
+    const cofLenSq = cofDx * cofDx + cofDy * cofDy;
+    if (cofLenSq < 0.01) return;
+    const pitchLen = Math.sqrt(pitchDx * pitchDx + pitchDy * pitchDy);
+    if (pitchLen < 0.01) return;
+
+    const pitchNx = pitchDx / pitchLen;
+    const pitchNy = pitchDy / pitchLen;
+
+
+    // Label offset: 90° CW from CoF axis ("above" at DCompose)
+    const cofLen = Math.sqrt(cofLenSq);
+    const perpX = cofDy / cofLen;
+    const perpY = -cofDx / cofLen;
+
+    this.ctx.save();
+    this.ctx.font = '11px "JetBrains Mono", monospace';
+    this.ctx.textAlign = 'center';
+    this.ctx.textBaseline = 'middle';
+    for (let i = -12; i <= 12; i++) {
+      if (i === 0) continue;
+      // Project i-th fifth offset ONTO the CoF axis line.
+      // Ticks are ON the axis — not at floating cell centers that go off-screen at MidiMech.
+      const t = (i * fifthDx * cofDx + i * fifthDy * cofDy) / cofLenSq;
+      const ax = cx + t * cofDx;
+      const ay = cy + t * cofDy;
+      const { width: w, height: h } = this.options;
+      if (ax < -20 || ax > w + 20 || ay < -20 || ay > h + 20) continue;
+      const dist = Math.abs(i) / 12;
+      const alpha = Math.max(0.08, 0.5 - dist * 0.2);
+      // Short perpendicular notch ON the axis (like a real graph axis tick)
+      const TICK = 6;
+      this.ctx.strokeStyle = `rgba(255,255,255,${alpha + 0.2})`;
+      this.ctx.lineWidth = 1;
+      this.ctx.beginPath();
+      this.ctx.moveTo(ax - pitchNx * TICK, ay - pitchNy * TICK);
+      this.ctx.lineTo(ax + pitchNx * TICK, ay + pitchNy * TICK);
+      this.ctx.stroke();
+      // Note name beside tick
+      this.ctx.fillStyle = `rgba(255,255,255,${alpha + 0.15})`;
+      const noteName = getNoteNameFromCoord(i);
+      this.ctx.fillText(noteName, ax + perpX * 16, ay + perpY * 16);
+    }
+
+    this.ctx.restore();
+  }
+
+
+  /** Place octave labels along the Pitch axis, projected from grid positions. */
+  private drawOctaveLabels(
+    cx: number, cy: number,
+    pitchDx: number, pitchDy: number,
+    octaveDx: number, octaveDy: number,
+  ): void {
+    const pitchLenSq = pitchDx * pitchDx + pitchDy * pitchDy;
+    if (pitchLenSq < 0.01) return;
+
+    // Label offset: 90° CCW from Pitch axis ("right" at DCompose)
+    const pitchLen = Math.sqrt(pitchLenSq);
+    const perpX = -pitchDy / pitchLen;
+    const perpY = pitchDx / pitchLen;
+
     this.ctx.save();
     this.ctx.font = '9px "JetBrains Mono", monospace';
     this.ctx.textAlign = 'center';
     this.ctx.textBaseline = 'middle';
-
-    // Circle of Fifths axis: note names at each fifth step
-    for (let i = -7; i <= 7; i++) {
-      if (i === 0) continue; // skip origin (D4 marker is there)
-      const x = cx + i * cofDx;
-      const y = cy + i * cofDy;
-      const { width: w, height: h } = this.options;
-      if (x < 10 || x > w - 10 || y < 10 || y > h - 10) continue;
-      const dist = Math.max(Math.abs(i) / 7, 0);
-      this.ctx.fillStyle = `rgba(255, 255, 255, ${0.4 - dist * 0.25})`;
-      const noteName = getNoteNameFromCoord(i);
-      this.ctx.fillText(noteName, x, y - 10);
-    }
-
-    // Pitch axis: octave labels at each octave step
     for (let j = -3; j <= 3; j++) {
       if (j === 0) continue;
-      const x = cx + j * pitchDx;
-      const y = cy + j * pitchDy;
+      // Project j-th octave grid position onto Pitch axis
+      const gx = j * octaveDx;
+      const gy = j * octaveDy;
+      const t = (gx * pitchDx + gy * pitchDy) / pitchLenSq;
+      const x = cx + t * pitchDx;
+      const y = cy + t * pitchDy;
+
       const { width: w, height: h } = this.options;
       if (x < 10 || x > w - 10 || y < 10 || y > h - 10) continue;
       const dist = Math.abs(j) / 3;
-      this.ctx.fillStyle = `rgba(255, 255, 255, ${0.4 - dist * 0.2})`;
-      const octave = 4 + j; // D4 is origin
-      this.ctx.fillText(`oct ${octave}`, x + 12, y);
+      this.ctx.fillStyle = `rgba(255, 255, 255, ${0.35 - dist * 0.2})`;
+      const octNum = 4 + j;
+      this.ctx.fillText(`oct ${octNum}`, x + perpX * 20, y + perpY * 20);
     }
 
     this.ctx.restore();

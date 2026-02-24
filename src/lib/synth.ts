@@ -19,8 +19,8 @@ interface Voice {
   coordX: number;  // Store coordinates for live tuning updates
   coordY: number;
   octaveOffset: number;
-  vibratoOnPress: boolean;  // Whether vibrato was active when note started (retained on sustain)
-  vibratoGainNode: GainNode | null;  // Per-voice vibrato modulation
+  vibratoGainNode: GainNode;
+
 }
 
 /**
@@ -29,20 +29,20 @@ interface Voice {
  * Users can set ANY value, these are just common reference points
  */
 export const TUNING_MARKERS: Array<{ id: string; name: string; fifth: number; description: string }> = [
-  { id: 'tet5', name: '5-TET', fifth: 720, description: 'Indonesian slendro' },
-  { id: 'tet17', name: '17-TET', fifth: 705.88, description: '17 equal divisions' },
-  { id: 'tet53', name: '53-TET', fifth: 701.89, description: 'Turkish classical' },
-  { id: 'pythagorean', name: 'Pythagorean', fifth: 701.96, description: 'Pure fifths (3:2)' },
-  { id: 'tet12', name: '12-TET', fifth: 700, description: 'Western standard' },
-  { id: 'tet31', name: '31-TET', fifth: 696.77, description: '31 equal divisions' },
-  { id: 'meantone', name: '1/4 Meantone', fifth: 696.58, description: 'Pure major thirds' },
-  { id: 'tet19', name: '19-TET', fifth: 694.74, description: '19 equal divisions' },
-  { id: 'tet7', name: '7-TET', fifth: 685.71, description: 'Thai, Mandinka balafon' },
+  { id: 'tet5', name: '5', fifth: 720, description: '5-TET · Indonesian slendro' },
+  { id: 'tet17', name: '17', fifth: 705.88, description: '17-TET · 17 equal divisions' },
+  { id: 'pythagorean', name: 'Pyth', fifth: 701.96, description: 'Pythagorean · Pure fifths (3:2)' },
+  { id: 'tet53', name: '53', fifth: 701.89, description: '53-TET · Turkish/Arabic comma' },
+  { id: 'tet12', name: '12', fifth: 700, description: '12-TET · Western standard' },
+  { id: 'tet31', name: '31', fifth: 696.77, description: '31-TET · 31 equal divisions' },
+  { id: 'meantone', name: '¼MT', fifth: 696.58, description: '1/4 Meantone · Pure major thirds' },
+  { id: 'tet19', name: '19', fifth: 694.74, description: '19-TET · 19 equal divisions' },
+  { id: 'tet7', name: '7', fifth: 685.71, description: '7-TET · Thai, Mandinka balafon' },
 ];
 
-// Slider range - can go beyond these but these are practical limits
-export const FIFTH_MIN = 650;  // Below 7-TET
-export const FIFTH_MAX = 750;  // Above 5-TET
+// Slider range — tightly covers all TET presets (7-TET=685.71¢ to 5-TET=720¢)
+export const FIFTH_MIN = 683;  // Just below 7-TET (685.71¢)
+export const FIFTH_MAX = 722;  // Just above 5-TET (720¢)
 export const FIFTH_DEFAULT = 700; // 12-TET
 
 /**
@@ -100,7 +100,7 @@ export class Synth {
   async init(): Promise<void> {
     if (this.context) return;
     
-    this.context = new AudioContext();
+    this.context = new AudioContext({ latencyHint: 'interactive' });
     
     // Create EQ filter (highshelf for treble control)
     this.eqFilter = this.context.createBiquadFilter();
@@ -289,27 +289,30 @@ export class Synth {
   }
   
   /**
-   * Enable/disable vibrato (pitch modulation)
-   * 
-   * IMPORTANT BEHAVIOR:
-   * - Vibrato only affects ACTIVELY HELD notes (not sustained notes)
-   * - When a note is released but sustained, it RETAINS the vibrato state it had when pressed
-   * - So if you press a note with vibrato, release it (sustain holds it), the vibrato continues
-   * - But pressing vibrato AFTER a note is sustained does NOT add vibrato to it
+   * Enable/disable vibrato (pitch modulation) on ALL currently-playing voices in real-time.
+   * When enabled: connects shared LFO → per-voice gain → oscillator.frequency for every voice.
+   * When disabled: zeros gain and disconnects LFO from every voice.
    */
   setVibrato(enabled: boolean): void {
     if (!this.context) return;
-    
     this._vibratoEnabled = enabled;
-    this.ensureVibratoLFO();
+    const now = this.context.currentTime;
     
-    // Note: We don't retroactively add/remove vibrato to existing voices here.
-    // Vibrato state is captured at note-press time (vibratoOnPress).
-    // This method just sets the flag for NEW notes.
-    // 
-    // However, for voices that are being actively held (not yet in sustainedVoices),
-    // we could add vibrato dynamically. For now, keeping it simple:
-    // vibrato state is locked in at note start.
+    if (enabled) {
+      this.ensureVibratoLFO();
+      for (const voice of this.voices.values()) {
+        const freq = this.getFrequency(voice.coordX, voice.coordY, voice.octaveOffset);
+        const depthHz = freq * (this.vibratoDepth / 1200);
+        voice.vibratoGainNode.gain.setValueAtTime(depthHz, now);
+        this.vibratoLFO!.connect(voice.vibratoGainNode);
+        voice.vibratoGainNode.connect(voice.oscillator.frequency);
+      }
+    } else {
+      for (const voice of this.voices.values()) {
+        voice.vibratoGainNode.gain.setValueAtTime(0, now);
+        try { this.vibratoLFO?.disconnect(voice.vibratoGainNode); } catch {}
+      }
+    }
   }
   
   getVibrato(): boolean {
@@ -336,43 +339,32 @@ export class Synth {
    * @param x Circle of fifths position
    * @param y Octave offset
    * @param octaveOffset Global octave offset
-   * @param vibratoOnPress Whether vibrato is active when note starts (retained if sustained)
    */
-  playNote(noteId: string, x: number, y: number, octaveOffset: number = 0, vibratoOnPress: boolean = false): void {
+  playNote(noteId: string, x: number, y: number, octaveOffset: number = 0): void {
     if (!this.context || !this.masterGain) return;
-    
-    // If note is already playing, don't restart it
     if (this.voices.has(noteId)) return;
-    
     const frequency = this.getFrequency(x, y, octaveOffset);
-    
     // Create oscillator
     const oscillator = this.context.createOscillator();
     oscillator.type = this.waveform;
     oscillator.frequency.value = frequency;
-    
-    // Create gain node for envelope
     const gainNode = this.context.createGain();
     gainNode.gain.value = 0;
-    
-    // Connect to master
     oscillator.connect(gainNode);
     gainNode.connect(this.masterGain);
-    
-    // Start with attack envelope
     oscillator.start();
     gainNode.gain.setTargetAtTime(1, this.context.currentTime, this.attackTime);
+    // Always create vibrato gain node (gain=0 = no modulation by default)
+    const vibratoGainNode = this.context.createGain();
+    vibratoGainNode.gain.value = 0;
     
-    // Create per-voice vibrato if vibrato is active
-    let vibratoGainNode: GainNode | null = null;
-    if (vibratoOnPress && this.vibratoLFO) {
-      vibratoGainNode = this.context.createGain();
+    // If vibrato is currently active, connect immediately
+    if (this._vibratoEnabled && this.vibratoLFO) {
       const depthHz = frequency * (this.vibratoDepth / 1200);
-      vibratoGainNode.gain.value = depthHz;
+      vibratoGainNode.gain.setValueAtTime(depthHz, this.context.currentTime);
       this.vibratoLFO.connect(vibratoGainNode);
       vibratoGainNode.connect(oscillator.frequency);
     }
-    
     // Store voice with coordinates for live tuning updates
     this.voices.set(noteId, {
       oscillator,
@@ -380,7 +372,6 @@ export class Synth {
       coordX: x,
       coordY: y,
       octaveOffset,
-      vibratoOnPress,
       vibratoGainNode,
     });
   }
@@ -413,6 +404,9 @@ export class Synth {
     oscillator.stop(now + this.releaseTime * 5);
     
     // Clean up
+    // Disconnect vibrato gain node
+    try { this.vibratoLFO?.disconnect(voice.vibratoGainNode); } catch {}
+
     this.voices.delete(noteId);
     this.sustainedVoices.delete(noteId);
   }

@@ -1,3 +1,9 @@
+> **⚠️ DEPRECATED**: The Playwright tests in `tests/` are the canonical source of truth.
+> Each test includes `@reason` and `@design-intent` explaining the design decision.
+> This file is preserved as historical reference only. Do not update it — update the tests instead.
+
+---
+
 # DCompose Web — Visual Test Invariants
 
 **For use by multimodal agents (screenshot + vision LLM verification).**
@@ -58,7 +64,7 @@ This is the initial page load state. No user interaction needed.
 - [ ] `KC-05` No overlapping cells — each cell has its own distinct space
 - [ ] `KC-06` D is at the center of the grid (golden D-line visible)
 - [ ] `KC-07` Note names are visible on each cell — readable size, white text
-- [ ] `KC-08` No double-sharp or double-flat note names visible (no Fx, Cx, Bbb, Ebb)
+ [ ] `KC-08` Double sharps render as 𝄪, double flats as 𝄫 (proper Unicode musical glyphs, not Fx/Bbb ASCII)
 - [ ] `KC-09` Cell colors are chromesthesia-based — different pitch classes have distinct hues
 - [ ] `KC-10` Adjacent cells on the grid (fifths apart) have high color contrast (near-complementary hues)
 - [ ] `KC-11` D cell is red/reddish (root color)
