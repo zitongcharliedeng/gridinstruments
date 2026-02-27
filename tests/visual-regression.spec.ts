@@ -284,7 +284,7 @@ test.describe('DCompose Web — Visual Regression (State-Machine Tests)', () => 
      *   for quick scanning of waveform and layout selections.
      */
     test('SM-COLOR-1: Wave and Layout labels are white', async ({ page }) => {
-      const colors = await page.locator('.header-controls .ctrl-label').evaluateAll(
+      const colors = await page.locator('.sidebar-section .ctrl-label').evaluateAll(
         els => els.map(el => getComputedStyle(el).color)
       );
       for (const c of colors) {
@@ -430,7 +430,7 @@ test.describe('DCompose Web — Visual Regression (State-Machine Tests)', () => 
      */
     test('SM-STRUCT-3: No rounded corners on controls', async ({ page }) => {
       const selectors = [
-        'header', '#keyboard-container', '#controls-strip', 'select', 'input[type="text"]',
+        '#sidebar', '#keyboard-container', 'select', 'input[type="text"]',
       ];
       for (const sel of selectors) {
         const els = page.locator(sel);
@@ -537,26 +537,22 @@ test.describe('DCompose Web — Visual Regression (State-Machine Tests)', () => 
 
   test.describe('Golden Screenshots — Fast Path', () => {
     /**
-     * @reason Controls strip contains tuning, skew, zoom, and d-ref sliders
-     *   whose layout is sensitive to CSS changes.
-     * @design-intent Pixel-level snapshot catches regressions in slider widths,
-     *   badge positions, label alignment, and TET preset markers.
+     * @reason Sidebar contains all settings controls — tuning, skew, zoom, d-ref, wave, layout, MIDI.
+     * @design-intent Pixel-level snapshot catches regressions in sidebar layout.
      */
-    test('GOLDEN-1: Controls strip snapshot', async ({ page }) => {
-      const strip = page.locator('#controls-strip');
-      await expect(strip).toHaveScreenshot('controls-strip.png', {
+    test('GOLDEN-1: Sidebar snapshot', async ({ page }) => {
+      const sidebar = page.locator('#sidebar');
+      await expect(sidebar).toHaveScreenshot('sidebar.png', {
         maxDiffPixelRatio: 0.01,
       });
     });
 
     /**
-     * @reason Header contains waveform/layout selects, volume slider, and
-     *   the MIDI settings toggle — all tightly packed.
-     * @design-intent Snapshot catches unintended reflows, color changes,
-     *   or misaligned elements in the header row.
+     * @reason Title bar contains site name and GitHub action buttons.
+     * @design-intent Snapshot catches unintended reflows or color changes.
      */
-    test('GOLDEN-2: Header snapshot', async ({ page }) => {
-      await expect(page.locator('header')).toHaveScreenshot('header.png', {
+    test('GOLDEN-2: Title bar snapshot', async ({ page }) => {
+      await expect(page.locator('#title-bar')).toHaveScreenshot('title-bar-overlay.png', {
         maxDiffPixelRatio: 0.015,
       });
     });

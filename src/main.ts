@@ -1125,6 +1125,17 @@ function hzToNoteAnnotation(hz: number, _d4Hz: number): string {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  const sidebarToggle = getElementOrNull('sidebar-toggle', HTMLButtonElement);
+  const sidebar = document.getElementById('sidebar');
+  sidebarToggle?.addEventListener('click', () => {
+    sidebar?.classList.toggle('collapsed');
+    if (sidebarToggle) {
+      sidebarToggle.textContent = sidebar?.classList.contains('collapsed') ? '▶' : '◀';
+    }
+    // Trigger resize so keyboard canvas reflows
+    window.dispatchEvent(new Event('resize'));
+  });
+
   const app = new DComposeApp();
   // Attach app to window for debugging/testing
   Object.defineProperty(window, 'dcomposeApp', {

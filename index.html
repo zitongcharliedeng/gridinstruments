@@ -38,10 +38,90 @@
 
     #app {
       display: flex;
+      flex-direction: row;
+      height: 100vh;
+      overflow: hidden;
+      padding: 0;
+      gap: 0;
+    }
+
+    /* ── Sidebar ─────────────────────────────────────────────────── */
+    #sidebar {
+      width: 260px;
+      min-width: 260px;
+      background: var(--subtle);
+      border-right: 1px solid var(--border);
+      display: flex;
       flex-direction: column;
-      min-height: 100vh;
+      overflow: hidden;
+      transition: width 0.15s ease, min-width 0.15s ease;
+      flex-shrink: 0;
+    }
+    #sidebar.collapsed {
+      width: 32px;
+      min-width: 32px;
+    }
+    #sidebar-toggle {
+      width: 32px;
+      height: 32px;
+      background: var(--bg);
+      border: none;
+      border-bottom: 1px solid var(--border);
+      color: var(--fg);
+      font-family: var(--font);
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      align-self: flex-end;
+    }
+    #sidebar-toggle:hover { background: var(--subtle); }
+    #sidebar-content {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    #sidebar.collapsed #sidebar-content { display: none; }
+    .sidebar-section {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+    .sidebar-section:last-child { border-bottom: none; }
+    .sidebar-section-title {
+      font-size: 9px;
+      color: var(--dim);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .sidebar-section .ctrl-label { color: #fff; }
+    .sidebar-section .slider-track { width: 100%; }
+    .sidebar-section .tuning-slider-area {
+      position: relative;
+      width: 100%;
+      padding-top: 0;
+      padding-bottom: 0;
+      margin-bottom: 28px;
+    }
+    .sidebar-section .tuning-slider-area .slider-track { width: 100%; }
+
+    /* ── Main content ─────────────────────────────────────────────── */
+    #main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
       gap: var(--gap);
       padding: var(--gap);
+      overflow-y: auto;
+      min-width: 0;
     }
 
     /* ── Title bar (floating overlay on history canvas) ─────── */
@@ -85,27 +165,6 @@
       border: 1px solid var(--border);
     }
 
-    /* ── Header ─────────────────────────────────────────────────── */
-    header {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: var(--gap);
-      padding: 6px 8px;
-      border: 1px solid var(--border);
-      background: var(--subtle);
-    }
-
-    /* (logo moved to #title-bar) */
-
-    .header-controls {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: var(--gap);
-      flex: 1;
-    }
-
     .ctrl-group {
       display: flex;
       align-items: center;
@@ -120,7 +179,6 @@
       letter-spacing: 0.06em;
       white-space: nowrap;
     }
-    .header-controls .ctrl-label { color: #fff; }
 
     select, input[type="range"], input[type="number"], input[type="text"] {
       font-family: var(--font);
@@ -296,15 +354,10 @@
 
     #midi-settings-panel {
       display: none;
-      border: 1px solid var(--border);
-      background: var(--subtle);
-      padding: 8px 12px;
       gap: 8px;
       flex-direction: column;
     }
-    #midi-settings-panel.open {
-      display: flex;
-    }
+    #midi-settings-panel.open { display: flex; }
 
     .midi-panel-row {
       display: flex;
@@ -374,20 +427,6 @@
       -webkit-touch-callout: none;
     }
 
-    /* ── Controls strip ──────────────────────────────────────────── */
-    #controls-strip {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 12px;
-      border: 1px solid var(--border);
-      background: var(--subtle);
-      padding: 6px 8px;
-    }
-
-    .tuning-section { display: flex; flex-direction: column; gap: 0; flex: 1; min-width: 300px; position: relative; z-index: 4; }
-    .tuning-row { display: flex; align-items: center; gap: 6px; }
-
     .tuning-slider-area {
       position: relative;
       flex: 1;
@@ -434,15 +473,6 @@
     .tet-preset:hover { color: #fff; }
     .tet-preset.active { color: #88ff88; }
 
-    .skew-section { display: flex; align-items: center; gap: 0; flex-shrink: 0; position: relative; z-index: 3; }
-    .skew-slider-area {
-      position: relative;
-      display: flex;
-      align-items: center;
-      gap: 0;
-    }
-    .skew-section .slider-track { width: 160px; }
-
     input[type="number"] {
       width: 70px;
     }
@@ -450,7 +480,6 @@
       width: 48px;
       text-transform: uppercase;
     }
-
 
     /* ── About section ───────────────────────────────────────────── */
     #about {
@@ -542,94 +571,66 @@
 <body>
   <div id="app">
 
-    <!-- Title bar + history canvas wrapper (title floats over canvas) -->
-    <div class="history-wrapper">
-      <div id="title-bar">
-        <span class="site-title">DCompose Web</span>
-        <div class="gh-actions">
-          <span class="gh-mark"><svg viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></span>
-          <a class="gh-btn" href="https://github.com/zitongcharliedeng/dcompose-web" target="_blank" rel="noopener">
-            <span class="star-icon">☆</span> Star <span id="star-count-badge"></span>
-          </a>
-          <a class="gh-btn" href="https://github.com/zitongcharliedeng/dcompose-web/issues" target="_blank" rel="noopener">
-            <svg viewBox="0 0 16 16"><path d="M8 9.5a1.5 1.5 0 100 3 1.5 1.5 0 000-3zM8 0a8 8 0 100 16A8 8 0 008 0zm0 14.5a6.5 6.5 0 110-13 6.5 6.5 0 010 13zM9 4a1 1 0 00-2 0v4a1 1 0 002 0V4z"/></svg>
-            Report a bug
-          </a>
-        </div>
-      </div>
-      <canvas id="history-canvas" height="220"></canvas>
-    </div>
+    <aside id="sidebar">
+      <button id="sidebar-toggle" title="Toggle settings sidebar">◀</button>
+      <div id="sidebar-content">
 
-    <!-- Header: title + controls -->
-    <header>
-      <button id="midi-settings-toggle" title="Toggle MIDI settings panel"><span style="display:inline-flex;align-items:center;line-height:0">⚙</span> MIDI</button>
-      <!-- logo moved to title-bar -->
-      <div class="header-controls">
-        <div class="ctrl-group">
-          <span class="ctrl-label">Wave</span>
-          <select id="waveform-select" title="Select oscillator waveform">
-            <option value="sawtooth">Sawtooth</option>
-            <option value="sine">Sine</option>
-            <option value="square">Square</option>
-            <option value="triangle">Triangle</option>
-          </select>
-        </div>
-
-        <div class="ctrl-group">
-          <span class="ctrl-label">Layout</span>
-          <select id="layout-select" title="Select keyboard physical layout">
-            <!-- populated by JS from KEYBOARD_VARIANTS -->
-          </select>
-        </div>
-
-        <div class="ctrl-group">
-          <div class="slider-track" style="width:80px">
-            <span class="slider-label-overlay">VOL (dB)</span>
-            <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.3" title="Master volume">
-            <span class="slider-value-badge" id="volume-thumb-badge">-10.5</span>
-            <button class="slider-reset" id="volume-reset" title="Reset volume to default (0.3)">↻</button>
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">AUDIO</div>
+          <div class="ctrl-group">
+            <span class="ctrl-label">Wave</span>
+            <select id="waveform-select" title="Select oscillator waveform">
+              <option value="sawtooth">Sawtooth</option>
+              <option value="sine">Sine</option>
+              <option value="square">Square</option>
+              <option value="triangle">Triangle</option>
+            </select>
+          </div>
+          <div class="ctrl-group">
+            <div class="slider-track">
+              <span class="slider-label-overlay">VOL (dB)</span>
+              <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.3" title="Master volume">
+              <span class="slider-value-badge" id="volume-thumb-badge">-10.5</span>
+              <button class="slider-reset" id="volume-reset" title="Reset volume to default (0.3)">↻</button>
+            </div>
           </div>
         </div>
 
-        <!-- indicators moved to canvas overlay -->
-
-
-      </div>
-    </header>
-
-    <!-- MIDI settings panel (collapsible accordion) -->
-    <div id="midi-settings-panel">
-      <div class="midi-panel-row">
-        <span class="ctrl-label">INPUT Devices:</span>
-        <div id="midi-device-list">
-          <span class="midi-no-devices">No MIDI devices detected</span>
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">LAYOUT</div>
+          <div class="ctrl-group">
+            <span class="ctrl-label">Layout</span>
+            <select id="layout-select" title="Select keyboard physical layout">
+              <!-- populated by JS from KEYBOARD_VARIANTS -->
+            </select>
+          </div>
         </div>
-      </div>
-      <div class="midi-panel-row" id="mpe-output-row">
-        <span class="ctrl-label" style="color:#fff">MPE Output:</span>
-        <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;">
-          <input type="checkbox" id="mpe-enabled" style="width:14px;height:14px;cursor:pointer;accent-color:#fff;">
-          Enable
-        </label>
-        <select id="mpe-output-select" style="min-width:120px;" disabled>
-          <option value="">No MIDI outputs</option>
-        </select>
-      </div>
-    </div>
 
-    <!-- Keyboard canvas -->
-    <div id="keyboard-container">
-      <canvas id="keyboard-canvas"></canvas>
-      <div class="status-indicators">
-        <span id="vibrato-indicator" class="status-indicator" title="Vibrato: hold Shift">VIBRATO</span>
-        <span id="sustain-indicator" class="status-indicator" title="Sustain: hold Space">SUSTAIN</span>
-      </div>
-    </div>
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">MIDI</div>
+          <button id="midi-settings-toggle" title="Toggle MIDI settings panel"><span style="display:inline-flex;align-items:center;line-height:0">⚙</span> MIDI</button>
+          <div id="midi-settings-panel">
+            <div class="midi-panel-row">
+              <span class="ctrl-label">INPUT Devices:</span>
+              <div id="midi-device-list">
+                <span class="midi-no-devices">No MIDI devices detected</span>
+              </div>
+            </div>
+            <div class="midi-panel-row" id="mpe-output-row">
+              <span class="ctrl-label" style="color:#fff">MPE Output:</span>
+              <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;">
+                <input type="checkbox" id="mpe-enabled" style="width:14px;height:14px;cursor:pointer;accent-color:#fff;">
+                Enable
+              </label>
+              <select id="mpe-output-select" style="min-width:120px;" disabled>
+                <option value="">No MIDI outputs</option>
+              </select>
+            </div>
+          </div>
+        </div>
 
-    <!-- Controls strip: tuning + skew + zoom + d-ref -->
-    <div id="controls-strip">
-      <div class="tuning-section">
-        <div class="tuning-row">
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">TUNING</div>
           <div class="tuning-slider-area">
             <div class="slider-track">
               <span class="slider-label-overlay">FIFTHS TUNING (cents)</span>
@@ -640,69 +641,101 @@
             <div class="tet-presets" id="tet-presets"></div>
           </div>
         </div>
-      </div>
 
-      <div class="skew-section">
-        <div class="skew-slider-area">
+        <div class="sidebar-section skew-slider-area">
+          <div class="sidebar-section-title">SKEW</div>
           <div class="slider-track">
             <span class="slider-label-overlay" id="skew-label">SKEW [MidiMech]</span>
-            <input type="range" id="skew-slider" min="0" max="1" step="0.01" value="0" title="Layout tilt: 0=MidiMech, 1=DCompose. Values outside 0-1 accepted via badge input.">
-            <input type="text" class="badge-input" id="skew-thumb-badge" value="0.00" title="Edit skew value. 0=MidiMech, 1=DCompose. Values outside 0-1 extend beyond both layouts.">
+            <input type="range" id="skew-slider" min="0" max="1" step="0.01" value="0" title="Layout tilt: 0=MidiMech, 1=DCompose.">
+            <input type="text" class="badge-input" id="skew-thumb-badge" value="0.00" title="Edit skew value.">
             <button class="slider-reset" id="skew-reset" title="Reset to MidiMech (0)">↻</button>
           </div>
         </div>
-      </div>
 
-
-      <div class="ctrl-group" style="position:relative;z-index:2">
-        <div class="slider-track" style="width:120px">
-          <span class="slider-label-overlay">Zoom (x)</span>
-          <input type="range" id="zoom-slider" min="0.2" max="3" step="0.01" value="1" title="Grid zoom level">
-          <span class="slider-value-badge" id="zoom-thumb-badge">1.00</span>
-          <button class="slider-reset" id="zoom-reset" title="Aims to match keysize to standard keyboard key size">↻</button>
-        </div>
-      </div>
-
-      <div class="ctrl-group d-ref-group" style="position:relative;z-index:1">
-        <div class="slider-track" style="width:140px">
-          <span class="slider-label-overlay" id="d-ref-label">D REF (Hz)</span>
-          <input type="range" id="d-ref-slider" min="73.42" max="1174.66" step="0.01" value="293.66" title="Reference pitch slider (D2–D6)">
-          <input type="text" class="badge-input" id="d-ref-input" value="293.66" style="width:80px; text-transform:none;" title="Edit reference pitch in Hz or note name (default: D4 = 293.66)">
-          <button id="d-ref-reset" class="slider-reset" title="Reset to D4 (293.66 Hz)">↻</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Instructions removed: hotkeys shown as canvas overlay status effects -->
-
-    <!-- About -->
-    <section id="about">
-      <h2>About</h2>
-      <div class="about-grid">
-
-        <div class="about-col">
-          <p style='font-size: 12px; color: var(--dim); line-height: 1.5;'>
-            DCompose Web makes isomorphic keyboard layouts accessible to everyone &mdash; no special hardware needed. Explore tunings, discover harmonic patterns, and play music in ways traditional keyboards can't offer.
-          </p>
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">ZOOM</div>
+          <div class="slider-track">
+            <span class="slider-label-overlay">Zoom (x)</span>
+            <input type="range" id="zoom-slider" min="0.2" max="3" step="0.01" value="1" title="Grid zoom level">
+            <span class="slider-value-badge" id="zoom-thumb-badge">1.00</span>
+            <button class="slider-reset" id="zoom-reset" title="Aims to match keysize to standard keyboard key size">↻</button>
+          </div>
         </div>
 
-        <div class="about-col">
-          <h3>Isomorphic Layout</h3>
-          <div class="about-links">
-            <a href="https://en.wikipedia.org/wiki/Wicki%E2%80%93Hayden_note_layout" target="_blank" rel="noopener">Wicki&ndash;Hayden (Wikipedia)</a>
-            <a href="https://www.striso.org/the-note-layout/" target="_blank" rel="noopener">Striso note layout</a>
-            <a href="https://github.com/flipcoder/midimech" target="_blank" rel="noopener">MidiMech</a>
-            <a href="https://www.toverlamp.org/static/wickisynth/wickisynth_lowlatency.html" target="_blank" rel="noopener">WickiSynth (original)</a>
+        <div class="sidebar-section d-ref-group">
+          <div class="sidebar-section-title">D-REF</div>
+          <div class="slider-track">
+            <span class="slider-label-overlay" id="d-ref-label">D REF (Hz)</span>
+            <input type="range" id="d-ref-slider" min="73.42" max="1174.66" step="0.01" value="293.66" title="Reference pitch slider (D2–D6)">
+            <input type="text" class="badge-input" id="d-ref-input" value="293.66" style="width:80px; text-transform:none;" title="Edit reference pitch in Hz or note name (default: D4 = 293.66)">
+            <button id="d-ref-reset" class="slider-reset" title="Reset to D4 (293.66 Hz)">↻</button>
           </div>
         </div>
 
       </div>
-    </section>
+    </aside>
 
-    <footer>
-      Based on <a href="https://www.toverlamp.org/static/wickisynth/wickisynth_lowlatency.html" target="_blank">WickiSynth</a> by Piers Titus van der Torren &middot;
-      Inspired by <a href="https://github.com/flipcoder/midimech" target="_blank">MIDImech</a> and <a href="https://www.striso.org/the-note-layout/" target="_blank">Striso</a>
-    </footer>
+    <div id="main-content">
+
+      <!-- Title bar + history canvas wrapper (title floats over canvas) -->
+      <div class="history-wrapper">
+        <div id="title-bar">
+          <span class="site-title">DCompose Web</span>
+          <div class="gh-actions">
+            <span class="gh-mark"><svg viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></span>
+            <a class="gh-btn" href="https://github.com/zitongcharliedeng/dcompose-web" target="_blank" rel="noopener">
+              <span class="star-icon">☆</span> Star <span id="star-count-badge"></span>
+            </a>
+            <a class="gh-btn" href="https://github.com/zitongcharliedeng/dcompose-web/issues" target="_blank" rel="noopener">
+              <svg viewBox="0 0 16 16"><path d="M8 9.5a1.5 1.5 0 100 3 1.5 1.5 0 000-3zM8 0a8 8 0 100 16A8 8 0 008 0zm0 14.5a6.5 6.5 0 110-13 6.5 6.5 0 010 13zM9 4a1 1 0 00-2 0v4a1 1 0 002 0V4z"/></svg>
+              Report a bug
+            </a>
+          </div>
+        </div>
+        <canvas id="history-canvas" height="220"></canvas>
+      </div>
+
+      <!-- Keyboard canvas -->
+      <div id="keyboard-container">
+        <canvas id="keyboard-canvas"></canvas>
+        <div class="status-indicators">
+          <span id="vibrato-indicator" class="status-indicator" title="Vibrato: hold Shift">VIBRATO</span>
+          <span id="sustain-indicator" class="status-indicator" title="Sustain: hold Space">SUSTAIN</span>
+        </div>
+      </div>
+
+      <!-- Instructions removed: hotkeys shown as canvas overlay status effects -->
+
+      <!-- About -->
+      <section id="about">
+        <h2>About</h2>
+        <div class="about-grid">
+
+          <div class="about-col">
+            <p style='font-size: 12px; color: var(--dim); line-height: 1.5;'>
+              DCompose Web makes isomorphic keyboard layouts accessible to everyone &mdash; no special hardware needed. Explore tunings, discover harmonic patterns, and play music in ways traditional keyboards can't offer.
+            </p>
+          </div>
+
+          <div class="about-col">
+            <h3>Isomorphic Layout</h3>
+            <div class="about-links">
+              <a href="https://en.wikipedia.org/wiki/Wicki%E2%80%93Hayden_note_layout" target="_blank" rel="noopener">Wicki&ndash;Hayden (Wikipedia)</a>
+              <a href="https://www.striso.org/the-note-layout/" target="_blank" rel="noopener">Striso note layout</a>
+              <a href="https://github.com/flipcoder/midimech" target="_blank" rel="noopener">MidiMech</a>
+              <a href="https://www.toverlamp.org/static/wickisynth/wickisynth_lowlatency.html" target="_blank" rel="noopener">WickiSynth (original)</a>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <footer>
+        Based on <a href="https://www.toverlamp.org/static/wickisynth/wickisynth_lowlatency.html" target="_blank">WickiSynth</a> by Piers Titus van der Torren &middot;
+        Inspired by <a href="https://github.com/flipcoder/midimech" target="_blank">MIDImech</a> and <a href="https://www.striso.org/the-note-layout/" target="_blank">Striso</a>
+      </footer>
+
+    </div>
 
   </div>
 
