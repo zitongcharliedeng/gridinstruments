@@ -32,3 +32,9 @@ npm-debug.log*
 
 # Stale nested clone
 dcompose-web/
+
+
+# Playwright test results and backups
+test-results/
+playwright-report/
+*.bak
