@@ -462,13 +462,13 @@ class DComposeApp {
       const sliderRange = FIFTH_MAX - FIFTH_MIN;
       // Sort by fifth value for stagger detection
       const sortedMarkers = [...TUNING_MARKERS].sort((a, b) => a.fifth - b.fifth);
-      for (const marker of sortedMarkers) {
+      sortedMarkers.forEach((marker, i) => {
         const pct = ((marker.fifth - FIFTH_MIN) / sliderRange) * 100;
         const mark = document.createElement('div');
         mark.className = 'tet-preset-mark';
         mark.style.left = `${pct}%`;
         const tick = document.createElement('div');
-        tick.className = 'tet-tick';
+        tick.className = i % 2 === 0 ? 'tet-tick tet-tick-long' : 'tet-tick tet-tick-short';
         const btn = document.createElement('button');
         btn.className = 'tet-preset';
         btn.dataset.fifth = marker.fifth.toString();
@@ -483,7 +483,7 @@ class DComposeApp {
         mark.appendChild(tick);
         mark.appendChild(btn);
         presetsContainer.appendChild(mark);
-      }
+      });
       // Mark initial active preset (12-TET at 700)
       presetsContainer.querySelector('.tet-preset[data-fifth="700"]')?.classList.add('active');
     }
