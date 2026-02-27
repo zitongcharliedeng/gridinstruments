@@ -39,6 +39,8 @@ import { MPEService } from './lib/mpe-service';
 import { midiToCoord } from './lib/note-colors';
 import { createChordGraffiti } from './lib/chord-graffiti';
 import './machines/_smoke'; // TODO: remove in Task 14
+import { appMachine } from './machines/appMachine';
+import { createActor } from 'xstate';
 // Type guard for WaveformType
 function isWaveformType(value: unknown): value is WaveformType {
   return typeof value === 'string' && ['sine', 'square', 'sawtooth', 'triangle'].includes(value);
@@ -1136,11 +1138,15 @@ document.addEventListener('DOMContentLoaded', () => {
     window.dispatchEvent(new Event('resize'));
   });
 
-  const app = new DComposeApp();
-  // Attach app to window for debugging/testing
-  Object.defineProperty(window, 'dcomposeApp', {
-    value: app,
-    writable: true,
-    configurable: true,
+  new DComposeApp();
+  // Create and start the AppMachine actor (observes only — DComposeApp still controls all behaviour)
+  const appActor = createActor(appMachine, {
+    input: { initialVolume: -10.5, defaultZoom: 1.0, touchDevice: 'ontouchstart' in window },
   });
+  appActor.start();
+  // Expose for debugging and Playwright verification
+  (window as Window & { dcomposeApp?: unknown }).dcomposeApp = {
+    actor: appActor,
+    getSnapshot: () => appActor.getSnapshot(),
+  };
 });
