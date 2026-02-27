@@ -360,23 +360,23 @@ export class NoteHistoryVisualizer {
       const chordColor = firstNote ? noteColor(firstNote.midiNote, 1) : '#6366f1';
 
       ctx.font = `bold ${Math.min(42, w * 0.28)}px 'JetBrains Mono', monospace`;
-      ctx.textAlign = 'center';
+      ctx.textAlign = 'left';
       ctx.textBaseline = 'middle';
       ctx.fillStyle = chordColor;
-      ctx.fillText(chordText, x + w / 2, chordY);
+      ctx.fillText(chordText, x + pad, chordY);
 
       // Alternate chord names
       if (chords.length > 1) {
         ctx.font = `${Math.min(14, w * 0.1)}px 'JetBrains Mono', monospace`;
         ctx.fillStyle = '#888888';
-        ctx.fillText(chords.slice(1, 3).join(' / '), x + w / 2, chordY + 28);
+        ctx.fillText(chords.slice(1, 3).join(' / '), x + pad, chordY + 28);
       }
     } else {
       ctx.font = `bold ${Math.min(28, w * 0.2)}px 'JetBrains Mono', monospace`;
-      ctx.textAlign = 'center';
+      ctx.textAlign = 'left';
       ctx.textBaseline = 'middle';
       ctx.fillStyle = '#222222';
-      ctx.fillText('—', x + w / 2, chordY);
+      ctx.fillText('—', x + pad, chordY);
     }
 
     // Active note names (sorted by pitch, stacked vertically)
