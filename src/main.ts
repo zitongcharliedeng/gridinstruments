@@ -33,7 +33,7 @@
 import { getLayout, KEYBOARD_VARIANTS, KeyboardLayout } from './lib/keyboard-layouts';
 import { Synth, WaveformType, FIFTH_MIN, FIFTH_MAX, FIFTH_DEFAULT, findNearestMarker, TUNING_MARKERS } from './lib/synth';
 import { KeyboardVisualizer } from './lib/keyboard-visualizer';
-import { NoteHistoryVisualizer, ClefType } from './lib/note-history-visualizer';
+import { NoteHistoryVisualizer } from './lib/note-history-visualizer';
 import { MidiInput, MidiDeviceInfo } from './lib/midi-input';
 import { MPEService } from './lib/mpe-service';
 import { midiToCoord } from './lib/note-colors';
@@ -179,10 +179,6 @@ class DComposeApp {
     this.historyVisualizer.start();
 
     // Clef selector
-    const clefSelect = document.getElementById('clef-select') as HTMLSelectElement | null;
-    clefSelect?.addEventListener('change', () => {
-      this.historyVisualizer?.setClef(clefSelect.value as ClefType);
-    });
 
     window.addEventListener('resize', () => {
       if (!this.historyVisualizer || !this.historyCanvas) return;

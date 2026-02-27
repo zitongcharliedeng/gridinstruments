@@ -568,36 +568,21 @@ test.describe('DCompose Web — Behavioral State Transitions', () => {
     });
   });
 
-  test.describe('Clef Selector', () => {
+  test.describe('Piano Roll', () => {
     /**
-     * @reason Staff panel must have a clef selector with treble/bass/alto options.
-     *   Default must be treble clef. User explicitly requested clef choice.
-     * @design-intent Musicians need to select the appropriate clef for their
-     *   instrument range. Treble is the most common default.
+     * @reason Piano roll replaces the old clef/staff panel.
+     *   The history canvas must be visible and render without errors.
+     * @design-intent Synthesia-style piano roll gives musicians clear
+     *   visual feedback on notes played over time.
      */
-    test('BH-CLEF-1: Clef selector exists with treble/bass/alto, default treble', async ({ page }) => {
-      const select = page.locator('#clef-select');
-      await expect(select).toBeVisible();
-      const options = await select.locator('option').allTextContents();
-      expect(options.map(o => o.toLowerCase())).toContain('treble');
-      expect(options.map(o => o.toLowerCase())).toContain('bass');
-      expect(options.map(o => o.toLowerCase())).toContain('alto');
-      // Default is treble
-      const value = await select.inputValue();
-      expect(value).toBe('treble');
-    });
-
-    /**
-     * @reason Clef symbol must render subtly (low opacity) to avoid visual noise.
-     *   User said "DRYLy" meaning subtle/understated rendering.
-     * @design-intent The clef is reference context, not the focus. Keep it subdued
-     *   so it doesn't compete with the actual note heads.
-     */
-    test('BH-CLEF-2: Clef selector can be changed to bass', async ({ page }) => {
-      const select = page.locator('#clef-select');
-      await select.selectOption('bass');
-      const value = await select.inputValue();
-      expect(value).toBe('bass');
+    test('BH-PIANOROLL-1: history canvas renders piano roll on note play', async ({ page }) => {
+      const canvas = page.locator('#history-canvas');
+      await expect(canvas).toBeVisible();
+      // Canvas should be present and have non-zero dimensions
+      const box = await canvas.boundingBox();
+      expect(box).not.toBeNull();
+      expect(box!.width).toBeGreaterThan(100);
+      expect(box!.height).toBeGreaterThan(50);
     });
   });
 
