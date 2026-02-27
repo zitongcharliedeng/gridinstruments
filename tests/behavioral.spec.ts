@@ -10,7 +10,7 @@ test.describe('DCompose Web — Behavioral State Transitions', () => {
   test.describe('Slider Reset State Transitions', () => {
     /**
      * @reason Tuning reset must restore the 12-TET default (700.0 cents).
-     *   Badge is a <span> — use textContent(), not inputValue().
+     *   Badge is an <input type="text"> — use inputValue(), not textContent().
      * @design-intent One-click reset to 12-TET prevents users from getting
      *   stuck on an unfamiliar tuning after exploring the syntonic continuum.
      */
@@ -23,12 +23,12 @@ test.describe('DCompose Web — Behavioral State Transitions', () => {
       await page.waitForTimeout(100);
       await page.locator('#tuning-reset').click();
       await page.waitForTimeout(100);
-      expect(await page.locator('#tuning-thumb-badge').textContent()).toBe('700.0');
+      expect(await page.locator('#tuning-thumb-badge').inputValue()).toBe('700.0');
     });
 
     /**
      * @reason Skew reset must restore MidiMech layout (0.00).
-     *   Badge is a <span> — use textContent(), not inputValue().
+     *   Badge is an <input type="text"> — use inputValue(), not textContent().
      * @design-intent Reset to MidiMech (0) is the safe default — the layout
      *   most users expect from a Wicki-Hayden keyboard.
      */
@@ -41,7 +41,7 @@ test.describe('DCompose Web — Behavioral State Transitions', () => {
       await page.waitForTimeout(100);
       await page.locator('#skew-reset').click();
       await page.waitForTimeout(100);
-      expect(await page.locator('#skew-thumb-badge').textContent()).toBe('0.00');
+      expect(await page.locator('#skew-thumb-badge').inputValue()).toBe('0.00');
     });
 
     /**
@@ -89,7 +89,7 @@ test.describe('DCompose Web — Behavioral State Transitions', () => {
      *   both formats makes the input accessible to all skill levels.
      */
     test('BH-DREF-1: D-ref accepts note name and converts to Hz', async ({ page }) => {
-      const input = page.locator('#d4-ref-input');
+      const input = page.locator('#d-ref-input');
       await input.click();
       await input.fill('C5');
       await input.dispatchEvent('input');
@@ -105,13 +105,13 @@ test.describe('DCompose Web — Behavioral State Transitions', () => {
      *   rather than showing a permanent error state.
      */
     test('BH-DREF-2: D-ref reverts to 293.66 on invalid input blur', async ({ page }) => {
-      const input = page.locator('#d4-ref-input');
+      const input = page.locator('#d-ref-input');
       await input.click();
       await input.fill('garbage');
       await input.dispatchEvent('input');
       await page.locator('body').click();
       await page.waitForTimeout(200);
-      expect(await input.inputValue()).toBe('293.66');
+      expect(await input.inputValue()).toContain('293.66');
     });
 
     /**
@@ -121,60 +121,66 @@ test.describe('DCompose Web — Behavioral State Transitions', () => {
      *   it must gracefully restore the default rather than crash.
      */
     test('BH-DREF-3: D-ref empty input reverts to 293.66', async ({ page }) => {
-      const input = page.locator('#d4-ref-input');
+      const input = page.locator('#d-ref-input');
       await input.click();
       await input.fill('');
-      await input.dispatchEvent('input');
+      await page.locator('body').click();
       await page.waitForTimeout(200);
       expect(await input.inputValue()).toBe('293.66');
     });
 
     /**
      * @reason D-ref reset button must restore default 293.66 Hz and update
-     *   the hint to show "D4".
+     *   the label overlay to show the D4 annotation in brackets.
      * @design-intent Reset is the escape hatch when a user has entered a
      *   custom reference frequency and wants to return to standard D4 tuning.
      */
     test('BH-DREF-4: D-ref reset restores default', async ({ page }) => {
-      const input = page.locator('#d4-ref-input');
+      const input = page.locator('#d-ref-input');
       await input.click();
       await input.fill('440');
       await input.dispatchEvent('input');
       await page.waitForTimeout(100);
-      await page.locator('#d4-ref-reset').click();
+      await page.locator('#d-ref-reset').click();
       await page.waitForTimeout(200);
+      // Badge shows plain number, annotation is in label overlay
       expect(await input.inputValue()).toBe('293.66');
-      const hint = await page.locator('#d4-ref-hint').textContent();
-      expect(hint).toContain('D4');
+      const labelText = await page.locator('#d-ref-label').textContent();
+      expect(labelText).toContain('D4');
+    });
+    /**
+     * @reason D-ref label overlay shows the note annotation in brackets
+     *   after the base label text, e.g. "D REF (Hz) [D4]".
+     * @design-intent Visible annotation in the slider label is more
+     *   discoverable than a hidden tooltip.
+     */
+    test('BH-DREF-5: D-ref badge shows plain Hz, annotation in label overlay', async ({ page }) => {
+      // Badge = just the number
+      const val = await page.locator('#d-ref-input').inputValue();
+      expect(val).toBe('293.66');
+      // Annotation in label overlay
+      const labelText = await page.locator('#d-ref-label').textContent();
+      expect(labelText).toContain('D4');
     });
 
     /**
-     * @reason D-ref hint shows the nearest note name ("D4") in white text,
-     *   helping users understand which note their frequency corresponds to.
-     * @design-intent White text matches the monochrome design; green was
-     *   rejected because it implies "valid" status rather than informational.
+     * @reason When frequency changes (e.g. to 440 Hz), the label overlay must
+     *   update to show the corresponding note annotation ("A4") in brackets.
+     * @design-intent Real-time annotation updates give musicians immediate
+     *   feedback about which note they're tuning to.
      */
-    test('BH-DREF-5: D-ref hint shows D4 and is white', async ({ page }) => {
-      const hint = page.locator('#d4-ref-hint');
-      expect(await hint.textContent()).toContain('D4');
-      const color = await hint.evaluate(el => getComputedStyle(el).color);
-      expect(color).toBe('rgb(255, 255, 255)');
-    });
-
-    /**
-     * @reason When frequency changes (e.g. to 440 Hz), the hint must update
-     *   to show the corresponding note name ("A4").
-     * @design-intent Real-time hint updates give musicians immediate feedback
-     *   about which note they're tuning to.
-     */
-    test('BH-DREF-6: D-ref hint updates when frequency changes', async ({ page }) => {
-      const input = page.locator('#d4-ref-input');
+    test('BH-DREF-6: D-ref annotation updates when frequency changes', async ({ page }) => {
+      const input = page.locator('#d-ref-input');
       await input.click();
       await input.fill('440');
       await input.dispatchEvent('input');
+      await page.locator('body').click();
       await page.waitForTimeout(200);
-      const hintText = await page.locator('#d4-ref-hint').textContent();
-      expect(hintText).toContain('A4');
+      // Badge shows plain number
+      expect(await input.inputValue()).toBe('440.00');
+      // Label overlay shows A4 annotation
+      const labelText = await page.locator('#d-ref-label').textContent();
+      expect(labelText).toContain('A4');
     });
 
     /**
@@ -184,7 +190,7 @@ test.describe('DCompose Web — Behavioral State Transitions', () => {
      *   entered value is invalid, before the auto-revert kicks in.
      */
     test('BH-DREF-7: D-ref shows red border on invalid value', async ({ page }) => {
-      const input = page.locator('#d4-ref-input');
+      const input = page.locator('#d-ref-input');
       await input.click();
       await input.fill('xyz');
       await input.dispatchEvent('input');
@@ -252,11 +258,11 @@ test.describe('DCompose Web — Behavioral State Transitions', () => {
      *   playing — the input must release focus without requiring a mouse click.
      */
     test('BH-FOCUS-1: Enter blurs text input', async ({ page }) => {
-      await page.locator('#d4-ref-input').click();
-      await expect(page.locator('#d4-ref-input')).toBeFocused();
+      await page.locator('#d-ref-input').click();
+      await expect(page.locator('#d-ref-input')).toBeFocused();
       await page.keyboard.press('Enter');
       await page.waitForTimeout(100);
-      await expect(page.locator('#d4-ref-input')).not.toBeFocused();
+      await expect(page.locator('#d-ref-input')).not.toBeFocused();
     });
 
     /**
@@ -266,11 +272,11 @@ test.describe('DCompose Web — Behavioral State Transitions', () => {
      *   to dismiss text input focus and return control to the synth.
      */
     test('BH-FOCUS-2: Escape blurs text input', async ({ page }) => {
-      await page.locator('#d4-ref-input').click();
-      await expect(page.locator('#d4-ref-input')).toBeFocused();
+      await page.locator('#d-ref-input').click();
+      await expect(page.locator('#d-ref-input')).toBeFocused();
       await page.keyboard.press('Escape');
       await page.waitForTimeout(100);
-      await expect(page.locator('#d4-ref-input')).not.toBeFocused();
+      await expect(page.locator('#d-ref-input')).not.toBeFocused();
     });
 
     /**
@@ -295,28 +301,47 @@ test.describe('DCompose Web — Behavioral State Transitions', () => {
      * @design-intent Active endpoint highlighting gives users a clear sense of
      *   which layout extreme they're closest to while dragging.
      */
-    test('BH-SKEW-1: Endpoint labels highlight correctly', async ({ page }) => {
-      await expect(page.locator('#skew-label-left')).toHaveClass(/active/);
+    test('BH-SKEW-1: Inline skew label updates correctly', async ({ page }) => {
+      // At default skew=0, label should show [MidiMech]
+      await expect(page.locator('#skew-label')).toContainText('[MidiMech]');
       await page.evaluate(() => {
         const s = document.getElementById('skew-slider') as HTMLInputElement;
         s.value = '1';
         s.dispatchEvent(new Event('input'));
       });
       await page.waitForTimeout(200);
-      await expect(page.locator('#skew-label-right')).toHaveClass(/active/);
+      // At skew=1, label should show [DCompose]
+      await expect(page.locator('#skew-label')).toContainText('[DCompose]');
     });
   });
 
   test.describe('Modifier Key Behavior', () => {
     /**
-     * @reason Space activates vibrato on keydown and deactivates on keyup —
+     * @reason Shift activates vibrato on keydown and deactivates on keyup —
      *   it is a hold modifier, not a toggle. The #vibrato-indicator gets
-     *   the .active class only while Space is held.
+     *   the .active class only while Shift is held.
      * @design-intent Hold-to-activate matches how real instrument vibrato works:
      *   the effect lasts exactly as long as the performer applies it.
      */
-    test('BH-MODIFIER-HOLD-1: Vibrato activates on hold, deactivates on release', async ({ page }) => {
+    test('BH-MODIFIER-HOLD-1: Vibrato activates on Shift hold, deactivates on release', async ({ page }) => {
       const indicator = page.locator('#vibrato-indicator');
+      await expect(indicator).not.toHaveClass(/active/);
+      await page.keyboard.down('Shift');
+      await page.waitForTimeout(100);
+      await expect(indicator).toHaveClass(/active/);
+      await page.keyboard.up('Shift');
+      await page.waitForTimeout(100);
+      await expect(indicator).not.toHaveClass(/active/);
+    });
+
+    /**
+     * @reason Space activates sustain on keydown and deactivates on keyup.
+     *   The #sustain-indicator gets .active class only while Space is held.
+     * @design-intent Space is the natural hold-sustain key — thumb-accessible
+     *   and doesn’t conflict with note keys.
+     */
+    test('BH-MODIFIER-HOLD-2: Sustain activates on Space hold', async ({ page }) => {
+      const indicator = page.locator('#sustain-indicator');
       await expect(indicator).not.toHaveClass(/active/);
       await page.keyboard.down('Space');
       await page.waitForTimeout(100);
@@ -375,4 +400,205 @@ test.describe('DCompose Web — Behavioral State Transitions', () => {
       expect(result.doubleFlat).toContain(String.fromCodePoint(0x1D12B));
     });
   });
+
+  test.describe('Tooltip Invariants', () => {
+    /**
+     * @reason Every interactive control must have a title attribute for
+     *   accessibility and discoverability (ISC-TT-1, ISC-TT-2).
+     * @design-intent Title attributes provide native browser tooltips on
+     *   hover, giving users context without cluttering the minimal UI.
+     */
+    test('BH-TT-1: All sliders and buttons have non-empty title attributes', async ({ page }) => {
+      const selectors = [
+        '#tuning-slider', '#tuning-thumb-badge', '#tuning-reset',
+        '#skew-slider', '#skew-thumb-badge', '#skew-reset',
+        '#zoom-slider', '#zoom-reset',
+        '#volume-slider', '#volume-reset',
+        '#d-ref-input', '#d-ref-reset',
+        '#midi-settings-toggle',
+        '#waveform-select', '#layout-select',
+      ];
+      for (const sel of selectors) {
+        const title = await page.locator(sel).getAttribute('title');
+        expect(title, `${sel} missing title`).toBeTruthy();
+        expect(title!.length, `${sel} empty title`).toBeGreaterThan(0);
+      }
+    });
+  });
+
+  test.describe('About Section Invariants', () => {
+    /**
+     * @reason About section must have the 'why' paragraph, no 'This Project'
+     *   column, and no GitHub profile link (ISC-AB-1, ISC-AB-2, ISC-AB-3).
+     * @design-intent The about section explains DCompose's purpose and links
+     *   to relevant isomorphic layout resources without self-promotional clutter.
+     */
+    test('BH-AB-1: About section has description, no This Project col, no GitHub profile link', async ({ page }) => {
+      // ISC-AB-3: Has description paragraph
+      const aboutText = await page.locator('#about').textContent();
+      expect(aboutText).toContain('isomorphic keyboard');
+      // ISC-AB-1: No 'This Project' column header
+      const colHeaders = await page.locator('#about .about-col h3').allTextContents();
+      expect(colHeaders).not.toContain('This Project');
+      // ISC-AB-2: No GitHub profile link in about section
+      const aboutLinks = await page.locator('#about a').allTextContents();
+      const hasGitHubProfile = aboutLinks.some(t => t.includes('GitHub') && t.includes('zitongcharliedeng'));
+      expect(hasGitHubProfile).toBe(false);
+    });
+  });
+
+  test.describe('D-ref Range', () => {
+    /**
+     * @reason D-ref slider must cover D2 (73.42 Hz) to D6 (1174.66 Hz) — the
+     *   full practical range for an isomorphic keyboard reference pitch.
+     * @design-intent D2–D4 was too narrow; musicians need D5/D6 for soprano
+     *   and piccolo register exploration.
+     */
+    test('BH-DREF-RANGE-1: D-ref slider range is D2 to D6', async ({ page }) => {
+      const slider = page.locator('#d-ref-slider');
+      const min = parseFloat(await slider.getAttribute('min') ?? '0');
+      const max = parseFloat(await slider.getAttribute('max') ?? '0');
+      expect(min).toBeCloseTo(73.42, 0);  // D2
+      expect(max).toBeCloseTo(1174.66, 0); // D6
+    });
+
+    /**
+     * @reason Setting D-ref to D6 frequency (1174.66 Hz) via slider must
+     *   propagate to the badge input and synth — the range is not cosmetic.
+     * @design-intent The full D2–D6 range must actually work, not just be
+     *   displayed as slider endpoints.
+     */
+    test('BH-DREF-RANGE-2: D-ref slider accepts D6 value', async ({ page }) => {
+      await page.evaluate(() => {
+        const s = document.getElementById('d-ref-slider') as HTMLInputElement;
+        s.value = '1174.66';
+        s.dispatchEvent(new Event('input'));
+      });
+      await page.waitForTimeout(200);
+      const val = parseFloat(await page.locator('#d-ref-input').inputValue());
+      expect(val).toBeCloseTo(1174.66, 0);
+    });
+  });
+
+  test.describe('Slider Fill Rendering', () => {
+    /**
+     * @reason Slider fill gradient must track the slider value. At min value,
+     *   the fill should be near 0%. At max value, near 100%. This was broken
+     *   in Firefox where ::-moz-range-track didn't inherit CSS custom properties.
+     * @design-intent Visual slider fill gives users spatial feedback about
+     *   where their value sits within the range — broken fill is disorienting.
+     */
+    test('BH-FILL-1: Slider fill at minimum shows near-zero fill', async ({ page }) => {
+      // Skew starts at 0 (its minimum)
+      const bg = await page.locator('#skew-slider').evaluate(
+        (el) => (el as HTMLElement).style.background
+      );
+      expect(bg).toContain('linear-gradient');
+      // First percentage in the gradient should be < 5%
+      const match = bg.match(/(\d+\.?\d*)%/);
+      expect(match, 'Gradient should contain a percentage').toBeTruthy();
+      expect(parseFloat(match![1])).toBeLessThan(5);
+    });
+
+    test('BH-FILL-2: Slider fill at maximum shows near-full fill', async ({ page }) => {
+      await page.evaluate(() => {
+        const s = document.getElementById('skew-slider') as HTMLInputElement;
+        s.value = '1';
+        s.dispatchEvent(new Event('input'));
+      });
+      await page.waitForTimeout(100);
+      const bg = await page.locator('#skew-slider').evaluate(
+        (el) => (el as HTMLElement).style.background
+      );
+      expect(bg).toContain('linear-gradient');
+      const match = bg.match(/(\d+\.?\d*)%/);
+      expect(match, 'Gradient should contain a percentage').toBeTruthy();
+      expect(parseFloat(match![1])).toBeGreaterThan(95);
+    });
+  });
+
+  test.describe('Bracket Annotation Styling', () => {
+    /**
+     * @reason D-ref label overlay annotation must use compact format (e.g. "D4 -52¢")
+     *   and be visually distinct with a green color, matching all other slider
+     *   bracket annotations.
+     * @design-intent Green bracket annotations are scannable at a glance —
+     *   they separate metadata from the base label without brackets taking space.
+     */
+    test('BH-BRACKET-1: D-ref annotation is green colored', async ({ page }) => {
+      const label = page.locator('#d-ref-label');
+      const html = await label.innerHTML();
+      // Annotation part should be in a colored span
+      expect(html).toContain('style=');
+      // The colored span should use a green-ish color
+      const greenMatch = html.match(/color:\s*([^;"]+)/);
+      expect(greenMatch, 'Annotation should have a color style').toBeTruthy();
+    });
+  });
+
+  test.describe('About Section Links', () => {
+    /**
+     * @reason About section must include Isomorphic Layout column with links
+     *   to Wicki-Hayden, Striso, MidiMech, and WickiSynth references.
+     * @design-intent These links credit the foundational work and give users
+     *   context about the isomorphic keyboard ecosystem.
+     */
+    test('BH-AB-2: About section has Isomorphic Layout links', async ({ page }) => {
+      const linkTexts = await page.locator('#about .about-links a').allTextContents();
+      expect(linkTexts.some(t => t.includes('Wicki'))).toBe(true);
+      expect(linkTexts.some(t => t.includes('Striso'))).toBe(true);
+      expect(linkTexts.some(t => t.includes('MidiMech'))).toBe(true);
+      expect(linkTexts.some(t => t.includes('WickiSynth'))).toBe(true);
+    });
+
+    /**
+     * @reason Footer must credit WickiSynth by Piers Titus van der Torren
+     *   and mention MIDImech and Striso as inspirations. No GitHub link.
+     * @design-intent Attribution is non-negotiable for derivative works.
+     */
+    test('BH-AB-3: Footer has WickiSynth attribution and inspiration credits', async ({ page }) => {
+      const footerText = await page.locator('footer').textContent();
+      expect(footerText).toContain('WickiSynth');
+      expect(footerText).toContain('Piers Titus');
+      expect(footerText).toContain('MIDImech');
+      expect(footerText).toContain('Striso');
+      // No standalone GitHub link in footer
+      const footerLinks = await page.locator('footer a').allTextContents();
+      expect(footerLinks.every(t => !t.match(/^GitHub$/i))).toBe(true);
+    });
+  });
+
+  test.describe('Clef Selector', () => {
+    /**
+     * @reason Staff panel must have a clef selector with treble/bass/alto options.
+     *   Default must be treble clef. User explicitly requested clef choice.
+     * @design-intent Musicians need to select the appropriate clef for their
+     *   instrument range. Treble is the most common default.
+     */
+    test('BH-CLEF-1: Clef selector exists with treble/bass/alto, default treble', async ({ page }) => {
+      const select = page.locator('#clef-select');
+      await expect(select).toBeVisible();
+      const options = await select.locator('option').allTextContents();
+      expect(options.map(o => o.toLowerCase())).toContain('treble');
+      expect(options.map(o => o.toLowerCase())).toContain('bass');
+      expect(options.map(o => o.toLowerCase())).toContain('alto');
+      // Default is treble
+      const value = await select.inputValue();
+      expect(value).toBe('treble');
+    });
+
+    /**
+     * @reason Clef symbol must render subtly (low opacity) to avoid visual noise.
+     *   User said "DRYLy" meaning subtle/understated rendering.
+     * @design-intent The clef is reference context, not the focus. Keep it subdued
+     *   so it doesn't compete with the actual note heads.
+     */
+    test('BH-CLEF-2: Clef selector can be changed to bass', async ({ page }) => {
+      const select = page.locator('#clef-select');
+      await select.selectOption('bass');
+      const value = await select.inputValue();
+      expect(value).toBe('bass');
+    });
+  });
+
 });

@@ -205,13 +205,28 @@ export function getNoteNameFromCoord(x: number): string {
   const baseName = FIFTHS_NATURALS[baseIndex];
   const accidentals = Math.floor((x + 3) / 7);
   if (accidentals === 0) return baseName;
-  if (accidentals === 1) return baseName + '\u266F';
-  if (accidentals === -1) return baseName + '\u266D';
-  // Double sharp/flat: use proper musical notation symbols
-  if (accidentals === 2) return baseName + '\uD834\uDD2A';   // 𝄪 (U+1D12A double sharp)
-  if (accidentals === -2) return baseName + '\uD834\uDD2B';  // 𝄫 (U+1D12B double flat)
-  // Triple+ accidentals: fall back to 12-TET
-  return get12TETName(x);
+  if (accidentals > 0) return baseName + buildSharps(accidentals);
+  return baseName + buildFlats(-accidentals);
+}
+
+function buildSharps(n: number): string {
+  // \u266F = ♯, \uD834\uDD2A = 𝄪 (double sharp)
+  let s = '';
+  const doubles = Math.floor(n / 2);
+  const singles = n % 2;
+  for (let i = 0; i < doubles; i++) s += '\uD834\uDD2A';
+  for (let i = 0; i < singles; i++) s += '\u266F';
+  return s;
+}
+
+function buildFlats(n: number): string {
+  // \u266D = ♭, \uD834\uDD2B = 𝄫 (double flat)
+  let s = '';
+  const doubles = Math.floor(n / 2);
+  const singles = n % 2;
+  for (let i = 0; i < doubles; i++) s += '\uD834\uDD2B';
+  for (let i = 0; i < singles; i++) s += '\u266D';
+  return s;
 }
 
 /**

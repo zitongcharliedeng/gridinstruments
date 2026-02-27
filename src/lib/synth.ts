@@ -32,9 +32,7 @@ export const TUNING_MARKERS: Array<{ id: string; name: string; fifth: number; de
   { id: 'tet5', name: '5', fifth: 720, description: '5-TET · Indonesian slendro' },
   { id: 'tet17', name: '17', fifth: 705.88, description: '17-TET · 17 equal divisions' },
   { id: 'pythagorean', name: 'Pyth', fifth: 701.96, description: 'Pythagorean · Pure fifths (3:2)' },
-  { id: 'tet53', name: '53', fifth: 701.89, description: '53-TET · Turkish/Arabic comma' },
   { id: 'tet12', name: '12', fifth: 700, description: '12-TET · Western standard' },
-  { id: 'tet31', name: '31', fifth: 696.77, description: '31-TET · 31 equal divisions' },
   { id: 'meantone', name: '¼MT', fifth: 696.58, description: '1/4 Meantone · Pure major thirds' },
   { id: 'tet19', name: '19', fifth: 694.74, description: '19-TET · 19 equal divisions' },
   { id: 'tet7', name: '7', fifth: 685.71, description: '7-TET · Thai, Mandinka balafon' },
@@ -112,10 +110,9 @@ export class Synth {
     this.masterGain = this.context.createGain();
     this.masterGain.gain.value = this._masterVolume;
     
-    // Connect: oscillators -> masterGain -> eqFilter -> destination
+    // Chain: oscillators → masterGain → eqFilter → destination
     this.masterGain.connect(this.eqFilter);
     this.eqFilter.connect(this.context.destination);
-    
     // Resume context if suspended (required by browsers)
     if (this.context.state === 'suspended') {
       await this.context.resume();
@@ -160,7 +157,7 @@ export class Synth {
   }
   
   getGenerator(): [number, number] {
-    return [...this.generator] as [number, number];
+    return [this.generator[0], this.generator[1]];
   }
   
   /**
@@ -273,6 +270,7 @@ export class Synth {
   getSustain(): boolean {
     return this.sustain;
   }
+  
   
   // === Vibrato ===
   

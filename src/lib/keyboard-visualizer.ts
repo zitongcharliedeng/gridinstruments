@@ -52,8 +52,8 @@ export class KeyboardVisualizer {
   private hv1 = { x: 0, y: 0 }; // half-step in coordX direction
   private hv2 = { x: 0, y: 0 }; // half-step in coordY direction
 
-  // W3C CSS reference pixel: 1 CSS px = 1/96 inch. Hardcoded because
-  // measureCssPxPerInch() always returns 96/devicePixelRatio (not physical DPI).
+  // W3C CSS spec: 1 CSS px = 1/96 inch. Always 96 — this is a spec constant,
+  // not a measurement. devicePixelRatio handles physical pixels separately.
   private readonly cssPxPerInch: number = 96;
 
 
@@ -80,22 +80,11 @@ export class KeyboardVisualizer {
       this.options = { ...this.options, ...options };
     }
 
+    // cssPxPerInch is a constant (96), no measurement needed
     this.setupCanvas();
     this.generateButtons();
   }
 
-  /** Binary-search actual screen DPI via CSS media queries, then convert to CSS px/inch. */
-  // @ts-ignore TS6133 — kept for potential future use (task requirement)
-  private static measureCssPxPerInch(): number {
-    let lo = 50, hi = 800;
-    while (hi - lo > 1) {
-      const mid = Math.floor((lo + hi) / 2);
-      if (window.matchMedia(`(min-resolution: ${mid}dpi)`).matches) lo = mid;
-      else hi = mid;
-    }
-    // CSS px/inch = physicalDPI / devicePixelRatio
-    return lo / (window.devicePixelRatio || 1);
-  }
 
 
   private setupCanvas(): void {
@@ -119,7 +108,7 @@ export class KeyboardVisualizer {
   }
 
   getGenerator(): [number, number] {
-    return [...this.options.generator] as [number, number];
+    return [this.options.generator[0], this.options.generator[1]];
   }
 
   setScale(scaleX: number, scaleY: number): void {
@@ -159,9 +148,9 @@ export class KeyboardVisualizer {
     );
   }
 
-  /** Set the DCompose↔MidiMech skew factor (0–1). Triggers re-render. */
+  /** Set the DCompose↔MidiMech skew factor. 0=MidiMech, 1=DCompose, values outside 0-1 allowed. */
   setSkewFactor(f: number): void {
-    this.options.skewFactor = Math.max(0, Math.min(1, f));
+    this.options.skewFactor = f;
     this.generateButtons();
     this.render();
   }
@@ -212,14 +201,13 @@ export class KeyboardVisualizer {
     const bSq = Math.max(0.001, (2 / 3) * a - a * a);
     const b = Math.sqrt(bSq);
 
-    // Physical key size: 18 mm (standard isomorphic keyboard key).
-    // The canvas context is pre-scaled by window.devicePixelRatio in setupCanvas(),
-    // so all drawing coordinates here are CSS pixels (1 CSS px ≡ 1/96 inch by W3C spec).
-    // Formula: KEY_MM / MM_PER_INCH * CSS_DPI_REFERENCE = 18/25.4*96 ≈ 68 CSS px per half-span.
-    // dPy is the full cell span (2 × half), so dPy = 2 × 68 = 136 CSS px.
-    const KEY_SIZE_MM  = 23.5;  // mm — tuned for ~178 CSS px full cell span
-    const MM_PER_INCH  = 25.4;
-    // CSS px/inch = 96 (W3C reference pixel, hardcoded above)
+    // ── Physical key sizing (metric) ──────────────────────────────────
+    // VISIBLE key = piano white key width (23.5mm). CELL_INSET (0.93) shrinks
+    // the visible key from the full cell, so we inflate the cell to compensate.
+    // cssPxPerInch = 96 (W3C spec constant, not a measurement).
+    const PIANO_KEY_MM   = 23.5;   // standard white piano key width
+    const KEY_SIZE_MM    = PIANO_KEY_MM / CELL_INSET;  // ~25.3mm cell → 23.5mm visible
+    const MM_PER_INCH    = 25.4;
     const dPy = 2 * Math.round(KEY_SIZE_MM / MM_PER_INCH * this.cssPxPerInch);
     const dGenX  = Math.max(28, b * dPy);        // Striso X spread (min 28px for readability)
     const dGenY0 = a * dPy;                       // fifth Y lean (pitch-proportional)
@@ -273,8 +261,10 @@ export class KeyboardVisualizer {
     this.hv1 = cellHv1;
     this.hv2 = cellHv2;
 
-    const iRange = 20;
-    const jRange = 12;
+    // Dynamic range: scale with inverse zoom so grid fills canvas when zoomed out
+    const effectiveScale = Math.min(this.options.scaleX, this.options.scaleY, 1);
+    const iRange = Math.min(80, Math.ceil(20 / effectiveScale));
+    const jRange = Math.min(48, Math.ceil(12 / effectiveScale));
 
     for (let i = -iRange; i <= iRange; i++) {
       for (let j = -jRange; j <= jRange; j++) {
@@ -351,103 +341,78 @@ export class KeyboardVisualizer {
 
     // ── Pitch axis ───────────────────────────────────────────────
     this.drawAxisLine(centerX, centerY, pitchDx, pitchDy, 'Pitch');
-    // ── Origin marker (D4) ────────────────────────────────────────
+    // ── Origin marker (small dot only, no label) ──────────────
     this.ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
     this.ctx.beginPath();
     this.ctx.arc(centerX, centerY, 3, 0, Math.PI * 2);
     this.ctx.fill();
-    this.ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-    this.ctx.font = 'bold 9px "JetBrains Mono", monospace';
-    this.ctx.textAlign = 'left';
-    this.ctx.textBaseline = 'bottom';
-    this.ctx.fillText(`D4 ${this.options.d4Hz.toFixed(0)}Hz`, centerX + 6, centerY - 4);
-    // ── Fifth index lines + note labels along CoF axis ─────────
+    // ── Fifth index lines (connect same-fifth notes via octave direction) ────
     this.drawFifthIndexLines(
       centerX, centerY,
-      cofDx, cofDy, pitchDx, pitchDy,
       genX, -genY0,
+      genX1, -genY1,
     );
 
-    // ── Octave labels along Pitch axis ──────────────────────────
+    // ── Octave labels at actual octave positions ────────────────────────
     this.drawOctaveLabels(
       centerX, centerY,
-      pitchDx, pitchDy,
       genX1, -genY1,
     );
   }
 
 
   /**
-   * Draw perpendicular index lines at each fifth step along the CoF axis,
-   * labeled with the fifth name. Shows that all notes of the same fifth
-   * (e.g. all D's) lie on the same iso-pitch line.
+   * Draw nameless geometric interval lines at each fifth step.
+   * Each line passes through ALL grid points at the same fifth index
+   * by anchoring at the i-th fifth position and extending in the octave direction.
+   * This is correct at ALL skew values, not just DCompose.
    */
   private drawFifthIndexLines(
     cx: number, cy: number,
-    cofDx: number, cofDy: number,
-    pitchDx: number, pitchDy: number,
-    fifthDx: number, fifthDy: number,
+    genX: number, genY0: number,
+    genX1: number, genY1: number,
   ): void {
-    const cofLenSq = cofDx * cofDx + cofDy * cofDy;
-    if (cofLenSq < 0.01) return;
-    const pitchLen = Math.sqrt(pitchDx * pitchDx + pitchDy * pitchDy);
-    if (pitchLen < 0.01) return;
-
-    const pitchNx = pitchDx / pitchLen;
-    const pitchNy = pitchDy / pitchLen;
-
-
-    // Label offset: 90° CW from CoF axis ("above" at DCompose)
-    const cofLen = Math.sqrt(cofLenSq);
-    const perpX = cofDy / cofLen;
-    const perpY = -cofDx / cofLen;
+    const { width: w, height: h } = this.options;
+    const canvasDiag = Math.sqrt(w * w + h * h);
+    // Line direction: octave step = (genX1, genY1) in screen space
+    const octLen = Math.sqrt(genX1 * genX1 + genY1 * genY1);
+    if (octLen < 0.01) return;
+    const octNx = genX1 / octLen;
+    const octNy = genY1 / octLen;
 
     this.ctx.save();
-    this.ctx.font = '11px "JetBrains Mono", monospace';
-    this.ctx.textAlign = 'center';
-    this.ctx.textBaseline = 'middle';
-    for (let i = -12; i <= 12; i++) {
+    for (let i = -20; i <= 20; i++) {
       if (i === 0) continue;
-      // Project i-th fifth offset ONTO the CoF axis line.
-      // Ticks are ON the axis — not at floating cell centers that go off-screen at MidiMech.
-      const t = (i * fifthDx * cofDx + i * fifthDy * cofDy) / cofLenSq;
-      const ax = cx + t * cofDx;
-      const ay = cy + t * cofDy;
-      const { width: w, height: h } = this.options;
-      if (ax < -20 || ax > w + 20 || ay < -20 || ay > h + 20) continue;
-      const dist = Math.abs(i) / 12;
-      const alpha = Math.max(0.08, 0.5 - dist * 0.2);
-      // Short perpendicular notch ON the axis (like a real graph axis tick)
-      const TICK = 6;
-      this.ctx.strokeStyle = `rgba(255,255,255,${alpha + 0.2})`;
-      this.ctx.lineWidth = 1;
+      // Anchor: i-th fifth position in screen space
+      const ax = cx + i * genX;
+      const ay = cy + i * genY0;
+      if (ax < -w || ax > 2 * w || ay < -h || ay > 2 * h) continue;
+
+      const dist = Math.abs(i) / 20;
+      const alpha = Math.max(0.03, 0.12 - dist * 0.06);
+
+      this.ctx.strokeStyle = `rgba(255,255,255,${alpha})`;
+      this.ctx.lineWidth = 0.5;
       this.ctx.beginPath();
-      this.ctx.moveTo(ax - pitchNx * TICK, ay - pitchNy * TICK);
-      this.ctx.lineTo(ax + pitchNx * TICK, ay + pitchNy * TICK);
+      this.ctx.moveTo(ax - octNx * canvasDiag, ay - octNy * canvasDiag);
+      this.ctx.lineTo(ax + octNx * canvasDiag, ay + octNy * canvasDiag);
       this.ctx.stroke();
-      // Note name beside tick
-      this.ctx.fillStyle = `rgba(255,255,255,${alpha + 0.15})`;
-      const noteName = getNoteNameFromCoord(i);
-      this.ctx.fillText(noteName, ax + perpX * 16, ay + perpY * 16);
     }
 
     this.ctx.restore();
   }
 
 
-  /** Place octave labels along the Pitch axis, projected from grid positions. */
+  /** Place octave labels at actual octave grid positions. */
   private drawOctaveLabels(
     cx: number, cy: number,
-    pitchDx: number, pitchDy: number,
-    octaveDx: number, octaveDy: number,
+    genX1: number, genY1: number,
   ): void {
-    const pitchLenSq = pitchDx * pitchDx + pitchDy * pitchDy;
-    if (pitchLenSq < 0.01) return;
-
-    // Label offset: 90° CCW from Pitch axis ("right" at DCompose)
-    const pitchLen = Math.sqrt(pitchLenSq);
-    const perpX = -pitchDy / pitchLen;
-    const perpY = pitchDx / pitchLen;
+    const octLen = Math.sqrt(genX1 * genX1 + genY1 * genY1);
+    if (octLen < 0.01) return;
+    // Perpendicular offset for label placement (90° CCW from octave direction)
+    const perpX = -genY1 / octLen;
+    const perpY = genX1 / octLen;
 
     this.ctx.save();
     this.ctx.font = '9px "JetBrains Mono", monospace';
@@ -455,12 +420,9 @@ export class KeyboardVisualizer {
     this.ctx.textBaseline = 'middle';
     for (let j = -3; j <= 3; j++) {
       if (j === 0) continue;
-      // Project j-th octave grid position onto Pitch axis
-      const gx = j * octaveDx;
-      const gy = j * octaveDy;
-      const t = (gx * pitchDx + gy * pitchDy) / pitchLenSq;
-      const x = cx + t * pitchDx;
-      const y = cy + t * pitchDy;
+      // Actual position: j octave steps from center
+      const x = cx + j * genX1;
+      const y = cy + j * genY1;
 
       const { width: w, height: h } = this.options;
       if (x < 10 || x > w - 10 || y < 10 || y > h - 10) continue;
@@ -563,10 +525,10 @@ export class KeyboardVisualizer {
     const isActive = this.activeNotes.has(noteId);
     const isSustained = this.sustainedNotes.has(noteId) && !isActive;
 
-    const state = isActive ? 'active' as const
-      : isSustained ? 'sustained' as const
-      : isBlackKey ? 'black' as const
-      : 'white' as const;
+    const state: 'active' | 'sustained' | 'white' | 'black' = isActive ? 'active'
+      : isSustained ? 'sustained'
+      : isBlackKey ? 'black'
+      : 'white';
     const { fill: fillColor, text: textColor } = cellColors(coordX, state);
 
     const { hv1, hv2 } = this;
@@ -580,11 +542,7 @@ export class KeyboardVisualizer {
     const px = (a: number, b: number) => x + a * h1x + b * h2x;
     const py = (a: number, b: number) => y + a * h1y + b * h2y;
 
-    // Vignette: fade cells near canvas edges
-    const { width: cw, height: ch } = this.options;
-    const distFrac = Math.max(Math.abs(x - cw / 2) / (cw / 2), Math.abs(y - ch / 2) / (ch / 2));
-    const fade = Math.max(0, 1 - Math.pow(distFrac, 2));
-    this.ctx.globalAlpha = fade;
+    // No vignette — all cells render at full brightness
 
     this.ctx.beginPath();
     this.ctx.moveTo(px(-1, -1), py(-1, -1)); // bottom-left
@@ -617,7 +575,7 @@ export class KeyboardVisualizer {
       const subSize = Math.max(7, fontSize * 0.6);
       this.ctx.font = `${subSize}px "JetBrains Mono", monospace`;
       this.ctx.fillStyle = textColor;
-      this.ctx.globalAlpha = fade * 0.6;
+      this.ctx.globalAlpha = 0.6;
       this.ctx.textBaseline = 'top';
       let bracket: string;
       if (Math.abs(deviation) < 0.5) {

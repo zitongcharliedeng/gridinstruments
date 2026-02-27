@@ -30,6 +30,8 @@ interface HistoryNote {
   endTime: number;
 }
 
+export type ClefType = 'treble' | 'bass' | 'alto';
+
 export class NoteHistoryVisualizer {
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
@@ -50,6 +52,7 @@ export class NoteHistoryVisualizer {
   private readonly MIDI_MAX = 96;
 
   private animFrame: number | null = null;
+  private clef: ClefType = 'treble';
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -89,6 +92,11 @@ export class NoteHistoryVisualizer {
   /** Update MIDI connection status */
   setMidiStatus(_status: 'unavailable' | 'no-devices' | 'connected', _deviceName: string = ''): void {
     // No-op: MIDI status is shown in the MIDI settings panel only
+  }
+
+  /** Set the clef type for staff notation rendering */
+  setClef(clef: ClefType): void {
+    this.clef = clef;
   }
 
   /** Clear all active notes (e.g. on blur / stop-all) */
@@ -139,7 +147,12 @@ export class NoteHistoryVisualizer {
       ctx.font = "48px 'JetBrains Mono', monospace";
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText('Play a note', width / 2, height / 2);
+      ctx.fillText('Play some notes', width / 2, height / 2 - 16);
+      ctx.font = "11px 'JetBrains Mono', monospace";
+      ctx.fillStyle = '#b8960a';
+      ctx.globalAlpha = 0.85;
+      ctx.fillText('tl;dr: notes that are mathematically more harmonious are closer together spatially \u2014 make it hard to suck!', width / 2, height / 2 + 24);
+      ctx.globalAlpha = 1;
       return;
     }
 
@@ -180,12 +193,11 @@ export class NoteHistoryVisualizer {
       ctx.stroke();
     }
 
-    // Draw treble clef symbol (simplified: just label)
-    ctx.fillStyle = '#999999';
-    ctx.font = 'bold 28px \'JetBrains Mono\', monospace';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('𝄞', x + padX / 2 + 3, staffTop + lineSpacing * 2);
+    // Draw clef symbol (low opacity — "dry" rendering)
+    ctx.save();
+    ctx.globalAlpha = 0.25;
+    this.drawClefSymbol(ctx, x + padX / 2 + 3, staffTop, lineSpacing);
+    ctx.restore();
 
     // Collect notes to display (active + recently ended within 1s)
     const now = performance.now();
@@ -427,5 +439,148 @@ export class NoteHistoryVisualizer {
       ctx.fillStyle = noteColor(midi, 0.9);
       ctx.fillText(noteNames[i], x + w / 2, ny);
     }
+  }
+
+  // ─── Clef Drawing (canvas paths, no font dependency) ─────────────────
+
+  /** Dispatch to the correct clef drawing method based on current clef type. */
+  private drawClefSymbol(
+    ctx: CanvasRenderingContext2D,
+    cx: number, staffTop: number, lineSpacing: number,
+  ): void {
+    switch (this.clef) {
+      case 'treble': this.drawTrebleClef(ctx, cx, staffTop, lineSpacing); break;
+      case 'bass':   this.drawBassClef(ctx, cx, staffTop, lineSpacing); break;
+      case 'alto':   this.drawAltoClef(ctx, cx, staffTop, lineSpacing); break;
+    }
+  }
+
+  /**
+   * Draw treble clef (G clef) centered on the G line (2nd line from bottom = line index 3).
+   * Uses bezier curves to approximate the classic shape.
+   */
+  private drawTrebleClef(
+    ctx: CanvasRenderingContext2D,
+    cx: number, staffTop: number, ls: number,
+  ): void {
+    // G line = staff line index 3 (0-indexed from top)
+    const gY = staffTop + 3 * ls;
+    const scale = ls / 10;
+    ctx.save();
+    ctx.translate(cx, gY);
+    ctx.scale(scale, scale);
+    ctx.strokeStyle = '#ffffff';
+    ctx.fillStyle = '#ffffff';
+    ctx.lineWidth = 1.8 / scale;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
+    // Main S-curve body of treble clef
+    ctx.beginPath();
+    // Start at bottom curl
+    ctx.moveTo(1, 18);
+    // Bottom curl (small loop below staff)
+    ctx.bezierCurveTo(-3, 20, -6, 16, -4, 12);
+    // Sweep up through the staff
+    ctx.bezierCurveTo(-1, 6, 5, -2, 5, -10);
+    // Curve over the top
+    ctx.bezierCurveTo(5, -18, -2, -24, -5, -20);
+    // Come back down through center
+    ctx.bezierCurveTo(-8, -16, -6, -10, -2, -6);
+    // Continue down through G line
+    ctx.bezierCurveTo(2, -2, 6, 4, 4, 10);
+    // Curl at bottom back to near start
+    ctx.bezierCurveTo(2, 16, -4, 16, -3, 12);
+    ctx.stroke();
+
+    // Vertical stem line
+    ctx.beginPath();
+    ctx.moveTo(0, -22);
+    ctx.lineTo(0, 20);
+    ctx.stroke();
+
+    // Small filled circle at bottom
+    ctx.beginPath();
+    ctx.arc(0, 20, 2.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  /**
+   * Draw bass clef (F clef) centered on the F line (2nd line from top = line index 1).
+   * Classic shape: curved body + two dots.
+   */
+  private drawBassClef(
+    ctx: CanvasRenderingContext2D,
+    cx: number, staffTop: number, ls: number,
+  ): void {
+    // F line = staff line index 3 (4th line from top in standard bass clef,
+    // but conventionally the dots sit between lines 2 and 3 from top)
+    const fY = staffTop + 1 * ls;
+    const scale = ls / 10;
+    ctx.save();
+    ctx.translate(cx, fY);
+    ctx.scale(scale, scale);
+    ctx.strokeStyle = '#ffffff';
+    ctx.fillStyle = '#ffffff';
+    ctx.lineWidth = 1.8 / scale;
+    ctx.lineCap = 'round';
+
+    // Main curve
+    ctx.beginPath();
+    ctx.arc(-2, 0, 5, -Math.PI * 0.8, Math.PI * 0.5, false);
+    ctx.stroke();
+
+    // Filled dot at the origin (F line marker)
+    ctx.beginPath();
+    ctx.arc(-2, -1, 2.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Two dots to the right
+    ctx.beginPath();
+    ctx.arc(6, -3.5, 1.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(6, 3.5, 1.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  /**
+   * Draw alto clef (C clef) centered on the middle line (line index 2).
+   * Classic shape: two vertical bars + a bracket.
+   */
+  private drawAltoClef(
+    ctx: CanvasRenderingContext2D,
+    cx: number, staffTop: number, ls: number,
+  ): void {
+    const midY = staffTop + 2 * ls;
+    const halfH = 2 * ls;
+    ctx.save();
+    ctx.strokeStyle = '#ffffff';
+    ctx.fillStyle = '#ffffff';
+    ctx.lineWidth = 1.5;
+    ctx.lineCap = 'butt';
+
+    // Thick left bar
+    ctx.fillRect(cx - 6, midY - halfH, 3, halfH * 2);
+
+    // Thin bar
+    ctx.fillRect(cx - 2, midY - halfH, 1.5, halfH * 2);
+
+    // Right bracket curves
+    const bx = cx + 2;
+    ctx.beginPath();
+    ctx.moveTo(bx, midY - halfH);
+    ctx.bezierCurveTo(bx + 8, midY - halfH, bx + 8, midY - 2, bx, midY);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(bx, midY + halfH);
+    ctx.bezierCurveTo(bx + 8, midY + halfH, bx + 8, midY + 2, bx, midY);
+    ctx.stroke();
+
+    ctx.restore();
   }
 }

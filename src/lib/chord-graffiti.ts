@@ -148,7 +148,7 @@ function renderChord(
 
   const rc = rough.svg(svg);
 
-  const triPoints = notePositions.map(p => [p.x, p.y] as [number, number]);
+  const triPoints: [number, number][] = notePositions.map(p => [p.x, p.y]);
 
   const triNode = rc.polygon(triPoints, {
     roughness: 2.5,

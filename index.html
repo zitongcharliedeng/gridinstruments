@@ -146,7 +146,18 @@
       height: 18px;
       border: none;
       cursor: pointer;
-      background: var(--border);
+      background: #000;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    input[type="range"]::-webkit-slider-runnable-track {
+      height: 18px;
+      background: inherit;
+    }
+    input[type="range"]::-moz-range-track {
+      height: 18px;
+      background: inherit;
+      border: none;
     }
     input[type="range"]::-webkit-slider-thumb {
       -webkit-appearance: none;
@@ -168,17 +179,21 @@
       position: relative;
       display: flex;
       align-items: center;
+      gap: 2px;
     }
     .slider-track input[type="range"] {
-      width: 100%;
+      flex: 1;
+      min-width: 0;
       margin: 0;
     }
     .slider-label-overlay {
       position: absolute;
-      left: 0;
-      bottom: 100%;
+      left: 4px;
+      top: 50%;
+      transform: translateY(-50%);
       font-size: 9px;
       color: #fff;
+      mix-blend-mode: difference;
       text-transform: uppercase;
       letter-spacing: 0.06em;
       pointer-events: none;
@@ -202,11 +217,36 @@
       text-align: center;
       font-family: var(--font);
     }
+    /* Editable badge input — same positioning as span badge but interactive */
+    input.badge-input {
+      position: absolute;
+      bottom: 100%;
+      transform: translateX(-50%);
+      font-size: 9px;
+      color: #fff;
+      background: none;
+      padding: 0 3px;
+      white-space: nowrap;
+      z-index: 2;
+      line-height: 14px;
+      height: 14px;
+      text-align: center;
+      font-family: var(--font);
+      border: 1px solid transparent;
+      width: 50px;
+      pointer-events: auto;
+      cursor: text;
+      outline: none;
+    }
+    input.badge-input:focus {
+      border-color: var(--accent);
+      background: var(--subtle);
+    }
     .slider-reset {
       font-family: var(--font); font-size: 14px; color: var(--dim);
       background: var(--bg); border: 1px solid var(--border);
-      width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; padding: 0;
-      cursor: pointer; line-height: 1;
+      width: 22px; height: 18px; display: inline-flex; align-items: center; justify-content: center; padding: 0;
+      cursor: pointer; line-height: 1; flex-shrink: 0; margin-left: 2px;
     }
     .slider-reset:hover { color: var(--fg); border-color: var(--accent); }
 
@@ -345,7 +385,7 @@
       padding: 6px 8px;
     }
 
-    .tuning-section { display: flex; flex-direction: column; gap: 0; flex: 1; min-width: 300px; }
+    .tuning-section { display: flex; flex-direction: column; gap: 0; flex: 1; min-width: 300px; position: relative; z-index: 4; }
     .tuning-row { display: flex; align-items: center; gap: 6px; }
 
     .tuning-slider-area {
@@ -362,7 +402,7 @@
     .tet-presets {
       position: absolute;
       left: 0; right: 0;
-      top: 100%;
+      top: 50%;  /* anchor at track center line — ticks emanate downward from here */
       pointer-events: none;
       overflow: visible;
     }
@@ -377,9 +417,8 @@
     }
     .tet-tick {
       width: 2px;
-      height: 10px;
+      height: 14px;  /* bridges from track center to label */
       background: #888;
-      margin-top: 0;
     }
     .tet-preset {
       font-family: var(--font);
@@ -395,21 +434,14 @@
     .tet-preset:hover { color: #fff; }
     .tet-preset.active { color: #88ff88; }
 
-    .skew-section { display: flex; align-items: center; gap: 0; flex-shrink: 0; }
+    .skew-section { display: flex; align-items: center; gap: 0; flex-shrink: 0; position: relative; z-index: 3; }
     .skew-slider-area {
       position: relative;
       display: flex;
       align-items: center;
       gap: 0;
     }
-    .skew-endpoint {
-      font-size: 10px; color: var(--dim); white-space: nowrap;
-      padding: 0 6px;
-      line-height: 1;
-      transition: color 0.15s;
-    }
-    .skew-endpoint.active { color: var(--fg); font-weight: 500; }
-    .skew-section .slider-track { width: 120px; }
+    .skew-section .slider-track { width: 160px; }
 
     input[type="number"] {
       width: 70px;
@@ -419,8 +451,6 @@
       text-transform: uppercase;
     }
 
-    .d-ref-group .slider-track { width: 140px; }
-    .d-ref-group #d4-ref-input { text-transform: none; width: 70px; }
 
     /* ── About section ───────────────────────────────────────────── */
     #about {
@@ -532,12 +562,12 @@
 
     <!-- Header: title + controls -->
     <header>
-      <button id="midi-settings-toggle"><span style="display:inline-flex;align-items:center;line-height:0">⚙</span> MIDI</button>
+      <button id="midi-settings-toggle" title="Toggle MIDI settings panel"><span style="display:inline-flex;align-items:center;line-height:0">⚙</span> MIDI</button>
       <!-- logo moved to title-bar -->
       <div class="header-controls">
         <div class="ctrl-group">
           <span class="ctrl-label">Wave</span>
-          <select id="waveform-select">
+          <select id="waveform-select" title="Select oscillator waveform">
             <option value="sawtooth">Sawtooth</option>
             <option value="sine">Sine</option>
             <option value="square">Square</option>
@@ -547,8 +577,17 @@
 
         <div class="ctrl-group">
           <span class="ctrl-label">Layout</span>
-          <select id="layout-select">
+          <select id="layout-select" title="Select keyboard physical layout">
             <!-- populated by JS from KEYBOARD_VARIANTS -->
+          </select>
+        </div>
+
+        <div class="ctrl-group">
+          <span class="ctrl-label">Clef</span>
+          <select id="clef-select" title="Select clef for staff notation">
+            <option value="treble">Treble</option>
+            <option value="bass">Bass</option>
+            <option value="alto">Alto</option>
           </select>
         </div>
 
@@ -557,13 +596,12 @@
             <span class="slider-label-overlay">VOL (dB)</span>
             <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.3" title="Master volume">
             <span class="slider-value-badge" id="volume-thumb-badge">-10.5</span>
+            <button class="slider-reset" id="volume-reset" title="Reset volume to default (0.3)">↻</button>
           </div>
-          <button class="slider-reset" id="volume-reset" title="Reset volume to default (0.3)">↻</button>
         </div>
 
         <!-- indicators moved to canvas overlay -->
 
-        <span class="header-quote" style="color:#b8960a;opacity:0.85;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;">tl;dr: notes that are mathematically more harmonious are closer together spatially — make it hard to suck!</span>
 
       </div>
     </header>
@@ -592,8 +630,8 @@
     <div id="keyboard-container">
       <canvas id="keyboard-canvas"></canvas>
       <div class="status-indicators">
-        <span id="vibrato-indicator" class="status-indicator" title="Vibrato: hold Space">VIBRATO</span>
-        <span id="sustain-indicator" class="status-indicator" title="Sustain: hold R or Left Shift">SUSTAIN</span>
+        <span id="vibrato-indicator" class="status-indicator" title="Vibrato: hold Shift">VIBRATO</span>
+        <span id="sustain-indicator" class="status-indicator" title="Sustain: hold Space">SUSTAIN</span>
       </div>
     </div>
 
@@ -605,43 +643,42 @@
             <div class="slider-track">
               <span class="slider-label-overlay">FIFTHS TUNING (cents)</span>
               <input type="range" id="tuning-slider" min="683" max="722" step="0.01" value="700" title="Fifth interval size in cents">
-              <span class="slider-value-badge" id="tuning-thumb-badge">700</span>
+              <input type="text" class="badge-input" id="tuning-thumb-badge" value="700" title="Edit fifth interval in cents">
+              <button class="slider-reset" id="tuning-reset" title="Reset to 12-TET (700¢)">↻</button>
             </div>
             <div class="tet-presets" id="tet-presets"></div>
           </div>
-          <button class="slider-reset" id="tuning-reset" title="Reset to 12-TET (700¢)">↻</button>
-
         </div>
       </div>
 
       <div class="skew-section">
         <div class="skew-slider-area">
-          <span class="skew-endpoint active" id="skew-label-left">MidiMech</span>
           <div class="slider-track">
-            <span class="slider-label-overlay">Skew</span>
-            <input type="range" id="skew-slider" min="0" max="1" step="0.01" value="0" title="Layout skew: 0=MidiMech, 1=DCompose">
-            <span class="slider-value-badge" id="skew-thumb-badge">0.00</span>
+            <span class="slider-label-overlay" id="skew-label">SKEW [MidiMech]</span>
+            <input type="range" id="skew-slider" min="0" max="1" step="0.01" value="0" title="Layout tilt: 0=MidiMech, 1=DCompose. Values outside 0-1 accepted via badge input.">
+            <input type="text" class="badge-input" id="skew-thumb-badge" value="0.00" title="Edit skew value. 0=MidiMech, 1=DCompose. Values outside 0-1 extend beyond both layouts.">
+            <button class="slider-reset" id="skew-reset" title="Reset to MidiMech (0)">↻</button>
           </div>
-          <span class="skew-endpoint" id="skew-label-right">DCompose</span>
         </div>
-        <button class="slider-reset" id="skew-reset" title="Reset to MidiMech (0)">↻</button>
       </div>
 
 
-      <div class="ctrl-group">
+      <div class="ctrl-group" style="position:relative;z-index:2">
         <div class="slider-track" style="width:120px">
           <span class="slider-label-overlay">Zoom (x)</span>
           <input type="range" id="zoom-slider" min="0.2" max="3" step="0.01" value="1" title="Grid zoom level">
           <span class="slider-value-badge" id="zoom-thumb-badge">1.00</span>
+          <button class="slider-reset" id="zoom-reset" title="Aims to match keysize to standard keyboard key size">↻</button>
         </div>
-        <button class="slider-reset" id="zoom-reset" title="Aims to match keysize to standard keyboard key size">↻</button>
       </div>
 
-      <div class="ctrl-group d-ref-group" style="position:relative;">
-        <span class="slider-label-overlay">D REF (Hz)</span>
-        <input type="text" id="d4-ref-input" value="293.66" style="width:70px; text-transform:none;">
-        <span id="d4-ref-hint" style="color: #fff; font-size: 11px; margin-left: 4px;"></span>
-        <button id="d4-ref-reset" class="slider-reset" title="Reset to D4 (293.66 Hz)">↻</button>
+      <div class="ctrl-group d-ref-group" style="position:relative;z-index:1">
+        <div class="slider-track" style="width:140px">
+          <span class="slider-label-overlay" id="d-ref-label">D REF (Hz)</span>
+          <input type="range" id="d-ref-slider" min="73.42" max="1174.66" step="0.01" value="293.66" title="Reference pitch slider (D2–D6)">
+          <input type="text" class="badge-input" id="d-ref-input" value="293.66" style="width:80px; text-transform:none;" title="Edit reference pitch in Hz or note name (default: D4 = 293.66)">
+          <button id="d-ref-reset" class="slider-reset" title="Reset to D4 (293.66 Hz)">↻</button>
+        </div>
       </div>
     </div>
 
@@ -653,28 +690,18 @@
       <div class="about-grid">
 
         <div class="about-col">
-          <h3>About</h3>
           <p style='font-size: 12px; color: var(--dim); line-height: 1.5;'>
-            DCompose Web makes isomorphic keyboard layouts accessible to everyone — no special hardware needed. Explore tunings, discover harmonic patterns, and play music in ways traditional keyboards can't offer.
+            DCompose Web makes isomorphic keyboard layouts accessible to everyone &mdash; no special hardware needed. Explore tunings, discover harmonic patterns, and play music in ways traditional keyboards can't offer.
           </p>
         </div>
 
         <div class="about-col">
           <h3>Isomorphic Layout</h3>
           <div class="about-links">
-            <a href="https://en.wikipedia.org/wiki/Wicki%E2%80%93Hayden_note_layout" target="_blank" rel="noopener">Wicki–Hayden (Wikipedia)</a>
+            <a href="https://en.wikipedia.org/wiki/Wicki%E2%80%93Hayden_note_layout" target="_blank" rel="noopener">Wicki&ndash;Hayden (Wikipedia)</a>
             <a href="https://www.striso.org/the-note-layout/" target="_blank" rel="noopener">Striso note layout</a>
             <a href="https://github.com/flipcoder/midimech" target="_blank" rel="noopener">MidiMech</a>
             <a href="https://www.toverlamp.org/static/wickisynth/wickisynth_lowlatency.html" target="_blank" rel="noopener">WickiSynth (original)</a>
-          </div>
-        </div>
-
-        <div class="about-col">
-          <h3>Creator</h3>
-          <div class="about-links">
-            <a href="https://www.youtube.com/@zitongcharliedeng" target="_blank" rel="noopener">YouTube</a>
-            <a href="https://www.instagram.com/zitongcharliedeng" target="_blank" rel="noopener">Instagram</a>
-            <a href="https://www.tiktok.com/@zitongcharliedeng" target="_blank" rel="noopener">TikTok</a>
           </div>
         </div>
 
@@ -682,9 +709,8 @@
     </section>
 
     <footer>
-      Based on <a href="https://www.toverlamp.org/static/wickisynth/wickisynth_lowlatency.html" target="_blank">WickiSynth</a> by Piers Titus van der Torren ·
-      Inspired by <a href="https://github.com/flipcoder/midimech" target="_blank">MIDImech</a> and <a href="https://www.striso.org/the-note-layout/" target="_blank">Striso</a> ·
-      <a href="https://github.com/zitongcharliedeng/dcompose-web" target="_blank">GitHub</a>
+      Based on <a href="https://www.toverlamp.org/static/wickisynth/wickisynth_lowlatency.html" target="_blank">WickiSynth</a> by Piers Titus van der Torren &middot;
+      Inspired by <a href="https://github.com/flipcoder/midimech" target="_blank">MIDImech</a> and <a href="https://www.striso.org/the-note-layout/" target="_blank">Striso</a>
     </footer>
 
   </div>
