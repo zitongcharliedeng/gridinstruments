@@ -38,7 +38,8 @@ import { MidiInput, MidiDeviceInfo } from './lib/midi-input';
 import { MPEService } from './lib/mpe-service';
 import { midiToCoord } from './lib/note-colors';
 import { createChordGraffiti } from './lib/chord-graffiti';
-
+import './machines/_smoke'; // TODO: remove in Task 14
+import './machines/_smoke'; // TODO: remove in Task 14
 // Type guard for WaveformType
 function isWaveformType(value: unknown): value is WaveformType {
   return typeof value === 'string' && ['sine', 'square', 'sawtooth', 'triangle'].includes(value);
