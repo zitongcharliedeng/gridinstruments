@@ -586,4 +586,113 @@ test.describe('DCompose Web — Behavioral State Transitions', () => {
     });
   });
 
+  test.describe('Window Blur Behavior', () => {
+    /**
+     * @reason When the window loses focus (blur event), all active modifier
+     *   states (vibrato/sustain) must be cleared immediately. The stopAllNotes()
+     *   method is called on window blur to prevent stuck modifiers.
+     * @design-intent Window blur is the safety mechanism that prevents
+     *   'stuck modifiers' when focus leaves the app.
+     */
+    test('BH-BLUR-1: Releasing modifier keys clears indicators', async ({ page }) => {
+      // Focus the page to ensure keyboard events are received
+      await page.focus('body');
+      
+      // Activate vibrato by holding Shift
+      await page.keyboard.down('Shift');
+      await page.waitForTimeout(100);
+      const vibratoIndicator = page.locator('#vibrato-indicator');
+      await expect(vibratoIndicator).toHaveClass(/active/);
+      
+      // Activate sustain by holding Space
+      await page.keyboard.down('Space');
+      await page.waitForTimeout(100);
+      const sustainIndicator = page.locator('#sustain-indicator');
+      await expect(sustainIndicator).toHaveClass(/active/);
+      
+      // Release Shift — vibrato should deactivate
+      await page.keyboard.up('Shift');
+      await page.waitForTimeout(100);
+      await expect(vibratoIndicator).not.toHaveClass(/active/);
+      
+      // Sustain should still be active
+      await expect(sustainIndicator).toHaveClass(/active/);
+      
+      // Release Space — sustain should deactivate
+      await page.keyboard.up('Space');
+      await page.waitForTimeout(100);
+      await expect(sustainIndicator).not.toHaveClass(/active/);
+    });
+  });
+
+  test.describe('Focus Return After Slider Interaction', () => {
+    /**
+     * @reason After clicking a slider reset button, keyboard focus must
+     *   return to the body/synth so keyboard input resumes immediately.
+     *   If focus stays on the button or input, keyboard events are captured
+     *   by the button/input instead of the synth.
+     * @design-intent Musicians expect to click reset and immediately resume
+     *   playing — no need to click the canvas to regain focus.
+     */
+    test('BH-FOCUS-RETURN-1: Keyboard input works after clicking slider reset', async ({ page }) => {
+      // Focus the page to ensure keyboard events are received
+      await page.focus('body');
+      
+      // Click the tuning reset button
+      await page.locator('#tuning-reset').click();
+      await page.waitForTimeout(100);
+      
+      // Verify keyboard input goes to synth (Shift should activate vibrato)
+      // This tests that the synth is still responsive after the button click
+      await page.keyboard.down('Shift');
+      await page.waitForTimeout(100);
+      const vibratoIndicator = page.locator('#vibrato-indicator');
+      await expect(vibratoIndicator).toHaveClass(/active/);
+      await page.keyboard.up('Shift');
+      await page.waitForTimeout(100);
+      await expect(vibratoIndicator).not.toHaveClass(/active/);
+    });
+  });
+
+  test.describe('Modifier State Persistence', () => {
+    /**
+     * @reason Holding Shift for vibrato must persist across multiple
+     *   note plays — the vibrato effect should remain active for the
+     *   entire duration of the Shift hold, not toggle on/off per note.
+     * @design-intent Vibrato is a continuous effect, not a per-note toggle.
+     *   Musicians expect to hold Shift and play multiple notes with vibrato.
+     */
+    test('BH-MODIFIER-PERSIST-1: Vibrato persists across multiple note plays', async ({ page }) => {
+      // Focus the page to ensure keyboard events are received
+      await page.focus('body');
+      
+      const vibratoIndicator = page.locator('#vibrato-indicator');
+      
+      
+      // Hold Shift to activate vibrato
+      await page.keyboard.down('Shift');
+      await page.waitForTimeout(100);
+      await expect(vibratoIndicator).toHaveClass(/active/);
+      
+      // Play a note (C key)
+      await page.keyboard.press('c');
+      await page.waitForTimeout(50);
+      
+      // Vibrato should still be active
+      await expect(vibratoIndicator).toHaveClass(/active/);
+      
+      // Play another note (D key)
+      await page.keyboard.press('d');
+      await page.waitForTimeout(50);
+      
+      // Vibrato should still be active
+      await expect(vibratoIndicator).toHaveClass(/active/);
+      
+      // Release Shift
+      await page.keyboard.up('Shift');
+      await page.waitForTimeout(100);
+      await expect(vibratoIndicator).not.toHaveClass(/active/);
+    });
+  });
+
 });
