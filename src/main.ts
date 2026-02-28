@@ -184,6 +184,7 @@ class DComposeApp {
     await this.midi.init();
     await this.mpe.init();
     this.setupMidiListeners();
+    this.updateMidiDevicePanel(this.midi.getDevices());
     // Chord shape graffiti overlays (dynamic — reads grid geometry from visualizer)
     const keyboardContainer = document.getElementById('keyboard-container');
     if (keyboardContainer && this.visualizer) {
