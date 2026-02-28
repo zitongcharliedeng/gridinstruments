@@ -16,7 +16,16 @@ export default defineConfig({
     },
     {
       name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
+      use: {
+        ...devices['Desktop Firefox'],
+        launchOptions: {
+          firefoxUserPrefs: {
+            // Allow AudioContext to resume without user gesture in headless CI
+            'media.autoplay.default': 0,
+            'media.autoplay.blocking_policy': 0,
+          },
+        },
+      },
     },
   ],
   webServer: {

@@ -1,5 +1,10 @@
 import { test, expect } from '@playwright/test';
 
+// Visual regression snapshots are environment-specific (font rendering, GPU, Chrome version).
+// Run locally before releases. Skip in CI to avoid flaky environment mismatches.
+test.skip(!!process.env.CI, 'Visual regression tests skipped in CI — run locally before release');
+
+
 test.describe('DCompose Web — Visual Regression (State-Machine Tests)', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
