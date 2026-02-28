@@ -307,10 +307,10 @@ test.describe('DCompose Web — Behavioral State Transitions', () => {
     test('BH-MODIFIER-HOLD-1: Vibrato activates on Shift hold, deactivates on release', async ({ page }) => {
       const indicator = page.locator('#vibrato-indicator');
       await expect(indicator).not.toHaveClass(/active/);
-      await page.evaluate(() => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Shift', code: 'ShiftLeft', shiftKey: true, bubbles: true, cancelable: true })));
+      await page.evaluate(() => document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Shift', code: 'ShiftLeft', shiftKey: true, bubbles: true, cancelable: true })));
       await page.waitForTimeout(100);
       await expect(indicator).toHaveClass(/active/);
-      await page.evaluate(() => document.dispatchEvent(new KeyboardEvent('keyup', { key: 'Shift', code: 'ShiftLeft', shiftKey: false, bubbles: true, cancelable: true })));
+      await page.evaluate(() => document.body.dispatchEvent(new KeyboardEvent('keyup', { key: 'Shift', code: 'ShiftLeft', shiftKey: false, bubbles: true, cancelable: true })));
       await page.waitForTimeout(100);
       await expect(indicator).not.toHaveClass(/active/);
     });
@@ -324,10 +324,10 @@ test.describe('DCompose Web — Behavioral State Transitions', () => {
     test('BH-MODIFIER-HOLD-2: Sustain activates on Space hold', async ({ page }) => {
       const indicator = page.locator('#sustain-indicator');
       await expect(indicator).not.toHaveClass(/active/);
-      await page.evaluate(() => document.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', code: 'Space', bubbles: true, cancelable: true })));
+      await page.evaluate(() => document.body.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', code: 'Space', bubbles: true, cancelable: true })));
       await page.waitForTimeout(100);
       await expect(indicator).toHaveClass(/active/);
-      await page.evaluate(() => document.dispatchEvent(new KeyboardEvent('keyup', { key: ' ', code: 'Space', bubbles: true, cancelable: true })));
+      await page.evaluate(() => document.body.dispatchEvent(new KeyboardEvent('keyup', { key: ' ', code: 'Space', bubbles: true, cancelable: true })));
       await page.waitForTimeout(100);
       await expect(indicator).not.toHaveClass(/active/);
     });
@@ -583,19 +583,19 @@ test.describe('DCompose Web — Behavioral State Transitions', () => {
       // Focus the page to ensure keyboard events are received
       
       // Activate vibrato by holding Shift
-      await page.evaluate(() => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Shift', code: 'ShiftLeft', shiftKey: true, bubbles: true, cancelable: true })));
+      await page.evaluate(() => document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Shift', code: 'ShiftLeft', shiftKey: true, bubbles: true, cancelable: true })));
       await page.waitForTimeout(100);
       const vibratoIndicator = page.locator('#vibrato-indicator');
       await expect(vibratoIndicator).toHaveClass(/active/);
       
       // Activate sustain by holding Space
-      await page.evaluate(() => document.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', code: 'Space', bubbles: true, cancelable: true })));
+      await page.evaluate(() => document.body.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', code: 'Space', bubbles: true, cancelable: true })));
       await page.waitForTimeout(100);
       const sustainIndicator = page.locator('#sustain-indicator');
       await expect(sustainIndicator).toHaveClass(/active/);
       
       // Release Shift — vibrato should deactivate
-      await page.evaluate(() => document.dispatchEvent(new KeyboardEvent('keyup', { key: 'Shift', code: 'ShiftLeft', shiftKey: false, bubbles: true, cancelable: true })));
+      await page.evaluate(() => document.body.dispatchEvent(new KeyboardEvent('keyup', { key: 'Shift', code: 'ShiftLeft', shiftKey: false, bubbles: true, cancelable: true })));
       await page.waitForTimeout(100);
       await expect(vibratoIndicator).not.toHaveClass(/active/);
       
@@ -603,7 +603,7 @@ test.describe('DCompose Web — Behavioral State Transitions', () => {
       await expect(sustainIndicator).toHaveClass(/active/);
       
       // Release Space — sustain should deactivate
-      await page.evaluate(() => document.dispatchEvent(new KeyboardEvent('keyup', { key: ' ', code: 'Space', bubbles: true, cancelable: true })));
+      await page.evaluate(() => document.body.dispatchEvent(new KeyboardEvent('keyup', { key: ' ', code: 'Space', bubbles: true, cancelable: true })));
       await page.waitForTimeout(100);
       await expect(sustainIndicator).not.toHaveClass(/active/);
     });
@@ -627,11 +627,11 @@ test.describe('DCompose Web — Behavioral State Transitions', () => {
       
       // Verify keyboard input goes to synth (Shift should activate vibrato)
       // This tests that the synth is still responsive after the button click
-      await page.evaluate(() => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Shift', code: 'ShiftLeft', shiftKey: true, bubbles: true, cancelable: true })));
+      await page.evaluate(() => document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Shift', code: 'ShiftLeft', shiftKey: true, bubbles: true, cancelable: true })));
       await page.waitForTimeout(100);
       const vibratoIndicator = page.locator('#vibrato-indicator');
       await expect(vibratoIndicator).toHaveClass(/active/);
-      await page.evaluate(() => document.dispatchEvent(new KeyboardEvent('keyup', { key: 'Shift', code: 'ShiftLeft', shiftKey: false, bubbles: true, cancelable: true })));
+      await page.evaluate(() => document.body.dispatchEvent(new KeyboardEvent('keyup', { key: 'Shift', code: 'ShiftLeft', shiftKey: false, bubbles: true, cancelable: true })));
       await page.waitForTimeout(100);
       await expect(vibratoIndicator).not.toHaveClass(/active/);
     });
@@ -652,7 +652,7 @@ test.describe('DCompose Web — Behavioral State Transitions', () => {
       
       
       // Hold Shift to activate vibrato
-      await page.evaluate(() => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Shift', code: 'ShiftLeft', shiftKey: true, bubbles: true, cancelable: true })));
+      await page.evaluate(() => document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Shift', code: 'ShiftLeft', shiftKey: true, bubbles: true, cancelable: true })));
       await page.waitForTimeout(100);
       await expect(vibratoIndicator).toHaveClass(/active/);
       
@@ -671,7 +671,7 @@ test.describe('DCompose Web — Behavioral State Transitions', () => {
       await expect(vibratoIndicator).toHaveClass(/active/);
       
       // Release Shift
-      await page.evaluate(() => document.dispatchEvent(new KeyboardEvent('keyup', { key: 'Shift', code: 'ShiftLeft', shiftKey: false, bubbles: true, cancelable: true })));
+      await page.evaluate(() => document.body.dispatchEvent(new KeyboardEvent('keyup', { key: 'Shift', code: 'ShiftLeft', shiftKey: false, bubbles: true, cancelable: true })));
       await page.waitForTimeout(100);
       await expect(vibratoIndicator).not.toHaveClass(/active/);
     });
