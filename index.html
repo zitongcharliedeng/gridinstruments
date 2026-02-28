@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
   <title>GridInstruments — Isomorphic Keyboard Synthesizer</title>
   <meta name="description" content="Live MIDI & keyboard isomorphic synthesizer. DCompose/Wicki-Hayden layout. Explore tunings from 7-TET to 5-TET on the syntonic temperament continuum.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -442,7 +442,7 @@
       position: absolute;
       left: 0; right: 26px;
       top: 50%;  /* anchor at track center line — ticks emanate downward from here */
-      height: 36px; /* must be explicit — absolute children don’t expand parent height */
+      height: 36px; /* must be explicit — absolute children don't expand parent height */
       pointer-events: none;
       overflow: hidden;
     }
@@ -570,6 +570,10 @@
       opacity: 0.9;
 
     }
+    .wave-group { display: flex; gap: 1px; background: var(--border); border: 1px solid var(--border); }
+    .wave-btn { flex: 1; padding: 5px 2px; background: var(--bg); border: none; color: var(--dim); font-family: var(--font); font-size: 10px; cursor: pointer; text-transform: uppercase; letter-spacing: 0.04em; }
+    .wave-btn.active { background: var(--fg); color: var(--bg); }
+    .wave-btn:hover:not(.active) { background: var(--subtle); color: var(--fg); }
   </style>
 </head>
 <body>
@@ -580,15 +584,13 @@
       <div id="sidebar-content">
 
         <div class="sidebar-section">
-          <div class="sidebar-section-title">AUDIO</div>
           <div class="ctrl-group">
-            <span class="ctrl-label">Wave</span>
-            <select id="waveform-select" title="Select oscillator waveform">
-              <option value="sawtooth" selected>Sawtooth</option>
-              <option value="sine">Sine</option>
-              <option value="square">Square</option>
-              <option value="triangle">Triangle</option>
-            </select>
+            <div class="wave-group" role="group" aria-label="Waveform">
+              <button class="wave-btn active" data-waveform="sawtooth" title="Sawtooth wave">SAW</button>
+              <button class="wave-btn" data-waveform="sine" title="Sine wave">SIN</button>
+              <button class="wave-btn" data-waveform="square" title="Square wave">SQR</button>
+              <button class="wave-btn" data-waveform="triangle" title="Triangle wave">TRI</button>
+            </div>
           </div>
           <div class="ctrl-group">
             <div class="slider-track">
@@ -601,12 +603,50 @@
         </div>
 
         <div class="sidebar-section">
-          <div class="sidebar-section-title">LAYOUT</div>
           <div class="ctrl-group">
             <span class="ctrl-label">Layout</span>
             <select id="layout-select" title="Select keyboard physical layout">
               <!-- populated by JS from KEYBOARD_VARIANTS -->
             </select>
+          </div>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="tuning-slider-area">
+            <div class="slider-track">
+              <span class="slider-label-overlay">FIFTHS TUNING (cents)</span>
+              <input type="range" id="tuning-slider" min="683" max="722" step="0.01" value="700" title="Fifth interval size in cents">
+              <input type="text" class="badge-input" id="tuning-thumb-badge" value="700" title="Edit fifth interval in cents">
+              <button class="slider-reset" id="tuning-reset" title="Reset to 12-TET (700¢)">↻</button>
+            </div>
+            <div class="tet-presets" id="tet-presets"></div>
+          </div>
+        </div>
+
+        <div class="sidebar-section skew-slider-area">
+          <div class="slider-track">
+            <span class="slider-label-overlay" id="skew-label">SKEW [MidiMech]</span>
+            <input type="range" id="skew-slider" min="0" max="1" step="0.01" value="0" title="Layout tilt: 0=MidiMech, 1=DCompose.">
+            <input type="text" class="badge-input" id="skew-thumb-badge" value="0.00" title="Edit skew value.">
+            <button class="slider-reset" id="skew-reset" title="Reset to MidiMech (0)">↻</button>
+          </div>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="slider-track">
+            <span class="slider-label-overlay">Zoom (x)</span>
+            <input type="range" id="zoom-slider" min="0.2" max="3" step="0.01" value="1" title="Grid zoom level">
+            <span class="slider-value-badge" id="zoom-thumb-badge">1.00</span>
+            <button class="slider-reset" id="zoom-reset" title="Aims to match keysize to standard keyboard key size">↻</button>
+          </div>
+        </div>
+
+        <div class="sidebar-section d-ref-group">
+          <div class="slider-track">
+            <span class="slider-label-overlay" id="d-ref-label">D REF (Hz)</span>
+            <input type="range" id="d-ref-slider" min="73.42" max="1174.66" step="0.01" value="293.66" title="Reference pitch slider (D2–D6)">
+            <input type="text" class="badge-input" id="d-ref-input" value="293.66" style="width:80px; text-transform:none;" title="Edit reference pitch in Hz or note name (default: D4 = 293.66)">
+            <button id="d-ref-reset" class="slider-reset" title="Reset to D4 (293.66 Hz)">↻</button>
           </div>
         </div>
 
@@ -623,49 +663,6 @@
             <select id="mpe-output-select" style="min-width:120px;" disabled>
               <option value="">No MIDI outputs</option>
             </select>
-          </div>
-        </div>
-
-        <div class="sidebar-section">
-          <div class="sidebar-section-title">TUNING</div>
-          <div class="tuning-slider-area">
-            <div class="slider-track">
-              <span class="slider-label-overlay">FIFTHS TUNING (cents)</span>
-              <input type="range" id="tuning-slider" min="683" max="722" step="0.01" value="700" title="Fifth interval size in cents">
-              <input type="text" class="badge-input" id="tuning-thumb-badge" value="700" title="Edit fifth interval in cents">
-              <button class="slider-reset" id="tuning-reset" title="Reset to 12-TET (700¢)">↻</button>
-            </div>
-            <div class="tet-presets" id="tet-presets"></div>
-          </div>
-        </div>
-
-        <div class="sidebar-section skew-slider-area">
-          <div class="sidebar-section-title">SKEW</div>
-          <div class="slider-track">
-            <span class="slider-label-overlay" id="skew-label">SKEW [MidiMech]</span>
-            <input type="range" id="skew-slider" min="0" max="1" step="0.01" value="0" title="Layout tilt: 0=MidiMech, 1=DCompose.">
-            <input type="text" class="badge-input" id="skew-thumb-badge" value="0.00" title="Edit skew value.">
-            <button class="slider-reset" id="skew-reset" title="Reset to MidiMech (0)">↻</button>
-          </div>
-        </div>
-
-        <div class="sidebar-section">
-          <div class="sidebar-section-title">ZOOM</div>
-          <div class="slider-track">
-            <span class="slider-label-overlay">Zoom (x)</span>
-            <input type="range" id="zoom-slider" min="0.2" max="3" step="0.01" value="1" title="Grid zoom level">
-            <span class="slider-value-badge" id="zoom-thumb-badge">1.00</span>
-            <button class="slider-reset" id="zoom-reset" title="Aims to match keysize to standard keyboard key size">↻</button>
-          </div>
-        </div>
-
-        <div class="sidebar-section d-ref-group">
-          <div class="sidebar-section-title">D-REF</div>
-          <div class="slider-track">
-            <span class="slider-label-overlay" id="d-ref-label">D REF (Hz)</span>
-            <input type="range" id="d-ref-slider" min="73.42" max="1174.66" step="0.01" value="293.66" title="Reference pitch slider (D2–D6)">
-            <input type="text" class="badge-input" id="d-ref-input" value="293.66" style="width:80px; text-transform:none;" title="Edit reference pitch in Hz or note name (default: D4 = 293.66)">
-            <button id="d-ref-reset" class="slider-reset" title="Reset to D4 (293.66 Hz)">↻</button>
           </div>
         </div>
 

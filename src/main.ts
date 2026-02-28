@@ -129,7 +129,6 @@ class DComposeApp {
   // DOM
   private canvas: HTMLCanvasElement;
   private historyCanvas: HTMLCanvasElement;
-  private waveformSelect: HTMLSelectElement;
   private layoutSelect: HTMLSelectElement | null = null;
   private skewSlider: HTMLInputElement | null = null;
   private tuningSlider: HTMLInputElement | null = null;
@@ -150,7 +149,6 @@ class DComposeApp {
 
     this.canvas = getElement('keyboard-canvas', HTMLCanvasElement);
     this.historyCanvas = getElement('history-canvas', HTMLCanvasElement);
-    this.waveformSelect = getElement('waveform-select', HTMLSelectElement);
     this.layoutSelect = getElement('layout-select', HTMLSelectElement);
     this.skewSlider = getElement('skew-slider', HTMLInputElement);
     this.tuningSlider = getElement('tuning-slider', HTMLInputElement);
@@ -322,11 +320,15 @@ class DComposeApp {
     // touch-action: none in CSS eliminates the need for touchstart preventDefault
     this.canvas.addEventListener('contextmenu', (e) => e.preventDefault());
 
-    this.waveformSelect?.addEventListener('change', () => {
-      const waveform = this.waveformSelect.value;
-      if (isWaveformType(waveform)) {
-        this.synth.setWaveform(waveform);
-      }
+    document.querySelectorAll<HTMLButtonElement>('.wave-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll<HTMLButtonElement>('.wave-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const waveform = btn.dataset.waveform;
+        if (isWaveformType(waveform)) {
+          this.synth.setWaveform(waveform);
+        }
+      });
     });
 
     // Keyboard layout dropdown
@@ -1223,13 +1225,12 @@ document.addEventListener('DOMContentLoaded', () => {
       appActor.send({ type: 'MPE_SELECT_OUTPUT', outputId: _mpeSelect.value });
     });
   }
-  const _waveformSelect = getElementOrNull('waveform-select', HTMLSelectElement);
-  if (_waveformSelect) {
-    _waveformSelect.addEventListener('change', () => {
-      const waveform = _waveformSelect.value;
+  document.querySelectorAll<HTMLButtonElement>('.wave-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const waveform = btn.dataset.waveform;
       if (isWaveformType(waveform)) appActor.send({ type: 'SET_WAVEFORM', waveform });
     });
-  }
+  });
   const _layoutSelect = getElementOrNull('layout-select', HTMLSelectElement);
   if (_layoutSelect) {
     _layoutSelect.addEventListener('change', () => {
