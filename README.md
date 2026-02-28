@@ -2,7 +2,7 @@
 
 A web-based isomorphic keyboard synthesizer using the DCompose/Wicki-Hayden note layout, with live MIDI input, note history waterfall, chord detection, and chromesthesia colors.
 
-**[Try it live](https://zitongcharliedeng.github.io/gridinstruments)** · [⭐ Star on GitHub](https://github.com/zitongcharliedeng/gridinstruments) · [![License: PolyForm Noncommercial](https://img.shields.io/badge/license-PolyForm%20NC-blue)](LICENSE)
+**[Try it live](https://gridinstruments.xyz)** · [⭐ Star on GitHub](https://github.com/zitongcharliedeng/gridinstruments) · [![License: PolyForm Noncommercial](https://img.shields.io/badge/license-PolyForm%20NC-blue)](LICENSE)
 
 ![GridInstruments screenshot](tests/visual-regression.spec.ts-snapshots/full-page-chromium-linux.png)
 
