@@ -111,6 +111,8 @@ export interface AppContext {
   transposeOffset: number;
   /** Active keyboard layout ID (e.g. 'ansi', 'iso') */
   layoutId: string;
+  /** Currently selected oscillator waveform */
+  waveform: import('../lib/synth').WaveformType;
   /** True if the MIDI settings panel is visible */
   midiPanelOpen: boolean;
   /** True if MPE output is enabled */

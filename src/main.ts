@@ -1142,7 +1142,6 @@ document.addEventListener('DOMContentLoaded', () => {
       sidebarToggle.textContent = sidebar?.classList.contains('collapsed') ? '▶' : '◀';
     }
     // Trigger resize after CSS transition (150ms) completes so canvas reads final width
-    // Trigger resize after CSS transition (150ms) completes so canvas reads final width
     setTimeout(() => window.dispatchEvent(new Event('resize')), 160);
   });
 
@@ -1168,6 +1167,36 @@ document.addEventListener('DOMContentLoaded', () => {
     input: { initialVolume: -10.5, defaultZoom: 1.0, touchDevice: 'ontouchstart' in window },
   });
   appActor.start();
+
+  // ─── Wire DOM → appActor (dual-write: DComposeApp handles services) ───────
+  document.getElementById('midi-settings-toggle')?.addEventListener('click', () => {
+    appActor.send({ type: 'MIDI_PANEL_TOGGLE' });
+  });
+  const _mpeCheckbox = getElementOrNull('mpe-enabled', HTMLInputElement);
+  if (_mpeCheckbox) {
+    _mpeCheckbox.addEventListener('change', () => {
+      appActor.send({ type: 'MPE_ENABLE', enabled: _mpeCheckbox.checked });
+    });
+  }
+  const _mpeSelect = getElementOrNull('mpe-output-select', HTMLSelectElement);
+  if (_mpeSelect) {
+    _mpeSelect.addEventListener('change', () => {
+      appActor.send({ type: 'MPE_SELECT_OUTPUT', outputId: _mpeSelect.value });
+    });
+  }
+  const _waveformSelect = getElementOrNull('waveform-select', HTMLSelectElement);
+  if (_waveformSelect) {
+    _waveformSelect.addEventListener('change', () => {
+      const waveform = _waveformSelect.value;
+      if (isWaveformType(waveform)) appActor.send({ type: 'SET_WAVEFORM', waveform });
+    });
+  }
+  const _layoutSelect = getElementOrNull('layout-select', HTMLSelectElement);
+  if (_layoutSelect) {
+    _layoutSelect.addEventListener('change', () => {
+      appActor.send({ type: 'SET_LAYOUT', layoutId: _layoutSelect.value });
+    });
+  }
   // Expose for debugging and Playwright verification
   (window as Window & { dcomposeApp?: unknown }).dcomposeApp = {
     actor: appActor,

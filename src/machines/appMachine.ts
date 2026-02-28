@@ -101,6 +101,30 @@ export const appMachine = setup({
       } satisfies SliderState;
       return { sliders: newSliders };
     }),
+
+    handleMidiPanelToggle: assign(({ context }) => ({
+      midiPanelOpen: !context.midiPanelOpen,
+    })),
+
+    handleMpeEnable: assign(({ event }) => {
+      assertEvent(event, 'MPE_ENABLE');
+      return { mpeEnabled: event.enabled };
+    }),
+
+    handleMpeSelectOutput: assign(({ event }) => {
+      assertEvent(event, 'MPE_SELECT_OUTPUT');
+      return { mpeOutputId: event.outputId };
+    }),
+
+    handleSetWaveform: assign(({ event }) => {
+      assertEvent(event, 'SET_WAVEFORM');
+      return { waveform: event.waveform };
+    }),
+
+    handleSetLayout: assign(({ event }) => {
+      assertEvent(event, 'SET_LAYOUT');
+      return { layoutId: event.layoutId };
+    }),
   },
 }).createMachine({
   id: 'dcompose',
@@ -123,6 +147,7 @@ export const appMachine = setup({
     octaveOffset: 0,
     transposeOffset: 0,
     layoutId: 'ansi',
+    waveform: 'sawtooth' as import('./types').WaveformType,
     midiPanelOpen: false,
     mpeEnabled: false,
     mpeOutputId: null,
@@ -136,6 +161,11 @@ export const appMachine = setup({
         SLIDER_INPUT:       { actions: 'handleSliderInput' },
         SLIDER_RESET:       { actions: 'handleSliderReset' },
         SLIDER_BADGE_EDIT:  { actions: 'handleSliderBadgeEdit' },
+        MIDI_PANEL_TOGGLE: { actions: 'handleMidiPanelToggle' },
+        MPE_ENABLE:        { actions: 'handleMpeEnable' },
+        MPE_SELECT_OUTPUT: { actions: 'handleMpeSelectOutput' },
+        SET_WAVEFORM:      { actions: 'handleSetWaveform' },
+        SET_LAYOUT:        { actions: 'handleSetLayout' },
       },
     },
     audioReady: {
@@ -143,6 +173,11 @@ export const appMachine = setup({
         SLIDER_INPUT:       { actions: 'handleSliderInput' },
         SLIDER_RESET:       { actions: 'handleSliderReset' },
         SLIDER_BADGE_EDIT:  { actions: 'handleSliderBadgeEdit' },
+        MIDI_PANEL_TOGGLE: { actions: 'handleMidiPanelToggle' },
+        MPE_ENABLE:        { actions: 'handleMpeEnable' },
+        MPE_SELECT_OUTPUT: { actions: 'handleMpeSelectOutput' },
+        SET_WAVEFORM:      { actions: 'handleSetWaveform' },
+        SET_LAYOUT:        { actions: 'handleSetLayout' },
       },
     },
   },
