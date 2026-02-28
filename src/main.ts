@@ -44,25 +44,29 @@ import readmeText from '../README.md?raw';
 // Type guard for WaveformType
 /** Converts a restricted subset of Markdown to HTML for the About dialog. */
 function renderMarkdown(md: string): string {
-  // Drop the H1 title, image lines, and the ## Development section + everything after it
+  // Drop H1 title, image/badge lines, and the ## Development section
   const withoutDev = md
-    .replace(/^# .+\n/m, '')                        // remove H1
-    .replace(/^!\[.*\]\(.*\)$/gm, '')               // remove image lines
-    .split(/^## Development$/m)[0];                  // cut at Development section
+    .replace(/^# .+\n/m, '')                          // remove H1 title
+    .replace(/^\[?!\[.*$/gm, '')                      // remove image/badge lines (![...] and [![...])
+    .split(/^## Development$/m)[0];                    // cut at Development section
 
   return withoutDev
     .replace(/^## (.+)$/gm, '<h2>$1</h2>')
     .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+    // Tables — before inline formatting (avoid pipe/bracket confusion)
+    .replace(/^\|(.+)\|$/gm, (_: string, row: string) =>
+      '<tr>' + row.split('|').map((c: string) => `<td>${c.trim()}</td>`).join('') + '</tr>')
+    .replace(/<tr>(<td>[-:\s]+<\/td>)+<\/tr>\n?/g, '')  // remove separator rows
+    .replace(/((?:<tr>.*<\/tr>\n?)+)/g, '<table>$1</table>')
+    // Inline formatting
     .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*([^*\n]+)\*/g, '<em>$1</em>')
     .replace(/`([^`]+)`/g, '<code>$1</code>')
     .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>')
+    // Lists
     .replace(/^- (.+)$/gm, '<li>$1</li>')
     .replace(/(<li>[\s\S]+?<\/li>)(?!\n<li>)/g, '$1</ul>')
     .replace(/<li>/g, (m: string, offset: number, str: string) => str.lastIndexOf('<li>', offset) < str.lastIndexOf('</ul>', offset) ? '<ul><li>' : m)
-    .replace(/\|\s*([^|]+)\s*\|/g, (_: string, cell: string) => `<td>${cell.trim()}</td>`)
-    .replace(/^\|[-|:\s]+\|$/gm, '')
-    .replace(/(<td>.*<\/td>)/g, '<tr>$1</tr>')
-    .replace(/(<tr>[\s\S]+?<\/tr>(?:\n<tr>[\s\S]+?<\/tr>)*)/g, '<table>$1</table>')
     .replace(/\n{2,}/g, '\n')
     .trim();
 }
