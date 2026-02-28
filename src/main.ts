@@ -141,6 +141,21 @@ class DComposeApp {
   private defaultZoom: number = 1.0;
   private updateGraffiti: (() => void) | null = null;
 
+  private static readonly STORAGE_KEYS = {
+    zoom: 'gi_zoom', skew: 'gi_skew', tuning: 'gi_tuning',
+    volume: 'gi_volume', waveform: 'gi_waveform', dref: 'gi_dref', layout: 'gi_layout',
+  } as const;
+
+  private loadSetting(key: keyof typeof DComposeApp.STORAGE_KEYS, fallback: string): string {
+    try { return localStorage.getItem(DComposeApp.STORAGE_KEYS[key]) ?? fallback; }
+    catch { return fallback; }
+  }
+
+  private saveSetting(key: keyof typeof DComposeApp.STORAGE_KEYS, value: string): void {
+    try { localStorage.setItem(DComposeApp.STORAGE_KEYS[key], value); }
+    catch { /* storage full or private mode */ }
+  }
+
   constructor() {
     this.synth = new Synth();
     this.midi = new MidiInput();
@@ -319,7 +334,6 @@ class DComposeApp {
     this.canvas.addEventListener('pointercancel', this.handlePointerUp.bind(this));
     // touch-action: none in CSS eliminates the need for touchstart preventDefault
     this.canvas.addEventListener('contextmenu', (e) => e.preventDefault());
-
     document.querySelectorAll<HTMLButtonElement>('.wave-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         document.querySelectorAll<HTMLButtonElement>('.wave-btn').forEach(b => b.classList.remove('active'));
@@ -327,9 +341,17 @@ class DComposeApp {
         const waveform = btn.dataset.waveform;
         if (isWaveformType(waveform)) {
           this.synth.setWaveform(waveform);
+          this.saveSetting('waveform', waveform);
         }
       });
     });
+
+    // Load saved waveform
+    const savedWaveform = this.loadSetting('waveform', 'sawtooth');
+    document.querySelectorAll<HTMLButtonElement>('.wave-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.waveform === savedWaveform);
+    });
+    if (isWaveformType(savedWaveform)) this.synth.setWaveform(savedWaveform);
 
     // Keyboard layout dropdown
     if (this.layoutSelect) {
@@ -340,9 +362,12 @@ class DComposeApp {
         opt.textContent = variant.name;
         this.layoutSelect.appendChild(opt);
       }
-      this.layoutSelect.value = 'ansi';
+      const savedLayout = this.loadSetting('layout', 'ansi');
+      this.layoutSelect.value = savedLayout;
+      this.currentLayout = getLayout(savedLayout);
       this.layoutSelect.addEventListener('change', () => {
         this.currentLayout = getLayout(this.layoutSelect!.value);
+        this.saveSetting('layout', this.layoutSelect!.value);
       });
     }
 
@@ -372,6 +397,12 @@ class DComposeApp {
       updateSkewBadge(0);
       updateSkewLabel(0);
 
+      const savedSkew = this.loadSetting('skew', '0');
+      this.skewSlider.value = savedSkew;
+      updateSkewBadge(parseFloat(savedSkew));
+      updateSkewLabel(parseFloat(savedSkew));
+      this.visualizer?.setSkewFactor(parseFloat(savedSkew));
+
       this.skewSlider.addEventListener('input', () => {
         const val = parseFloat(this.skewSlider!.value);
         this.visualizer?.setSkewFactor(val);
@@ -379,6 +410,7 @@ class DComposeApp {
         updateSkewBadge(val);
         updateSkewLabel(val);
         this.updateSliderFill(this.skewSlider!);
+        this.saveSetting('skew', this.skewSlider!.value);
       });
 
       // Skew reset
@@ -430,6 +462,13 @@ class DComposeApp {
         thumbBadge.value = value.toFixed(1);
       };
       updateThumbBadge(FIFTH_DEFAULT);
+
+      const savedTuning = this.loadSetting('tuning', FIFTH_DEFAULT.toString());
+      this.tuningSlider.value = savedTuning;
+      updateThumbBadge(parseFloat(savedTuning));
+      this.synth.setFifth(parseFloat(savedTuning));
+      this.visualizer?.setGenerator([parseFloat(savedTuning), 1200]);
+
       this.tuningSlider.addEventListener('input', () => {
         const value = parseFloat(this.tuningSlider!.value);
         this.synth.setFifth(value);
@@ -438,6 +477,7 @@ class DComposeApp {
 
         updateThumbBadge(value);
         this.updateSliderFill(this.tuningSlider!);
+        this.saveSetting('tuning', this.tuningSlider!.value);
         // Sync active TET preset button
         document.querySelectorAll('.tet-preset').forEach(b => {
           const btn = b instanceof HTMLElement ? b : null;
@@ -542,8 +582,14 @@ class DComposeApp {
       this.synth.setMasterVolume(val);
       if (this.volumeSlider) this.updateSliderFill(this.volumeSlider);
       updateVolBadge(val);
+      this.saveSetting('volume', this.volumeSlider!.value);
     });
-    updateVolBadge(0.3);
+    const savedVolume = this.loadSetting('volume', '0.3');
+    if (this.volumeSlider) {
+      this.volumeSlider.value = savedVolume;
+      this.synth.setMasterVolume(parseFloat(savedVolume));
+    }
+    updateVolBadge(parseFloat(savedVolume));
     const volReset = getElementOrNull('volume-reset', HTMLButtonElement);
       volReset?.addEventListener('click', () => {
         if (this.volumeSlider) {
@@ -646,19 +692,20 @@ class DComposeApp {
     dRefInput?.addEventListener('focus', () => {
       dRefInput.select();
     });
-
     dRefSlider?.addEventListener('input', () => {
       const hz = parseFloat(dRefSlider.value);
       if (isFinite(hz)) {
         applyDRefHz(hz);
         this.updateSliderFill(dRefSlider);
+        this.saveSetting('dref', dRefSlider.value);
       }
     });
 
     // Init
-    if (dRefInput) dRefInput.value = '293.66';
-    if (dRefSlider) dRefSlider.value = '293.66';
-    updateDRefDisplay(293.66);
+    const savedDref = this.loadSetting('dref', '293.66');
+    if (dRefInput) dRefInput.value = savedDref;
+    if (dRefSlider) dRefSlider.value = savedDref;
+    updateDRefDisplay(parseFloat(savedDref));
 
     // D-ref reset button
     const dRefReset = getElementOrNull('d-ref-reset', HTMLButtonElement);
@@ -752,18 +799,21 @@ class DComposeApp {
       zoomBadge.textContent = value.toFixed(2);
     };
     // Mobile default: ~1.6x on touch (base is already 3x via dPy=height/3, so 1.6*3 ≈ 5x)
+    // Mobile default: ~1.6x on touch (base is already 3x via dPy=height/3, so 1.6*3 ≈ 5x)
     const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-    this.defaultZoom = isTouchDevice ? 1.6 : 1.0;
+    this.defaultZoom = isTouchDevice ? Math.min(1.6, window.innerWidth / 480) : 1.0;
     if (this.zoomSlider) {
-      this.zoomSlider.value = this.defaultZoom.toString();
-      this.visualizer?.setZoom(this.defaultZoom);
-      updateZoomBadge(this.defaultZoom);
+      const savedZoom = this.loadSetting('zoom', this.defaultZoom.toString());
+      this.zoomSlider.value = savedZoom;
+      this.visualizer?.setZoom(parseFloat(savedZoom));
+      updateZoomBadge(parseFloat(savedZoom));
       this.zoomSlider.addEventListener('input', () => {
         const zoom = parseFloat(this.zoomSlider!.value);
         this.visualizer?.setZoom(zoom);
         this.updateGraffiti?.();
         this.updateSliderFill(this.zoomSlider!);
         updateZoomBadge(zoom);
+        this.saveSetting('zoom', this.zoomSlider!.value);
       });
     }
       zoomReset?.addEventListener('click', () => {
