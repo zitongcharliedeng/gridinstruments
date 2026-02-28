@@ -154,16 +154,16 @@ export class NoteHistoryVisualizer {
       return;
     }
 
-    this.drawPianoKeys(0, pianoW, height, now);
-    this.drawNoteRoll(pianoW, rollW, height, now);
-    this.drawChordPanel(pianoW + rollW, chordW, height, now);
+    this.drawChordPanel(0, chordW, height, now);
+    this.drawNoteRoll(chordW + pianoW, rollW, height, now);
+    this.drawPianoKeys(chordW, pianoW, height, now);
 
     // Divider between chord panel and roll
     this.ctx.strokeStyle = '#2a2a2a';
     this.ctx.lineWidth = 1;
     this.ctx.beginPath();
-    this.ctx.moveTo(pianoW + rollW, 0);
-    this.ctx.lineTo(pianoW + rollW, height);
+    this.ctx.moveTo(chordW, 0);
+    this.ctx.lineTo(chordW, height);
     this.ctx.stroke();
   }
 

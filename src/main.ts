@@ -1141,8 +1141,25 @@ document.addEventListener('DOMContentLoaded', () => {
     if (sidebarToggle) {
       sidebarToggle.textContent = sidebar?.classList.contains('collapsed') ? '▶' : '◀';
     }
-    // Trigger resize so keyboard canvas reflows
-    window.dispatchEvent(new Event('resize'));
+    // Trigger resize after CSS transition (150ms) completes so canvas reads final width
+    // Trigger resize after CSS transition (150ms) completes so canvas reads final width
+    setTimeout(() => window.dispatchEvent(new Event('resize')), 160);
+  });
+
+  // About dialog
+  const aboutBtn = document.getElementById('about-btn');
+  const aboutDialog = document.getElementById('about-dialog');
+  const aboutClose = document.getElementById('about-close');
+  aboutBtn?.addEventListener('click', () => {
+    if (aboutDialog instanceof HTMLDialogElement) aboutDialog.showModal();
+  });
+  aboutClose?.addEventListener('click', () => {
+    if (aboutDialog instanceof HTMLDialogElement) aboutDialog.close();
+  });
+  aboutDialog?.addEventListener('click', (e) => {
+    if (e.target === e.currentTarget && e.currentTarget instanceof HTMLDialogElement) {
+      e.currentTarget.close();
+    }
   });
 
   new DComposeApp();

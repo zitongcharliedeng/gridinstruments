@@ -32,8 +32,8 @@
       font-family: var(--font);
       font-size: 13px;
       line-height: 1.4;
-      min-height: 100vh;
-      overflow-x: hidden;
+      height: 100%;
+      overflow: hidden;
     }
 
     #app {
@@ -120,10 +120,10 @@
       flex-direction: column;
       gap: var(--gap);
       padding: var(--gap);
-      overflow-y: auto;
+      overflow: hidden;
       min-width: 0;
+      min-height: 0;
     }
-
     /* ── Title bar (floating overlay on history canvas) ─────── */
     .history-wrapper {
       position: relative;
@@ -406,7 +406,7 @@
     #keyboard-container {
       flex: 1;
       border: 1px solid var(--border);
-      min-height: 380px;
+      min-height: 0;
       position: relative;
       overflow: hidden;
       display: flex;
@@ -489,14 +489,32 @@
       text-transform: uppercase;
     }
 
-    /* ── About section ───────────────────────────────────────────── */
-    #about {
+    /* ── About dialog ─────────────────────────────────────────── */
+    #about-dialog {
+      background: var(--bg);
+      color: var(--fg);
       border: 1px solid var(--border);
-      background: var(--subtle);
-      padding: 12px 14px;
+      font-family: var(--font);
+      max-width: 600px;
+      max-height: 80vh;
+      overflow-y: auto;
+      padding: 24px;
     }
+    #about-dialog::backdrop {
+      background: rgba(0,0,0,0.7);
+    }
+    #about-close {
+      float: right;
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--fg);
+      font-family: var(--font);
+      cursor: pointer;
+      padding: 2px 8px;
+    }
+    #about-close:hover { border-color: var(--accent); }
 
-    #about h2 {
+    #about-dialog h2 {
       font-size: 12px;
       text-transform: uppercase;
       letter-spacing: 0.08em;
@@ -504,44 +522,27 @@
       margin-bottom: 10px;
     }
 
-    .about-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 12px;
-    }
-
-    .about-col h3 {
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
+    /* ── About button (title bar) ─────────────────────────────── */
+    #about-btn {
+      font-family: var(--font);
+      font-size: 10px;
       color: var(--dim);
-      margin-bottom: 6px;
+      background: none;
+      border: 1px solid var(--border);
+      padding: 2px 8px;
+      cursor: pointer;
     }
+    #about-btn:hover { color: var(--fg); border-color: var(--accent); }
 
-    .about-links {
-      display: flex;
-      flex-direction: column;
-      gap: 3px;
-    }
-
-    .about-links a {
-      color: var(--fg);
-      text-decoration: none;
-      font-size: 12px;
-    }
-    .about-links a:hover { text-decoration: underline; }
-    .about-links a::before { content: '→ '; color: var(--dim); }
-
-    /* ── Footer ──────────────────────────────────────────────────── */
-    footer {
+    .about-footer {
       border-top: 1px solid var(--border);
-      padding: 8px;
+      padding-top: 12px;
+      margin-top: 16px;
       font-size: 11px;
       color: var(--dim);
-      text-align: center;
     }
-    footer a { color: var(--dim); text-decoration: none; }
-    footer a:hover { color: var(--fg); text-decoration: underline; }
+    .about-footer a { color: var(--dim); text-decoration: none; }
+    .about-footer a:hover { color: var(--fg); text-decoration: underline; }
 
     /* ── Instructions ────────────────────────────────────────────── */
     #instructions {
@@ -579,8 +580,8 @@
 <body>
   <div id="app">
 
-    <aside id="sidebar">
-      <button id="sidebar-toggle" title="Toggle settings sidebar">◀</button>
+    <aside id="sidebar" class="collapsed">
+      <button id="sidebar-toggle" title="Toggle settings sidebar">▶</button>
       <div id="sidebar-content">
 
         <div class="sidebar-section">
@@ -699,6 +700,7 @@
               Report a bug
             </a>
           </div>
+          <button id="about-btn" title="About DCompose Web">ⓘ About</button>
         </div>
         <canvas id="history-canvas" height="220"></canvas>
       </div>
@@ -712,40 +714,35 @@
         </div>
       </div>
 
-      <!-- Instructions removed: hotkeys shown as canvas overlay status effects -->
-
-      <!-- About -->
-      <section id="about">
-        <h2>About</h2>
-        <div class="about-grid">
-
-          <div class="about-col">
-            <p style='font-size: 12px; color: var(--dim); line-height: 1.5;'>
-              DCompose Web makes isomorphic keyboard layouts accessible to everyone &mdash; no special hardware needed. Explore tunings, discover harmonic patterns, and play music in ways traditional keyboards can't offer.
-            </p>
-          </div>
-
-          <div class="about-col">
-            <h3>Isomorphic Layout</h3>
-            <div class="about-links">
-              <a href="https://en.wikipedia.org/wiki/Wicki%E2%80%93Hayden_note_layout" target="_blank" rel="noopener">Wicki&ndash;Hayden (Wikipedia)</a>
-              <a href="https://www.striso.org/the-note-layout/" target="_blank" rel="noopener">Striso note layout</a>
-              <a href="https://github.com/flipcoder/midimech" target="_blank" rel="noopener">MidiMech</a>
-              <a href="https://www.toverlamp.org/static/wickisynth/wickisynth_lowlatency.html" target="_blank" rel="noopener">WickiSynth (original)</a>
-            </div>
-          </div>
-
-        </div>
-      </section>
-
-      <footer>
-        Based on <a href="https://www.toverlamp.org/static/wickisynth/wickisynth_lowlatency.html" target="_blank">WickiSynth</a> by Piers Titus van der Torren &middot;
-        Inspired by <a href="https://github.com/flipcoder/midimech" target="_blank">MIDImech</a> and <a href="https://www.striso.org/the-note-layout/" target="_blank">Striso</a>
-      </footer>
 
     </div>
 
   </div>
+
+  <dialog id="about-dialog">
+    <button id="about-close" autofocus>✕</button>
+    <h2>About</h2>
+    <div class="about-grid">
+      <div class="about-col">
+        <p style='font-size: 12px; color: var(--dim); line-height: 1.5;'>
+          DCompose Web makes isomorphic keyboard layouts accessible to everyone &mdash; no special hardware needed. Explore tunings, discover harmonic patterns, and play music in ways traditional keyboards can't offer.
+        </p>
+      </div>
+      <div class="about-col">
+        <h3>Isomorphic Layout</h3>
+        <div class="about-links">
+          <a href="https://en.wikipedia.org/wiki/Wicki%E2%80%93Hayden_note_layout" target="_blank" rel="noopener">Wicki&ndash;Hayden (Wikipedia)</a>
+          <a href="https://www.striso.org/the-note-layout/" target="_blank" rel="noopener">Striso note layout</a>
+          <a href="https://github.com/flipcoder/midimech" target="_blank" rel="noopener">MidiMech</a>
+          <a href="https://www.toverlamp.org/static/wickisynth/wickisynth_lowlatency.html" target="_blank" rel="noopener">WickiSynth (original)</a>
+        </div>
+      </div>
+    </div>
+    <div class="about-footer">
+      Based on <a href="https://www.toverlamp.org/static/wickisynth/wickisynth_lowlatency.html" target="_blank">WickiSynth</a> by Piers Titus van der Torren &middot;
+      Inspired by <a href="https://github.com/flipcoder/midimech" target="_blank">MIDImech</a> and <a href="https://www.striso.org/the-note-layout/" target="_blank">Striso</a>
+    </div>
+  </dialog>
 
   <script type="module" src="/src/main.ts"></script>
   <script>
