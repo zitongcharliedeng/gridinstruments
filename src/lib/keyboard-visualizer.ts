@@ -301,6 +301,17 @@ export class KeyboardVisualizer {
     this.activeNotes = new Set(noteIds);
   }
 
+  /** Returns all cell IDs ("coordX_coordY") whose MIDI note is in the given set.
+   *  Used to highlight all duplicate positions for the same pitch on the isomorphic grid. */
+  getCellIdsForMidiNotes(midiNotes: ReadonlySet<number>): string[] {
+    const result: string[] = [];
+    for (const b of this.buttons) {
+      const midi = 62 + b.coordX * 7 + b.coordY * 12;
+      if (midiNotes.has(midi)) result.push(`${b.coordX}_${b.coordY}`);
+    }
+    return result;
+  }
+
   setSustainedNotes(noteIds: string[]): void {
     this.sustainedNotes = new Set(noteIds);
   }

@@ -36,7 +36,7 @@ import { KeyboardVisualizer } from './lib/keyboard-visualizer';
 import { NoteHistoryVisualizer } from './lib/note-history-visualizer';
 import { MidiInput, MidiDeviceInfo } from './lib/midi-input';
 import { MPEService } from './lib/mpe-service';
-import { midiToCoord } from './lib/note-colors';
+import { midiToCoord, coordToMidiNote } from './lib/note-colors';
 import { createChordGraffiti } from './lib/chord-graffiti';
 import { appMachine } from './machines/appMachine';
 import { createActor } from 'xstate';
@@ -1109,9 +1109,10 @@ class DComposeApp {
     requestAnimationFrame(() => {
       this.renderScheduled = false;
       if (!this.visualizer) return;
-      const activeNoteIds = Array.from(this.activeNotes.values()).map(
-        ({ coordX, coordY }) => `${coordX}_${coordY}`
+      const activeMidiNotes = new Set(
+        Array.from(this.activeNotes.values()).map(({ coordX, coordY }) => coordToMidiNote(coordX, coordY))
       );
+      const activeNoteIds = this.visualizer.getCellIdsForMidiNotes(activeMidiNotes);
       this.visualizer.setActiveNotes(activeNoteIds);
       this.visualizer.render();
     });
