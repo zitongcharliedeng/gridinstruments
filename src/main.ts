@@ -468,7 +468,7 @@ class DComposeApp {
         const pct = ((marker.fifth - FIFTH_MIN) / sliderRange) * 100;
         const mark = document.createElement('div');
         mark.className = 'tet-preset-mark';
-        mark.style.left = `${pct}%`;
+        mark.style.left = `${Math.min(pct, 98.5)}%`;
         const tick = document.createElement('div');
         tick.className = i % 2 === 0 ? 'tet-tick tet-tick-long' : 'tet-tick tet-tick-short';
         const btn = document.createElement('button');
@@ -1059,11 +1059,8 @@ class DComposeApp {
     const max = parseFloat(slider.max) || 100;
     const val = parseFloat(slider.value) || 0;
     const ratio = (val - min) / (max - min);
-    // Thumb is 3px wide. At ratio=0 thumb center is at 1.5px,
-    // at ratio=1 center is at trackWidth-1.5px. Correct gradient to match.
-    const thumbW = 3;
-    const offset = (0.5 - ratio) * thumbW;
-    const pct = `calc(${(ratio * 100).toFixed(2)}% + ${offset.toFixed(1)}px)`;
+    // Badges are centered via translateX(-50%) at left: ratio*100%. Match fill exactly.
+    const pct = `${(ratio * 100).toFixed(2)}%`;
     slider.style.background = `linear-gradient(to right, var(--fg) ${pct}, #000 ${pct})`;
   }
 

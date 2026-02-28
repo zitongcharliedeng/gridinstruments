@@ -443,7 +443,7 @@
       left: 0; right: 0;
       top: 50%;  /* anchor at track center line — ticks emanate downward from here */
       pointer-events: none;
-      overflow: visible;
+      overflow: hidden;
     }
     .tet-preset-mark {
       position: absolute;
@@ -459,14 +459,14 @@
       background: #888;
     }
     .tet-tick-long {
-      height: 14px;  /* major notch — long ruler tick */
+      height: 20px;  /* major notch — long ruler tick (12px taller than short → 1ch+4px label clearance) */
     }
     .tet-tick-short {
       height: 8px;   /* minor notch — short ruler tick; labels sit higher */
     }
     .tet-preset {
       font-family: var(--font);
-      font-size: 11px;
+      font-size: 10px;
       color: #ccc;
       background: none;
       border: none;
@@ -474,6 +474,9 @@
       cursor: pointer;
       white-space: nowrap;
       line-height: 1.2;
+      max-width: 4ch;
+      overflow: hidden;
+      text-overflow: clip;
     }
     .tet-preset:hover { color: #fff; }
     .tet-preset.active { color: #88ff88; }
