@@ -1059,9 +1059,19 @@ class DComposeApp {
     const max = parseFloat(slider.max) || 100;
     const val = parseFloat(slider.value) || 0;
     const ratio = (val - min) / (max - min);
-    // Badges are centered via translateX(-50%) at left: ratio*100%. Match fill exactly.
-    const pct = `${(ratio * 100).toFixed(2)}%`;
-    slider.style.background = `linear-gradient(to right, var(--fg) ${pct}, #000 ${pct})`;
+    // Thumb is 3px wide (CSS). Compute exact thumb-center position in px,
+    // then convert to a plain percentage so the gradient edge tracks the thumb.
+    const thumbW = 3;
+    const trackW = slider.offsetWidth;
+    if (trackW > 0) {
+      const thumbCenterPx = ratio * (trackW - thumbW) + thumbW / 2;
+      const fillPct = (thumbCenterPx / trackW) * 100;
+      slider.style.background = `linear-gradient(to right, var(--fg) ${fillPct.toFixed(2)}%, #000 ${fillPct.toFixed(2)}%)`;
+    } else {
+      // Element not laid out yet — fall back to uncorrected percentage
+      const pct = ratio * 100;
+      slider.style.background = `linear-gradient(to right, var(--fg) ${pct.toFixed(2)}%, #000 ${pct.toFixed(2)}%)`;
+    }
   }
 
   // ─── Render ─────────────────────────────────────────────────────────────

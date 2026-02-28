@@ -1,14 +1,46 @@
 /**
- * DCompose AppMachine — Root XState v5 Machine Skeleton
+ * DCompose AppMachine — Root XState v5 Machine
  *
- * Observes but does not control — DComposeApp class continues to handle
- * all event logic. This machine coexists alongside it as a foundation
- * for the incremental XState migration.
+ * Manages slider state (value, badgeText, labelText, editing) and handles
+ * SLIDER_INPUT / SLIDER_RESET / SLIDER_BADGE_EDIT events from NumericSlider
+ * component instances wired in main.ts.
  */
 
-import { setup, fromPromise } from 'xstate';
-import type { AppContext, AppEvent } from './types';
+import { setup, fromPromise, assign, assertEvent } from 'xstate';
+import type { AppContext, AppEvent, SliderName, SliderState } from './types';
 import type { Synth } from '../lib/synth';
+
+// ─── Per-slider format helpers ────────────────────────────────────────────────
+
+function formatBadge(slider: SliderName, v: number): string {
+  switch (slider) {
+    case 'tuning': return v.toFixed(1);
+    case 'skew':   return v.toFixed(2);
+    case 'volume': return v <= 0 ? '-\u221E' : (20 * Math.log10(v)).toFixed(1);
+    case 'zoom':   return v.toFixed(2);
+    case 'dref':   return v.toFixed(2);
+  }
+}
+
+function formatLabel(slider: SliderName, v: number): string {
+  switch (slider) {
+    case 'tuning': return `${v.toFixed(1)} cents`;
+    case 'skew':   return v <= 0.15 ? 'SKEW [MidiMech]' : v >= 0.85 ? 'SKEW [DCompose]' : 'SKEW';
+    case 'volume': return v <= 0 ? '-\u221E dB' : `${(20 * Math.log10(v)).toFixed(1)} dB`;
+    case 'zoom':   return `${v.toFixed(2)}\u00d7`;
+    case 'dref':   return `D REF ${v.toFixed(2)} Hz`;
+  }
+}
+
+const SLIDER_DEFAULTS: Record<SliderName, number> = {
+  tuning: 700,
+  skew:   0,
+  volume: 0.3,
+  zoom:   1.0,
+  dref:   293.66,
+};
+
+// ─── Machine ──────────────────────────────────────────────────────────────────
 
 export const appMachine = setup({
   types: {
@@ -25,15 +57,60 @@ export const appMachine = setup({
       if (!input.synth.isInitialized()) await input.synth.init();
     }),
   },
+  actions: {
+    handleSliderInput: assign(({ context, event }) => {
+      assertEvent(event, 'SLIDER_INPUT');
+      const newSliders = { ...context.sliders };
+      newSliders[event.slider] = {
+        ...newSliders[event.slider],
+        value:     event.value,
+        badgeText: formatBadge(event.slider, event.value),
+        labelText: formatLabel(event.slider, event.value),
+        editing:   false,
+      } satisfies SliderState;
+      return { sliders: newSliders };
+    }),
+
+    handleSliderReset: assign(({ context, event }) => {
+      assertEvent(event, 'SLIDER_RESET');
+      const defaultVal = SLIDER_DEFAULTS[event.slider];
+      const newSliders = { ...context.sliders };
+      newSliders[event.slider] = {
+        ...newSliders[event.slider],
+        value:     defaultVal,
+        badgeText: formatBadge(event.slider, defaultVal),
+        labelText: formatLabel(event.slider, defaultVal),
+        editing:   false,
+      } satisfies SliderState;
+      return { sliders: newSliders };
+    }),
+
+    handleSliderBadgeEdit: assign(({ context, event }) => {
+      assertEvent(event, 'SLIDER_BADGE_EDIT');
+      // rawValue is always a numeric string at this point (note names were
+      // converted to Hz before sending, see main.ts onBadgeEdit callbacks).
+      const parsed = parseFloat(event.rawValue);
+      if (!isFinite(parsed)) return {};
+      const newSliders = { ...context.sliders };
+      newSliders[event.slider] = {
+        ...newSliders[event.slider],
+        value:     parsed,
+        badgeText: formatBadge(event.slider, parsed),
+        labelText: formatLabel(event.slider, parsed),
+        editing:   true,
+      } satisfies SliderState;
+      return { sliders: newSliders };
+    }),
+  },
 }).createMachine({
   id: 'dcompose',
   context: ({ input }) => ({
     sliders: {
-      tuning: { value: 700, badgeText: '700¢', labelText: '700 cents', editing: false },
-      skew: { value: 0, badgeText: '0¢', labelText: '0 cents', editing: false },
-      volume: { value: input.initialVolume, badgeText: `${input.initialVolume}dB`, labelText: `${input.initialVolume} dB`, editing: false },
-      zoom: { value: input.defaultZoom, badgeText: `${input.defaultZoom}×`, labelText: `${input.defaultZoom}×`, editing: false },
-      dref: { value: 293.66, badgeText: '293.66Hz', labelText: 'D4 293.66 Hz', editing: false },
+      tuning: { value: 700,              badgeText: formatBadge('tuning', 700),              labelText: formatLabel('tuning', 700),              editing: false },
+      skew:   { value: 0,                badgeText: formatBadge('skew',   0),                labelText: formatLabel('skew',   0),                editing: false },
+      volume: { value: input.initialVolume, badgeText: formatBadge('volume', input.initialVolume), labelText: formatLabel('volume', input.initialVolume), editing: false },
+      zoom:   { value: input.defaultZoom,   badgeText: formatBadge('zoom',   input.defaultZoom),   labelText: formatLabel('zoom',   input.defaultZoom),   editing: false },
+      dref:   { value: 293.66,           badgeText: formatBadge('dref',   293.66),           labelText: formatLabel('dref',   293.66),           editing: false },
     },
     activeNotes: new Map(),
     heldKeys: new Set(),
@@ -55,12 +132,18 @@ export const appMachine = setup({
   states: {
     uninitialized: {
       on: {
-        AUDIO_READY: 'audioReady',
+        AUDIO_READY:        'audioReady',
+        SLIDER_INPUT:       { actions: 'handleSliderInput' },
+        SLIDER_RESET:       { actions: 'handleSliderReset' },
+        SLIDER_BADGE_EDIT:  { actions: 'handleSliderBadgeEdit' },
       },
     },
     audioReady: {
-      // Placeholder state — will be expanded in later tasks
-      on: {},
+      on: {
+        SLIDER_INPUT:       { actions: 'handleSliderInput' },
+        SLIDER_RESET:       { actions: 'handleSliderReset' },
+        SLIDER_BADGE_EDIT:  { actions: 'handleSliderBadgeEdit' },
+      },
     },
   },
 });
