@@ -5,7 +5,11 @@ test.describe('DCompose Web — Behavioral State Transitions', () => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
+    // Sidebar starts collapsed — open it so slider/input tests can interact
+    await page.locator('#sidebar-toggle').click();
+    await page.waitForTimeout(300);
   });
+
 
   test.describe('Slider Reset State Transitions', () => {
     /**
@@ -433,15 +437,17 @@ test.describe('DCompose Web — Behavioral State Transitions', () => {
      * @design-intent The about section explains DCompose's purpose and links
      *   to relevant isomorphic layout resources without self-promotional clutter.
      */
-    test('BH-AB-1: About section has description, no This Project col, no GitHub profile link', async ({ page }) => {
+    test('BH-AB-1: About dialog has description, no This Project col, no GitHub profile link', async ({ page }) => {
+      await page.locator('#about-btn').click();
+      await page.waitForTimeout(200);
       // ISC-AB-3: Has description paragraph
-      const aboutText = await page.locator('#about').textContent();
+      const aboutText = await page.locator('#about-dialog').textContent();
       expect(aboutText).toContain('isomorphic keyboard');
       // ISC-AB-1: No 'This Project' column header
-      const colHeaders = await page.locator('#about .about-col h3').allTextContents();
+      const colHeaders = await page.locator('#about-dialog .about-col h3').allTextContents();
       expect(colHeaders).not.toContain('This Project');
-      // ISC-AB-2: No GitHub profile link in about section
-      const aboutLinks = await page.locator('#about a').allTextContents();
+      // ISC-AB-2: No GitHub profile link in about dialog
+      const aboutLinks = await page.locator('#about-dialog a').allTextContents();
       const hasGitHubProfile = aboutLinks.some(t => t.includes('GitHub') && t.includes('zitongcharliedeng'));
       expect(hasGitHubProfile).toBe(false);
     });
@@ -543,31 +549,33 @@ test.describe('DCompose Web — Behavioral State Transitions', () => {
      * @design-intent These links credit the foundational work and give users
      *   context about the isomorphic keyboard ecosystem.
      */
-    test('BH-AB-2: About section has Isomorphic Layout links', async ({ page }) => {
-      const linkTexts = await page.locator('#about .about-links a').allTextContents();
+    test('BH-AB-2: About dialog has Isomorphic Layout links', async ({ page }) => {
+      await page.locator('#about-btn').click();
+      await page.waitForTimeout(200);
+      const linkTexts = await page.locator('#about-dialog .about-links a').allTextContents();
       expect(linkTexts.some(t => t.includes('Wicki'))).toBe(true);
       expect(linkTexts.some(t => t.includes('Striso'))).toBe(true);
       expect(linkTexts.some(t => t.includes('MidiMech'))).toBe(true);
       expect(linkTexts.some(t => t.includes('WickiSynth'))).toBe(true);
     });
-
     /**
      * @reason Footer must credit WickiSynth by Piers Titus van der Torren
      *   and mention MIDImech and Striso as inspirations. No GitHub link.
      * @design-intent Attribution is non-negotiable for derivative works.
      */
-    test('BH-AB-3: Footer has WickiSynth attribution and inspiration credits', async ({ page }) => {
-      const footerText = await page.locator('footer').textContent();
+    test('BH-AB-3: About dialog footer has WickiSynth attribution and inspiration credits', async ({ page }) => {
+      await page.locator('#about-btn').click();
+      await page.waitForTimeout(200);
+      const footerText = await page.locator('#about-dialog .about-footer').textContent();
       expect(footerText).toContain('WickiSynth');
       expect(footerText).toContain('Piers Titus');
       expect(footerText).toContain('MIDImech');
       expect(footerText).toContain('Striso');
       // No standalone GitHub link in footer
-      const footerLinks = await page.locator('footer a').allTextContents();
+      const footerLinks = await page.locator('#about-dialog .about-footer a').allTextContents();
       expect(footerLinks.every(t => !t.match(/^GitHub$/i))).toBe(true);
-    });
   });
-
+    });
   test.describe('Piano Roll', () => {
     /**
      * @reason Piano roll replaces the old clef/staff panel.
