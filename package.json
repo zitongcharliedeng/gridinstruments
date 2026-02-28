@@ -1,7 +1,7 @@
 {
-  "name": "dcompose-web",
+  "name": "gridinstruments",
   "version": "1.0.0",
-  "description": "Web-based isomorphic keyboard synthesizer with DCompose/Wicki-Hayden layout",
+  "description": "Web-based isomorphic grid keyboard synthesizer — GridInstruments",
   "type": "module",
   "scripts": {
     "dev": "vite",

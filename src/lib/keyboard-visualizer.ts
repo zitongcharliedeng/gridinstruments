@@ -326,16 +326,14 @@ export class KeyboardVisualizer {
     const fifth = this.options.generator[0];
     const octave = this.options.generator[1];
 
-    // ── Conceptual axes from pitch gradient ──────────────────────
-    // The pitch gradient in screen space gives the direction of steepest
-    // pitch increase. Its perpendicular is the iso-pitch direction:
-    // movement through the Circle of Fifths at constant pitch.
-    //   At DCompose (skew=1): CoF = horizontal, Pitch = vertical.
-    //   At MidiMech (skew=0): both axes are diagonal.
-    const cofDx = octave * genX - fifth * genX1;     // iso-pitch (⊥ gradient)
+    // ── Pitch axis = octave direction (through all D cells) ────────────
+    // D notes at (i=0, varying j): x = centerX + j*genX1, y = centerY - j*genY1
+    // D-to-D direction is (genX1, -genY1). Passes through EVERY D center.
+    const pitchDx = genX1;
+    const pitchDy = -genY1;
+    // ── CoF axis = iso-pitch direction ────────────────────────────────
+    const cofDx = octave * genX - fifth * genX1;
     const cofDy = fifth * genY1 - octave * genY0;
-    const pitchDx = fifth * genY1 - octave * genY0;  // pitch gradient
-    const pitchDy = fifth * genX1 - octave * genX;
     // ── Circle of Fifths axis ─────────────────────────────────────
     this.drawAxisLine(centerX, centerY, cofDx, cofDy, 'Circle of Fifths');
 

@@ -212,8 +212,6 @@ test.describe('DCompose Web — Behavioral State Transitions', () => {
      *   avoid overwhelming non-MIDI users with advanced options.
      */
     test('BH-MPE-1: MPE checkbox and select are present', async ({ page }) => {
-      await page.locator('#midi-settings-toggle').click();
-      await page.waitForTimeout(300);
       await expect(page.locator('#mpe-enabled')).toBeVisible();
       await expect(page.locator('#mpe-output-select')).toBeVisible();
     });
@@ -225,8 +223,6 @@ test.describe('DCompose Web — Behavioral State Transitions', () => {
      *   measure to prevent unintended MIDI data being sent to external devices.
      */
     test('BH-MPE-2: MPE select is disabled until checkbox is checked', async ({ page }) => {
-      await page.locator('#midi-settings-toggle').click();
-      await page.waitForTimeout(300);
       expect(await page.locator('#mpe-output-select').isDisabled()).toBe(true);
       await page.locator('#mpe-enabled').check();
       await page.waitForTimeout(100);
@@ -234,25 +230,6 @@ test.describe('DCompose Web — Behavioral State Transitions', () => {
     });
   });
 
-  test.describe('MIDI Panel Behavior', () => {
-    /**
-     * @reason MIDI settings panel toggles open/closed via the .open CSS class
-     *   which switches display from none to flex.
-     * @design-intent Accordion pattern keeps the MIDI panel out of sight until
-     *   needed, preserving screen real estate for the keyboard canvas.
-     */
-    test('BH-MIDI-1: MIDI settings toggle opens/closes panel', async ({ page }) => {
-      const toggle = page.locator('#midi-settings-toggle');
-      const panel = page.locator('#midi-settings-panel');
-      await expect(panel).not.toHaveClass(/open/);
-      await toggle.click();
-      await page.waitForTimeout(200);
-      await expect(panel).toHaveClass(/open/);
-      await toggle.click();
-      await page.waitForTimeout(200);
-      await expect(panel).not.toHaveClass(/open/);
-    });
-  });
 
   test.describe('Keyboard Focus Behavior', () => {
     /**
@@ -290,12 +267,12 @@ test.describe('DCompose Web — Behavioral State Transitions', () => {
      *   must stay on body/synth so notes can still be played via keyboard.
      */
     test('BH-FOCUS-PRESERVE-1: Settings toggle does not steal synth focus', async ({ page }) => {
-      await page.locator('#midi-settings-toggle').click();
+      await page.locator('#sidebar-toggle').click();
       await page.waitForTimeout(300);
       const activeTagName = await page.evaluate(() => document.activeElement?.tagName);
       expect(activeTagName).not.toBe('INPUT');
       expect(activeTagName).not.toBe('SELECT');
-    });
+    })
   });
 
   test.describe('Skew Slider Behavior', () => {
@@ -419,7 +396,7 @@ test.describe('DCompose Web — Behavioral State Transitions', () => {
         '#zoom-slider', '#zoom-reset',
         '#volume-slider', '#volume-reset',
         '#d-ref-input', '#d-ref-reset',
-        '#midi-settings-toggle',
+
         '#waveform-select', '#layout-select',
       ];
       for (const sel of selectors) {

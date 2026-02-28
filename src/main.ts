@@ -38,7 +38,6 @@ import { MidiInput, MidiDeviceInfo } from './lib/midi-input';
 import { MPEService } from './lib/mpe-service';
 import { midiToCoord } from './lib/note-colors';
 import { createChordGraffiti } from './lib/chord-graffiti';
-import './machines/_smoke'; // TODO: remove in Task 14
 import { appMachine } from './machines/appMachine';
 import { createActor } from 'xstate';
 // Type guard for WaveformType
@@ -465,10 +464,10 @@ class DComposeApp {
       // Sort by fifth value for stagger detection
       const sortedMarkers = [...TUNING_MARKERS].sort((a, b) => a.fifth - b.fifth);
       sortedMarkers.forEach((marker, i) => {
-        const pct = ((marker.fifth - FIFTH_MIN) / sliderRange) * 100;
+        const ratio = (marker.fifth - FIFTH_MIN) / sliderRange;
         const mark = document.createElement('div');
         mark.className = 'tet-preset-mark';
-        mark.style.left = `${Math.min(pct, 98.5)}%`;
+        mark.style.left = `calc(${ratio.toFixed(6)} * (100% - 3px) + 1.5px)`;
         const tick = document.createElement('div');
         tick.className = i % 2 === 0 ? 'tet-tick tet-tick-long' : 'tet-tick tet-tick-short';
         const btn = document.createElement('button');

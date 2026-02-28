@@ -402,8 +402,6 @@ test.describe('DCompose Web — Visual Regression (State-Machine Tests)', () => 
      *   to keep the main interface uncluttered for non-MIDI users.
      */
     test('SM-STRUCT-1: MPE output row exists in MIDI panel', async ({ page }) => {
-      await page.locator('#midi-settings-toggle').click();
-      await page.waitForTimeout(300);
       await expect(page.locator('#mpe-output-row')).toBeVisible();
       await expect(page.locator('#mpe-enabled')).toBeVisible();
       await expect(page.locator('#mpe-output-select')).toBeVisible();

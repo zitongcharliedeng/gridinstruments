@@ -1,8 +1,10 @@
-# DCompose Web
+# GridInstruments
 
 A web-based isomorphic keyboard synthesizer using the DCompose/Wicki-Hayden note layout, with live MIDI input, note history waterfall, chord detection, and chromesthesia colors.
 
-**[Try it live](https://zitongcharliedeng.github.io/dcompose-web)** · [⭐ Star on GitHub](https://github.com/zitongcharliedeng/dcompose-web)
+**[Try it live](https://zitongcharliedeng.github.io/gridinstruments)** · [⭐ Star on GitHub](https://github.com/zitongcharliedeng/gridinstruments)
+
+![GridInstruments screenshot](tests/visual-regression.spec.ts-snapshots/full-page-chromium-linux.png)
 
 ## Why I Made This
 
@@ -12,7 +14,7 @@ I've been experimenting with the MIDImech layout and became very interested in t
 
 - **Isomorphic keyboard grid** — DCompose / Wicki-Hayden layout with continuous DCompose↔MidiMech skew slider
 - **Live MIDI input** — Web MIDI API with per-device enable/disable
-- **MPE output** — send expressive MIDI to external synths
+- **MPE output** *(in progress)* — send expressive MIDI to external synths
 - **Note history** — staff notation, piano-roll waterfall, chord detection
 - **Tuning exploration** — continuous fifth slider (7-TET through 5-TET), reference markers, live frequency updates
 - **Chromesthesia colors** — each pitch class has a fixed OKLCH color

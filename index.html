@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DCompose Web — Isomorphic Keyboard Synthesizer</title>
+  <title>GridInstruments — Isomorphic Keyboard Synthesizer</title>
   <meta name="description" content="Live MIDI & keyboard isomorphic synthesizer. DCompose/Wicki-Hayden layout. Explore tunings from 7-TET to 5-TET on the syntonic temperament continuum.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -440,8 +440,9 @@
     }
     .tet-presets {
       position: absolute;
-      left: 0; right: 0;
+      left: 0; right: 26px;
       top: 50%;  /* anchor at track center line — ticks emanate downward from here */
+      height: 36px; /* must be explicit — absolute children don’t expand parent height */
       pointer-events: none;
       overflow: hidden;
     }
@@ -526,7 +527,7 @@
     #about-btn {
       font-family: var(--font);
       font-size: 10px;
-      color: var(--dim);
+      color: #fff;
       background: none;
       border: 1px solid var(--border);
       padding: 2px 8px;
@@ -592,7 +593,7 @@
               <option value="sawtooth">Sawtooth</option>
               <option value="sine">Sine</option>
               <option value="square">Square</option>
-              <option value="triangle">Triangle</option>
+              <option value="triangle" selected>Triangle</option>
             </select>
           </div>
           <div class="ctrl-group">
@@ -617,24 +618,17 @@
 
         <div class="sidebar-section">
           <div class="sidebar-section-title">MIDI</div>
-          <button id="midi-settings-toggle" title="Toggle MIDI settings panel"><span style="display:inline-flex;align-items:center;line-height:0">⚙</span> MIDI</button>
-          <div id="midi-settings-panel">
-            <div class="midi-panel-row">
-              <span class="ctrl-label">INPUT Devices:</span>
-              <div id="midi-device-list">
-                <span class="midi-no-devices">No MIDI devices detected</span>
-              </div>
-            </div>
-            <div class="midi-panel-row" id="mpe-output-row">
-              <span class="ctrl-label" style="color:#fff">MPE Output:</span>
-              <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;">
-                <input type="checkbox" id="mpe-enabled" style="width:14px;height:14px;cursor:pointer;accent-color:#fff;">
-                Enable
-              </label>
-              <select id="mpe-output-select" style="min-width:120px;" disabled>
-                <option value="">No MIDI outputs</option>
-              </select>
-            </div>
+          <div id="midi-device-list"></div>
+          <!-- MPE output always visible, no toggle needed -->
+          <div class="midi-panel-row" id="mpe-output-row">
+            <span class="ctrl-label" style="color:#fff">MPE Out:</span>
+            <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;">
+              <input type="checkbox" id="mpe-enabled" style="width:14px;height:14px;cursor:pointer;accent-color:#fff;">
+              Enable
+            </label>
+            <select id="mpe-output-select" style="min-width:120px;" disabled>
+              <option value="">No MIDI outputs</option>
+            </select>
           </div>
         </div>
 
@@ -689,18 +683,18 @@
       <!-- Title bar + history canvas wrapper (title floats over canvas) -->
       <div class="history-wrapper">
         <div id="title-bar">
-          <span class="site-title">DCompose Web</span>
+          <button id="about-btn" title="About GridInstruments">ⓘ About</button>
+          <span class="site-title">GridInstruments</span>
           <div class="gh-actions">
             <span class="gh-mark"><svg viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></span>
-            <a class="gh-btn" href="https://github.com/zitongcharliedeng/dcompose-web" target="_blank" rel="noopener">
+            <a class="gh-btn" href="https://github.com/zitongcharliedeng/gridinstruments" target="_blank" rel="noopener">
               <span class="star-icon">☆</span> Star <span id="star-count-badge"></span>
             </a>
-            <a class="gh-btn" href="https://github.com/zitongcharliedeng/dcompose-web/issues" target="_blank" rel="noopener">
+            <a class="gh-btn" href="https://github.com/zitongcharliedeng/gridinstruments/issues" target="_blank" rel="noopener">
               <svg viewBox="0 0 16 16"><path d="M8 9.5a1.5 1.5 0 100 3 1.5 1.5 0 000-3zM8 0a8 8 0 100 16A8 8 0 008 0zm0 14.5a6.5 6.5 0 110-13 6.5 6.5 0 010 13zM9 4a1 1 0 00-2 0v4a1 1 0 002 0V4z"/></svg>
               Report a bug
             </a>
           </div>
-          <button id="about-btn" title="About DCompose Web">ⓘ About</button>
         </div>
         <canvas id="history-canvas" height="220"></canvas>
       </div>
@@ -725,7 +719,7 @@
     <div class="about-grid">
       <div class="about-col">
         <p style='font-size: 12px; color: var(--dim); line-height: 1.5;'>
-          DCompose Web makes isomorphic keyboard layouts accessible to everyone &mdash; no special hardware needed. Explore tunings, discover harmonic patterns, and play music in ways traditional keyboards can't offer.
+          GridInstruments makes isomorphic keyboard layouts accessible to everyone &mdash; no special hardware needed. Explore tunings, discover harmonic patterns, and play music in ways traditional keyboards can't offer.
         </p>
       </div>
       <div class="about-col">
@@ -746,7 +740,7 @@
 
   <script type="module" src="/src/main.ts"></script>
   <script>
-    fetch('https://api.github.com/repos/zitongcharliedeng/dcompose-web')
+    fetch('https://api.github.com/repos/zitongcharliedeng/gridinstruments')
       .then(r => r.json()).then(d => {
         const el = document.getElementById('star-count-badge');
         if (el && typeof d.stargazers_count === 'number') el.textContent = d.stargazers_count.toLocaleString();

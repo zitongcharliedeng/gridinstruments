@@ -69,7 +69,7 @@ export class Synth {
   private voices: Map<string, Voice> = new Map();
   private sustainedVoices: Set<string> = new Set();
   private sustain: boolean = false;
-  private waveform: WaveformType = 'sawtooth';
+  private waveform: WaveformType = 'triangle';
   
   // Vibrato (LFO modulating pitch)
   // Shared LFO for all voices, per-voice gain nodes for individual control
