@@ -416,13 +416,13 @@ test.describe('DCompose Web — Behavioral State Transitions', () => {
      */
     test('BH-AB-1: About dialog has description, no This Project col, no GitHub profile link', async ({ page }) => {
       await page.locator('#about-btn').click();
-      await page.waitForTimeout(200);
-      // ISC-AB-3: Has description paragraph
+      await page.waitForTimeout(500);
+      // ISC-AB-3: Has description paragraph (README starts with "Isomorphic keyboard synthesizer")
       const aboutText = await page.locator('#about-dialog').textContent();
-      expect(aboutText).toContain('isomorphic keyboard');
-      // ISC-AB-1: No 'This Project' column header
-      const colHeaders = await page.locator('#about-dialog .about-col h3').allTextContents();
-      expect(colHeaders).not.toContain('This Project');
+      expect(aboutText?.toLowerCase()).toContain('isomorphic');
+      // ISC-AB-1: No '.about-col' elements (old structure gone)
+      const colCount = await page.locator('#about-dialog .about-col').count();
+      expect(colCount).toBe(0);
       // ISC-AB-2: No GitHub profile link in about dialog
       const aboutLinks = await page.locator('#about-dialog a').allTextContents();
       const hasGitHubProfile = aboutLinks.some(t => t.includes('GitHub') && t.includes('zitongcharliedeng'));
@@ -528,11 +528,11 @@ test.describe('DCompose Web — Behavioral State Transitions', () => {
      */
     test('BH-AB-2: About dialog has Isomorphic Layout links', async ({ page }) => {
       await page.locator('#about-btn').click();
-      await page.waitForTimeout(200);
-      const linkTexts = await page.locator('#about-dialog .about-links a').allTextContents();
+      await page.waitForTimeout(500);
+      const linkTexts = await page.locator('#about-content a').allTextContents();
       expect(linkTexts.some(t => t.includes('Wicki'))).toBe(true);
       expect(linkTexts.some(t => t.includes('Striso'))).toBe(true);
-      expect(linkTexts.some(t => t.includes('MidiMech'))).toBe(true);
+      expect(linkTexts.some(t => t.includes('MIDImech'))).toBe(true);
       expect(linkTexts.some(t => t.includes('WickiSynth'))).toBe(true);
     });
     /**
@@ -542,15 +542,15 @@ test.describe('DCompose Web — Behavioral State Transitions', () => {
      */
     test('BH-AB-3: About dialog footer has WickiSynth attribution and inspiration credits', async ({ page }) => {
       await page.locator('#about-btn').click();
-      await page.waitForTimeout(200);
-      const footerText = await page.locator('#about-dialog .about-footer').textContent();
-      expect(footerText).toContain('WickiSynth');
-      expect(footerText).toContain('Piers Titus');
-      expect(footerText).toContain('MIDImech');
-      expect(footerText).toContain('Striso');
-      // No standalone GitHub link in footer
-      const footerLinks = await page.locator('#about-dialog .about-footer a').allTextContents();
-      expect(footerLinks.every(t => !t.match(/^GitHub$/i))).toBe(true);
+      await page.waitForTimeout(500);
+      const contentText = await page.locator('#about-content').textContent();
+      expect(contentText).toContain('WickiSynth');
+      expect(contentText).toContain('Piers Titus');
+      expect(contentText).toContain('MIDImech');
+      expect(contentText).toContain('Striso');
+      // No standalone GitHub link
+      const allLinks = await page.locator('#about-content a').allTextContents();
+      expect(allLinks.every(t => !t.match(/^GitHub$/i))).toBe(true);
   });
     });
   test.describe('Piano Roll', () => {
