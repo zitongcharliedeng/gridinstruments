@@ -95,26 +95,38 @@ export class Synth {
     // AudioContext will be created on first user interaction
   }
   
-  async init(): Promise<void> {
+  private initSync(): void {
     if (this.context) return;
-    
+
     this.context = new AudioContext({ latencyHint: 'interactive' });
-    
+
     // Create EQ filter (highshelf for treble control)
     this.eqFilter = this.context.createBiquadFilter();
     this.eqFilter.type = 'highshelf';
     this.eqFilter.frequency.value = 3000; // 3kHz crossover
     this.eqFilter.gain.value = 0; // Flat by default
-    
+
     // Create master gain
     this.masterGain = this.context.createGain();
     this.masterGain.gain.value = this._masterVolume;
-    
+
     // Chain: oscillators → masterGain → eqFilter → destination
     this.masterGain.connect(this.eqFilter);
     this.eqFilter.connect(this.context.destination);
-    // Resume context if suspended (required by browsers)
-    if (this.context.state === 'suspended') {
+  }
+
+  /** Call synchronously from any user gesture handler to unlock the AudioContext.
+   *  Creates the context if needed, then calls resume() synchronously (iOS-safe). */
+  tryUnlock(): void {
+    this.initSync();
+    if (this.context && this.context.state === 'suspended') {
+      void this.context.resume();
+    }
+  }
+
+  async init(): Promise<void> {
+    this.initSync();
+    if (this.context && this.context.state === 'suspended') {
       await this.context.resume();
     }
   }
@@ -339,7 +351,7 @@ export class Synth {
    * @param octaveOffset Global octave offset
    */
   playNote(noteId: string, x: number, y: number, octaveOffset: number = 0): void {
-    if (!this.context || !this.masterGain) return;
+    if (!this.context || !this.masterGain || this.context.state !== 'running') return;
     if (this.voices.has(noteId)) return;
     const frequency = this.getFrequency(x, y, octaveOffset);
     // Create oscillator

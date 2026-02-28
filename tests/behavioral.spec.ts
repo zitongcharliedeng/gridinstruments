@@ -677,4 +677,30 @@ test.describe('DCompose Web — Behavioral State Transitions', () => {
     });
   });
 
+
+  test.describe('Stuck Note Prevention', () => {
+    test('BH-STUCK-1: pointerdown+up on canvas without prior interaction leaves no active note', async ({ page }) => {
+      await page.goto('http://localhost:5173', { waitUntil: 'networkidle' });
+      const canvas = page.locator('#keyboard-canvas');
+      await canvas.dispatchEvent('pointerdown', { pointerId: 1, clientX: 200, clientY: 200, pressure: 0.5, bubbles: true });
+      await canvas.dispatchEvent('pointerup', { pointerId: 1, clientX: 200, clientY: 200, bubbles: true });
+      await page.waitForTimeout(600);
+      const count = await page.evaluate(() => {
+        const d = (window as unknown as { dcomposeApp?: { getActiveNoteCount?: () => number } }).dcomposeApp;
+        return d?.getActiveNoteCount?.() ?? -1;
+      });
+      expect(count).toBe(0);
+    });
+
+    test('BH-STUCK-2: keydown+up without prior interaction leaves no active note', async ({ page }) => {
+      await page.goto('http://localhost:5173', { waitUntil: 'networkidle' });
+      await page.keyboard.press('a');
+      await page.waitForTimeout(600);
+      const count = await page.evaluate(() => {
+        const d = (window as unknown as { dcomposeApp?: { getActiveNoteCount?: () => number } }).dcomposeApp;
+        return d?.getActiveNoteCount?.() ?? -1;
+      });
+      expect(count).toBe(0);
+    });
+  });
 });

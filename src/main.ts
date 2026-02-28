@@ -198,6 +198,7 @@ class DComposeApp {
       this.cachedCanvasRect = null; // invalidate on resize
       const r = container.getBoundingClientRect();
       this.visualizer.resize(Math.max(r.width - 2, 300), Math.max(r.height - 2, 200));
+      this.updateGraffiti?.();
     });
     window.addEventListener('scroll', () => { this.cachedCanvasRect = null; }, { passive: true });
     window.addEventListener('orientationchange', () => { this.cachedCanvasRect = null; });
@@ -247,8 +248,9 @@ class DComposeApp {
     });
   }
 
-  private async handleMidiNoteOn(midiNote: number, velocity: number): Promise<void> {
-    await this.ensureAudioReady();
+  private handleMidiNoteOn(midiNote: number, velocity: number): void {
+    this.synth.tryUnlock();
+    if (!this.synth.isInitialized()) return;
     const [coordX, coordY] = midiToCoord(midiNote);
     const noteKey = `midi_${midiNote}`;
     const audioNoteId = `midi_${midiNote}_${coordX}_${coordY}`;
@@ -769,6 +771,9 @@ class DComposeApp {
         }
       });
     window.addEventListener('blur', () => this.stopAllNotes());
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') this.stopAllNotes();
+    });
 
     // Auto-return focus to body after using range/select controls so keyboard always works
     document.querySelectorAll<HTMLElement>('select, input[type="range"]').forEach(el => {
@@ -793,7 +798,7 @@ class DComposeApp {
 
   // ─── Keyboard input ─────────────────────────────────────────────────────
 
-  private async handleKeyDown(event: KeyboardEvent): Promise<void> {
+  private handleKeyDown(event: KeyboardEvent): void {
     const target = event.target instanceof HTMLElement ? event.target : null;
     if (!target) return;
     if (target.tagName === 'TEXTAREA') return;
@@ -815,7 +820,8 @@ class DComposeApp {
     // Shift (left or right) = vibrato (hold)
     if (code === 'ShiftLeft' || code === 'ShiftRight') {
       this.vibratoIndicator?.classList.add('active');
-      await this.ensureAudioReady();
+      this.synth.tryUnlock();                  // synchronous, iOS-safe
+      if (!this.synth.isInitialized()) return; // not running yet — wake audio silently
       this.synth.setVibrato(true);
       this.startMpeVibrato();
       return;
@@ -823,16 +829,19 @@ class DComposeApp {
     // Space = sustain (hold)
     if (code === 'Space') {
       this.sustainIndicator?.classList.add('active');
-      await this.ensureAudioReady();
+      this.synth.tryUnlock();                  // synchronous, iOS-safe
+      if (!this.synth.isInitialized()) return; // not running yet — wake audio silently
       this.synth.setSustain(true);
       return;
     }
     // Shift+=/- zoom shortcuts removed — Shift is now vibrato-only
 
+    this.synth.tryUnlock();                  // synchronous, iOS-safe
+    if (!this.synth.isInitialized()) return; // not running yet — drop this keypress
+
     const coord = this.currentLayout.keyMap[code];
     if (!coord) return;
 
-    await this.ensureAudioReady();
     const [coordX, coordY] = coord;
     const effectiveCoordX = coordX + this.transposeOffset;
     const effectiveCoordY = coordY + this.octaveOffset;
@@ -881,10 +890,8 @@ class DComposeApp {
 
   private handlePointerDown(event: PointerEvent): void {
     this.pointerDown.set(event.pointerId, null);
-    if (!this.synth.isInitialized()) {
-      this.synth.init().then(() => this.handlePointerDownInner(event));
-      return;
-    }
+    this.synth.tryUnlock();                  // synchronous, iOS-safe
+    if (!this.synth.isInitialized()) return; // not running yet — first touch silently wakes audio
     this.handlePointerDownInner(event);
   }
 
@@ -1127,9 +1134,6 @@ class DComposeApp {
     this.cachedCanvasRect = this.canvas.getBoundingClientRect();
     return this.cachedCanvasRect;
   }
-  private async ensureAudioReady(): Promise<void> {
-    if (!this.synth.isInitialized()) await this.synth.init();
-  }
 }
 
 // ─── D ref helper functions ────────────────────────────────────────────────
@@ -1196,7 +1200,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  new DComposeApp();
+  const app = new DComposeApp();
   // Create and start the AppMachine actor (observes only — DComposeApp still controls all behaviour)
   const appActor = createActor(appMachine, {
     input: { initialVolume: -10.5, defaultZoom: 1.0, touchDevice: 'ontouchstart' in window },
@@ -1236,5 +1240,7 @@ document.addEventListener('DOMContentLoaded', () => {
   (window as Window & { dcomposeApp?: unknown }).dcomposeApp = {
     actor: appActor,
     getSnapshot: () => appActor.getSnapshot(),
+    getActiveNoteCount: () => (app as unknown as { activeNotes: Map<string, unknown> }).activeNotes.size,
+    isAudioReady: () => (app as unknown as { synth: { isInitialized: () => boolean } }).synth.isInitialized(),
   };
 });
