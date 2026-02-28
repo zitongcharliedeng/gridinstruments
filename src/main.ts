@@ -845,6 +845,24 @@ class DComposeApp {
       });
     });
 
+
+    // History visualizer toggle
+    const historyToggle = getElementOrNull('history-toggle', HTMLButtonElement);
+    const historyWrapper = document.querySelector<HTMLElement>('.history-wrapper');
+    if (historyToggle && historyWrapper) {
+      const savedHidden = localStorage.getItem('gi_history_hidden') === 'true';
+      if (savedHidden) {
+        historyWrapper.classList.add('hidden');
+        historyToggle.textContent = '▶ History';
+      }
+      historyToggle.addEventListener('click', () => {
+        const isHidden = historyWrapper.classList.toggle('hidden');
+        historyToggle.textContent = isHidden ? '▶ History' : '▼ History';
+        try { localStorage.setItem('gi_history_hidden', isHidden.toString()); } catch { /* private mode */ }
+        // Trigger resize so keyboard canvas fills the freed space
+        window.dispatchEvent(new Event('resize'));
+      });
+    }
     // Initialize slider progress fills
     document.querySelectorAll<HTMLInputElement>('input[type="range"]').forEach(s => this.updateSliderFill(s));
   }

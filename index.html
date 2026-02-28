@@ -580,6 +580,10 @@
     .wave-btn { flex: 1; padding: 5px 2px; background: var(--bg); border: none; color: var(--dim); font-family: var(--font); font-size: 10px; cursor: pointer; text-transform: uppercase; letter-spacing: 0.04em; }
     .wave-btn.active { background: var(--fg); color: var(--bg); }
     .wave-btn:hover:not(.active) { background: var(--subtle); color: var(--fg); }
+    #history-toggle { background: none; border: 1px solid var(--border); color: var(--dim); font-family: var(--font); font-size: 10px; padding: 2px 6px; cursor: pointer; }
+    #history-toggle:hover { color: var(--fg); background: var(--subtle); }
+    .history-wrapper.hidden #history-canvas { display: none; }
+    .history-wrapper.hidden #history-toggle { color: var(--dim); }
   </style>
 </head>
 <body>
@@ -692,6 +696,7 @@
               Report a bug
             </a>
           </div>
+          <button id="history-toggle" title="Toggle note history visualizer">▼ History</button>
         </div>
         <canvas id="history-canvas" height="220"></canvas>
       </div>
