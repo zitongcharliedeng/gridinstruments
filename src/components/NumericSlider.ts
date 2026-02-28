@@ -151,8 +151,8 @@ export class NumericSlider {
   /**
    * Recompute the fill gradient from the current slider value.
    *
-   * Uses the Firefox-compatible calc() workaround that accounts for the
-   * 3 px thumb width so the gradient tracks the thumb center precisely.
+   * Accounts for the 3px thumb width so the gradient edge tracks
+   * the thumb center precisely. Uses offsetWidth for pixel-exact alignment.
    */
   updateFill(): void {
     const min = parseFloat(this.rangeInput.min) || 0;
@@ -160,10 +160,17 @@ export class NumericSlider {
     const val = parseFloat(this.rangeInput.value) || 0;
     const ratio = (val - min) / (max - min);
     const thumbW = 3;
-    const offset = (0.5 - ratio) * thumbW;
-    const pct = `calc(${(ratio * 100).toFixed(2)}% + ${offset.toFixed(1)}px)`;
-    this.rangeInput.style.background =
-      `linear-gradient(to right, var(--fg) ${pct}, #000 ${pct})`;
+    const trackW = this.rangeInput.offsetWidth;
+    if (trackW > 0) {
+      const thumbCenterPx = ratio * (trackW - thumbW) + thumbW / 2;
+      const fillPct = (thumbCenterPx / trackW) * 100;
+      this.rangeInput.style.background =
+        `linear-gradient(to right, var(--fg) ${fillPct.toFixed(2)}%, #000 ${fillPct.toFixed(2)}%)`;
+    } else {
+      const pct = ratio * 100;
+      this.rangeInput.style.background =
+        `linear-gradient(to right, var(--fg) ${pct.toFixed(2)}%, #000 ${pct.toFixed(2)}%)`;
+    }
   }
 
   /**
