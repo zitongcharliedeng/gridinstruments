@@ -397,7 +397,9 @@ test.describe('DCompose Web — Behavioral State Transitions', () => {
         '#volume-slider', '#volume-reset',
         '#d-ref-input', '#d-ref-reset',
 
-        '#waveform-select', '#layout-select',
+        '.wave-btn[data-waveform="sawtooth"]', '.wave-btn[data-waveform="sine"]',
+        '.wave-btn[data-waveform="square"]', '.wave-btn[data-waveform="triangle"]',
+        '#layout-select',
       ];
       for (const sel of selectors) {
         const title = await page.locator(sel).getAttribute('title');
