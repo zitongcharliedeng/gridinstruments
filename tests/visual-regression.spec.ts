@@ -546,7 +546,8 @@ test.describe('DCompose Web — Visual Regression (State-Machine Tests)', () => 
      * @reason Title bar contains site name and GitHub action buttons.
      * @design-intent Snapshot catches unintended reflows or color changes.
      */
-    test('GOLDEN-2: Title bar snapshot', async ({ page }) => {
+    test('GOLDEN-2: Title bar snapshot', async ({ page, browserName }) => {
+      test.skip(browserName !== 'chromium', 'Snapshot only maintained for Chromium');
       await expect(page.locator('#title-bar')).toHaveScreenshot('title-bar-overlay.png', {
         maxDiffPixelRatio: 0.015,
       });
@@ -558,7 +559,8 @@ test.describe('DCompose Web — Visual Regression (State-Machine Tests)', () => 
      * @design-intent Higher tolerance (0.5%) accounts for anti-aliased text
      *   rendering differences across environments.
      */
-    test('GOLDEN-3: History canvas snapshot', async ({ page }) => {
+    test('GOLDEN-3: History canvas snapshot', async ({ page, browserName }) => {
+      test.skip(browserName !== 'chromium', 'Snapshot only maintained for Chromium');
       await expect(page.locator('#history-canvas')).toHaveScreenshot('history-canvas.png', {
         maxDiffPixelRatio: 0.005,
       });
@@ -583,7 +585,8 @@ test.describe('DCompose Web — Visual Regression (State-Machine Tests)', () => 
      * @design-intent Title bar is the brand identity — any drift in positioning
      *   or text rendering is immediately noticeable.
      */
-    test('GOLDEN-5: Title bar snapshot', async ({ page }) => {
+    test('GOLDEN-5: Title bar snapshot', async ({ page, browserName }) => {
+      test.skip(browserName !== 'chromium', 'Snapshot only maintained for Chromium');
       await expect(page.locator('#title-bar')).toHaveScreenshot('title-bar.png', {
         maxDiffPixelRatio: 0.01,
       });
@@ -595,7 +598,8 @@ test.describe('DCompose Web — Visual Regression (State-Machine Tests)', () => 
      * @design-intent Snapshot validates the tuning slider + TET preset
      *   alignment that is critical for the syntonic continuum UX.
      */
-    test('GOLDEN-6: Tuning slider area snapshot', async ({ page }) => {
+    test('GOLDEN-6: Tuning slider area snapshot', async ({ page, browserName }) => {
+      test.skip(browserName !== 'chromium', 'Snapshot only maintained for Chromium');
       await expect(page.locator('.tuning-slider-area')).toHaveScreenshot('tuning-slider-area.png', {
         maxDiffPixelRatio: 0.01,
       });
