@@ -784,17 +784,17 @@ class DComposeApp {
 
     // Shift (left or right) = vibrato (hold)
     if (code === 'ShiftLeft' || code === 'ShiftRight') {
+      this.vibratoIndicator?.classList.add('active');
       await this.ensureAudioReady();
       this.synth.setVibrato(true);
-      this.vibratoIndicator?.classList.add('active');
       this.startMpeVibrato();
       return;
     }
     // Space = sustain (hold)
     if (code === 'Space') {
+      this.sustainIndicator?.classList.add('active');
       await this.ensureAudioReady();
       this.synth.setSustain(true);
-      this.sustainIndicator?.classList.add('active');
       return;
     }
     // Shift+=/- zoom shortcuts removed — Shift is now vibrato-only
