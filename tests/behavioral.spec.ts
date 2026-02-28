@@ -307,6 +307,7 @@ test.describe('DCompose Web — Behavioral State Transitions', () => {
     test('BH-MODIFIER-HOLD-1: Vibrato activates on Shift hold, deactivates on release', async ({ page }) => {
       const indicator = page.locator('#vibrato-indicator');
       await expect(indicator).not.toHaveClass(/active/);
+      await page.focus('body');
       await page.keyboard.down('Shift');
       await page.waitForTimeout(100);
       await expect(indicator).toHaveClass(/active/);
@@ -324,6 +325,7 @@ test.describe('DCompose Web — Behavioral State Transitions', () => {
     test('BH-MODIFIER-HOLD-2: Sustain activates on Space hold', async ({ page }) => {
       const indicator = page.locator('#sustain-indicator');
       await expect(indicator).not.toHaveClass(/active/);
+      await page.focus('body');
       await page.keyboard.down('Space');
       await page.waitForTimeout(100);
       await expect(indicator).toHaveClass(/active/);
