@@ -23,7 +23,7 @@ jobs:
         run: npx tsc --noEmit
 
       - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install --with-deps chromium firefox
 
       - name: Run Playwright tests
         run: npx playwright test
