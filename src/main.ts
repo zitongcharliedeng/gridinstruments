@@ -1312,5 +1312,7 @@ document.addEventListener('DOMContentLoaded', () => {
     getSnapshot: () => appActor.getSnapshot(),
     getActiveNoteCount: () => (app as unknown as { activeNotes: Map<string, unknown> }).activeNotes.size,
     isAudioReady: () => (app as unknown as { synth: { isInitialized: () => boolean } }).synth.isInitialized(),
+    getGridGeometry: () => (app as unknown as { visualizer: { getGridGeometry: () => { cellHv1: {x:number,y:number}, cellHv2: {x:number,y:number}, width: number, height: number } | null } }).visualizer?.getGridGeometry() ?? null,
+    getDefaultZoom: () => (app as unknown as { defaultZoom: number }).defaultZoom,
   };
 });

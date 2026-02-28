@@ -705,4 +705,59 @@ test.describe('DCompose Web — Behavioral State Transitions', () => {
       expect(count).toBe(0);
     });
   });
+
+  test.describe('Portrait Mobile Layout', () => {
+    test('BH-MOB-1: Collapsed sidebar takes zero space — canvas fills full 390px viewport width', async ({ browser }) =>
+      const ctx = await browser.newContext({
+        viewport: { width: 390, height: 844 },
+        hasTouch: true,
+      });
+      const p = await ctx.newPage();
+      await p.goto('/');
+      await p.waitForLoadState('networkidle');
+      await p.waitForTimeout(1500);
+
+      // Sidebar starts collapsed and must take zero layout space
+      const sidebarWidth = await p.evaluate(() =>
+        document.getElementById('sidebar')!.getBoundingClientRect().width
+      );
+      expect(sidebarWidth, 'collapsed sidebar must take 0px width').toBe(0);
+
+      // Keyboard container fills the full viewport width (sidebar not stealing space)
+      const containerBox = await p.locator('#keyboard-container').boundingBox();
+      expect(containerBox, 'keyboard-container must exist').not.toBeNull();
+      expect(containerBox!.width, 'keyboard-container must fill viewport width').toBeGreaterThanOrEqual(385);
+
+      await ctx.close();
+    });
+
+    test('BH-MOB-2: Default zoom on 390px touch device is smart-scaled (≤ 1.0)', async ({ browser }) => {
+      const ctx = await browser.newContext({
+        viewport: { width: 390, height: 844 },
+        hasTouch: true,
+      });
+      const p = await ctx.newPage();
+      await p.goto('/');
+      await p.waitForLoadState('networkidle');
+      await p.waitForTimeout(1500);
+
+      // Smart formula: Math.min(1.6, 390/480) = 0.8125 on touch devices
+      const defaultZoom = await p.evaluate(() => {
+        const app = (window as Window & { dcomposeApp?: { getDefaultZoom: () => number } }).dcomposeApp;
+        return app?.getDefaultZoom() ?? -1;
+      });
+      expect(defaultZoom, 'defaultZoom must be initialized').toBeGreaterThan(0);
+      expect(defaultZoom, 'defaultZoom on 390px touch must be ≤ 1.0 (smart formula)').toBeLessThanOrEqual(1.0);
+      expect(defaultZoom, 'defaultZoom on 390px touch must be > 0.5 (not absurdly small)').toBeGreaterThan(0.5);
+
+      // Also verify the zoom slider reflects the smart default
+      const sliderVal = await p.evaluate(() => {
+        const s = document.getElementById('zoom-slider') as HTMLInputElement | null;
+        return s ? parseFloat(s.value) : -1;
+      });
+      expect(sliderVal, 'zoom slider must match defaultZoom').toBeCloseTo(defaultZoom, 2);
+
+      await ctx.close();
+    });
+  });
 });

@@ -38,7 +38,7 @@
 
     #app {
       display: flex;
-      flex-direction: column;
+      flex-direction: row;
       height: 100vh;
       overflow: hidden;
       padding: 0;
@@ -47,43 +47,43 @@
 
     /* ── Sidebar ─────────────────────────────────────────────────── */
     #sidebar {
-      position: fixed;
-      left: 0;
-      top: 0;
-      height: 100vh;
       width: 260px;
+      min-width: 260px;
       background: var(--subtle);
       border-right: 1px solid var(--border);
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      transition: transform 0.15s ease;
-      z-index: 100;
+      transition: width 0.15s ease, min-width 0.15s ease;
+      flex-shrink: 0;
+      position: relative;
     }
     #sidebar.collapsed {
-      transform: translateX(calc(-260px + 32px));
+      width: 0;
+      min-width: 0;
+      border-right: none;
     }
+    #sidebar.collapsed #sidebar-content { display: none; }
     #sidebar-toggle {
-      position: absolute;
-      right: 0;
+      position: fixed;
+      left: 0;
       top: 0;
       width: 32px;
       height: 32px;
-      background: var(--bg);
+      background: #fff;
       border: none;
+      border-right: 1px solid var(--border);
       border-bottom: 1px solid var(--border);
-      border-left: 1px solid var(--border);
-      color: var(--fg);
+      color: #000;
       font-family: var(--font);
       font-size: 14px;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      flex-shrink: 0;
-      z-index: 1;
+      z-index: 200;
     }
-    #sidebar-toggle:hover { background: var(--subtle); }
+    #sidebar-toggle:hover { background: #ddd; }
     #sidebar-content {
       flex: 1;
       overflow-y: auto;
