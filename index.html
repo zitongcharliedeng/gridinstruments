@@ -492,38 +492,42 @@
 
     /* ── About dialog ─────────────────────────────────────────── */
     #about-dialog {
-      background: var(--bg);
-      color: var(--fg);
-      border: 1px solid var(--border);
-      font-family: var(--font);
-      max-width: 600px;
+      background: #111;
+      color: #fff;
+      border: 1px solid #333;
+      border-radius: 0;
+      padding: 32px;
+      width: min(720px, 90vw);
       max-height: 80vh;
       overflow-y: auto;
-      padding: 24px;
+      font-family: "JetBrains Mono", monospace;
     }
-    #about-dialog::backdrop {
-      background: rgba(0,0,0,0.7);
-    }
+    #about-dialog::backdrop { background: rgba(0,0,0,0.7); }
     #about-close {
+      position: sticky;
+      top: 0;
       float: right;
       background: none;
-      border: 1px solid var(--border);
-      color: var(--fg);
-      font-family: var(--font);
+      border: 1px solid #444;
+      color: #fff;
+      padding: 4px 8px;
       cursor: pointer;
-      padding: 2px 8px;
+      font-family: inherit;
+      font-size: 12px;
     }
     #about-close:hover { border-color: var(--accent); }
-
-    #about-dialog h2 {
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--dim);
-      margin-bottom: 10px;
-    }
-
-    /* ── About button (title bar) ─────────────────────────────── */
+    .about-content h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent, #4af); margin: 24px 0 8px; border-bottom: 1px solid #222; padding-bottom: 4px; }
+    .about-content h3 { font-size: 12px; color: #aaa; margin: 16px 0 4px; }
+    .about-content p { font-size: 12px; line-height: 1.6; color: #ccc; margin: 8px 0; }
+    .about-content ul { margin: 8px 0; padding-left: 16px; }
+    .about-content li { font-size: 12px; line-height: 1.6; color: #ccc; margin: 2px 0; }
+    .about-content a { color: var(--accent, #4af); text-decoration: none; }
+    .about-content a:hover { text-decoration: underline; }
+    .about-content code { font-size: 11px; color: #f9a; background: #1a1a1a; padding: 1px 4px; }
+    .about-content table { border-collapse: collapse; width: 100%; margin: 8px 0; font-size: 11px; }
+    .about-content td { border: 1px solid #333; padding: 4px 8px; color: #ccc; }
+    .about-content strong { color: #fff; }
+    /* ── About button (title bar) ───────────────────────────── */
     #about-btn {
       font-family: var(--font);
       font-size: 10px;
@@ -534,16 +538,6 @@
       cursor: pointer;
     }
     #about-btn:hover { color: var(--fg); border-color: var(--accent); }
-
-    .about-footer {
-      border-top: 1px solid var(--border);
-      padding-top: 12px;
-      margin-top: 16px;
-      font-size: 11px;
-      color: var(--dim);
-    }
-    .about-footer a { color: var(--dim); text-decoration: none; }
-    .about-footer a:hover { color: var(--fg); text-decoration: underline; }
 
     /* ── Instructions ────────────────────────────────────────────── */
     #instructions {
@@ -715,27 +709,7 @@
 
   <dialog id="about-dialog">
     <button id="about-close" autofocus>✕</button>
-    <h2>About</h2>
-    <div class="about-grid">
-      <div class="about-col">
-        <p style='font-size: 12px; color: var(--dim); line-height: 1.5;'>
-          GridInstruments makes isomorphic keyboard layouts accessible to everyone &mdash; no special hardware needed. Explore tunings, discover harmonic patterns, and play music in ways traditional keyboards can't offer.
-        </p>
-      </div>
-      <div class="about-col">
-        <h3>Isomorphic Layout</h3>
-        <div class="about-links">
-          <a href="https://en.wikipedia.org/wiki/Wicki%E2%80%93Hayden_note_layout" target="_blank" rel="noopener">Wicki&ndash;Hayden (Wikipedia)</a>
-          <a href="https://www.striso.org/the-note-layout/" target="_blank" rel="noopener">Striso note layout</a>
-          <a href="https://github.com/flipcoder/midimech" target="_blank" rel="noopener">MidiMech</a>
-          <a href="https://www.toverlamp.org/static/wickisynth/wickisynth_lowlatency.html" target="_blank" rel="noopener">WickiSynth (original)</a>
-        </div>
-      </div>
-    </div>
-    <div class="about-footer">
-      Based on <a href="https://www.toverlamp.org/static/wickisynth/wickisynth_lowlatency.html" target="_blank">WickiSynth</a> by Piers Titus van der Torren &middot;
-      Inspired by <a href="https://github.com/flipcoder/midimech" target="_blank">MIDImech</a> and <a href="https://www.striso.org/the-note-layout/" target="_blank">Striso</a>
-    </div>
+    <div id="about-content" class="about-content"></div>
   </dialog>
 
   <script type="module" src="/src/main.ts"></script>
