@@ -379,8 +379,8 @@ class DComposeApp {
 
       const updateSkewLabel = (value: number): void => {
         if (!skewLabel) return;
-        if (value <= 0.15) skewLabel.textContent = 'SKEW [MidiMech]';
-        else if (value >= 0.85) skewLabel.textContent = 'SKEW [DCompose]';
+        if (value <= 0.15) skewLabel.innerHTML = "SKEW <span style='color:#88ff88'>[MidiMech]</span>";
+        else if (value >= 0.85) skewLabel.innerHTML = "SKEW <span style='color:#88ff88'>[DCompose]</span>";
         else skewLabel.textContent = 'SKEW';
       };
 
@@ -462,11 +462,22 @@ class DComposeApp {
         thumbBadge.style.left = `${pct}%`;
         thumbBadge.value = value.toFixed(1);
       };
+      const tuningLabel = getElementOrNull('tuning-label', HTMLSpanElement);
+      const updateTuningLabel = (value: number) => {
+        if (!tuningLabel) return;
+        const { marker, distance } = findNearestMarker(value);
+        const roundedDist = Math.round(distance * 10) / 10;
+        const sign = value > marker.fifth ? '+' : '\u2212';
+        const ann = distance < 0.05 ? marker.name : `${marker.name} ${sign}${roundedDist.toFixed(1)}\u00a2`;
+        tuningLabel.innerHTML = `FIFTHS TUNING (cents) <span style='color:#88ff88'>${ann}</span>`;
+      };
+      updateTuningLabel(FIFTH_DEFAULT);
       updateThumbBadge(FIFTH_DEFAULT);
 
       const savedTuning = this.loadSetting('tuning', FIFTH_DEFAULT.toString());
       this.tuningSlider.value = savedTuning;
       updateThumbBadge(parseFloat(savedTuning));
+      updateTuningLabel(parseFloat(savedTuning));
       this.synth.setFifth(parseFloat(savedTuning));
       this.visualizer?.setGenerator([parseFloat(savedTuning), 1200]);
 
@@ -477,6 +488,7 @@ class DComposeApp {
         this.updateGraffiti?.();
 
         updateThumbBadge(value);
+        updateTuningLabel(value);
         this.updateSliderFill(this.tuningSlider!);
         this.saveSetting('tuning', this.tuningSlider!.value);
         // Sync active TET preset button
@@ -494,6 +506,7 @@ class DComposeApp {
         this.synth.setFifth(marker.fifth);
         this.visualizer?.setGenerator([marker.fifth, 1200]);
         this.updateSliderFill(this.tuningSlider!);
+        updateTuningLabel(marker.fifth);
       });
       // Tuning reset
       const tuningReset = getElementOrNull('tuning-reset', HTMLButtonElement);
@@ -515,6 +528,7 @@ class DComposeApp {
               this.updateGraffiti?.();
               updateThumbBadge(raw);
               this.updateSliderFill(this.tuningSlider);
+              updateTuningLabel(raw);
               document.querySelectorAll('.tet-preset').forEach(b => {
                 const btn = b instanceof HTMLElement ? b : null;
                 if (!btn) return;
