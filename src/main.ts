@@ -533,33 +533,61 @@ class DComposeApp {
     // Note: #fifth-custom-input was removed; #tuning-thumb-badge input handles direct value entry
 
     // Populate TET preset buttons — positioned proportionally along slider
+    // Generate all unique N-TET fifth values in [FIFTH_MIN, FIFTH_MAX]
     const presetsContainer = document.getElementById('tet-presets');
     if (presetsContainer) {
       const sliderRange = FIFTH_MAX - FIFTH_MIN;
-      // Sort by fifth value for stagger detection
-      const sortedMarkers = [...TUNING_MARKERS].sort((a, b) => a.fifth - b.fifth);
-      sortedMarkers.forEach((marker, i) => {
-        const ratio = (marker.fifth - FIFTH_MIN) / sliderRange;
+
+      const seen = new Set<string>();
+      const allTicks: Array<{ fifth: number; marker?: typeof TUNING_MARKERS[0] }> = [];
+
+      // Generate all N-TET positions for N = 3..100
+      for (let n = 3; n <= 100; n++) {
+        const steps = Math.round(n * 7 / 12);
+        const fifth = (steps * 1200) / n;
+        if (fifth < FIFTH_MIN || fifth > FIFTH_MAX) continue;
+        const key = fifth.toFixed(4);
+        if (seen.has(key)) continue;
+        seen.add(key);
+        // Check if this matches a named marker (within 0.01¢ tolerance)
+        const marker = TUNING_MARKERS.find(m => Math.abs(m.fifth - fifth) < 0.01);
+        allTicks.push({ fifth, marker });
+      }
+      allTicks.sort((a, b) => a.fifth - b.fifth);
+
+      // Render all ticks
+      allTicks.forEach(tick => {
+        const ratio = (tick.fifth - FIFTH_MIN) / sliderRange;
         const mark = document.createElement('div');
         mark.className = 'tet-preset-mark';
         mark.style.left = `calc(${ratio.toFixed(6)} * (100% - 3px) + 1.5px)`;
-        const tick = document.createElement('div');
-        tick.className = i % 2 === 0 ? 'tet-tick tet-tick-long' : 'tet-tick tet-tick-short';
-        const btn = document.createElement('button');
-        btn.className = 'tet-preset';
-        btn.dataset.fifth = marker.fifth.toString();
-        btn.textContent = marker.name;
-        btn.title = `${marker.description} (${marker.fifth.toFixed(2)}\u00a2)`;
-        btn.addEventListener('click', () => {
-          if (this.tuningSlider) {
-            this.tuningSlider.value = marker.fifth.toString();
-            this.tuningSlider.dispatchEvent(new Event('input'));
-          }
-        });
-        mark.appendChild(tick);
-        mark.appendChild(btn);
+
+        const tickEl = document.createElement('div');
+        if (tick.marker) {
+          // Named marker: long tick + button
+          tickEl.className = 'tet-tick tet-tick-long';
+          const btn = document.createElement('button');
+          btn.className = 'tet-preset';
+          btn.dataset.fifth = tick.marker.fifth.toString();
+          btn.textContent = tick.marker.name;
+          btn.title = `${tick.marker.description} (${tick.marker.fifth.toFixed(2)}\u00a2)`;
+          btn.addEventListener('click', () => {
+            if (this.tuningSlider) {
+              this.tuningSlider.value = tick.marker!.fifth.toString();
+              this.tuningSlider.dispatchEvent(new Event('input'));
+            }
+          });
+          mark.appendChild(tickEl);
+          mark.appendChild(btn);
+        } else {
+          // Unnamed tick: short tick only, no pointer events
+          tickEl.className = 'tet-tick tet-tick-short';
+          mark.style.pointerEvents = 'none';
+          mark.appendChild(tickEl);
+        }
         presetsContainer.appendChild(mark);
       });
+
       // Mark initial active preset (12-TET at 700)
       presetsContainer.querySelector('.tet-preset[data-fifth="700"]')?.classList.add('active');
     }
@@ -1008,7 +1036,7 @@ class DComposeApp {
       }
       if (dLabel) {
         const ann = hzToNoteAnnotation(newHz, 293.66);
-        dLabel.textContent = ann ? `D REF (Hz) [${ann}]` : 'D REF (Hz)';
+        dLabel.innerHTML = ann ? `D REF (Hz) <span style="color:#88ff88">${ann}</span>` : 'D REF (Hz)';
       }
       return;
     }
@@ -1235,7 +1263,7 @@ function hzToNoteAnnotation(hz: number, _d4Hz: number): string {
   const octave = 4 + Math.floor(roundedSemis / 12);
   const noteName = NOTE_NAMES[noteIdx] + octave;
   if (Math.abs(cents) < 1) return `${noteName}`;
-  return `${cents > 0 ? '+' : ''}${cents}\u00a2 from ${noteName}`;
+  return `${noteName} ${cents > 0 ? '+' : ''}${cents}¢`;
 }
 
 document.addEventListener('DOMContentLoaded', () => {

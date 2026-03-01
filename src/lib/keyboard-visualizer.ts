@@ -362,11 +362,6 @@ export class KeyboardVisualizer {
       genX1, -genY1,
     );
 
-    // ── Octave labels at actual octave positions ────────────────────────
-    this.drawOctaveLabels(
-      centerX, centerY,
-      genX1, -genY1,
-    );
   }
 
 
@@ -412,37 +407,6 @@ export class KeyboardVisualizer {
   }
 
 
-  /** Place octave labels at actual octave grid positions. */
-  private drawOctaveLabels(
-    cx: number, cy: number,
-    genX1: number, genY1: number,
-  ): void {
-    const octLen = Math.sqrt(genX1 * genX1 + genY1 * genY1);
-    if (octLen < 0.01) return;
-    // Perpendicular offset for label placement (90° CCW from octave direction)
-    const perpX = -genY1 / octLen;
-    const perpY = genX1 / octLen;
-
-    this.ctx.save();
-    this.ctx.font = '9px "JetBrains Mono", monospace';
-    this.ctx.textAlign = 'center';
-    this.ctx.textBaseline = 'middle';
-    for (let j = -3; j <= 3; j++) {
-      if (j === 0) continue;
-      // Actual position: j octave steps from center
-      const x = cx + j * genX1;
-      const y = cy + j * genY1;
-
-      const { width: w, height: h } = this.options;
-      if (x < 10 || x > w - 10 || y < 10 || y > h - 10) continue;
-      const dist = Math.abs(j) / 3;
-      this.ctx.fillStyle = `rgba(255, 255, 255, ${0.35 - dist * 0.2})`;
-      const octNum = 4 + j;
-      this.ctx.fillText(`oct ${octNum}`, x + perpX * 20, y + perpY * 20);
-    }
-
-    this.ctx.restore();
-  }
 
   /** Draw a labeled axis line through center with arrowhead at the positive end. */
   private drawAxisLine(
