@@ -132,7 +132,7 @@ const SLIDER_INFO: Record<string, string> = {
 <p>At shear = 1, the layout sits at τ = e<sup>iπ/3</sup> in the <a href="https://en.wikipedia.org/wiki/Upper_half-plane" target="_blank" rel="noopener">upper half-plane</a> — a fixed point of the <a href="https://en.wikipedia.org/wiki/Modular_group" target="_blank" rel="noopener">modular group PSL(2,ℤ)</a> with <strong>ℤ/6ℤ hexagonal symmetry</strong> (60° rotational). This is the deepest group-theoretic structure in the space of 2D lattices.</p>
 <h3>Lattice vs Voronoi Cells</h3>
 <p>The parallelogram cells you see are the <strong>lattice fundamental domain</strong> — defined directly by the basis vectors. But hit detection uses nearest-neighbor regions: <a href="https://en.wikipedia.org/wiki/Voronoi_diagram" target="_blank" rel="noopener">Voronoi cells</a>, also called <a href="https://en.wikipedia.org/wiki/Wigner%E2%80%93Seitz_cell" target="_blank" rel="noopener">Wigner–Seitz cells</a> in crystallography.</p>
-<p><img src="https://upload.wikimedia.org/wikipedia/commons/5/56/Wigner-Seitz_Animation.gif" alt="Wigner-Seitz cell construction — nearest-neighbor regions form hexagons from a triangular lattice" style="max-width:100%;margin:8px 0;"></p>
+<p><a href="https://en.wikipedia.org/wiki/File:Wigner-Seitz_Animation.gif" target="_blank" rel="noopener"><img src="https://upload.wikimedia.org/wikipedia/commons/2/24/Wigner-Seitz_Animation.gif" alt="Wigner-Seitz cell construction — nearest-neighbor regions form hexagons from a triangular lattice" style="max-width:100%;margin:8px 0;"></a></p>
 <h3>References</h3>
 <ul>
 <li><a href="https://en.wikipedia.org/wiki/Shear_mapping" target="_blank" rel="noopener">Shear mapping</a> — Wikipedia</li>

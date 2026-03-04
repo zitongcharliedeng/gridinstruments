@@ -59,6 +59,8 @@ export class KeyboardVisualizer {
   private hv1 = { x: 0, y: 0 }; // half-step in coordX direction
   private hv2 = { x: 0, y: 0 }; // half-step in coordY direction
 
+
+
   // W3C CSS spec: 1 CSS px = 1/96 inch. Always 96 — this is a spec constant,
   // not a measurement. devicePixelRatio handles physical pixels separately.
   private readonly cssPxPerInch: number = 96;
@@ -283,7 +285,6 @@ export class KeyboardVisualizer {
     this.hv1 = cellHv1;
     this.hv2 = cellHv2;
 
-    // Dynamic range: scale with inverse zoom so grid fills canvas when zoomed out
     const effectiveScale = Math.min(this.options.scaleX, this.options.scaleY, 1);
     const iRange = Math.min(80, Math.ceil(20 / effectiveScale));
     const jRange = Math.min(48, Math.ceil(12 / effectiveScale));
@@ -387,43 +388,37 @@ export class KeyboardVisualizer {
   }
 
 
-  /**
-   * Draw nameless geometric interval lines at each fifth step.
-   * Each line passes through ALL grid points at the same fifth index
-   * by anchoring at the i-th fifth position and extending in the octave direction.
-   * This is correct at ALL skew values, not just DCompose.
-   */
   private drawFifthIndexLines(
     cx: number, cy: number,
     genX: number, genY0: number,
     genX1: number, genY1: number,
   ): void {
-    const { width: w, height: h } = this.options;
-    const canvasDiag = Math.sqrt(w * w + h * h);
-    // Line direction: octave step = (genX1, genY1) in screen space
     const octLen = Math.sqrt(genX1 * genX1 + genY1 * genY1);
     if (octLen < 0.01) return;
     const octNx = genX1 / octLen;
     const octNy = genY1 / octLen;
 
-    const fifthLen = Math.sqrt(genX * genX + genY0 * genY0);
-    const maxFifths = fifthLen > 0.1 ? Math.ceil(canvasDiag / fifthLen) + 2 : 20;
+    const visibleFifths = new Set<number>();
+    let maxAbsI = 1;
+    for (const b of this.buttons) {
+      if (b.coordX !== 0) visibleFifths.add(b.coordX);
+      maxAbsI = Math.max(maxAbsI, Math.abs(b.coordX));
+    }
+
+    const { width: w, height: h } = this.options;
+    const halfLen = Math.sqrt(w * w + h * h) * 2;
 
     this.ctx.save();
-    for (let i = -maxFifths; i <= maxFifths; i++) {
-      if (i === 0) continue;
+    for (const i of visibleFifths) {
       const ax = cx + i * genX;
       const ay = cy + i * genY0;
-      if (ax < -w || ax > 2 * w || ay < -h || ay > 2 * h) continue;
-
-      const dist = Math.abs(i) / maxFifths;
-      const alpha = Math.max(0.03, 0.12 - dist * 0.06);
+      const alpha = Math.max(0.03, 0.12 - (Math.abs(i) / maxAbsI) * 0.06);
 
       this.ctx.strokeStyle = `rgba(255,255,255,${alpha})`;
       this.ctx.lineWidth = 0.5;
       this.ctx.beginPath();
-      this.ctx.moveTo(ax - octNx * canvasDiag, ay - octNy * canvasDiag);
-      this.ctx.lineTo(ax + octNx * canvasDiag, ay + octNy * canvasDiag);
+      this.ctx.moveTo(ax - octNx * halfLen, ay - octNy * halfLen);
+      this.ctx.lineTo(ax + octNx * halfLen, ay + octNy * halfLen);
       this.ctx.stroke();
     }
 
