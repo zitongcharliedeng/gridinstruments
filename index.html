@@ -439,7 +439,7 @@
       min-width: 200px;
       padding-top: 0;
       padding-bottom: 0;
-      margin-bottom: 28px;
+      margin-bottom: 34px;
     }
     .tuning-slider-area .slider-track {
       width: 100%;
@@ -447,10 +447,10 @@
     .tet-presets, .slider-presets {
       position: absolute;
       left: 0; right: 24px;
-      top: 50%;  /* anchor at track center line — ticks emanate downward from here */
-      height: 36px; /* must be explicit — absolute children don't expand parent height */
+      top: 50%;
+      height: 44px;
       pointer-events: none;
-      overflow: hidden;
+      overflow: visible;
     }
     .tet-preset-mark, .slider-preset-mark {
       position: absolute;
@@ -473,7 +473,7 @@
     }
     .tet-preset, .slider-preset-btn {
       font-family: var(--font);
-      font-size: 10px;
+      font-size: 9px;
       color: #ccc;
       background: none;
       border: none;
@@ -481,9 +481,6 @@
       cursor: pointer;
       white-space: nowrap;
       line-height: 1.2;
-      max-width: 8ch;
-      overflow: hidden;
-      text-overflow: clip;
     }
     .tet-preset:hover, .slider-preset-btn:hover { color: #fff; }
     .tet-preset.active, .slider-preset-btn.active { color: #88ff88; }
@@ -523,16 +520,21 @@
     }
     #about-close:hover, #info-close:hover { border-color: var(--accent); }
     .slider-info-btn {
-      font-size: 12px;
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 2;
+      font-size: 11px;
       color: #555;
       background: none;
       border: none;
       cursor: pointer;
-      padding: 0 2px;
-      flex-shrink: 0;
+      padding: 2px;
       line-height: 1;
     }
     .slider-info-btn:hover { color: var(--accent, #4af); }
+    .slider-info-btn + .slider-label-overlay { left: 16px; }
     .about-content h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent, #4af); margin: 24px 0 8px; border-bottom: 1px solid #222; padding-bottom: 4px; }
     .about-content h3 { font-size: 12px; color: #aaa; margin: 16px 0 4px; }
     .about-content p { font-size: 12px; line-height: 1.6; color: #ccc; margin: 8px 0; }

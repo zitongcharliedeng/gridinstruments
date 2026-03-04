@@ -406,15 +406,17 @@ export class KeyboardVisualizer {
     const octNx = genX1 / octLen;
     const octNy = genY1 / octLen;
 
+    const fifthLen = Math.sqrt(genX * genX + genY0 * genY0);
+    const maxFifths = fifthLen > 0.1 ? Math.ceil(canvasDiag / fifthLen) + 2 : 20;
+
     this.ctx.save();
-    for (let i = -20; i <= 20; i++) {
+    for (let i = -maxFifths; i <= maxFifths; i++) {
       if (i === 0) continue;
-      // Anchor: i-th fifth position in screen space
       const ax = cx + i * genX;
       const ay = cy + i * genY0;
       if (ax < -w || ax > 2 * w || ay < -h || ay > 2 * h) continue;
 
-      const dist = Math.abs(i) / 20;
+      const dist = Math.abs(i) / maxFifths;
       const alpha = Math.max(0.03, 0.12 - dist * 0.06);
 
       this.ctx.strokeStyle = `rgba(255,255,255,${alpha})`;

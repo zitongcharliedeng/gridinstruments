@@ -475,7 +475,7 @@ class DComposeApp {
 
       const updateSkewLabel = (value: number): void => {
         if (!skewLabel) return;
-        if (Math.abs(value) <= 0.15) skewLabel.innerHTML = "MECH SKEW <span style='color:#88ff88'>[DCompose / Wicki-Hayden]</span>";
+        if (Math.abs(value) <= 0.15) skewLabel.innerHTML = "MECH SKEW <span style='color:#88ff88'>[DCompose]</span>";
         else if (Math.abs(value - 1) <= 0.15) skewLabel.innerHTML = "MECH SKEW <span style='color:#88ff88'>[MidiMech]</span>";
         else skewLabel.textContent = 'MECH SKEW';
       };
@@ -543,7 +543,7 @@ class DComposeApp {
       }
 
       this.populateSliderPresets('skew-presets', this.skewSlider, [
-        { value: 0, label: 'DCompose / Wicki-Hayden', description: 'DCompose / Wicki-Hayden: diagonal parallelogram grid (Striso angle). Wicki-Hayden shares this skew — use WICKED SHEAR to differentiate.' },
+        { value: 0, label: 'DCompose', description: 'DCompose: diagonal parallelogram grid (Striso angle). Wicki-Hayden shares this skew — use WICKED SHEAR to differentiate.' },
         { value: 1, label: 'MidiMech', description: 'MidiMech: orthogonal rectangular grid' },
       ]);
     }
