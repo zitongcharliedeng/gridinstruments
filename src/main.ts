@@ -75,6 +75,40 @@ function isWaveformType(value: unknown): value is WaveformType {
   return typeof value === 'string' && ['sine', 'square', 'sawtooth', 'triangle'].includes(value);
 }
 
+interface SliderPresetPoint { value: number; label: string }
+
+const SKEW_PRESETS: SliderPresetPoint[] = [
+  { value: 0, label: 'DCompose' },
+  { value: 1, label: 'MidiMech' },
+];
+
+const SHEAR_PRESETS: SliderPresetPoint[] = [
+  { value: 0, label: 'DCompose' },
+  { value: 1, label: 'Wicki-Hayden' },
+];
+
+const TUNING_LABEL_PRESETS: SliderPresetPoint[] = TUNING_MARKERS.map(m => ({ value: m.fifth, label: m.name }));
+
+function formatSliderAnnotation(
+  value: number,
+  presets: SliderPresetPoint[],
+  precision: number,
+  unit: string = '',
+): string {
+  let nearest = presets[0];
+  let minDist = Math.abs(value - nearest.value);
+  for (const p of presets) {
+    const d = Math.abs(value - p.value);
+    if (d < minDist) { minDist = d; nearest = p; }
+  }
+  // Threshold = half the last displayed digit (e.g. precision=2 → 0.005)
+  const threshold = 0.5 * Math.pow(10, -precision);
+  if (minDist < threshold) return nearest.label;
+  const rounded = parseFloat(minDist.toFixed(precision));
+  const sign = value > nearest.value ? '+' : '\u2212';
+  return `${nearest.label} ${sign}${rounded.toFixed(precision)}${unit}`;
+}
+
 const tuningTableRows = TUNING_MARKERS
   .slice().sort((a, b) => a.fifth - b.fifth)
   .map(m => `<tr><td><strong>${m.fifth % 1 === 0 ? m.fifth : '~' + m.fifth}¢</strong></td><td>${m.description}</td></tr>`)
@@ -328,7 +362,7 @@ class DComposeApp {
       if (!this.historyVisualizer || !this.historyCanvas) return;
       this.historyVisualizer.resize(
         this.historyCanvas.parentElement?.clientWidth ?? 900,
-        220
+        120
       );
     });
   }
@@ -477,9 +511,8 @@ class DComposeApp {
 
       const updateSkewLabel = (value: number): void => {
         if (!skewLabel) return;
-        if (Math.abs(value) <= 0.15) skewLabel.innerHTML = "MECH SKEW <span style='color:#88ff88'>[DCompose]</span>";
-        else if (Math.abs(value - 1) <= 0.15) skewLabel.innerHTML = "MECH SKEW <span style='color:#88ff88'>[MidiMech]</span>";
-        else skewLabel.textContent = 'MECH SKEW';
+        const ann = formatSliderAnnotation(value, SKEW_PRESETS, 2);
+        skewLabel.innerHTML = `MECH SKEW <span style='color:#88ff88'>${ann}</span>`;
       };
 
       const updateSkewBadge = (value: number) => {
@@ -557,9 +590,8 @@ class DComposeApp {
 
       const updateBfactLabel = (value: number): void => {
         if (!bfactLabel) return;
-        if (Math.abs(value) <= 0.15) bfactLabel.innerHTML = "WICKED SHEAR <span style='color:#88ff88'>[DCompose]</span>";
-        else if (Math.abs(value - 1) <= 0.15) bfactLabel.innerHTML = "WICKED SHEAR <span style='color:#88ff88'>[Wicki-Hayden]</span>";
-        else bfactLabel.textContent = 'WICKED SHEAR';
+        const ann = formatSliderAnnotation(value, SHEAR_PRESETS, 2);
+        bfactLabel.innerHTML = `WICKED SHEAR <span style='color:#88ff88'>${ann}</span>`;
       };
 
       const updateBfactBadge = (value: number) => {
@@ -643,10 +675,7 @@ class DComposeApp {
       const tuningLabel = getElementOrNull('tuning-label', HTMLSpanElement);
       const updateTuningLabel = (value: number) => {
         if (!tuningLabel) return;
-        const { marker, distance } = findNearestMarker(value);
-        const roundedDist = Math.round(distance * 10) / 10;
-        const sign = value > marker.fifth ? '+' : '\u2212';
-        const ann = distance < 0.05 ? marker.name : `${marker.name} ${sign}${roundedDist.toFixed(1)}\u00a2`;
+        const ann = formatSliderAnnotation(value, TUNING_LABEL_PRESETS, 1, '\u00a2');
         tuningLabel.innerHTML = `FIFTHS TUNING (cents) <span style='color:#88ff88'>${ann}</span>`;
       };
       updateTuningLabel(FIFTH_DEFAULT);
@@ -669,12 +698,6 @@ class DComposeApp {
         updateTuningLabel(value);
         this.updateSliderFill(this.tuningSlider!);
         this.saveSetting('tuning', this.tuningSlider!.value);
-        // Sync active TET preset button
-        document.querySelectorAll('.tet-preset').forEach(b => {
-          const btn = b instanceof HTMLElement ? b : null;
-          if (!btn) return;
-          btn.classList.toggle('active', Math.abs(Number(btn.dataset.fifth) - value) < 0.1);
-        });
       });
 
       this.tuningSlider.addEventListener('dblclick', () => {
@@ -707,11 +730,6 @@ class DComposeApp {
               updateThumbBadge(raw);
               this.updateSliderFill(this.tuningSlider);
               updateTuningLabel(raw);
-              document.querySelectorAll('.tet-preset').forEach(b => {
-                const btn = b instanceof HTMLElement ? b : null;
-                if (!btn) return;
-                btn.classList.toggle('active', Math.abs(Number(btn.dataset.fifth) - raw) < 0.1);
-              });
             }
           } else {
             // Revert to current slider value
@@ -724,37 +742,13 @@ class DComposeApp {
     }
     // Note: #fifth-custom-input was removed; #tuning-thumb-badge input handles direct value entry
 
-    // Populate TET preset buttons — only named markers (5, 7, 12, 17, 19)
-    const presetsContainer = document.getElementById('tet-presets');
-    if (presetsContainer) {
-      const sliderRange = FIFTH_MAX - FIFTH_MIN;
-
-      TUNING_MARKERS.forEach(marker => {
-        const ratio = (marker.fifth - FIFTH_MIN) / sliderRange;
-        const mark = document.createElement('div');
-        mark.className = 'tet-preset-mark';
-        mark.style.left = `calc(${ratio.toFixed(6)} * (100% - 3px) + 1.5px)`;
-
-        const tickEl = document.createElement('div');
-        tickEl.className = 'tet-tick tet-tick-long';
-        const btn = document.createElement('button');
-        btn.className = 'tet-preset';
-        btn.dataset.fifth = marker.fifth.toString();
-        btn.textContent = marker.name;
-        btn.title = `${marker.description} (${marker.fifth.toFixed(2)}\u00a2)`;
-        btn.addEventListener('click', () => {
-          if (this.tuningSlider) {
-            this.tuningSlider.value = marker.fifth.toString();
-            this.tuningSlider.dispatchEvent(new Event('input'));
-          }
-        });
-        mark.appendChild(tickEl);
-        mark.appendChild(btn);
-        presetsContainer.appendChild(mark);
-      });
-
-      presetsContainer.querySelector('.tet-preset[data-fifth="700"]')?.classList.add('active');
-
+    if (this.tuningSlider) {
+      const tetPresets = TUNING_MARKERS.map(m => ({
+        value: m.fifth,
+        label: m.name,
+        description: `${m.description} (${m.fifth.toFixed(2)}\u00a2)`,
+      }));
+      this.populateSliderPresets('tet-presets', this.tuningSlider, tetPresets);
     }
 
     // Volume
@@ -1039,21 +1033,62 @@ class DComposeApp {
     });
 
 
-    // History visualizer toggle
-    const historyToggle = getElementOrNull('history-toggle', HTMLButtonElement);
-    const historyWrapper = document.querySelector<HTMLElement>('.history-wrapper');
-    if (historyToggle && historyWrapper) {
-      const savedHidden = localStorage.getItem('gi_history_hidden') === 'true';
-      if (savedHidden) {
-        historyWrapper.classList.add('hidden');
-        historyToggle.textContent = '▶ History';
-      }
-      historyToggle.addEventListener('click', () => {
-        const isHidden = historyWrapper.classList.toggle('hidden');
-        historyToggle.textContent = isHidden ? '▶ History' : '▼ History';
-        try { localStorage.setItem('gi_history_hidden', isHidden.toString()); } catch { /* private mode */ }
-        // Trigger resize so keyboard canvas fills the freed space
-        window.dispatchEvent(new Event('resize'));
+    const visualiserPanel = document.getElementById('visualiser-panel');
+    if (visualiserPanel && localStorage.getItem('gi_history_hidden') === 'true') {
+      visualiserPanel.classList.add('collapsed');
+    }
+    const pedalsPanel = document.getElementById('pedals-panel');
+    if (pedalsPanel && localStorage.getItem('gi_pedals_hidden') === 'true') {
+      pedalsPanel.classList.add('collapsed');
+    }
+
+    // Grid settings overlay toggle
+    const gridCog = getElementOrNull('grid-settings-btn', HTMLButtonElement);
+    const gridOverlay = document.getElementById('grid-overlay');
+    if (gridCog && gridOverlay) {
+      gridCog.addEventListener('click', () => {
+        const isHidden = gridOverlay.classList.toggle('hidden');
+        gridCog.classList.toggle('active', !isHidden);
+      });
+      gridOverlay.addEventListener('click', (e) => {
+        if (e.target === gridOverlay) {
+          gridOverlay.classList.add('hidden');
+          gridCog.classList.remove('active');
+        }
+      });
+    }
+
+    // Pedal touch handlers
+    const sustainPedal = getElementOrNull('sustain-indicator', HTMLButtonElement);
+    const vibratoPedal = getElementOrNull('vibrato-indicator', HTMLButtonElement);
+    if (sustainPedal) {
+      sustainPedal.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        this.synth.setSustain(true);
+        sustainPedal.classList.add('active');
+      });
+      sustainPedal.addEventListener('pointerup', () => {
+        this.synth.setSustain(false);
+        sustainPedal.classList.remove('active');
+      });
+      sustainPedal.addEventListener('pointerleave', () => {
+        this.synth.setSustain(false);
+        sustainPedal.classList.remove('active');
+      });
+    }
+    if (vibratoPedal) {
+      vibratoPedal.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        this.synth.setVibrato(true);
+        vibratoPedal.classList.add('active');
+      });
+      vibratoPedal.addEventListener('pointerup', () => {
+        this.synth.setVibrato(false);
+        vibratoPedal.classList.remove('active');
+      });
+      vibratoPedal.addEventListener('pointerleave', () => {
+        this.synth.setVibrato(false);
+        vibratoPedal.classList.remove('active');
       });
     }
     // Initialize slider progress fills
@@ -1362,15 +1397,18 @@ class DComposeApp {
     const sliderMin = parseFloat(slider.min);
     const sliderMax = parseFloat(slider.max);
     const range = sliderMax - sliderMin;
+    const alternate = container.hasAttribute('data-alternate-ticks');
+    const sorted = [...presets].sort((a, b) => a.value - b.value);
 
-    for (const preset of presets) {
+    sorted.forEach((preset, i) => {
       const ratio = (preset.value - sliderMin) / range;
       const mark = document.createElement('div');
       mark.className = 'slider-preset-mark';
       mark.style.left = `calc(${ratio.toFixed(6)} * (100% - 3px) + 1.5px)`;
 
       const tick = document.createElement('div');
-      tick.className = 'slider-tick slider-tick-long';
+      const tickClass = alternate && i % 2 === 1 ? 'slider-tick-staggered' : 'slider-tick-long';
+      tick.className = `slider-tick ${tickClass}`;
 
       const btn = document.createElement('button');
       btn.className = 'slider-preset-btn';
@@ -1385,7 +1423,7 @@ class DComposeApp {
       mark.appendChild(tick);
       mark.appendChild(btn);
       container.appendChild(mark);
-    }
+    });
 
     const updateActive = () => {
       const val = parseFloat(slider.value);
@@ -1479,15 +1517,126 @@ function hzToNoteAnnotation(hz: number, _d4Hz: number): string {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  const sidebarToggle = getElementOrNull('sidebar-toggle', HTMLButtonElement);
-  const sidebar = document.getElementById('sidebar');
-  sidebarToggle?.addEventListener('click', () => {
-    sidebar?.classList.toggle('collapsed');
-    if (sidebarToggle) {
-      sidebarToggle.textContent = sidebar?.classList.contains('collapsed') ? '▶' : '◀';
+  if (parseInt(localStorage.getItem('gi_visualiser_h') ?? '0', 10) > window.innerHeight * 0.6) localStorage.removeItem('gi_visualiser_h');
+  if (parseInt(localStorage.getItem('gi_pedals_h') ?? '0', 10) > window.innerHeight * 0.6) localStorage.removeItem('gi_pedals_h');
+
+  document.getElementById('reset-layout')?.addEventListener('click', () => {
+    Object.keys(localStorage).filter(k => k.startsWith('gi_')).forEach(k => localStorage.removeItem(k));
+    location.reload();
+  });
+
+  document.querySelectorAll<HTMLElement>('.panel-resize-handle').forEach(handle => {
+    const targetId = handle.dataset.target;
+    const minH = parseInt(handle.dataset.min ?? '40', 10);
+    const dataMax = parseInt(handle.dataset.max ?? '600', 10);
+    const defaultH = parseInt(handle.dataset.default ?? '120', 10);
+    const storageKey = handle.dataset.key;
+    const panel = targetId ? document.getElementById(targetId) : null;
+    if (!panel) return;
+
+    // Dynamic max: never exceed 60% of viewport
+    const getMaxH = () => Math.min(dataMax, Math.floor(window.innerHeight * 0.6));
+
+    const canvas = panel.querySelector('canvas');
+    const applyHeight = (h: number) => {
+      const clamped = Math.max(minH, Math.min(getMaxH(), h));
+      panel.style.height = clamped + 'px';
+      if (canvas) canvas.style.height = clamped + 'px';
+      return clamped;
+    };
+
+    if (storageKey) {
+      const saved = localStorage.getItem(storageKey);
+      if (saved) {
+        const h = applyHeight(parseInt(saved, 10));
+        localStorage.setItem(storageKey, Math.round(h).toString());
+      }
     }
-    // Trigger resize after CSS transition (150ms) completes so canvas reads final width
-    setTimeout(() => window.dispatchEvent(new Event('resize')), 160);
+
+    const dirUp = handle.dataset.direction === 'up';
+    const hiddenKey = handle.dataset.hiddenKey;
+    const collapseThreshold = minH + 10;
+
+    const persistHeight = (h: number) => {
+      if (storageKey) try { localStorage.setItem(storageKey, Math.round(h).toString()); } catch { /* */ }
+    };
+
+    const toggleCollapse = () => {
+      const isCollapsed = panel.classList.toggle('collapsed');
+      if (hiddenKey) try { localStorage.setItem(hiddenKey, isCollapsed.toString()); } catch { /* */ }
+      if (!isCollapsed) applyHeight(defaultH);
+      persistHeight(isCollapsed ? 0 : defaultH);
+      window.dispatchEvent(new Event('resize'));
+    };
+
+    let startY = 0;
+    let startH = 0;
+    handle.addEventListener('pointerdown', (e: PointerEvent) => {
+      e.preventDefault();
+      handle.setPointerCapture(e.pointerId);
+      handle.classList.add('dragging');
+      panel.style.transition = 'none';
+      panel.classList.remove('collapsed');
+      startY = e.clientY;
+      startH = panel.getBoundingClientRect().height;
+    });
+    handle.addEventListener('pointermove', (e: PointerEvent) => {
+      if (!handle.classList.contains('dragging')) return;
+      const delta = dirUp ? startY - e.clientY : e.clientY - startY;
+      applyHeight(startH + delta);
+    });
+    const stopDrag = () => {
+      if (!handle.classList.contains('dragging')) return;
+      handle.classList.remove('dragging');
+      panel.style.transition = '';
+      const h = panel.getBoundingClientRect().height;
+      if (h <= collapseThreshold) {
+        panel.classList.add('collapsed');
+        if (hiddenKey) try { localStorage.setItem(hiddenKey, 'true'); } catch { /* */ }
+      }
+      persistHeight(h);
+      window.dispatchEvent(new Event('resize'));
+    };
+    handle.addEventListener('pointerup', stopDrag);
+    handle.addEventListener('pointercancel', stopDrag);
+
+    handle.addEventListener('dblclick', () => {
+      const h = applyHeight(defaultH);
+      panel.classList.remove('collapsed');
+      persistHeight(h);
+      if (hiddenKey) try { localStorage.setItem(hiddenKey, 'false'); } catch { /* */ }
+      window.dispatchEvent(new Event('resize'));
+    });
+
+    handle.addEventListener('keydown', (e: KeyboardEvent) => {
+      const step = 10;
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        const current = panel.getBoundingClientRect().height;
+        const grow = dirUp ? e.key === 'ArrowUp' : e.key === 'ArrowDown';
+        const h = applyHeight(current + (grow ? step : -step));
+        persistHeight(h);
+        window.dispatchEvent(new Event('resize'));
+      } else if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        toggleCollapse();
+      }
+    });
+  });
+
+  document.addEventListener('wheel', (e) => { if (e.ctrlKey) e.preventDefault(); }, { passive: false });
+  document.addEventListener('gesturestart', (e) => e.preventDefault());
+  document.addEventListener('gesturechange', (e) => e.preventDefault());
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      const overlay = document.getElementById('grid-overlay');
+      const cog = document.getElementById('grid-settings-btn');
+      if (overlay && !overlay.classList.contains('hidden')) {
+        overlay.classList.add('hidden');
+        cog?.classList.remove('active');
+      }
+    }
   });
 
   // About dialog
@@ -1514,6 +1663,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupInfoDialogs();
 
   const app = new DComposeApp();
+  requestAnimationFrame(() => window.dispatchEvent(new Event('resize')));
   // Create and start the AppMachine actor (observes only — DComposeApp still controls all behaviour)
   const appActor = createActor(appMachine, {
     input: { initialVolume: -10.5, defaultZoom: 1.0, touchDevice: 'ontouchstart' in window },

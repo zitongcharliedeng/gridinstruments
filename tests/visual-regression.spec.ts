@@ -11,8 +11,8 @@ test.describe('DCompose Web — Visual Regression (State-Machine Tests)', () => 
     await page.waitForLoadState('networkidle');
     // Wait for canvas + JS init (badge positions, slider fills, TET presets)
     await page.waitForTimeout(2000);
-    // Open sidebar (starts collapsed by default)
-    await page.locator('#sidebar-toggle').click();
+    // Open settings overlay (starts hidden by default)
+    await page.locator('#grid-settings-btn').click();
     await page.waitForTimeout(200);
   });
 
@@ -251,25 +251,25 @@ test.describe('DCompose Web — Visual Regression (State-Machine Tests)', () => 
 
   test.describe('TET Preset Invariants', () => {
     /**
-     * @reason TET tick marks originate from the slider track center line (ISC-FS-4)
-     *   via .tet-presets { top: 50% }. Ticks bridge downward to their labels.
-     * @design-intent Ticks create a ruler-like visual connecting the slider
-     *   position to the TET preset labels below.
-     */
+      * @reason TET tick marks originate from the slider track center line (ISC-FS-4)
+      *   via .tet-presets { top: 50% }. Ticks bridge downward to their labels.
+      * @design-intent Ticks create a ruler-like visual connecting the slider
+      *   position to the slider preset labels below.
+      */
     test('SM-TET-BELOW-1: TET ticks start at track center, buttons below track', async ({ page }) => {
       const track = await page.locator('.tuning-slider-area .slider-track').boundingBox();
       expect(track).toBeTruthy();
-      const marks = page.locator('.tet-preset-mark');
+      const marks = page.locator('.slider-preset-mark');
       const count = await marks.count();
       expect(count).toBeGreaterThan(0);
       const trackCenter = track!.y + track!.height / 2;
       for (let i = 0; i < count; i++) {
         // Tick top edge starts at or near track center (±3px tolerance)
-        const tick = await marks.nth(i).locator('.tet-tick').boundingBox();
+        const tick = await marks.nth(i).locator('.slider-tick').boundingBox();
         expect(tick).toBeTruthy();
         expect(Math.abs(tick!.y - trackCenter)).toBeLessThanOrEqual(120);
         // Preset button text is below the track bottom edge
-        const btn = await marks.nth(i).locator('.tet-preset').boundingBox();
+        const btn = await marks.nth(i).locator('.slider-preset-btn').boundingBox();
         expect(btn).toBeTruthy();
         expect(btn!.y).toBeGreaterThanOrEqual(track!.y + track!.height - 2);
       }
@@ -292,7 +292,7 @@ test.describe('DCompose Web — Visual Regression (State-Machine Tests)', () => 
      *   for quick scanning of waveform and layout selections.
      */
     test('SM-COLOR-1: Wave and Layout labels are white', async ({ page }) => {
-      const colors = await page.locator('.sidebar-section .ctrl-label').evaluateAll(
+      const colors = await page.locator('.overlay-section .ctrl-label').evaluateAll(
         els => els.map(el => getComputedStyle(el).color)
       );
       for (const c of colors) {
@@ -436,7 +436,7 @@ test.describe('DCompose Web — Visual Regression (State-Machine Tests)', () => 
      */
     test('SM-STRUCT-3: No rounded corners on controls', async ({ page }) => {
       const selectors = [
-        '#sidebar', '#keyboard-container', 'select', 'input[type="text"]',
+        '#grid-overlay', '#keyboard-container', 'select', 'input[type="text"]',
       ];
       for (const sel of selectors) {
         const els = page.locator(sel);
@@ -537,12 +537,12 @@ test.describe('DCompose Web — Visual Regression (State-Machine Tests)', () => 
 
   test.describe('Golden Screenshots — Fast Path', () => {
     /**
-     * @reason Sidebar contains all settings controls — tuning, skew, zoom, d-ref, wave, layout, MIDI.
-     * @design-intent Pixel-level snapshot catches regressions in sidebar layout.
-     */
-    test('GOLDEN-1: Sidebar snapshot', async ({ page }) => {
-      const sidebar = page.locator('#sidebar');
-      await expect(sidebar).toHaveScreenshot('sidebar.png', {
+      * @reason Grid overlay contains all settings controls — tuning, skew, zoom, d-ref, wave, layout, MIDI.
+      * @design-intent Pixel-level snapshot catches regressions in overlay layout.
+      */
+    test('GOLDEN-1: Grid overlay snapshot', async ({ page }) => {
+      const overlay = page.locator('#grid-overlay');
+      await expect(overlay).toHaveScreenshot('grid-overlay.png', {
         maxDiffPixelRatio: 0.01,
       });
     });

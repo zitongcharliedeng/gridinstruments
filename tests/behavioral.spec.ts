@@ -5,8 +5,8 @@ test.describe('DCompose Web — Behavioral State Transitions', () => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
-    // Sidebar starts collapsed — open it so slider/input tests can interact
-    await page.locator('#sidebar-toggle').click();
+    // Overlay starts hidden — open it so slider/input tests can interact
+    await page.locator('#grid-settings-btn').click();
     await page.waitForTimeout(300);
   });
 
@@ -267,7 +267,7 @@ test.describe('DCompose Web — Behavioral State Transitions', () => {
      *   must stay on body/synth so notes can still be played via keyboard.
      */
     test('BH-FOCUS-PRESERVE-1: Settings toggle does not steal synth focus', async ({ page }) => {
-      await page.locator('#sidebar-toggle').click();
+      await page.locator('#grid-settings-btn').click();
       await page.waitForTimeout(300);
       const activeTagName = await page.evaluate(() => document.activeElement?.tagName);
       expect(activeTagName).not.toBe('INPUT');
@@ -283,16 +283,16 @@ test.describe('DCompose Web — Behavioral State Transitions', () => {
      *   which layout extreme they're closest to while dragging.
      */
     test('BH-SKEW-1: Inline skew label updates correctly', async ({ page }) => {
-      // At default skew=0, label should show [MidiMech]
-      await expect(page.locator('#skew-label')).toContainText('[MidiMech]');
+      // At default skew=0, annotation shows nearest preset (DCompose)
+      await expect(page.locator('#skew-label')).toContainText('DCompose');
       await page.evaluate(() => {
         const s = document.getElementById('skew-slider') as HTMLInputElement;
         s.value = '1';
         s.dispatchEvent(new Event('input'));
       });
       await page.waitForTimeout(200);
-      // At skew=1, label should show [DCompose]
-      await expect(page.locator('#skew-label')).toContainText('[DCompose]');
+      // At skew=1, annotation shows MidiMech
+      await expect(page.locator('#skew-label')).toContainText('MidiMech');
     });
   });
 
@@ -474,12 +474,16 @@ test.describe('DCompose Web — Behavioral State Transitions', () => {
      *   where their value sits within the range — broken fill is disorienting.
      */
     test('BH-FILL-1: Slider fill at minimum shows near-zero fill', async ({ page }) => {
-      // Skew starts at 0 (its minimum)
+      await page.evaluate(() => {
+        const s = document.getElementById('skew-slider') as HTMLInputElement;
+        s.value = s.min;
+        s.dispatchEvent(new Event('input'));
+      });
+      await page.waitForTimeout(100);
       const bg = await page.locator('#skew-slider').evaluate(
         (el) => (el as HTMLElement).style.background
       );
       expect(bg).toContain('linear-gradient');
-      // First percentage in the gradient should be < 5%
       const match = bg.match(/(\d+\.?\d*)%/);
       expect(match, 'Gradient should contain a percentage').toBeTruthy();
       expect(parseFloat(match![1])).toBeLessThan(5);
@@ -488,7 +492,7 @@ test.describe('DCompose Web — Behavioral State Transitions', () => {
     test('BH-FILL-2: Slider fill at maximum shows near-full fill', async ({ page }) => {
       await page.evaluate(() => {
         const s = document.getElementById('skew-slider') as HTMLInputElement;
-        s.value = '1';
+        s.value = s.max;
         s.dispatchEvent(new Event('input'));
       });
       await page.waitForTimeout(100);
@@ -707,7 +711,13 @@ test.describe('DCompose Web — Behavioral State Transitions', () => {
   });
 
   test.describe('Portrait Mobile Layout', () => {
-    test('BH-MOB-1: Collapsed sidebar takes zero space — canvas fills full 390px viewport width', async ({ browser }) => {
+    /**
+     * @reason On portrait mobile, the overlay is absolutely positioned and starts hidden,
+     *   so the keyboard canvas must fill the full viewport width.
+     * @design-intent Mobile users get the maximum playable grid area. The overlay never
+     *   takes layout flow space because it uses position: absolute.
+     */
+    test('BH-MOB-1: Overlay starts hidden — canvas fills full 390px viewport width', async ({ browser }) => {
       const ctx = await browser.newContext({
         viewport: { width: 390, height: 844 },
         hasTouch: true,
@@ -717,16 +727,17 @@ test.describe('DCompose Web — Behavioral State Transitions', () => {
       await p.waitForLoadState('networkidle');
       await p.waitForTimeout(1500);
 
-      // Sidebar starts collapsed and must take zero layout space
-      const sidebarWidth = await p.evaluate(() =>
-        document.getElementById('sidebar')!.getBoundingClientRect().width
+      // Overlay starts hidden (position: absolute, no layout impact)
+      const overlayHidden = await p.evaluate(() =>
+        document.getElementById('grid-overlay')!.classList.contains('hidden')
       );
-      expect(sidebarWidth, 'collapsed sidebar must take 0px width').toBe(0);
+      expect(overlayHidden).toBe(true);
 
-      // Keyboard container fills the full viewport width (sidebar not stealing space)
-      const containerBox = await p.locator('#keyboard-container').boundingBox();
-      expect(containerBox, 'keyboard-container must exist').not.toBeNull();
-      expect(containerBox!.width, 'keyboard-container must fill viewport width (minus scrollbar)').toBeGreaterThanOrEqual(370);
+      // Canvas fills viewport width
+      const canvasWidth = await p.evaluate(() =>
+        document.getElementById('keyboard-canvas')!.getBoundingClientRect().width
+      );
+      expect(canvasWidth).toBeGreaterThanOrEqual(380); // 390px viewport minus tiny margin
 
       await ctx.close();
     });
