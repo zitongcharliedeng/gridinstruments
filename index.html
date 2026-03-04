@@ -497,7 +497,7 @@
     }
 
     /* ── About dialog ─────────────────────────────────────────── */
-    #about-dialog {
+    #about-dialog, #info-dialog {
       background: #111;
       color: #fff;
       border: 1px solid #333;
@@ -508,8 +508,8 @@
       overflow-y: auto;
       font-family: "JetBrains Mono", monospace;
     }
-    #about-dialog::backdrop { background: rgba(0,0,0,0.7); }
-    #about-close {
+    #about-dialog::backdrop, #info-dialog::backdrop { background: rgba(0,0,0,0.7); }
+    #about-close, #info-close {
       position: sticky;
       top: 0;
       float: right;
@@ -521,7 +521,18 @@
       font-family: inherit;
       font-size: 12px;
     }
-    #about-close:hover { border-color: var(--accent); }
+    #about-close:hover, #info-close:hover { border-color: var(--accent); }
+    .slider-info-btn {
+      font-size: 12px;
+      color: #555;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0 2px;
+      flex-shrink: 0;
+      line-height: 1;
+    }
+    .slider-info-btn:hover { color: var(--accent, #4af); }
     .about-content h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent, #4af); margin: 24px 0 8px; border-bottom: 1px solid #222; padding-bottom: 4px; }
     .about-content h3 { font-size: 12px; color: #aaa; margin: 16px 0 4px; }
     .about-content p { font-size: 12px; line-height: 1.6; color: #ccc; margin: 8px 0; }
@@ -625,8 +636,9 @@
         <div class="sidebar-section">
           <div class="tuning-slider-area">
             <div class="slider-track">
+              <button class="slider-info-btn" data-info="tuning">ⓘ</button>
               <span class="slider-label-overlay" id="tuning-label">FIFTHS TUNING (cents)</span>
-              <input type="range" id="tuning-slider" min="683" max="722" step="0.01" value="700" title="Fifth interval size in cents">
+              <input type="range" id="tuning-slider" min="683" max="722" step="0.01" value="700">
               <input type="text" class="badge-input" id="tuning-thumb-badge" value="700" title="Edit fifth interval in cents">
               <button class="slider-reset" id="tuning-reset" title="Reset to 12-TET (700¢)">↻</button>
             </div>
@@ -637,8 +649,9 @@
         <div class="sidebar-section">
           <div class="tuning-slider-area">
             <div class="slider-track">
+              <button class="slider-info-btn" data-info="skew">ⓘ</button>
               <span class="slider-label-overlay" id="skew-label">MECH SKEW</span>
-              <input type="range" id="skew-slider" min="-0.5" max="1.5" step="0.01" value="0" title="Mech skew: 0=DCompose, 1=MidiMech. Extrapolates beyond.">
+              <input type="range" id="skew-slider" min="-0.5" max="1.5" step="0.01" value="0">
               <input type="text" class="badge-input" id="skew-thumb-badge" value="0.00" title="Edit skew value.">
               <button class="slider-reset" id="skew-reset" title="Reset to DCompose (0)">↻</button>
             </div>
@@ -649,8 +662,9 @@
         <div class="sidebar-section">
           <div class="tuning-slider-area">
             <div class="slider-track">
+              <button class="slider-info-btn" data-info="shear">ⓘ</button>
               <span class="slider-label-overlay" id="bfact-label">WICKED SHEAR</span>
-              <input type="range" id="bfact-slider" min="-0.5" max="1.5" step="0.01" value="0" title="Wicked shear: 0=no shear, 1=Wicki-Hayden horizontal rows. Pure affine shear mapping (area-preserving). Extrapolates beyond.">
+              <input type="range" id="bfact-slider" min="-0.5" max="1.5" step="0.01" value="0">
               <input type="text" class="badge-input" id="bfact-thumb-badge" value="0.00" title="Edit wicked-ness value.">
               <button class="slider-reset" id="bfact-reset" title="Reset to default (0)">↻</button>
             </div>
@@ -734,6 +748,11 @@
   <dialog id="about-dialog">
     <button id="about-close" autofocus>✕</button>
     <div id="about-content" class="about-content"></div>
+  </dialog>
+
+  <dialog id="info-dialog">
+    <button id="info-close" autofocus>✕</button>
+    <div id="info-content" class="about-content"></div>
   </dialog>
 
   <script type="module" src="/src/main.ts"></script>
