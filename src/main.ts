@@ -131,6 +131,7 @@ class DComposeApp {
   private historyCanvas: HTMLCanvasElement;
   private layoutSelect: HTMLSelectElement | null = null;
   private skewSlider: HTMLInputElement | null = null;
+  private bfactSlider: HTMLInputElement | null = null;
   private tuningSlider: HTMLInputElement | null = null;
 
   private volumeSlider: HTMLInputElement | null = null;
@@ -142,7 +143,7 @@ class DComposeApp {
   private updateGraffiti: (() => void) | null = null;
 
   private static readonly STORAGE_KEYS = {
-    zoom: 'gi_zoom', skew: 'gi_skew', tuning: 'gi_tuning',
+    zoom: 'gi_zoom', skew: 'gi_skew', bfact: 'gi_bfact', tuning: 'gi_tuning',
     volume: 'gi_volume', waveform: 'gi_waveform', dref: 'gi_dref', layout: 'gi_layout',
   } as const;
 
@@ -166,6 +167,7 @@ class DComposeApp {
     this.historyCanvas = getElement('history-canvas', HTMLCanvasElement);
     this.layoutSelect = getElement('layout-select', HTMLSelectElement);
     this.skewSlider = getElement('skew-slider', HTMLInputElement);
+    this.bfactSlider = getElement('bfact-slider', HTMLInputElement);
     this.tuningSlider = getElement('tuning-slider', HTMLInputElement);
 
     this.volumeSlider = getElement('volume-slider', HTMLInputElement);
@@ -379,9 +381,9 @@ class DComposeApp {
 
       const updateSkewLabel = (value: number): void => {
         if (!skewLabel) return;
-        if (value <= 0.15) skewLabel.innerHTML = "SKEW <span style='color:#88ff88'>[MidiMech]</span>";
-        else if (value >= 0.85) skewLabel.innerHTML = "SKEW <span style='color:#88ff88'>[DCompose]</span>";
-        else skewLabel.textContent = 'SKEW';
+        if (value <= 0.15) skewLabel.innerHTML = "MECH SKEW <span style='color:#88ff88'>[DCompose]</span>";
+        else if (value >= 0.85) skewLabel.innerHTML = "MECH SKEW <span style='color:#88ff88'>[MidiMech]</span>";
+        else skewLabel.textContent = 'MECH SKEW';
       };
 
       const updateSkewBadge = (value: number) => {
@@ -432,10 +434,10 @@ class DComposeApp {
             this.updateGraffiti?.();
             updateSkewBadge(raw);
             updateSkewLabel(raw);
-            // Clamp slider thumb to its range, but let the actual skew go beyond
             if (this.skewSlider) {
-              const clamped = Math.max(0, Math.min(1, raw));
-              this.skewSlider.value = clamped.toString();
+              const sMin = parseFloat(this.skewSlider.min);
+              const sMax = parseFloat(this.skewSlider.max);
+              this.skewSlider.value = Math.max(sMin, Math.min(sMax, raw)).toString();
               this.updateSliderFill(this.skewSlider);
             }
           } else {
@@ -445,7 +447,87 @@ class DComposeApp {
         });
         skewBadge.addEventListener('focus', () => skewBadge.select());
       }
+
+      this.populateSliderPresets('skew-presets', this.skewSlider, [
+        { value: 0, label: 'DCompose', description: 'DCompose: diagonal parallelogram grid (Striso angle)' },
+        { value: 1, label: 'MidiMech', description: 'MidiMech: orthogonal rectangular grid' },
+      ]);
     }
+
+    // Shear (bFact) slider — row-flattening toward Wicki-Hayden
+    if (this.bfactSlider) {
+      const bfactBadge = getElementOrNull('bfact-thumb-badge', HTMLInputElement);
+      const bfactLabel = getElementOrNull('bfact-label', HTMLSpanElement);
+
+      const updateBfactLabel = (value: number): void => {
+        if (!bfactLabel) return;
+        if (value <= 0.15) bfactLabel.innerHTML = "WICKED SHEAR <span style='color:#88ff88'>[DCompose]</span>";
+        else if (value >= 0.85) bfactLabel.innerHTML = "WICKED SHEAR <span style='color:#88ff88'>[Wicki-Hayden]</span>";
+        else bfactLabel.textContent = 'WICKED SHEAR';
+      };
+
+      const updateBfactBadge = (value: number) => {
+        if (!bfactBadge) return;
+        const sliderMin = parseFloat(this.bfactSlider!.min);
+        const sliderMax = parseFloat(this.bfactSlider!.max);
+        const clampedForPos = Math.max(sliderMin, Math.min(sliderMax, value));
+        const pct = ((clampedForPos - sliderMin) / (sliderMax - sliderMin)) * 100;
+        bfactBadge.style.left = `${pct}%`;
+        bfactBadge.value = value.toFixed(2);
+      };
+
+      const savedBfact = this.loadSetting('bfact', '0');
+      this.bfactSlider.value = savedBfact;
+      updateBfactBadge(parseFloat(savedBfact));
+      updateBfactLabel(parseFloat(savedBfact));
+      this.visualizer?.setBFact(parseFloat(savedBfact));
+
+      this.bfactSlider.addEventListener('input', () => {
+        const val = parseFloat(this.bfactSlider!.value);
+        this.visualizer?.setBFact(val);
+        this.updateGraffiti?.();
+        updateBfactBadge(val);
+        updateBfactLabel(val);
+        this.updateSliderFill(this.bfactSlider!);
+        this.saveSetting('bfact', this.bfactSlider!.value);
+      });
+
+      const bfactReset = getElementOrNull('bfact-reset', HTMLButtonElement);
+      bfactReset?.addEventListener('click', () => {
+        if (this.bfactSlider) {
+          this.bfactSlider.value = '0';
+          this.bfactSlider.dispatchEvent(new Event('input'));
+        }
+      });
+
+      if (bfactBadge) {
+        bfactBadge.addEventListener('change', () => {
+          const raw = parseFloat(bfactBadge.value);
+          if (isFinite(raw)) {
+            this.visualizer?.setBFact(raw);
+            this.updateGraffiti?.();
+            updateBfactBadge(raw);
+            updateBfactLabel(raw);
+            if (this.bfactSlider) {
+              const sMin = parseFloat(this.bfactSlider.min);
+              const sMax = parseFloat(this.bfactSlider.max);
+              this.bfactSlider.value = Math.max(sMin, Math.min(sMax, raw)).toString();
+              this.updateSliderFill(this.bfactSlider);
+            }
+          } else {
+            const current = parseFloat(this.bfactSlider?.value ?? '0');
+            bfactBadge.value = current.toFixed(2);
+          }
+        });
+        bfactBadge.addEventListener('focus', () => bfactBadge.select());
+      }
+
+      this.populateSliderPresets('bfact-presets', this.bfactSlider, [
+        { value: 0, label: 'DCompose', description: 'DCompose: no row shear (default lattice)' },
+        { value: 1, label: 'Wicki-Hayden', description: 'Wicki-Hayden: horizontal rows (shear mapping from Tonnetz)' },
+      ]);
+    }
+
     // Tuning slider
 
     if (this.tuningSlider) {
@@ -1199,6 +1281,52 @@ class DComposeApp {
       this.mpe.sendPitchBend(noteId, 0);
     }
     this.vibratoPhase = 0;
+  }
+
+  private populateSliderPresets(
+    containerId: string,
+    slider: HTMLInputElement,
+    presets: Array<{ value: number; label: string; description: string }>,
+  ): void {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    const sliderMin = parseFloat(slider.min);
+    const sliderMax = parseFloat(slider.max);
+    const range = sliderMax - sliderMin;
+
+    for (const preset of presets) {
+      const ratio = (preset.value - sliderMin) / range;
+      const mark = document.createElement('div');
+      mark.className = 'slider-preset-mark';
+      mark.style.left = `calc(${ratio.toFixed(6)} * (100% - 3px) + 1.5px)`;
+
+      const tick = document.createElement('div');
+      tick.className = 'slider-tick slider-tick-long';
+
+      const btn = document.createElement('button');
+      btn.className = 'slider-preset-btn';
+      btn.dataset.value = preset.value.toString();
+      btn.textContent = preset.label;
+      btn.title = preset.description;
+      btn.addEventListener('click', () => {
+        slider.value = preset.value.toString();
+        slider.dispatchEvent(new Event('input'));
+      });
+
+      mark.appendChild(tick);
+      mark.appendChild(btn);
+      container.appendChild(mark);
+    }
+
+    const updateActive = () => {
+      const val = parseFloat(slider.value);
+      container.querySelectorAll('.slider-preset-btn').forEach(b => {
+        const pVal = parseFloat((b as HTMLElement).dataset.value ?? '');
+        (b as HTMLElement).classList.toggle('active', Math.abs(val - pVal) < 0.05);
+      });
+    };
+    slider.addEventListener('input', updateActive);
+    updateActive();
   }
 
   // ─── Slider fill ─────────────────────────────────────────────────────────

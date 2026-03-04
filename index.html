@@ -444,7 +444,7 @@
     .tuning-slider-area .slider-track {
       width: 100%;
     }
-    .tet-presets {
+    .tet-presets, .slider-presets {
       position: absolute;
       left: 0; right: 24px;
       top: 50%;  /* anchor at track center line — ticks emanate downward from here */
@@ -452,7 +452,7 @@
       pointer-events: none;
       overflow: hidden;
     }
-    .tet-preset-mark {
+    .tet-preset-mark, .slider-preset-mark {
       position: absolute;
       transform: translateX(-50%);
       display: flex;
@@ -461,17 +461,17 @@
       pointer-events: auto;
       top: 0;
     }
-    .tet-tick {
+    .tet-tick, .slider-tick {
       width: 2px;
       background: #888;
     }
-    .tet-tick-long {
+    .tet-tick-long, .slider-tick-long {
       height: 20px;  /* major notch — long ruler tick (12px taller than short → 1ch+4px label clearance) */
     }
-    .tet-tick-short {
+    .tet-tick-short, .slider-tick-short {
       height: 8px;   /* minor notch — short ruler tick; labels sit higher */
     }
-    .tet-preset {
+    .tet-preset, .slider-preset-btn {
       font-family: var(--font);
       font-size: 10px;
       color: #ccc;
@@ -481,12 +481,12 @@
       cursor: pointer;
       white-space: nowrap;
       line-height: 1.2;
-      max-width: 4ch;
+      max-width: 8ch;
       overflow: hidden;
       text-overflow: clip;
     }
-    .tet-preset:hover { color: #fff; }
-    .tet-preset.active { color: #88ff88; }
+    .tet-preset:hover, .slider-preset-btn:hover { color: #fff; }
+    .tet-preset.active, .slider-preset-btn.active { color: #88ff88; }
 
     input[type="number"] {
       width: 70px;
@@ -634,12 +634,27 @@
           </div>
         </div>
 
-        <div class="sidebar-section skew-slider-area">
-          <div class="slider-track">
-            <span class="slider-label-overlay" id="skew-label">SKEW [MidiMech]</span>
-            <input type="range" id="skew-slider" min="0" max="1" step="0.01" value="0" title="Layout tilt: 0=MidiMech, 1=DCompose.">
-            <input type="text" class="badge-input" id="skew-thumb-badge" value="0.00" title="Edit skew value.">
-            <button class="slider-reset" id="skew-reset" title="Reset to MidiMech (0)">↻</button>
+        <div class="sidebar-section">
+          <div class="tuning-slider-area">
+            <div class="slider-track">
+              <span class="slider-label-overlay" id="skew-label">MECH SKEW</span>
+              <input type="range" id="skew-slider" min="-0.5" max="1.5" step="0.01" value="0" title="Mech skew: 0=DCompose, 1=MidiMech. Extrapolates beyond.">
+              <input type="text" class="badge-input" id="skew-thumb-badge" value="0.00" title="Edit skew value.">
+              <button class="slider-reset" id="skew-reset" title="Reset to DCompose (0)">↻</button>
+            </div>
+            <div class="slider-presets" id="skew-presets"></div>
+          </div>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="tuning-slider-area">
+            <div class="slider-track">
+              <span class="slider-label-overlay" id="bfact-label">WICKED SHEAR</span>
+              <input type="range" id="bfact-slider" min="-0.5" max="1.5" step="0.01" value="0" title="Wicked shear: 0=no shear, 1=Wicki-Hayden horizontal rows. Pure affine shear mapping (area-preserving). Extrapolates beyond.">
+              <input type="text" class="badge-input" id="bfact-thumb-badge" value="0.00" title="Edit wicked-ness value.">
+              <button class="slider-reset" id="bfact-reset" title="Reset to default (0)">↻</button>
+            </div>
+            <div class="slider-presets" id="bfact-presets"></div>
           </div>
         </div>
 

@@ -25,6 +25,13 @@ export interface VisualizerOptions {
    * 0.0 = MidiMech orthogonal rows (default)
    */
   skewFactor: number;
+  /**
+   * Row-flattening shear toward Wicki-Hayden layout.
+   * 0.0 = no flattening (default, current DCompose/MidiMech behavior)
+   * 1.0 = rows fully horizontal (Wicki-Hayden: DCompose cells with flat rows)
+   * Shears genY0 toward genY1/2, making the wholetone direction horizontal.
+   */
+  bFact: number;
 }
 
 interface Button {
@@ -66,6 +73,7 @@ export class KeyboardVisualizer {
     scaleY: 1.0,
     buttonSpacing: 0,
     skewFactor: 0,
+    bFact: 0,
   };
 
   // (spacing is computed dynamically from canvas size and generator ratio)
@@ -159,6 +167,16 @@ export class KeyboardVisualizer {
     return this.options.skewFactor;
   }
 
+  setBFact(f: number): void {
+    this.options.bFact = f;
+    this.generateButtons();
+    this.render();
+  }
+
+  getBFact(): number {
+    return this.options.bFact;
+  }
+
 
   /**
    * Public grid geometry for external consumers (e.g. chord graffiti).
@@ -190,7 +208,7 @@ export class KeyboardVisualizer {
     genX: number; genY0: number; genX1: number; genY1: number;
     cellHv1: { x: number; y: number }; cellHv2: { x: number; y: number };
   } {
-    const { generator, skewFactor, scaleX, scaleY } = this.options;
+    const { generator, skewFactor, scaleX, scaleY, bFact } = this.options;
     const t = skewFactor;
     // From WickiSynth by Piers Titus van der Torren.
     //   a = gen[0]/gen[1]  (fifth/octave ratio, ~0.583 for 12-TET)
@@ -223,18 +241,22 @@ export class KeyboardVisualizer {
     const mGenY0 = mCS;
     const mGenX1 = mCS;
     const mGenY1 = 2 * mCS;
-    // ── Interpolate basis vectors ────────────────────────────────────────
-    const genX  = (mGenX  + t * (dGenX  - mGenX))  * scaleX;
-    const genY0 = (mGenY0 + t * (dGenY0 - mGenY0)) * scaleY;
-    const genX1 = (mGenX1 + t * (dGenX1 - mGenX1)) * scaleX;
-    const genY1 = (mGenY1 + t * (dGenY1 - mGenY1)) * scaleY;
+    // ── Interpolate basis vectors (t=0 DCompose, t=1 MidiMech) ─────────
+    const genX  = (dGenX  + t * (mGenX  - dGenX))  * scaleX;
+    let   genY0 = (dGenY0 + t * (mGenY0 - dGenY0)) * scaleY;
+    const genX1 = (dGenX1 + t * (mGenX1 - dGenX1)) * scaleX;
+    const genY1 = (dGenY1 + t * (mGenY1 - dGenY1)) * scaleY;
+    // ── Row-flattening shear (bFact: 0=current, 1=Wicki-Hayden) ──────
+    // genY0 → genY1/2 makes wholetone direction horizontal.
+    // Honeycomb offset (fourth_X = -wholetone_X/2) follows from lattice math.
+    genY0 = genY0 + bFact * (genY1 / 2 - genY0);
     // ── Cell half-vectors (parallelogram shape) ─────────────────────────
     // Derive tiling vectors from the CURRENT interpolated basis vectors.
     // wholetone = 2*fifth − octave  → always the horizontal-ish cell axis
     // fourth    = −fifth + octave   → always the vertical-ish cell axis
     // These ALWAYS tile because they're the reduced basis of the lattice.
-    // At t=0 (MidiMech): wholetone is pure horizontal, fourth is pure vertical → rectangles.
-    // At t=1 (DCompose): wholetone and fourth are both diagonal → parallelograms.
+    // At t=0 (DCompose): wholetone and fourth are both diagonal → parallelograms.
+    // At t=1 (MidiMech): wholetone is pure horizontal, fourth is pure vertical → rectangles.
     // At ANY intermediate t: still tiles perfectly (reduced basis is always valid).
     const cellHv1 = {
       x: (2 * genX - genX1) / 2,           // half-wholetone x
