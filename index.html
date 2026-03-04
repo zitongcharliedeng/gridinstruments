@@ -105,8 +105,9 @@
       position: relative;
       transition: height 0.15s ease;
       border-bottom: 1px solid var(--border);
+      height: 120px;
     }
-    #visualiser-panel.collapsed { height: 0 !important; overflow: visible; }
+    #visualiser-panel.collapsed { height: 0 !important; overflow: visible; border-bottom-width: 0; }
     .panel-resize-handle-wrap {
       position: absolute;
       left: 50%;
@@ -138,7 +139,7 @@
     #history-canvas {
       display: block;
       width: 100%;
-      height: 120px;
+      height: 100%;
     }
 
     /* ── Grid area ───────────────────────────────────────────── */

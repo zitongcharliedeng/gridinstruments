@@ -304,6 +304,11 @@ test.describe('DCompose Web — Behavioral State Transitions', () => {
      * @design-intent Hold-to-activate matches how real instrument vibrato works:
      *   the effect lasts exactly as long as the performer applies it.
      */
+    /**
+     * @deprecated Superseded by graph tests: `[Graph] vibrato › inactive → PRESS_SHIFT → active`
+     *   and `[Graph] vibrato › active → RELEASE_SHIFT → inactive`.
+     * @see tests/xstate-graph.spec.ts — vibrato machine.
+     */
     test('BH-MODIFIER-HOLD-1: Vibrato activates on Shift hold, deactivates on release', async ({ page }) => {
       const indicator = page.locator('#vibrato-indicator');
       await expect(indicator).not.toHaveClass(/active/);
@@ -320,6 +325,11 @@ test.describe('DCompose Web — Behavioral State Transitions', () => {
      *   The #sustain-indicator gets .active class only while Space is held.
      * @design-intent Space is the natural hold-sustain key — thumb-accessible
      *   and doesn’t conflict with note keys.
+     */
+    /**
+     * @deprecated Superseded by graph tests: `[Graph] sustain › inactive → PRESS_SPACE → active`
+     *   and `[Graph] sustain › active → RELEASE_SPACE → inactive`.
+     * @see tests/xstate-graph.spec.ts — sustain machine.
      */
     test('BH-MODIFIER-HOLD-2: Sustain activates on Space hold', async ({ page }) => {
       const indicator = page.locator('#sustain-indicator');
@@ -686,7 +696,7 @@ test.describe('DCompose Web — Behavioral State Transitions', () => {
 
   test.describe('Stuck Note Prevention', () => {
     test('BH-STUCK-1: pointerdown+up on canvas without prior interaction leaves no active note', async ({ page }) => {
-      await page.goto('http://localhost:5173', { waitUntil: 'networkidle' });
+      await page.goto('http://localhost:3000', { waitUntil: 'networkidle' });
       const canvas = page.locator('#keyboard-canvas');
       await canvas.dispatchEvent('pointerdown', { pointerId: 1, clientX: 200, clientY: 200, pressure: 0.5, bubbles: true });
       await canvas.dispatchEvent('pointerup', { pointerId: 1, clientX: 200, clientY: 200, bubbles: true });
@@ -699,7 +709,7 @@ test.describe('DCompose Web — Behavioral State Transitions', () => {
     });
 
     test('BH-STUCK-2: keydown+up without prior interaction leaves no active note', async ({ page }) => {
-      await page.goto('http://localhost:5173', { waitUntil: 'networkidle' });
+      await page.goto('http://localhost:3000', { waitUntil: 'networkidle' });
       await page.keyboard.press('a');
       await page.waitForTimeout(600);
       const count = await page.evaluate(() => {

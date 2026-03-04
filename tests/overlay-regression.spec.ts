@@ -13,6 +13,9 @@ test.describe('GridInstruments — Overlay Regression Tests', () => {
 
   test('OV-HIDDEN-1: Overlay starts hidden on page load', async ({ page }) => {
     /**
+     * @deprecated Superseded by graph test: `[Graph] overlay › hidden → CLICK_COG → visible`
+     *   which asserts the hidden initial state as a precondition (Step 2).
+     * @see tests/xstate-graph.spec.ts — overlay machine, hidden state assertion.
      * @reason The overlay must start with the `hidden` class so the keyboard
      *   canvas is fully visible and playable on initial page load.
      * @design-intent First-time users should see and interact with the keyboard
@@ -26,6 +29,8 @@ test.describe('GridInstruments — Overlay Regression Tests', () => {
 
   test('OV-TOGGLE-1: Cog opens overlay (removes hidden)', async ({ page }) => {
     /**
+     * @deprecated Superseded by graph test: `[Graph] overlay › hidden → CLICK_COG → visible`.
+     * @see tests/xstate-graph.spec.ts — overlay machine, CLICK_COG event.
      * @reason Clicking the cog button must toggle the `hidden` class off,
      *   making the overlay visible over the keyboard canvas.
      * @design-intent The cog is the single entry point for all grid settings —
@@ -41,6 +46,8 @@ test.describe('GridInstruments — Overlay Regression Tests', () => {
 
   test('OV-TOGGLE-2: Cog closes overlay (re-adds hidden)', async ({ page }) => {
     /**
+     * @deprecated Superseded by graph test: `[Graph] overlay › visible → CLICK_COG → hidden`.
+     * @see tests/xstate-graph.spec.ts — overlay machine, CLICK_COG from visible state.
      * @reason Clicking the cog a second time must re-add the `hidden` class,
      *   restoring the full keyboard view. The cog is a toggle, not a one-way open.
      * @design-intent Musicians need to quickly toggle settings without losing
@@ -58,6 +65,8 @@ test.describe('GridInstruments — Overlay Regression Tests', () => {
 
   test('OV-TOGGLE-3: Clicking overlay backdrop closes it', async ({ page }) => {
     /**
+     * @deprecated Superseded by graph test: `[Graph] overlay › visible → CLICK_BACKDROP → hidden`.
+     * @see tests/xstate-graph.spec.ts — overlay machine, CLICK_BACKDROP event.
      * @reason Clicking the overlay backdrop (the semi-transparent area outside
      *   controls) must close the overlay. The click handler checks `e.target === gridOverlay`.
      * @design-intent Backdrop-close is a standard modal pattern — users expect
@@ -131,6 +140,9 @@ test.describe('GridInstruments — Overlay Regression Tests', () => {
 
   test('OV-WAVE-1: SAW is default active waveform', async ({ page }) => {
     /**
+     * @deprecated Superseded by graph test: `[Graph] waveform › sawtooth → SELECT_SINE → sine`
+     *   which asserts sawtooth as the initial/default active state (Step 2).
+     * @see tests/xstate-graph.spec.ts — waveform machine, sawtooth initial state.
      * @reason The sawtooth waveform must be the default active waveform on fresh load
      *   (no localStorage). The HTML declares it with class `active` and main.ts falls
      *   back to 'sawtooth' when no saved waveform exists.
@@ -145,6 +157,9 @@ test.describe('GridInstruments — Overlay Regression Tests', () => {
 
   test('OV-WAVE-2: Clicking waveform button transfers active state', async ({ page }) => {
     /**
+     * @deprecated Superseded by graph test: `[Graph] waveform › sawtooth → SELECT_SINE → sine`.
+     *   Graph test verifies `.active` class is on the clicked waveform button.
+     * @see tests/xstate-graph.spec.ts — waveform machine, all 12 transitions.
      * @reason Clicking a waveform button must transfer the `.active` class to it
      *   and remove it from all other waveform buttons. Only one waveform is active.
      * @design-intent The active button highlight gives immediate visual feedback
@@ -242,6 +257,8 @@ test.describe('GridInstruments — Overlay Regression Tests', () => {
 
   test('OV-ESC-1: Escape key closes overlay', async ({ page }) => {
     /**
+     * @deprecated Superseded by graph test: `[Graph] overlay › visible → PRESS_ESCAPE → hidden`.
+     * @see tests/xstate-graph.spec.ts — overlay machine, PRESS_ESCAPE event.
      * @reason Pressing Escape while the overlay is open must add the `hidden` class
      *   back to the overlay and remove `active` from the cog button.
      * @design-intent Escape is the universal dismiss key — users expect it to close

@@ -362,7 +362,7 @@ class DComposeApp {
       if (!this.historyVisualizer || !this.historyCanvas) return;
       this.historyVisualizer.resize(
         this.historyCanvas.parentElement?.clientWidth ?? 900,
-        120
+        this.historyCanvas.parentElement?.clientHeight ?? 120
       );
     });
   }
@@ -1036,10 +1036,14 @@ class DComposeApp {
     const visualiserPanel = document.getElementById('visualiser-panel');
     if (visualiserPanel && localStorage.getItem('gi_history_hidden') === 'true') {
       visualiserPanel.classList.add('collapsed');
+      visualiserPanel.style.height = '';
+      const vc = visualiserPanel.querySelector('canvas');
+      if (vc) (vc as HTMLElement).style.height = '0';
     }
     const pedalsPanel = document.getElementById('pedals-panel');
     if (pedalsPanel && localStorage.getItem('gi_pedals_hidden') === 'true') {
       pedalsPanel.classList.add('collapsed');
+      pedalsPanel.style.height = '';
     }
 
     // Grid settings overlay toggle
@@ -1108,10 +1112,16 @@ class DComposeApp {
     }
 
     const code = event.code;
-    // Always pass Ctrl/Meta combos to the browser (Ctrl+C, Ctrl+V, etc.)
     if (event.ctrlKey || event.metaKey) return;
-    const allowDefault = ['F5', 'F11', 'F12', 'Escape'].includes(code);
-    if (!allowDefault) event.preventDefault();
+
+    const isSynthKey =
+      code === 'ShiftLeft' || code === 'ShiftRight' ||
+      code === 'Space' ||
+      code in this.currentLayout.keyMap;
+
+    if (!isSynthKey) return;
+
+    event.preventDefault();
 
     if (this.keyRepeat.has(code)) return;
     this.keyRepeat.add(code);
@@ -1561,21 +1571,38 @@ document.addEventListener('DOMContentLoaded', () => {
       if (storageKey) try { localStorage.setItem(storageKey, Math.round(h).toString()); } catch { /* */ }
     };
 
-    const toggleCollapse = () => {
-      const isCollapsed = panel.classList.toggle('collapsed');
-      if (hiddenKey) try { localStorage.setItem(hiddenKey, isCollapsed.toString()); } catch { /* */ }
-      if (!isCollapsed) applyHeight(defaultH);
-      persistHeight(isCollapsed ? 0 : defaultH);
+    const collapsePanel = () => {
+      const hadFocus = document.activeElement === handle;
+      panel.classList.add('collapsed');
+      panel.style.height = '';
+      if (canvas) canvas.style.height = '0';
+      if (hiddenKey) try { localStorage.setItem(hiddenKey, 'true'); } catch { /* */ }
+      persistHeight(0);
+      if (hadFocus) handle.focus();
       window.dispatchEvent(new Event('resize'));
+    };
+
+    const expandPanel = () => {
+      panel.classList.remove('collapsed');
+      applyHeight(defaultH);
+      if (hiddenKey) try { localStorage.setItem(hiddenKey, 'false'); } catch { /* */ }
+      persistHeight(defaultH);
+      window.dispatchEvent(new Event('resize'));
+    };
+
+    const toggleCollapse = () => {
+      if (panel.classList.contains('collapsed')) expandPanel(); else collapsePanel();
     };
 
     let startY = 0;
     let startH = 0;
+    let dragStartedCollapsed = false;
     handle.addEventListener('pointerdown', (e: PointerEvent) => {
       e.preventDefault();
       handle.setPointerCapture(e.pointerId);
       handle.classList.add('dragging');
       panel.style.transition = 'none';
+      dragStartedCollapsed = panel.classList.contains('collapsed');
       panel.classList.remove('collapsed');
       startY = e.clientY;
       startH = panel.getBoundingClientRect().height;
@@ -1590,23 +1617,21 @@ document.addEventListener('DOMContentLoaded', () => {
       handle.classList.remove('dragging');
       panel.style.transition = '';
       const h = panel.getBoundingClientRect().height;
-      if (h <= collapseThreshold) {
+      if (dragStartedCollapsed) {
         panel.classList.add('collapsed');
-        if (hiddenKey) try { localStorage.setItem(hiddenKey, 'true'); } catch { /* */ }
+        return;
       }
-      persistHeight(h);
-      window.dispatchEvent(new Event('resize'));
+      if (h <= collapseThreshold) {
+        collapsePanel();
+      } else {
+        persistHeight(h);
+        window.dispatchEvent(new Event('resize'));
+      }
     };
     handle.addEventListener('pointerup', stopDrag);
     handle.addEventListener('pointercancel', stopDrag);
 
-    handle.addEventListener('dblclick', () => {
-      const h = applyHeight(defaultH);
-      panel.classList.remove('collapsed');
-      persistHeight(h);
-      if (hiddenKey) try { localStorage.setItem(hiddenKey, 'false'); } catch { /* */ }
-      window.dispatchEvent(new Event('resize'));
-    });
+    handle.addEventListener('dblclick', () => { dragStartedCollapsed = false; expandPanel(); });
 
     handle.addEventListener('keydown', (e: KeyboardEvent) => {
       const step = 10;

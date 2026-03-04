@@ -38,3 +38,6 @@ dcompose-web/
 test-results/
 playwright-report/
 *.bak
+
+# LLM vision cache (test-only, per-machine)
+tests/.vision-cache.json
