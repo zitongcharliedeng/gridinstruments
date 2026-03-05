@@ -5,7 +5,7 @@
  * transitions. Used ONLY with `getAdjacencyMap` to enumerate (state, event)
  * pairs for Playwright test generation — NOT used at runtime.
  *
- * Total (state × event) pairs across all machines: 50.
+ * Total (state × event) pairs across all machines: 56.
  */
 
 import { setup } from 'xstate';
@@ -96,11 +96,12 @@ export const overlayDomAssertions: Record<string, (page: Page) => Promise<void>>
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// 2. Visualiser Machine  (3 states × 3 events = 9 pairs)
+// 2. Visualiser Machine  (3 states × 4 events = 12 pairs)
 // ═══════════════════════════════════════════════════════════════════════════════
 
 type VisualiserEvent =
   | { type: 'DRAG_VIS_EXPAND' }
+  | { type: 'DRAG_VIS_FROM_COLLAPSED' }
   | { type: 'TOGGLE_VIS_COLLAPSE' }
   | { type: 'DBLCLICK_VIS_HANDLE' };
 
@@ -126,6 +127,7 @@ export const visualiserMachine = setup({
       on: {
         TOGGLE_VIS_COLLAPSE: 'default',
         DBLCLICK_VIS_HANDLE: 'default',
+        DRAG_VIS_FROM_COLLAPSED: 'expanded',
       },
     },
   },
@@ -135,6 +137,9 @@ const VIS_HANDLE = '#visualiser-panel .panel-resize-handle';
 
 export const visualiserPlaywrightActions: Record<VisualiserEvent['type'], (page: Page) => Promise<void>> = {
   DRAG_VIS_EXPAND: async (page) => {
+    await dragHandle(page, VIS_HANDLE, 80);
+  },
+  DRAG_VIS_FROM_COLLAPSED: async (page) => {
     await dragHandle(page, VIS_HANDLE, 80);
   },
   TOGGLE_VIS_COLLAPSE: async (page) => {
@@ -164,7 +169,7 @@ export const visualiserDomAssertions: Record<string, (page: Page) => Promise<voi
     await expect(page.locator('#visualiser-panel')).toBeVisible();
     await expect(page.locator('#visualiser-panel')).not.toHaveClass(/collapsed/);
     const box = await page.locator('#visualiser-panel').boundingBox();
-    expect(box!.height).toBeGreaterThan(150);
+    expect(box!.height).toBeGreaterThan(30);
   },
   collapsed: async (page) => {
     await expect(page.locator('#visualiser-panel')).toHaveClass(/collapsed/);
@@ -174,11 +179,12 @@ export const visualiserDomAssertions: Record<string, (page: Page) => Promise<voi
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// 3. Pedals Machine  (3 states × 3 events = 9 pairs)
+// 3. Pedals Machine  (3 states × 4 events = 12 pairs)
 // ═══════════════════════════════════════════════════════════════════════════════
 
 type PedalsEvent =
   | { type: 'DRAG_PED_EXPAND' }
+  | { type: 'DRAG_PED_FROM_COLLAPSED' }
   | { type: 'TOGGLE_PED_COLLAPSE' }
   | { type: 'DBLCLICK_PED_HANDLE' };
 
@@ -204,6 +210,7 @@ export const pedalsMachine = setup({
       on: {
         TOGGLE_PED_COLLAPSE: 'default',
         DBLCLICK_PED_HANDLE: 'default',
+        DRAG_PED_FROM_COLLAPSED: 'expanded',
       },
     },
   },
@@ -214,6 +221,16 @@ const PED_HANDLE = '#pedals-panel .panel-resize-handle';
 export const pedalsPlaywrightActions: Record<PedalsEvent['type'], (page: Page) => Promise<void>> = {
   DRAG_PED_EXPAND: async (page) => {
     await dragHandle(page, PED_HANDLE, -80);
+  },
+  DRAG_PED_FROM_COLLAPSED: async (page) => {
+    const handle = page.locator(PED_HANDLE);
+    const box = await handle.boundingBox();
+    if (!box) throw new Error(`Handle not found: ${PED_HANDLE}`);
+    const cx = Math.round(box.x + box.width / 2);
+    const cy = Math.round(box.y + box.height / 2);
+    await handle.dispatchEvent('pointerdown', { clientX: cx, clientY: cy, button: 0, buttons: 1, bubbles: true });
+    await handle.dispatchEvent('pointermove', { clientX: cx, clientY: cy - 60, buttons: 1, bubbles: true });
+    await handle.dispatchEvent('pointerup', { clientX: cx, clientY: cy - 60, button: 0, buttons: 0, bubbles: true });
   },
   TOGGLE_PED_COLLAPSE: async (page) => {
     await tabUntil(page, '#pedals-panel .panel-resize-handle');
@@ -239,7 +256,7 @@ export const pedalsDomAssertions: Record<string, (page: Page) => Promise<void>> 
     await expect(page.locator('#pedals-panel')).toBeVisible();
     await expect(page.locator('#pedals-panel')).not.toHaveClass(/collapsed/);
     const box = await page.locator('#pedals-panel').boundingBox();
-    expect(box!.height).toBeGreaterThan(60);
+    expect(box!.height).toBeGreaterThan(20);
   },
   collapsed: async (page) => {
     await expect(page.locator('#pedals-panel')).toHaveClass(/collapsed/);

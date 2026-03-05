@@ -298,51 +298,6 @@ test.describe('DCompose Web — Behavioral State Transitions', () => {
 
   test.describe('Modifier Key Behavior', () => {
     /**
-     * @reason Shift activates vibrato on keydown and deactivates on keyup —
-     *   it is a hold modifier, not a toggle. The #vibrato-indicator gets
-     *   the .active class only while Shift is held.
-     * @design-intent Hold-to-activate matches how real instrument vibrato works:
-     *   the effect lasts exactly as long as the performer applies it.
-     */
-    /**
-     * @deprecated Superseded by graph tests: `[Graph] vibrato › inactive → PRESS_SHIFT → active`
-     *   and `[Graph] vibrato › active → RELEASE_SHIFT → inactive`.
-     * @see tests/xstate-graph.spec.ts — vibrato machine.
-     */
-    test('BH-MODIFIER-HOLD-1: Vibrato activates on Shift hold, deactivates on release', async ({ page }) => {
-      const indicator = page.locator('#vibrato-indicator');
-      await expect(indicator).not.toHaveClass(/active/);
-      await page.evaluate(() => document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Shift', code: 'ShiftLeft', shiftKey: true, bubbles: true, cancelable: true })));
-      await page.waitForTimeout(100);
-      await expect(indicator).toHaveClass(/active/);
-      await page.evaluate(() => document.body.dispatchEvent(new KeyboardEvent('keyup', { key: 'Shift', code: 'ShiftLeft', shiftKey: false, bubbles: true, cancelable: true })));
-      await page.waitForTimeout(100);
-      await expect(indicator).not.toHaveClass(/active/);
-    });
-
-    /**
-     * @reason Space activates sustain on keydown and deactivates on keyup.
-     *   The #sustain-indicator gets .active class only while Space is held.
-     * @design-intent Space is the natural hold-sustain key — thumb-accessible
-     *   and doesn’t conflict with note keys.
-     */
-    /**
-     * @deprecated Superseded by graph tests: `[Graph] sustain › inactive → PRESS_SPACE → active`
-     *   and `[Graph] sustain › active → RELEASE_SPACE → inactive`.
-     * @see tests/xstate-graph.spec.ts — sustain machine.
-     */
-    test('BH-MODIFIER-HOLD-2: Sustain activates on Space hold', async ({ page }) => {
-      const indicator = page.locator('#sustain-indicator');
-      await expect(indicator).not.toHaveClass(/active/);
-      await page.evaluate(() => document.body.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', code: 'Space', bubbles: true, cancelable: true })));
-      await page.waitForTimeout(100);
-      await expect(indicator).toHaveClass(/active/);
-      await page.evaluate(() => document.body.dispatchEvent(new KeyboardEvent('keyup', { key: ' ', code: 'Space', bubbles: true, cancelable: true })));
-      await page.waitForTimeout(100);
-      await expect(indicator).not.toHaveClass(/active/);
-    });
-
-    /**
      * @reason Ctrl key combos (Ctrl+C, Ctrl+V, etc.) must pass through to the
      *   browser — they must NOT activate any synth modifier (vibrato/sustain).
      * @design-intent Ctrl is reserved for browser shortcuts. The synth's

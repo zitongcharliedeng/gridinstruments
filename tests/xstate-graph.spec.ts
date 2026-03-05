@@ -16,14 +16,14 @@
  *
  * Machines:
  *   overlay (2 states, 6 pairs) — overlay show/hide
- *   visualiser (3 states, 9 pairs) — panel resize
- *   pedals (3 states, 9 pairs) — panel resize
+ *   visualiser (3 states, 12 pairs) — panel resize
+ *   pedals (3 states, 12 pairs) — panel resize
  *   waveform (4 states, 16 pairs) — waveform selection
  *   sustain (2 states, 4 pairs) — sustain hold
  *   vibrato (2 states, 4 pairs) — vibrato hold
  *   midiPanel (2 states, 2 pairs) — MIDI panel toggle (skipped: no DOM element)
  *
- * Total: 50 pairs, ~48 active tests (midiPanel skipped).
+ * Total: 56 pairs, ~54 active tests (midiPanel skipped).
  */
 
 import { test } from '@playwright/test';
