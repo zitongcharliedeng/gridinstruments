@@ -659,17 +659,19 @@
           </div>
 
           <div class="overlay-section">
-            <div class="overlay-section-title">MIDI</div>
-            <div id="midi-device-list"></div>
-            <div class="midi-panel-row" id="mpe-output-row">
-              <span class="ctrl-label" style="color:#fff">MPE Out:</span>
-              <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;">
-                <input type="checkbox" id="mpe-enabled" style="width:14px;height:14px;cursor:pointer;accent-color:#fff;">
-                Enable
-              </label>
-              <select id="mpe-output-select" style="min-width:120px;" disabled>
-                <option value="">No MIDI outputs</option>
-              </select>
+            <div class="overlay-section-title" id="midi-settings-toggle" style="cursor:pointer"><span style="display:inline-flex;align-items:center;line-height:0">⚙</span> MIDI</div>
+            <div id="midi-settings-panel">
+              <div id="midi-device-list"></div>
+              <div class="midi-panel-row" id="mpe-output-row">
+                <span class="ctrl-label" style="color:#fff">MPE Out:</span>
+                <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;">
+                  <input type="checkbox" id="mpe-enabled" style="width:14px;height:14px;cursor:pointer;accent-color:#fff;">
+                  Enable
+                </label>
+                <select id="mpe-output-select" style="min-width:120px;" disabled>
+                  <option value="">No MIDI outputs</option>
+                </select>
+              </div>
             </div>
           </div>
 

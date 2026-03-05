@@ -43,6 +43,8 @@ import { overlayMachine } from './machines/overlayMachine';
 import { waveformMachine } from './machines/waveformMachine';
 import { pedalMachine } from './machines/pedalMachines';
 import { panelMachine, clampPanelHeight } from './machines/panelMachine';
+import { midiPanelMachine } from './machines/midiPanelMachine';
+import { dialogMachine } from './machines/dialogMachine';
 import { createActor } from 'xstate';
 import readmeText from '../README.md?raw';
 // Type guard for WaveformType
@@ -185,26 +187,31 @@ ${tuningTableRows}
 function setupInfoDialogs(): void {
   const dialog = document.getElementById('info-dialog');
   const closeBtn = document.getElementById('info-close');
-  const content = document.getElementById('info-content');
+  const contentEl = document.getElementById('info-content');
+  if (!(dialog instanceof HTMLDialogElement)) return;
+
+  const infoDialogActor = createActor(dialogMachine);
+  infoDialogActor.subscribe((snapshot) => {
+    if (snapshot.matches('open')) {
+      if (contentEl) contentEl.innerHTML = snapshot.context.content;
+      dialog.showModal();
+    } else {
+      dialog.close();
+    }
+  });
+  infoDialogActor.start();
 
   document.querySelectorAll<HTMLButtonElement>('.slider-info-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const key = btn.dataset.info;
-      if (key && SLIDER_INFO[key] && content) {
-        content.innerHTML = SLIDER_INFO[key];
-      }
-      if (dialog instanceof HTMLDialogElement) dialog.showModal();
+      infoDialogActor.send({ type: 'OPEN', content: (key && SLIDER_INFO[key]) ?? '' });
     });
   });
 
-  closeBtn?.addEventListener('click', () => {
-    if (dialog instanceof HTMLDialogElement) dialog.close();
-  });
+  closeBtn?.addEventListener('click', () => infoDialogActor.send({ type: 'CLOSE' }));
 
-  dialog?.addEventListener('click', (e) => {
-    if (e.target === e.currentTarget && e.currentTarget instanceof HTMLDialogElement) {
-      e.currentTarget.close();
-    }
+  dialog.addEventListener('click', (e) => {
+    if (e.target === dialog) infoDialogActor.send({ type: 'CLOSE' });
   });
 }
 
@@ -922,12 +929,21 @@ class DComposeApp {
       dRefReset.style.color = '';
       dRefReset.style.borderColor = '';
     });
-    // MIDI settings toggle
+    // MIDI settings toggle (XState actor)
     const midiToggle = document.getElementById('midi-settings-toggle');
     const midiPanel = document.getElementById('midi-settings-panel');
-    midiToggle?.addEventListener('click', () => {
-      const isOpen = midiPanel?.classList.toggle('open');
+    const midiPanelActor = createActor(midiPanelMachine);
+
+    midiPanelActor.subscribe((snapshot) => {
+      const isOpen = snapshot.matches('open');
+      midiPanel?.classList.toggle('open', isOpen);
       if (midiToggle) midiToggle.innerHTML = isOpen ? '<span style="display:inline-flex;align-items:center;line-height:0">⚙</span> MIDI settings' : '<span style="display:inline-flex;align-items:center;line-height:0">⚙</span> MIDI';
+    });
+
+    midiPanelActor.start();
+
+    midiToggle?.addEventListener('click', () => {
+      midiPanelActor.send({ type: 'TOGGLE_MIDI' });
     });
 
     // MPE output UI
@@ -1643,26 +1659,32 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // About dialog
+  // About dialog — XState actor
   const aboutBtn = document.getElementById('about-btn');
   const aboutDialog = document.getElementById('about-dialog');
   const aboutClose = document.getElementById('about-close');
-  aboutBtn?.addEventListener('click', () => {
-    if (aboutDialog instanceof HTMLDialogElement) aboutDialog.showModal();
-    const aboutContent = document.getElementById('about-content');
-    if (aboutContent && !aboutContent.dataset.rendered) {
-      aboutContent.innerHTML = renderMarkdown(readmeText);
-      aboutContent.dataset.rendered = '1';
-    }
-  });
-  aboutClose?.addEventListener('click', () => {
-    if (aboutDialog instanceof HTMLDialogElement) aboutDialog.close();
-  });
-  aboutDialog?.addEventListener('click', (e) => {
-    if (e.target === e.currentTarget && e.currentTarget instanceof HTMLDialogElement) {
-      e.currentTarget.close();
-    }
-  });
+  const aboutContentEl = document.getElementById('about-content');
+  if (aboutDialog instanceof HTMLDialogElement) {
+    const aboutRendered = renderMarkdown(readmeText);
+    const aboutDialogActor = createActor(dialogMachine);
+    aboutDialogActor.subscribe((snapshot) => {
+      if (snapshot.matches('open')) {
+        if (aboutContentEl) aboutContentEl.innerHTML = snapshot.context.content;
+        aboutDialog.showModal();
+      } else {
+        aboutDialog.close();
+      }
+    });
+    aboutDialogActor.start();
+
+    aboutBtn?.addEventListener('click', () => {
+      aboutDialogActor.send({ type: 'OPEN', content: aboutRendered });
+    });
+    aboutClose?.addEventListener('click', () => aboutDialogActor.send({ type: 'CLOSE' }));
+    aboutDialog.addEventListener('click', (e) => {
+      if (e.target === aboutDialog) aboutDialogActor.send({ type: 'CLOSE' });
+    });
+  }
 
   setupInfoDialogs();
 

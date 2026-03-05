@@ -142,11 +142,11 @@ function enumerateTransitions(
 
 // ─── Machines that require overlay to be open first ──────────────────────────
 
-const NEEDS_OVERLAY_OPEN = new Set(['waveform', 'mpe', 'textInputFocus', 'skewLabel']);
+const NEEDS_OVERLAY_OPEN = new Set(['waveform', 'mpe', 'textInputFocus', 'skewLabel', 'midiPanel']);
 
 // ─── Machines to skip (DOM elements don't exist) ─────────────────────────────
 
-const SKIP_MACHINES = new Set(['midiPanel']);
+const SKIP_MACHINES = new Set<string>([]);
 
 // ─── Test generation ─────────────────────────────────────────────────────────
 
