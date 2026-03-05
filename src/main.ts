@@ -937,7 +937,7 @@ class DComposeApp {
     midiPanelActor.subscribe((snapshot) => {
       const isOpen = snapshot.matches('open');
       midiPanel?.classList.toggle('open', isOpen);
-      if (midiToggle) midiToggle.innerHTML = isOpen ? '<span style="display:inline-flex;align-items:center;line-height:0">⚙</span> MIDI settings' : '<span style="display:inline-flex;align-items:center;line-height:0">⚙</span> MIDI';
+      if (midiToggle) midiToggle.innerHTML = isOpen ? '<span id="midi-chevron" style="display:inline-flex;align-items:center;line-height:0;transition:transform 0.15s ease;transform:rotate(90deg)">▶</span><span style="display:inline-flex;align-items:center;line-height:0">⚙</span> MIDI settings' : '<span id="midi-chevron" style="display:inline-flex;align-items:center;line-height:0;transition:transform 0.15s ease">▶</span><span style="display:inline-flex;align-items:center;line-height:0">⚙</span> MIDI';
     });
 
     midiPanelActor.start();
