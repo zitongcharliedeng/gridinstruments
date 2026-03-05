@@ -182,6 +182,63 @@ test.describe('Panel Resize Handles', () => {
     });
 
     /**
+     * @reason Dragging a collapsed visualiser panel open must leave it open
+     *   when the mouse is released past the minimum threshold. Previously the
+     *   dragStartedCollapsed guard unconditionally snapped it shut on DRAG_END
+     *   regardless of drag distance — this was a regression.
+     * @design-intent Users must be able to open collapsed panels via mouse drag,
+     *   not only via keyboard (Enter) or double-click. Collapse should only
+     *   happen if released within minHeight + 10px of the collapsed position.
+     */
+    test('PNL-DRAG-5: Dragging collapsed visualiser handle open leaves panel open', async ({ page }) => {
+      await page.goto('/');
+      const handle = page.locator('#visualiser-panel .panel-resize-handle');
+      await handle.focus();
+      await page.keyboard.press('Enter');
+      await page.waitForTimeout(150);
+      const collapsedH = (await page.locator('#visualiser-panel').boundingBox())!.height;
+      expect(collapsedH).toBeLessThanOrEqual(5);
+      const handleBox = await handle.boundingBox();
+      const cx = handleBox!.x + handleBox!.width / 2;
+      const cy = handleBox!.y + handleBox!.height / 2;
+      await page.mouse.move(cx, cy);
+      await page.mouse.down();
+      await page.mouse.move(cx, cy + 80, { steps: 10 });
+      await page.mouse.up();
+      await page.waitForTimeout(200);
+      const openH = (await page.locator('#visualiser-panel').boundingBox())!.height;
+      expect(openH).toBeGreaterThan(30);
+    });
+
+    /**
+     * @reason Dragging a collapsed pedals panel open must leave it open.
+     *   Same regression as PNL-DRAG-5 but for the upward-direction pedals handle.
+     *   The pedals handle sits at the very bottom of the viewport when collapsed,
+     *   so this test uses localStorage to start collapsed and locator.dispatchEvent
+     *   to deliver pointer events directly on the element — bypassing viewport-edge
+     *   reliability issues with page.mouse at extreme y coordinates.
+     * @design-intent Both panels must be openable by mouse drag from collapsed.
+     */
+    test('PNL-DRAG-6: Dragging collapsed pedals handle open leaves panel open', async ({ page }) => {
+      await page.goto('/');
+      await page.evaluate(() => localStorage.setItem('gi_pedals_hidden', 'true'));
+      await page.reload();
+      await page.waitForLoadState('networkidle');
+      const collapsedH = (await page.locator('#pedals-panel').boundingBox())!.height;
+      expect(collapsedH).toBeLessThanOrEqual(5);
+      const handle = page.locator('#pedals-panel .panel-resize-handle');
+      const handleBox = await handle.boundingBox();
+      const cx = Math.round(handleBox!.x + handleBox!.width / 2);
+      const cy = Math.round(handleBox!.y + handleBox!.height / 2);
+      await handle.dispatchEvent('pointerdown', { clientX: cx, clientY: cy, button: 0, buttons: 1, bubbles: true });
+      await handle.dispatchEvent('pointermove', { clientX: cx, clientY: cy - 60, buttons: 1, bubbles: true });
+      await handle.dispatchEvent('pointerup',   { clientX: cx, clientY: cy - 60, button: 0, buttons: 0, bubbles: true });
+      await page.waitForTimeout(200);
+      const openH = (await page.locator('#pedals-panel').boundingBox())!.height;
+      expect(openH).toBeGreaterThan(20);
+    });
+
+    /**
      * @reason Panel must not exceed 60% of viewport height regardless of drag.
      * @design-intent Without a cap, a runaway drag could make the grid
      *   invisible — the 60% cap ensures the grid always has room.

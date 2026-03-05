@@ -1,0 +1,9 @@
+id: no-raw-classlist-contains
+language: typescript
+rule:
+  pattern: $EL.classList.contains($$$)
+files:
+  - "src/main.ts"
+severity: error
+message: "classList.contains() is banned in main.ts — use snapshot.matches() or snapshot.context to read state."
+note: "DOM class checks couple logic to presentation. Read state from XState snapshots instead."

@@ -16,7 +16,6 @@ interface PanelContext {
   dirUp: boolean;
   dragStartY: number;
   dragStartH: number;
-  dragStartedCollapsed: boolean;
 }
 
 interface PanelInput {
@@ -41,7 +40,6 @@ export const panelMachine = setup({
   },
   guards: {
     isInitCollapsed: ({ context }) => context.height <= 0,
-    dragStartedCollapsed: ({ context }) => context.dragStartedCollapsed,
     belowThreshold: ({ context }) => context.height <= context.minHeight + 10,
   },
 }).createMachine({
@@ -54,7 +52,6 @@ export const panelMachine = setup({
     dirUp: input.dirUp,
     dragStartY: 0,
     dragStartH: 0,
-    dragStartedCollapsed: false,
   }),
   initial: 'routing',
   states: {
@@ -71,7 +68,6 @@ export const panelMachine = setup({
           actions: assign(({ context, event }) => ({
             dragStartY: event.clientY,
             dragStartH: context.height,
-            dragStartedCollapsed: false,
           })),
         },
         TOGGLE: { target: 'collapsed' },
@@ -98,7 +94,6 @@ export const panelMachine = setup({
           actions: assign(({ context, event }) => ({
             dragStartY: event.clientY,
             dragStartH: context.minHeight,
-            dragStartedCollapsed: true,
             height: context.minHeight,
           })),
         },
@@ -112,7 +107,6 @@ export const panelMachine = setup({
           target: 'idle',
           actions: assign(({ context }) => ({
             height: clampPanelHeight(context.defaultHeight, context.minHeight, context.maxHeight),
-            dragStartedCollapsed: false,
           })),
         },
       },
@@ -134,7 +128,6 @@ export const panelMachine = setup({
           }),
         },
         DRAG_END: [
-          { guard: 'dragStartedCollapsed', target: 'collapsed' },
           { guard: 'belowThreshold', target: 'collapsed' },
           { target: 'idle' },
         ],

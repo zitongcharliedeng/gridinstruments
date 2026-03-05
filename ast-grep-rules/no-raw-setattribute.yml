@@ -1,0 +1,11 @@
+id: no-raw-setattribute
+language: typescript
+rule:
+  any:
+    - pattern: $EL.setAttribute($$$)
+    - pattern: $EL.removeAttribute($$$)
+files:
+  - "src/main.ts"
+severity: error
+message: "setAttribute()/removeAttribute() is banned in main.ts — use XState actor.send() and handle DOM in the subscriber."
+note: "All UI state must be managed by XState actors. See src/machines/ for examples."

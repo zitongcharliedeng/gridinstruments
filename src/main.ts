@@ -1600,7 +1600,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     handle.addEventListener('pointerdown', (e: PointerEvent) => {
       e.preventDefault();
-      handle.setPointerCapture(e.pointerId);
+      try { handle.setPointerCapture(e.pointerId); } catch { /* synthetic events in tests may lack active pointer registration */ }
       actor.send({ type: 'DRAG_START', clientY: e.clientY });
     });
     handle.addEventListener('pointermove', (e: PointerEvent) => {
