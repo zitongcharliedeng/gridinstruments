@@ -128,17 +128,17 @@
        align-items: center;
        justify-content: center;
        gap: 1px;
-       background: rgba(0,0,0,1);
+       background: var(--bg);
        border: 1px solid var(--border);
      }
     .panel-resize-handle:focus-visible { outline: 1px solid var(--accent); }
     .panel-resize-handle .grip-arrow { width: 0; height: 0; border-left: 4px solid transparent; border-right: 4px solid transparent; }
-    .panel-resize-handle .grip-arrow-up { border-bottom: 4px solid #666; }
-    .panel-resize-handle .grip-arrow-down { border-top: 4px solid #666; }
-    .panel-resize-handle .grip-line { width: 14px; height: 1px; background: #666; }
-    .panel-resize-handle:hover .grip-arrow-up { border-bottom-color: #ccc; }
-    .panel-resize-handle:hover .grip-arrow-down { border-top-color: #ccc; }
-    .panel-resize-handle:hover .grip-line { background: #ccc; }
+    .panel-resize-handle .grip-arrow-up { border-bottom: 4px solid var(--dim); }
+    .panel-resize-handle .grip-arrow-down { border-top: 4px solid var(--dim); }
+    .panel-resize-handle .grip-line { width: 14px; height: 1px; background: var(--dim); }
+    .panel-resize-handle:hover .grip-arrow-up { border-bottom-color: var(--fg); }
+    .panel-resize-handle:hover .grip-arrow-down { border-top-color: var(--fg); }
+    .panel-resize-handle:hover .grip-line { background: var(--fg); }
     #history-canvas {
       display: block;
       width: 100%;
@@ -173,8 +173,8 @@
        z-index: 15;
        width: 32px;
        height: 32px;
-       font-size: 18px;
-       background: rgba(0, 0, 0, 1);
+       font-size: 16px;
+       background: var(--bg);
        color: var(--dim);
        border: 1px solid var(--border);
        cursor: pointer;
@@ -184,7 +184,7 @@
        font-family: var(--font);
      }
      .grid-cog:hover { color: var(--fg); border-color: var(--accent); }
-     .grid-cog.active { color: var(--fg); background: rgba(0, 0, 0, 1); border-color: var(--accent); }
+     .grid-cog.active { color: var(--fg); background: var(--bg); border-color: var(--accent); }
 
     /* ── Grid settings overlay ───────────────────────────────── */
     #grid-overlay {
@@ -205,13 +205,13 @@
       inset: 0;
       background: linear-gradient(110deg, rgba(255,255,255,0.02) 20%, rgba(255,255,255,0.05) 40%, rgba(255,255,255,0.07) 50%, rgba(255,255,255,0.05) 60%, rgba(255,255,255,0.02) 80%);
       background-size: 300% 100%;
-      animation: shimmer 18s linear infinite;
+      animation: shimmer 18s ease-in-out infinite alternate;
       pointer-events: none;
       z-index: -1;
     }
     @keyframes shimmer {
-      0% { background-position: 300% 0; }
-      100% { background-position: -100% 0; }
+      0% { background-position: 80% 0; }
+      100% { background-position: 20% 0; }
     }
     #grid-overlay.hidden { display: none; }
     .overlay-section {
@@ -229,11 +229,19 @@
     }
     .overlay-section .tuning-slider-area .slider-track { width: 100%; }
     .overlay-section-title {
-      font-size: 9px;
-      color: var(--dim);
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-    }
+       font-size: 11px;
+       color: var(--dim);
+       text-transform: uppercase;
+       letter-spacing: 0.08em;
+       font-family: var(--font);
+       font-weight: 700;
+       display: flex;
+       align-items: center;
+       gap: 6px;
+     }
+     .overlay-section-title:hover {
+       color: var(--fg);
+     }
 
     /* ── Pedals panel ────────────────────────────────────────── */
     #pedals-panel {
