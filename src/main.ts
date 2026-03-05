@@ -44,6 +44,7 @@ import { waveformMachine } from './machines/waveformMachine';
 import { pedalMachine } from './machines/pedalMachines';
 import { panelMachine, clampPanelHeight } from './machines/panelMachine';
 import { midiPanelMachine } from './machines/midiPanelMachine';
+import { mpeMachine } from './machines/mpeMachine';
 import { dialogMachine } from './machines/dialogMachine';
 import { createActor } from 'xstate';
 import readmeText from '../README.md?raw';
@@ -236,6 +237,24 @@ function getElementOrNull<T extends HTMLElement>(id: string, type: new() => T): 
   if (el === null) return null;
   if (!(el instanceof type)) return null;
   return el;
+}
+
+/** Apply fill gradient to a range input (module-level for use in actor subscribers). */
+function applySliderFill(slider: HTMLInputElement): void {
+  const min = parseFloat(slider.min) || 0;
+  const max = parseFloat(slider.max) || 100;
+  const val = parseFloat(slider.value) || 0;
+  const ratio = (val - min) / (max - min);
+  const thumbW = 3;
+  const trackW = slider.offsetWidth;
+  if (trackW > 0) {
+    const thumbCenterPx = ratio * (trackW - thumbW) + thumbW / 2;
+    const fillPct = (thumbCenterPx / trackW) * 100;
+    slider.style.background = `linear-gradient(to right, var(--fg) ${fillPct.toFixed(2)}%, #000 ${fillPct.toFixed(2)}%)`;
+  } else {
+    const pct = ratio * 100;
+    slider.style.background = `linear-gradient(to right, var(--fg) ${pct.toFixed(2)}%, #000 ${pct.toFixed(2)}%)`;
+  }
 }
 
 class DComposeApp {
@@ -521,44 +540,18 @@ class DComposeApp {
       });
     }
 
-    // DCompose ↔ MidiMech skew slider
+    // DCompose ↔ MidiMech skew slider (DOM mutations driven by appActor subscriber)
     if (this.skewSlider) {
       const skewBadge = getElementOrNull('skew-thumb-badge', HTMLInputElement);
-      const skewLabel = getElementOrNull('skew-label', HTMLSpanElement);
-
-      const updateSkewLabel = (value: number): void => {
-        if (!skewLabel) return;
-        const ann = formatSliderAnnotation(value, SKEW_PRESETS, 2);
-        skewLabel.innerHTML = `MECH SKEW <span style='color:#88ff88'>${ann}</span>`;
-      };
-
-      const updateSkewBadge = (value: number) => {
-        if (!skewBadge) return;
-        // Position badge: clamp to slider range for positioning
-        const sliderMin = parseFloat(this.skewSlider!.min);
-        const sliderMax = parseFloat(this.skewSlider!.max);
-        const clampedForPos = Math.max(sliderMin, Math.min(sliderMax, value));
-        const pct = ((clampedForPos - sliderMin) / (sliderMax - sliderMin)) * 100;
-        skewBadge.style.left = `${pct}%`;
-        skewBadge.value = value.toFixed(2);
-      };
-
-      updateSkewBadge(0);
-      updateSkewLabel(0);
 
       const savedSkew = this.loadSetting('skew', '0');
       this.skewSlider.value = savedSkew;
-      updateSkewBadge(parseFloat(savedSkew));
-      updateSkewLabel(parseFloat(savedSkew));
       this.visualizer?.setSkewFactor(parseFloat(savedSkew));
 
       this.skewSlider.addEventListener('input', () => {
         const val = parseFloat(this.skewSlider!.value);
         this.visualizer?.setSkewFactor(val);
         this.updateGraffiti?.();
-        updateSkewBadge(val);
-        updateSkewLabel(val);
-        this.updateSliderFill(this.skewSlider!);
         this.saveSetting('skew', this.skewSlider!.value);
       });
 
@@ -578,13 +571,10 @@ class DComposeApp {
           if (isFinite(raw)) {
             this.visualizer?.setSkewFactor(raw);
             this.updateGraffiti?.();
-            updateSkewBadge(raw);
-            updateSkewLabel(raw);
             if (this.skewSlider) {
               const sMin = parseFloat(this.skewSlider.min);
               const sMax = parseFloat(this.skewSlider.max);
               this.skewSlider.value = Math.max(sMin, Math.min(sMax, raw)).toString();
-              this.updateSliderFill(this.skewSlider);
             }
           } else {
             const current = parseFloat(this.skewSlider?.value ?? '0');
@@ -946,9 +936,18 @@ class DComposeApp {
       midiPanelActor.send({ type: 'TOGGLE_MIDI' });
     });
 
-    // MPE output UI
+    // MPE output UI — XState actor
     const mpeCheckbox = getElementOrNull('mpe-enabled', HTMLInputElement);
     const mpeSelect = getElementOrNull('mpe-output-select', HTMLSelectElement);
+    const mpeActor = createActor(mpeMachine);
+
+    mpeActor.subscribe((snapshot) => {
+      const isEnabled = snapshot.matches('enabled');
+      if (mpeCheckbox) mpeCheckbox.checked = isEnabled;
+      if (mpeSelect) mpeSelect.disabled = !isEnabled;
+    });
+
+    mpeActor.start();
 
     const refreshMpeOutputs = () => {
       if (!mpeSelect) return;
@@ -965,13 +964,13 @@ class DComposeApp {
         opt.textContent = out.name ?? out.id;
         mpeSelect.appendChild(opt);
       }
-      mpeSelect.disabled = !mpeCheckbox?.checked;
+      mpeSelect.disabled = !mpeActor.getSnapshot().matches('enabled');
     };
 
     mpeCheckbox?.addEventListener('change', () => {
-      const enabled = mpeCheckbox.checked;
+      mpeActor.send({ type: 'TOGGLE' });
+      const enabled = mpeActor.getSnapshot().matches('enabled');
       this.mpe.setEnabled(enabled);
-      if (mpeSelect) mpeSelect.disabled = !enabled;
       if (enabled) {
         const selectedId = mpeSelect?.value;
         const outputs = this.mpe.getAvailableOutputs();
@@ -983,7 +982,7 @@ class DComposeApp {
     });
 
     mpeSelect?.addEventListener('change', () => {
-      if (!mpeCheckbox?.checked) return;
+      if (!mpeActor.getSnapshot().matches('enabled')) return;
       const outputs = this.mpe.getAvailableOutputs();
       const selected = outputs.find(o => o.id === mpeSelect.value) ?? null;
       this.mpe.setOutput(selected);
@@ -1470,23 +1469,7 @@ class DComposeApp {
   // ─── Slider fill ─────────────────────────────────────────────────────────
 
   private updateSliderFill(slider: HTMLInputElement): void {
-    const min = parseFloat(slider.min) || 0;
-    const max = parseFloat(slider.max) || 100;
-    const val = parseFloat(slider.value) || 0;
-    const ratio = (val - min) / (max - min);
-    // Thumb is 3px wide (CSS). Compute exact thumb-center position in px,
-    // then convert to a plain percentage so the gradient edge tracks the thumb.
-    const thumbW = 3;
-    const trackW = slider.offsetWidth;
-    if (trackW > 0) {
-      const thumbCenterPx = ratio * (trackW - thumbW) + thumbW / 2;
-      const fillPct = (thumbCenterPx / trackW) * 100;
-      slider.style.background = `linear-gradient(to right, var(--fg) ${fillPct.toFixed(2)}%, #000 ${fillPct.toFixed(2)}%)`;
-    } else {
-      // Element not laid out yet — fall back to uncorrected percentage
-      const pct = ratio * 100;
-      slider.style.background = `linear-gradient(to right, var(--fg) ${pct.toFixed(2)}%, #000 ${pct.toFixed(2)}%)`;
-    }
+    applySliderFill(slider);
   }
 
   // ─── Render ─────────────────────────────────────────────────────────────
@@ -1689,13 +1672,60 @@ document.addEventListener('DOMContentLoaded', () => {
   setupInfoDialogs();
 
   const app = new DComposeApp();
-  // Create and start the AppMachine actor (observes only — DComposeApp still controls all behaviour)
   const appActor = createActor(appMachine, {
     input: { initialVolume: -10.5, defaultZoom: 1.0, touchDevice: 'ontouchstart' in window },
   });
+
+  // ─── Skew slider: appActor subscriber drives badge, label & fill ──────────
+  const _skewSlider = getElementOrNull('skew-slider', HTMLInputElement);
+  const _skewBadge = getElementOrNull('skew-thumb-badge', HTMLInputElement);
+  const _skewLabel = getElementOrNull('skew-label', HTMLSpanElement);
+  let _prevSkewValue = NaN;
+
+  appActor.subscribe((snapshot) => {
+    const skew = snapshot.context.sliders.skew;
+    if (skew.value === _prevSkewValue) return;
+    _prevSkewValue = skew.value;
+
+    if (_skewBadge && _skewSlider) {
+      const sliderMin = parseFloat(_skewSlider.min);
+      const sliderMax = parseFloat(_skewSlider.max);
+      const clampedForPos = Math.max(sliderMin, Math.min(sliderMax, skew.value));
+      const pct = ((clampedForPos - sliderMin) / (sliderMax - sliderMin)) * 100;
+      _skewBadge.style.left = `${pct}%`;
+      _skewBadge.value = skew.value.toFixed(2);
+    }
+
+    if (_skewLabel) {
+      const ann = formatSliderAnnotation(skew.value, SKEW_PRESETS, 2);
+      _skewLabel.innerHTML = `MECH SKEW <span style='color:#88ff88'>${ann}</span>`;
+    }
+
+    if (_skewSlider) {
+      applySliderFill(_skewSlider);
+    }
+  });
+
   appActor.start();
 
+  if (_skewSlider) {
+    appActor.send({ type: 'SLIDER_INPUT', slider: 'skew', value: parseFloat(_skewSlider.value) });
+  }
+
   // ─── Wire DOM → appActor (dual-write: DComposeApp handles services) ───────
+  if (_skewSlider) {
+    _skewSlider.addEventListener('input', () => {
+      appActor.send({ type: 'SLIDER_INPUT', slider: 'skew', value: parseFloat(_skewSlider.value) });
+    });
+  }
+  if (_skewBadge) {
+    _skewBadge.addEventListener('change', () => {
+      const raw = parseFloat(_skewBadge.value);
+      if (isFinite(raw)) {
+        appActor.send({ type: 'SLIDER_BADGE_EDIT', slider: 'skew', rawValue: raw.toString() });
+      }
+    });
+  }
   document.getElementById('midi-settings-toggle')?.addEventListener('click', () => {
     appActor.send({ type: 'MIDI_PANEL_TOGGLE' });
   });
