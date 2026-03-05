@@ -195,7 +195,7 @@ export function getLayout(id: string): KeyboardLayout {
 /**
  * Get note name from coordinate using circle-of-fifths spelling.
  * Returns proper enharmonic names using ♯ and ♭ glyphs.
- * When a note would require double-sharps/flats, falls back to 12-TET enharmonic name.
+ * When a note would require double-sharps/flats, uses repeated ♯/♭ glyphs (♯♯, ♭♭).
  * x = position in circle of fifths (0 = D)
  */
 // Natural notes in order of fifths: F(-3) C(-2) G(-1) D(0) A(1) E(2) B(3)
@@ -210,22 +210,16 @@ export function getNoteNameFromCoord(x: number): string {
 }
 
 function buildSharps(n: number): string {
-  // \u266F = ♯, \uD834\uDD2A = 𝄪 (double sharp)
+  // Use ♯♯ instead of 𝄪 (U+1D12A) — JetBrains Mono lacks the SMP double-sharp glyph
   let s = '';
-  const doubles = Math.floor(n / 2);
-  const singles = n % 2;
-  for (let i = 0; i < doubles; i++) s += '\uD834\uDD2A';
-  for (let i = 0; i < singles; i++) s += '\u266F';
+  for (let i = 0; i < n; i++) s += '\u266F';
   return s;
 }
 
 function buildFlats(n: number): string {
-  // \u266D = ♭, \uD834\uDD2B = 𝄫 (double flat)
+  // Use ♭♭ instead of 𝄫 (U+1D12B) — JetBrains Mono lacks the SMP double-flat glyph
   let s = '';
-  const doubles = Math.floor(n / 2);
-  const singles = n % 2;
-  for (let i = 0; i < doubles; i++) s += '\uD834\uDD2B';
-  for (let i = 0; i < singles; i++) s += '\u266D';
+  for (let i = 0; i < n; i++) s += '\u266D';
   return s;
 }
 
