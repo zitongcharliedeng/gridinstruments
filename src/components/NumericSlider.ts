@@ -188,8 +188,12 @@ export class NumericSlider {
     const value = parseFloat(this.rangeInput.value);
     const min = parseFloat(this.rangeInput.min) || 0;
     const max = parseFloat(this.rangeInput.max) || 100;
-    const pct = ((value - min) / (max - min)) * 100;
-    const thumbOffset = (pct / 100) * this.rangeInput.offsetWidth;
+    const ratio = (value - min) / (max - min);
+    const thumbW = 3;
+    const trackW = this.rangeInput.offsetWidth;
+    const thumbOffset = trackW > 0
+      ? ratio * (trackW - thumbW) + thumbW / 2
+      : 0;
     this.badge.style.left = `${thumbOffset}px`;
 
     const text = this.config.formatBadge(value);

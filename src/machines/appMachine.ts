@@ -25,7 +25,7 @@ function formatBadge(slider: SliderName, v: number): string {
 function formatLabel(slider: SliderName, v: number): string {
   switch (slider) {
     case 'tuning': return `${v.toFixed(1)} cents`;
-    case 'skew':   return v <= 0.15 ? 'SKEW [MidiMech]' : v >= 0.85 ? 'SKEW [DCompose]' : 'SKEW';
+    case 'skew':   return Math.abs(v) <= 0.15 ? 'SKEW [MidiMech]' : v >= 0.85 ? 'SKEW [DCompose]' : 'SKEW';
     case 'volume': return v <= 0 ? '-\u221E dB' : `${(20 * Math.log10(v)).toFixed(1)} dB`;
     case 'zoom':   return `${v.toFixed(2)}\u00d7`;
     case 'dref':   return `D REF ${v.toFixed(2)} Hz`;

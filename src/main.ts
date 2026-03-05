@@ -111,8 +111,9 @@ function formatSliderAnnotation(
   // Threshold = half the last displayed digit (e.g. precision=2 → 0.005)
   const threshold = 0.5 * Math.pow(10, -precision);
   if (minDist < threshold) return nearest.label;
-  const rounded = parseFloat(minDist.toFixed(precision));
-  const sign = value > nearest.value ? '+' : '\u2212';
+  const offset = value - nearest.value;
+  const rounded = parseFloat(Math.abs(offset).toFixed(precision));
+  const sign = offset > 0 ? '+' : '\u2212';
   return `${nearest.label} ${sign}${rounded.toFixed(precision)}${unit}`;
 }
 
@@ -239,17 +240,24 @@ function getElementOrNull<T extends HTMLElement>(id: string, type: new() => T): 
   return el;
 }
 
+/** Thumb center px offset — source of truth for fill, badge & notch alignment. */
+function thumbCenterPx(ratio: number, slider: HTMLInputElement): number {
+  const thumbW = 3;
+  const trackW = slider.offsetWidth;
+  return trackW > 0
+    ? ratio * (trackW - thumbW) + thumbW / 2
+    : 0;
+}
+
 /** Apply fill gradient to a range input (module-level for use in actor subscribers). */
 function applySliderFill(slider: HTMLInputElement): void {
   const min = parseFloat(slider.min) || 0;
   const max = parseFloat(slider.max) || 100;
   const val = parseFloat(slider.value) || 0;
   const ratio = (val - min) / (max - min);
-  const thumbW = 3;
   const trackW = slider.offsetWidth;
   if (trackW > 0) {
-    const thumbCenterPx = ratio * (trackW - thumbW) + thumbW / 2;
-    const fillPct = (thumbCenterPx / trackW) * 100;
+    const fillPct = (thumbCenterPx(ratio, slider) / trackW) * 100;
     slider.style.background = `linear-gradient(to right, var(--fg) ${fillPct.toFixed(2)}%, #000 ${fillPct.toFixed(2)}%)`;
   } else {
     const pct = ratio * 100;
@@ -606,8 +614,8 @@ class DComposeApp {
         const sliderMin = parseFloat(this.bfactSlider!.min);
         const sliderMax = parseFloat(this.bfactSlider!.max);
         const clampedForPos = Math.max(sliderMin, Math.min(sliderMax, value));
-        const pct = ((clampedForPos - sliderMin) / (sliderMax - sliderMin)) * 100;
-        bfactBadge.style.left = `${pct}%`;
+        const ratio = (clampedForPos - sliderMin) / (sliderMax - sliderMin);
+        bfactBadge.style.left = `${thumbCenterPx(ratio, this.bfactSlider!)}px`;
         bfactBadge.value = value.toFixed(2);
       };
 
@@ -675,8 +683,8 @@ class DComposeApp {
       const range = FIFTH_MAX - FIFTH_MIN;
       const updateThumbBadge = (value: number) => {
         if (!thumbBadge) return;
-        const pct = ((value - FIFTH_MIN) / range) * 100;
-        thumbBadge.style.left = `${pct}%`;
+        const ratio = (value - FIFTH_MIN) / range;
+        thumbBadge.style.left = `${thumbCenterPx(ratio, this.tuningSlider!)}px`;
         thumbBadge.value = value.toFixed(1);
       };
       const tuningLabel = getElementOrNull('tuning-label', HTMLSpanElement);
@@ -714,6 +722,7 @@ class DComposeApp {
         this.synth.setFifth(marker.fifth);
         this.visualizer?.setGenerator([marker.fifth, 1200]);
         this.updateSliderFill(this.tuningSlider!);
+        updateThumbBadge(marker.fifth);
         updateTuningLabel(marker.fifth);
       });
       // Tuning reset
@@ -808,8 +817,8 @@ class DComposeApp {
         const min = parseFloat(dRefSlider.min);
         const max = parseFloat(dRefSlider.max);
         const clamped = Math.max(min, Math.min(max, hz));
-        const pct = ((clamped - min) / (max - min)) * 100;
-        dRefInput.style.left = `${pct}%`;
+        const ratio = (clamped - min) / (max - min);
+        dRefInput.style.left = `${thumbCenterPx(ratio, dRefSlider)}px`;
       }
       // Slider: clamp to range
       if (dRefSlider && document.activeElement !== dRefSlider) {
@@ -1012,7 +1021,7 @@ class DComposeApp {
     });
 
     // Auto-return focus to body after using range/select controls so keyboard always works
-    document.querySelectorAll<HTMLElement>('select, input[type="range"]').forEach(el => {
+    document.querySelectorAll<HTMLElement>('select, input[type="range"], input[type="checkbox"]').forEach(el => {
       el.addEventListener('pointerup', () => setTimeout(() => el.blur(), 0));
       el.addEventListener('change', () => setTimeout(() => el.blur(), 0));
     });
@@ -1232,8 +1241,8 @@ class DComposeApp {
         this.updateSliderFill(dSlider);
         // Position badge over slider thumb
         if (dInput) {
-          const pct = ((clamped - min) / (max - min)) * 100;
-          dInput.style.left = `${pct}%`;
+          const ratio = (clamped - min) / (max - min);
+          dInput.style.left = `${thumbCenterPx(ratio, dSlider)}px`;
         }
       }
       if (dLabel) {
@@ -1427,9 +1436,14 @@ class DComposeApp {
 
     const updateActive = () => {
       const val = parseFloat(slider.value);
-      container.querySelectorAll('.slider-preset-btn').forEach(b => {
-        const pVal = parseFloat((b as HTMLElement).dataset.value ?? '');
-        (b as HTMLElement).classList.toggle('active', Math.abs(val - pVal) < 0.05);
+      container.querySelectorAll('.slider-preset-mark').forEach(mark => {
+        const btn = mark.querySelector('.slider-preset-btn') as HTMLElement | null;
+        if (!btn) return;
+        const pVal = parseFloat(btn.dataset.value ?? '');
+        const isActive = Math.abs(val - pVal) < 0.05;
+        btn.classList.toggle('active', isActive);
+        (mark as HTMLElement).classList.toggle('preset-below', !isActive && pVal < val);
+        (mark as HTMLElement).classList.toggle('preset-above', !isActive && pVal > val);
       });
     };
     slider.addEventListener('input', updateActive);
@@ -1662,8 +1676,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const sliderMin = parseFloat(_skewSlider.min);
       const sliderMax = parseFloat(_skewSlider.max);
       const clampedForPos = Math.max(sliderMin, Math.min(sliderMax, skew.value));
-      const pct = ((clampedForPos - sliderMin) / (sliderMax - sliderMin)) * 100;
-      _skewBadge.style.left = `${pct}%`;
+      const ratio = (clampedForPos - sliderMin) / (sliderMax - sliderMin);
+      _skewBadge.style.left = `${thumbCenterPx(ratio, _skewSlider)}px`;
       _skewBadge.value = skew.value.toFixed(2);
     }
 
@@ -1691,8 +1705,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const sliderMin = parseFloat(_volumeSlider.min);
       const sliderMax = parseFloat(_volumeSlider.max);
       const clampedForPos = Math.max(sliderMin, Math.min(sliderMax, volume.value));
-      const pct = ((clampedForPos - sliderMin) / (sliderMax - sliderMin)) * 100;
-      _volumeBadge.style.left = `${pct}%`;
+      const ratio = (clampedForPos - sliderMin) / (sliderMax - sliderMin);
+      _volumeBadge.style.left = `${thumbCenterPx(ratio, _volumeSlider)}px`;
       _volumeBadge.textContent = volume.badgeText;
     }
 
@@ -1715,8 +1729,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const sliderMin = parseFloat(_zoomSlider.min);
       const sliderMax = parseFloat(_zoomSlider.max);
       const clampedForPos = Math.max(sliderMin, Math.min(sliderMax, zoom.value));
-      const pct = ((clampedForPos - sliderMin) / (sliderMax - sliderMin)) * 100;
-      _zoomBadge.style.left = `${pct}%`;
+      const ratio = (clampedForPos - sliderMin) / (sliderMax - sliderMin);
+      _zoomBadge.style.left = `${thumbCenterPx(ratio, _zoomSlider)}px`;
       _zoomBadge.textContent = zoom.badgeText;
     }
 

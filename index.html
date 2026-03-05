@@ -119,18 +119,18 @@
       bottom: 0;
     }
     .pedals-handle-wrap { bottom: auto; top: 0; transform: translate(-50%, -50%); }
-    .panel-resize-handle {
-      width: 28px;
-      height: 24px;
-      cursor: row-resize;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 1px;
-      background: rgba(0,0,0,0.6);
-      border: 1px solid var(--border);
-    }
+     .panel-resize-handle {
+       width: 28px;
+       height: 24px;
+       cursor: row-resize;
+       display: flex;
+       flex-direction: column;
+       align-items: center;
+       justify-content: center;
+       gap: 1px;
+       background: rgba(0,0,0,1);
+       border: 1px solid var(--border);
+     }
     .panel-resize-handle:focus-visible { outline: 1px solid var(--accent); }
     .panel-resize-handle .grip-arrow { width: 0; height: 0; border-left: 4px solid transparent; border-right: 4px solid transparent; }
     .panel-resize-handle .grip-arrow-up { border-bottom: 4px solid #666; }
@@ -166,25 +166,25 @@
     }
 
     /* ── Grid settings cog ───────────────────────────────────── */
-    .grid-cog {
-      position: absolute;
-      top: 8px;
-      left: 8px;
-      z-index: 15;
-      width: 32px;
-      height: 32px;
-      font-size: 18px;
-      background: rgba(0, 0, 0, 0.6);
-      color: var(--dim);
-      border: 1px solid var(--border);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: var(--font);
-    }
-    .grid-cog:hover { color: var(--fg); border-color: var(--accent); }
-    .grid-cog.active { color: var(--fg); background: rgba(0, 0, 0, 0.8); border-color: var(--accent); }
+     .grid-cog {
+       position: absolute;
+       top: 8px;
+       left: 8px;
+       z-index: 15;
+       width: 32px;
+       height: 32px;
+       font-size: 18px;
+       background: rgba(0, 0, 0, 1);
+       color: var(--dim);
+       border: 1px solid var(--border);
+       cursor: pointer;
+       display: flex;
+       align-items: center;
+       justify-content: center;
+       font-family: var(--font);
+     }
+     .grid-cog:hover { color: var(--fg); border-color: var(--accent); }
+     .grid-cog.active { color: var(--fg); background: rgba(0, 0, 0, 1); border-color: var(--accent); }
 
     /* ── Grid settings overlay ───────────────────────────────── */
     #grid-overlay {
@@ -560,7 +560,7 @@
     <div id="visualiser-panel">
       <canvas id="history-canvas" height="120"></canvas>
       <div class="panel-resize-handle-wrap">
-        <div class="panel-resize-handle" tabindex="0" role="separator" aria-orientation="horizontal" aria-label="Resize visualiser" data-target="visualiser-panel" data-min="60" data-max="400" data-default="120" data-key="gi_visualiser_h" data-hidden-key="gi_history_hidden"><span class="grip-arrow grip-arrow-up"></span><span class="grip-line"></span><span class="grip-line"></span><span class="grip-arrow grip-arrow-down"></span></div>
+         <div class="panel-resize-handle" tabindex="0" role="separator" aria-orientation="horizontal" aria-label="Resize visualiser" title="Drag to resize visualiser panel" data-target="visualiser-panel" data-min="60" data-max="400" data-default="120" data-key="gi_visualiser_h" data-hidden-key="gi_history_hidden"><span class="grip-arrow grip-arrow-up"></span><span class="grip-line"></span><span class="grip-line"></span><span class="grip-arrow grip-arrow-down"></span></div>
       </div>
     </div>
 
@@ -568,7 +568,7 @@
     <div id="grid-area">
       <div id="keyboard-container">
         <canvas id="keyboard-canvas"></canvas>
-        <button id="grid-settings-btn" class="grid-cog" title="Grid settings">⚙</button>
+         <button id="grid-settings-btn" class="grid-cog" title="Open settings overlay">⚙</button>
 
         <!-- Grid settings overlay (was sidebar) -->
         <div id="grid-overlay" class="hidden">
@@ -682,7 +682,7 @@
     <!-- Pedals -->
     <div id="pedals-panel" style="height:44px">
       <div class="panel-resize-handle-wrap pedals-handle-wrap">
-        <div class="panel-resize-handle" tabindex="0" role="separator" aria-orientation="horizontal" aria-label="Resize pedals" data-target="pedals-panel" data-min="30" data-max="120" data-default="44" data-key="gi_pedals_h" data-direction="up" data-hidden-key="gi_pedals_hidden"><span class="grip-arrow grip-arrow-up"></span><span class="grip-line"></span><span class="grip-line"></span><span class="grip-arrow grip-arrow-down"></span></div>
+         <div class="panel-resize-handle" tabindex="0" role="separator" aria-orientation="horizontal" aria-label="Resize pedals" title="Drag to resize pedals panel" data-target="pedals-panel" data-min="30" data-max="120" data-default="44" data-key="gi_pedals_h" data-direction="up" data-hidden-key="gi_pedals_hidden"><span class="grip-arrow grip-arrow-up"></span><span class="grip-line"></span><span class="grip-line"></span><span class="grip-arrow grip-arrow-down"></span></div>
       </div>
       <button class="pedal-btn" id="sustain-indicator" title="Sustain: hold Space or tap" style="padding-top: 4px;">SUSTAIN</button>
       <button class="pedal-btn" id="vibrato-indicator" title="Vibrato: hold Shift or tap" style="padding-top: 4px;">VIBRATO</button>
