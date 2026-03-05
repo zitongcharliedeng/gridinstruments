@@ -8,6 +8,7 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "lint": "eslint src/",
+    "lint:ast": "ast-grep scan",
     "test": "playwright test",
     "test:update": "playwright test --update-snapshots"
   },
@@ -24,6 +25,7 @@
   "license": "MIT",
   "devDependencies": {
     "@anthropic-ai/sdk": "^0.78.0",
+    "@ast-grep/cli": "^0.41.0",
     "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.57.0",
     "@types/node": "^25.3.3",

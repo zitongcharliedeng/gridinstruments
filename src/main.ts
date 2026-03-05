@@ -39,6 +39,10 @@ import { MPEService } from './lib/mpe-service';
 import { midiToCoord, coordToMidiNote } from './lib/note-colors';
 import { createChordGraffiti } from './lib/chord-graffiti';
 import { appMachine } from './machines/appMachine';
+import { overlayMachine } from './machines/overlayMachine';
+import { waveformMachine } from './machines/waveformMachine';
+import { pedalMachine } from './machines/pedalMachines';
+import { panelMachine, clampPanelHeight } from './machines/panelMachine';
 import { createActor } from 'xstate';
 import readmeText from '../README.md?raw';
 // Type guard for WaveformType
@@ -266,6 +270,8 @@ class DComposeApp {
   private volumeSlider: HTMLInputElement | null = null;
   private vibratoIndicator: HTMLElement | null = null;
   private sustainIndicator: HTMLElement | null = null;
+  private sustainActor: ReturnType<typeof createActor<typeof pedalMachine>> | null = null;
+  private vibratoActor: ReturnType<typeof createActor<typeof pedalMachine>> | null = null;
   private midiDeviceList: HTMLElement | null = null;
   private zoomSlider: HTMLInputElement | null = null;
   private defaultZoom: number = 1.0;
@@ -338,14 +344,16 @@ class DComposeApp {
 
     this.visualizer = new KeyboardVisualizer(this.canvas, { width, height });
 
-    window.addEventListener('resize', () => {
-      if (!this.visualizer || !container) return;
+    new ResizeObserver((entries) => {
+      if (!this.visualizer) return;
       this.cachedCanvasRect = null;
-      const r = container.getBoundingClientRect();
-      this.visualizer.resize(Math.max(r.width - 2, 300), Math.max(r.height - 2, 200));
+      const entry = entries[0];
+      const w = Math.max(entry.contentRect.width - 2, 300);
+      const h = Math.max(entry.contentRect.height - 2, 200);
+      this.visualizer.resize(w, h);
       this.updateGraffiti?.();
+    }).observe(container);
 
-    });
     window.addEventListener('scroll', () => { this.cachedCanvasRect = null; }, { passive: true });
     window.addEventListener('orientationchange', () => { this.cachedCanvasRect = null; });
     document.addEventListener('scroll', () => { this.cachedCanvasRect = null; }, { passive: true, capture: true });
@@ -356,15 +364,17 @@ class DComposeApp {
     this.historyVisualizer = new NoteHistoryVisualizer(this.historyCanvas);
     this.historyVisualizer.start();
 
-    // Clef selector
-
-    window.addEventListener('resize', () => {
-      if (!this.historyVisualizer || !this.historyCanvas) return;
-      this.historyVisualizer.resize(
-        this.historyCanvas.parentElement?.clientWidth ?? 900,
-        this.historyCanvas.parentElement?.clientHeight ?? 120
-      );
-    });
+    const historyContainer = this.historyCanvas.parentElement;
+    if (historyContainer) {
+      new ResizeObserver((entries) => {
+        if (!this.historyVisualizer) return;
+        const entry = entries[0];
+        this.historyVisualizer.resize(
+          entry.contentRect.width || 900,
+          entry.contentRect.height || 120
+        );
+      }).observe(historyContainer);
+    }
   }
 
   // ─── MIDI ───────────────────────────────────────────────────────────────
@@ -467,24 +477,24 @@ class DComposeApp {
     this.canvas.addEventListener('pointercancel', this.handlePointerUp.bind(this));
     // touch-action: none in CSS eliminates the need for touchstart preventDefault
     this.canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+    const savedWaveform = this.loadSetting('waveform', 'sawtooth');
+    const initialWaveform = isWaveformType(savedWaveform) ? savedWaveform : 'sawtooth' as WaveformType;
+    const waveformActor = createActor(waveformMachine, { input: { initial: initialWaveform } });
+    waveformActor.subscribe((snapshot) => {
+      const active = snapshot.context.active;
+      document.querySelectorAll<HTMLButtonElement>('.wave-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.waveform === active);
+      });
+      this.synth.setWaveform(active);
+      this.saveSetting('waveform', active);
+    });
+    waveformActor.start();
     document.querySelectorAll<HTMLButtonElement>('.wave-btn').forEach(btn => {
       btn.addEventListener('click', () => {
-        document.querySelectorAll<HTMLButtonElement>('.wave-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
         const waveform = btn.dataset.waveform;
-        if (isWaveformType(waveform)) {
-          this.synth.setWaveform(waveform);
-          this.saveSetting('waveform', waveform);
-        }
+        if (isWaveformType(waveform)) waveformActor.send({ type: 'SELECT', waveform });
       });
     });
-
-    // Load saved waveform
-    const savedWaveform = this.loadSetting('waveform', 'sawtooth');
-    document.querySelectorAll<HTMLButtonElement>('.wave-btn').forEach(b => {
-      b.classList.toggle('active', b.dataset.waveform === savedWaveform);
-    });
-    if (isWaveformType(savedWaveform)) this.synth.setWaveform(savedWaveform);
 
     // Keyboard layout dropdown
     if (this.layoutSelect) {
@@ -1033,66 +1043,66 @@ class DComposeApp {
     });
 
 
-    const visualiserPanel = document.getElementById('visualiser-panel');
-    if (visualiserPanel && localStorage.getItem('gi_history_hidden') === 'true') {
-      visualiserPanel.classList.add('collapsed');
-      visualiserPanel.style.height = '';
-      const vc = visualiserPanel.querySelector('canvas');
-      if (vc) (vc as HTMLElement).style.height = '0';
-    }
-    const pedalsPanel = document.getElementById('pedals-panel');
-    if (pedalsPanel && localStorage.getItem('gi_pedals_hidden') === 'true') {
-      pedalsPanel.classList.add('collapsed');
-      pedalsPanel.style.height = '';
-    }
-
-    // Grid settings overlay toggle
+    // Grid settings overlay — XState actor
     const gridCog = getElementOrNull('grid-settings-btn', HTMLButtonElement);
     const gridOverlay = document.getElementById('grid-overlay');
     if (gridCog && gridOverlay) {
-      gridCog.addEventListener('click', () => {
-        const isHidden = gridOverlay.classList.toggle('hidden');
-        gridCog.classList.toggle('active', !isHidden);
+      const overlayActor = createActor(overlayMachine);
+      overlayActor.subscribe((snapshot) => {
+        const visible = snapshot.matches('visible');
+        gridOverlay.classList.toggle('hidden', !visible);
+        gridCog.classList.toggle('active', visible);
       });
+      overlayActor.start();
+      gridCog.addEventListener('click', () => overlayActor.send({ type: 'TOGGLE' }));
       gridOverlay.addEventListener('click', (e) => {
-        if (e.target === gridOverlay) {
-          gridOverlay.classList.add('hidden');
-          gridCog.classList.remove('active');
-        }
+        if (e.target === gridOverlay) overlayActor.send({ type: 'CLOSE' });
       });
+      (window as Window & { overlayActor?: unknown }).overlayActor = overlayActor;
     }
 
-    // Pedal touch handlers
+    // Pedal actors — XState runtime manages indicator classList + synth state
     const sustainPedal = getElementOrNull('sustain-indicator', HTMLButtonElement);
     const vibratoPedal = getElementOrNull('vibrato-indicator', HTMLButtonElement);
+
+    this.sustainActor = createActor(pedalMachine);
+    this.sustainActor.subscribe((snapshot) => {
+      const active = snapshot.matches('active');
+      this.sustainIndicator?.classList.toggle('active', active);
+      this.synth.setSustain(active);
+    });
+    this.sustainActor.start();
+
+    this.vibratoActor = createActor(pedalMachine);
+    this.vibratoActor.subscribe((snapshot) => {
+      const active = snapshot.matches('active');
+      this.vibratoIndicator?.classList.toggle('active', active);
+      this.synth.setVibrato(active);
+    });
+    this.vibratoActor.start();
+
     if (sustainPedal) {
       sustainPedal.addEventListener('pointerdown', (e) => {
         e.preventDefault();
-        this.synth.setSustain(true);
-        sustainPedal.classList.add('active');
+        this.sustainActor!.send({ type: 'ACTIVATE' });
       });
       sustainPedal.addEventListener('pointerup', () => {
-        this.synth.setSustain(false);
-        sustainPedal.classList.remove('active');
+        this.sustainActor!.send({ type: 'DEACTIVATE' });
       });
       sustainPedal.addEventListener('pointerleave', () => {
-        this.synth.setSustain(false);
-        sustainPedal.classList.remove('active');
+        this.sustainActor!.send({ type: 'DEACTIVATE' });
       });
     }
     if (vibratoPedal) {
       vibratoPedal.addEventListener('pointerdown', (e) => {
         e.preventDefault();
-        this.synth.setVibrato(true);
-        vibratoPedal.classList.add('active');
+        this.vibratoActor!.send({ type: 'ACTIVATE' });
       });
       vibratoPedal.addEventListener('pointerup', () => {
-        this.synth.setVibrato(false);
-        vibratoPedal.classList.remove('active');
+        this.vibratoActor!.send({ type: 'DEACTIVATE' });
       });
       vibratoPedal.addEventListener('pointerleave', () => {
-        this.synth.setVibrato(false);
-        vibratoPedal.classList.remove('active');
+        this.vibratoActor!.send({ type: 'DEACTIVATE' });
       });
     }
     // Initialize slider progress fills
@@ -1128,19 +1138,17 @@ class DComposeApp {
 
     // Shift (left or right) = vibrato (hold)
     if (code === 'ShiftLeft' || code === 'ShiftRight') {
-      this.vibratoIndicator?.classList.add('active');
-      this.synth.tryUnlock();                  // synchronous, iOS-safe
-      if (!this.synth.isInitialized()) return; // not running yet — wake audio silently
-      this.synth.setVibrato(true);
+      this.vibratoActor?.send({ type: 'ACTIVATE' });
+      this.synth.tryUnlock();
+      if (!this.synth.isInitialized()) return;
       this.startMpeVibrato();
       return;
     }
     // Space = sustain (hold)
     if (code === 'Space') {
-      this.sustainIndicator?.classList.add('active');
-      this.synth.tryUnlock();                  // synchronous, iOS-safe
-      if (!this.synth.isInitialized()) return; // not running yet — wake audio silently
-      this.synth.setSustain(true);
+      this.sustainActor?.send({ type: 'ACTIVATE' });
+      this.synth.tryUnlock();
+      if (!this.synth.isInitialized()) return;
       return;
     }
     // Shift+=/- zoom shortcuts removed — Shift is now vibrato-only
@@ -1170,14 +1178,12 @@ class DComposeApp {
     this.keyRepeat.delete(code);
 
     if (code === 'ShiftLeft' || code === 'ShiftRight') {
-      this.synth.setVibrato(false);
-      this.vibratoIndicator?.classList.remove('active');
+      this.vibratoActor?.send({ type: 'DEACTIVATE' });
       this.stopMpeVibrato();
       return;
     }
     if (code === 'Space') {
-      this.synth.setSustain(false);
-      this.sustainIndicator?.classList.remove('active');
+      this.sustainActor?.send({ type: 'DEACTIVATE' });
       return;
     }
 
@@ -1338,10 +1344,8 @@ class DComposeApp {
   }
 
   public stopAllNotes(): void {
-    this.synth.setSustain(false);
-    this.sustainIndicator?.classList.remove('active');
-    this.synth.setVibrato(false);
-    this.vibratoIndicator?.classList.remove('active');
+    this.sustainActor?.send({ type: 'DEACTIVATE' });
+    this.vibratoActor?.send({ type: 'DEACTIVATE' });
     this.stopMpeVibrato();
     this.synth.stopAll();
     this.mpe.panic();
@@ -1541,110 +1545,87 @@ document.addEventListener('DOMContentLoaded', () => {
     const dataMax = parseInt(handle.dataset.max ?? '600', 10);
     const defaultH = parseInt(handle.dataset.default ?? '120', 10);
     const storageKey = handle.dataset.key;
+    const hiddenKey = handle.dataset.hiddenKey;
+    const dirUp = handle.dataset.direction === 'up';
     const panel = targetId ? document.getElementById(targetId) : null;
     if (!panel) return;
 
-    // Dynamic max: never exceed 60% of viewport
-    const getMaxH = () => Math.min(dataMax, Math.floor(window.innerHeight * 0.6));
+    const savedHeight = storageKey ? parseInt(localStorage.getItem(storageKey) ?? '0', 10) : 0;
+    const startCollapsed = hiddenKey ? localStorage.getItem(hiddenKey) === 'true' : false;
 
-    const canvas = panel.querySelector('canvas');
-    const applyHeight = (h: number) => {
-      const clamped = Math.max(minH, Math.min(getMaxH(), h));
-      panel.style.height = clamped + 'px';
-      if (canvas) canvas.style.height = clamped + 'px';
-      return clamped;
-    };
+    const actor = createActor(panelMachine, {
+      input: {
+        defaultHeight: defaultH,
+        minHeight: minH,
+        maxHeight: dataMax,
+        dirUp,
+        initialHeight: savedHeight > 0 ? savedHeight : defaultH,
+        startCollapsed,
+      },
+    });
 
-    if (storageKey) {
-      const saved = localStorage.getItem(storageKey);
-      if (saved) {
-        const h = applyHeight(parseInt(saved, 10));
-        localStorage.setItem(storageKey, Math.round(h).toString());
+    let prevState = '';
+    actor.subscribe((snapshot) => {
+      const state = snapshot.value as string;
+      if (state === 'routing') return;
+      const { height } = snapshot.context;
+      const isCollapsed = state === 'collapsed';
+      const isDragging = state === 'dragging';
+
+      panel.classList.toggle('collapsed', isCollapsed);
+      handle.classList.toggle('dragging', isDragging);
+      panel.style.transition = isDragging ? 'none' : '';
+
+      if (isCollapsed) {
+        panel.style.height = '';
+      } else {
+        panel.style.height = clampPanelHeight(height, minH, dataMax) + 'px';
       }
-    }
 
-    const dirUp = handle.dataset.direction === 'up';
-    const hiddenKey = handle.dataset.hiddenKey;
-    const collapseThreshold = minH + 10;
+      if (state !== prevState && !isDragging) {
+        if (storageKey) {
+          try { localStorage.setItem(storageKey, isCollapsed ? '0' : Math.round(height).toString()); } catch { /* */ }
+        }
+        if (hiddenKey) {
+          try { localStorage.setItem(hiddenKey, isCollapsed ? 'true' : 'false'); } catch { /* */ }
+        }
+        if (isCollapsed && document.activeElement === handle) handle.focus();
+      }
+      if (state === 'idle' && prevState === 'dragging' && storageKey) {
+        try { localStorage.setItem(storageKey, Math.round(height).toString()); } catch { /* */ }
+      }
+      prevState = state;
+    });
+    actor.start();
 
-    const persistHeight = (h: number) => {
-      if (storageKey) try { localStorage.setItem(storageKey, Math.round(h).toString()); } catch { /* */ }
-    };
-
-    const collapsePanel = () => {
-      const hadFocus = document.activeElement === handle;
-      panel.classList.add('collapsed');
-      panel.style.height = '';
-      if (canvas) canvas.style.height = '0';
-      if (hiddenKey) try { localStorage.setItem(hiddenKey, 'true'); } catch { /* */ }
-      persistHeight(0);
-      if (hadFocus) handle.focus();
-      window.dispatchEvent(new Event('resize'));
-    };
-
-    const expandPanel = () => {
-      panel.classList.remove('collapsed');
-      applyHeight(defaultH);
-      if (hiddenKey) try { localStorage.setItem(hiddenKey, 'false'); } catch { /* */ }
-      persistHeight(defaultH);
-      window.dispatchEvent(new Event('resize'));
-    };
-
-    const toggleCollapse = () => {
-      if (panel.classList.contains('collapsed')) expandPanel(); else collapsePanel();
-    };
-
-    let startY = 0;
-    let startH = 0;
-    let dragStartedCollapsed = false;
     handle.addEventListener('pointerdown', (e: PointerEvent) => {
       e.preventDefault();
       handle.setPointerCapture(e.pointerId);
-      handle.classList.add('dragging');
-      panel.style.transition = 'none';
-      dragStartedCollapsed = panel.classList.contains('collapsed');
-      panel.classList.remove('collapsed');
-      startY = e.clientY;
-      startH = panel.getBoundingClientRect().height;
+      actor.send({ type: 'DRAG_START', clientY: e.clientY });
     });
     handle.addEventListener('pointermove', (e: PointerEvent) => {
       if (!handle.classList.contains('dragging')) return;
-      const delta = dirUp ? startY - e.clientY : e.clientY - startY;
-      applyHeight(startH + delta);
+      actor.send({ type: 'DRAG_MOVE', clientY: e.clientY });
     });
     const stopDrag = () => {
       if (!handle.classList.contains('dragging')) return;
-      handle.classList.remove('dragging');
-      panel.style.transition = '';
-      const h = panel.getBoundingClientRect().height;
-      if (dragStartedCollapsed) {
-        panel.classList.add('collapsed');
-        return;
-      }
-      if (h <= collapseThreshold) {
-        collapsePanel();
-      } else {
-        persistHeight(h);
-        window.dispatchEvent(new Event('resize'));
-      }
+      actor.send({ type: 'DRAG_END' });
     };
     handle.addEventListener('pointerup', stopDrag);
     handle.addEventListener('pointercancel', stopDrag);
 
-    handle.addEventListener('dblclick', () => { dragStartedCollapsed = false; expandPanel(); });
+    handle.addEventListener('dblclick', () => {
+      actor.send({ type: 'DBLCLICK' });
+    });
 
     handle.addEventListener('keydown', (e: KeyboardEvent) => {
-      const step = 10;
       if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
         e.preventDefault();
-        const current = panel.getBoundingClientRect().height;
         const grow = dirUp ? e.key === 'ArrowUp' : e.key === 'ArrowDown';
-        const h = applyHeight(current + (grow ? step : -step));
-        persistHeight(h);
-        window.dispatchEvent(new Event('resize'));
+        actor.send({ type: 'RESIZE_STEP', grow });
       } else if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
-        toggleCollapse();
+        actor.send({ type: 'TOGGLE' });
       }
     });
   });
@@ -1655,11 +1636,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
-      const overlay = document.getElementById('grid-overlay');
-      const cog = document.getElementById('grid-settings-btn');
-      if (overlay && !overlay.classList.contains('hidden')) {
-        overlay.classList.add('hidden');
-        cog?.classList.remove('active');
+      const actor = (window as Window & { overlayActor?: { send: (e: { type: string }) => void; getSnapshot: () => { matches: (s: string) => boolean } } }).overlayActor;
+      if (actor?.getSnapshot().matches('visible')) {
+        actor.send({ type: 'CLOSE' });
       }
     }
   });
@@ -1688,7 +1667,6 @@ document.addEventListener('DOMContentLoaded', () => {
   setupInfoDialogs();
 
   const app = new DComposeApp();
-  requestAnimationFrame(() => window.dispatchEvent(new Event('resize')));
   // Create and start the AppMachine actor (observes only — DComposeApp still controls all behaviour)
   const appActor = createActor(appMachine, {
     input: { initialVolume: -10.5, defaultZoom: 1.0, touchDevice: 'ontouchstart' in window },

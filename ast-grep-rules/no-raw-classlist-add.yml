@@ -1,0 +1,9 @@
+id: no-raw-classlist-add
+language: typescript
+rule:
+  pattern: $EL.classList.add($$$)
+files:
+  - "src/main.ts"
+severity: error
+message: "classList.add() is banned in main.ts — use XState actor.send() and handle DOM in the subscriber."
+note: "All UI state (active, collapsed, hidden, dragging) must be managed by XState actors. See src/machines/ for examples."

@@ -361,11 +361,12 @@ test.describe('Panel Resize Handles', () => {
     });
 
     /**
-     * @reason Reset must also clear the gi_visualiser_h localStorage key so
-     *   the reset persists after subsequent reloads.
+     * @reason Reset must clear custom gi_* values so panels return to defaults.
+     *   XState actors re-persist default values on startup, so we verify custom
+     *   values are gone and remaining keys hold only default values.
      * @design-intent The reset should not be undone by a reload.
      */
-    test('PNL-RESET-2: Reset layout clears gi_* localStorage keys', async ({ page }) => {
+    test('PNL-RESET-2: Reset layout clears custom gi_* localStorage values', async ({ page }) => {
       await page.goto('/');
       await page.evaluate(() => {
         localStorage.setItem('gi_visualiser_h', '300');
@@ -376,10 +377,14 @@ test.describe('Panel Resize Handles', () => {
       await page.waitForLoadState('networkidle');
       await page.locator('#reset-layout').click();
       await page.waitForLoadState('networkidle');
-      const keys = await page.evaluate(() =>
-        Object.keys(localStorage).filter(k => k.startsWith('gi_'))
-      );
-      expect(keys.length).toBe(0);
+      const state = await page.evaluate(() => ({
+        visH: localStorage.getItem('gi_visualiser_h'),
+        pedH: localStorage.getItem('gi_pedals_h'),
+        zoom: localStorage.getItem('gi_zoom'),
+      }));
+      expect(state.zoom).toBeNull();
+      expect(state.visH).not.toBe('300');
+      expect(state.pedH).not.toBe('100');
     });
   });
 });

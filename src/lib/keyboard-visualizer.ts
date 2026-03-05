@@ -101,8 +101,8 @@ export class KeyboardVisualizer {
     const dpr = window.devicePixelRatio || 1;
     this.canvas.width = this.options.width * dpr;
     this.canvas.height = this.options.height * dpr;
-    this.canvas.style.width = `${this.options.width}px`;
-    this.canvas.style.height = `${this.options.height}px`;
+    // Do NOT set canvas.style.width/height — let CSS (width:100%; height:100%) control layout.
+    // Only canvas.width/height (physical pixel buffer) are set here.
     this.ctx.scale(dpr, dpr);
   }
 

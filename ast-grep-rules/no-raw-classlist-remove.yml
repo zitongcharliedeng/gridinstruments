@@ -1,0 +1,9 @@
+id: no-raw-classlist-remove
+language: typescript
+rule:
+  pattern: $EL.classList.remove($$$)
+files:
+  - "src/main.ts"
+severity: error
+message: "classList.remove() is banned in main.ts — use XState actor.send() and handle DOM in the subscriber."
+note: "All UI state (active, collapsed, hidden, dragging) must be managed by XState actors. See src/machines/ for examples."
