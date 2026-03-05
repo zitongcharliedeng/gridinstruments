@@ -758,40 +758,24 @@ class DComposeApp {
       this.populateSliderPresets('tet-presets', this.tuningSlider, tetPresets);
     }
 
-    // Volume
-    const volBadge = getElementOrNull('volume-thumb-badge', HTMLSpanElement);
-    const updateVolBadge = (value: number) => {
-      if (!volBadge) return;
-      const min = 0, max = 1;
-      const pct = ((value - min) / (max - min)) * 100;
-      volBadge.style.left = `${pct}%`;
-      if (value <= 0) {
-        volBadge.textContent = '-\u221E';
-      } else {
-        const db = 20 * Math.log10(value);
-        volBadge.textContent = db.toFixed(1);
-      }
-    };
-    this.volumeSlider?.addEventListener('input', () => {
-      const val = parseFloat(this.volumeSlider!.value);
-      this.synth.setMasterVolume(val);
-      if (this.volumeSlider) this.updateSliderFill(this.volumeSlider);
-      updateVolBadge(val);
-      this.saveSetting('volume', this.volumeSlider!.value);
-    });
-    const savedVolume = this.loadSetting('volume', '0.3');
-    if (this.volumeSlider) {
-      this.volumeSlider.value = savedVolume;
-      this.synth.setMasterVolume(parseFloat(savedVolume));
-    }
-    updateVolBadge(parseFloat(savedVolume));
-    const volReset = getElementOrNull('volume-reset', HTMLButtonElement);
-      volReset?.addEventListener('click', () => {
-        if (this.volumeSlider) {
-          this.volumeSlider.value = '0.3';
-          this.volumeSlider.dispatchEvent(new Event('input'));
-        }
-      });
+     // Volume slider — DOM mutations driven by appActor subscriber
+     const savedVolume = this.loadSetting('volume', '0.3');
+     if (this.volumeSlider) {
+       this.volumeSlider.value = savedVolume;
+       this.synth.setMasterVolume(parseFloat(savedVolume));
+     }
+     this.volumeSlider?.addEventListener('input', () => {
+       const val = parseFloat(this.volumeSlider!.value);
+       this.synth.setMasterVolume(val);
+       this.saveSetting('volume', this.volumeSlider!.value);
+     });
+     const volReset = getElementOrNull('volume-reset', HTMLButtonElement);
+     volReset?.addEventListener('click', () => {
+       if (this.volumeSlider) {
+         this.volumeSlider.value = '0.3';
+         this.volumeSlider.dispatchEvent(new Event('input'));
+       }
+     });
 
     // Button spacing
     const spacingInput = getElementOrNull('spacing-input', HTMLInputElement);
@@ -1001,40 +985,27 @@ class DComposeApp {
     });
 
 
-    // Zoom slider
-    const zoomReset = getElementOrNull('zoom-reset', HTMLButtonElement);
-    const zoomBadge = getElementOrNull('zoom-thumb-badge', HTMLSpanElement);
-    const updateZoomBadge = (value: number) => {
-      if (!zoomBadge) return;
-      const min = 0.2, max = 3;
-      const pct = ((value - min) / (max - min)) * 100;
-      zoomBadge.style.left = `${pct}%`;
-      zoomBadge.textContent = value.toFixed(2);
-    };
-    // Mobile default: ~1.6x on touch (base is already 3x via dPy=height/3, so 1.6*3 ≈ 5x)
-    // Mobile default: ~1.6x on touch (base is already 3x via dPy=height/3, so 1.6*3 ≈ 5x)
-    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-    this.defaultZoom = isTouchDevice ? Math.min(1.6, window.innerWidth / 480) : 1.0;
-    if (this.zoomSlider) {
-      const savedZoom = this.loadSetting('zoom', this.defaultZoom.toString());
-      this.zoomSlider.value = savedZoom;
-      this.visualizer?.setZoom(parseFloat(savedZoom));
-      updateZoomBadge(parseFloat(savedZoom));
-      this.zoomSlider.addEventListener('input', () => {
-        const zoom = parseFloat(this.zoomSlider!.value);
-        this.visualizer?.setZoom(zoom);
-        this.updateGraffiti?.();
-        this.updateSliderFill(this.zoomSlider!);
-        updateZoomBadge(zoom);
-        this.saveSetting('zoom', this.zoomSlider!.value);
-      });
-    }
-      zoomReset?.addEventListener('click', () => {
-        if (this.zoomSlider) {
-          this.zoomSlider.value = this.defaultZoom.toString();
-          this.zoomSlider.dispatchEvent(new Event('input'));
-        }
-      });
+     // Zoom slider — DOM mutations driven by appActor subscriber
+     const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+     this.defaultZoom = isTouchDevice ? Math.min(1.6, window.innerWidth / 480) : 1.0;
+     const savedZoom = this.loadSetting('zoom', this.defaultZoom.toString());
+     if (this.zoomSlider) {
+       this.zoomSlider.value = savedZoom;
+       this.visualizer?.setZoom(parseFloat(savedZoom));
+     }
+     this.zoomSlider?.addEventListener('input', () => {
+       const zoom = parseFloat(this.zoomSlider!.value);
+       this.visualizer?.setZoom(zoom);
+       this.updateGraffiti?.();
+       this.saveSetting('zoom', this.zoomSlider!.value);
+     });
+     const zoomReset = getElementOrNull('zoom-reset', HTMLButtonElement);
+     zoomReset?.addEventListener('click', () => {
+       if (this.zoomSlider) {
+         this.zoomSlider.value = this.defaultZoom.toString();
+         this.zoomSlider.dispatchEvent(new Event('input'));
+       }
+     });
     window.addEventListener('blur', () => this.stopAllNotes());
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'hidden') this.stopAllNotes();
@@ -1704,13 +1675,69 @@ document.addEventListener('DOMContentLoaded', () => {
     if (_skewSlider) {
       applySliderFill(_skewSlider);
     }
+   });
+
+  // ─── Volume slider: appActor subscriber drives badge & fill ──────────────────
+  const _volumeSlider = getElementOrNull('volume-slider', HTMLInputElement);
+  const _volumeBadge = getElementOrNull('volume-thumb-badge', HTMLSpanElement);
+  let _prevVolumeValue = NaN;
+
+  appActor.subscribe((snapshot) => {
+    const volume = snapshot.context.sliders.volume;
+    if (volume.value === _prevVolumeValue) return;
+    _prevVolumeValue = volume.value;
+
+    if (_volumeBadge && _volumeSlider) {
+      const sliderMin = parseFloat(_volumeSlider.min);
+      const sliderMax = parseFloat(_volumeSlider.max);
+      const clampedForPos = Math.max(sliderMin, Math.min(sliderMax, volume.value));
+      const pct = ((clampedForPos - sliderMin) / (sliderMax - sliderMin)) * 100;
+      _volumeBadge.style.left = `${pct}%`;
+      _volumeBadge.textContent = volume.badgeText;
+    }
+
+    if (_volumeSlider) {
+      applySliderFill(_volumeSlider);
+    }
   });
 
-  appActor.start();
+  // ─── Zoom slider: appActor subscriber drives badge & fill ────────────────────
+  const _zoomSlider = getElementOrNull('zoom-slider', HTMLInputElement);
+  const _zoomBadge = getElementOrNull('zoom-thumb-badge', HTMLSpanElement);
+  let _prevZoomValue = NaN;
 
-  if (_skewSlider) {
-    appActor.send({ type: 'SLIDER_INPUT', slider: 'skew', value: parseFloat(_skewSlider.value) });
-  }
+  appActor.subscribe((snapshot) => {
+    const zoom = snapshot.context.sliders.zoom;
+    if (zoom.value === _prevZoomValue) return;
+    _prevZoomValue = zoom.value;
+
+    if (_zoomBadge && _zoomSlider) {
+      const sliderMin = parseFloat(_zoomSlider.min);
+      const sliderMax = parseFloat(_zoomSlider.max);
+      const clampedForPos = Math.max(sliderMin, Math.min(sliderMax, zoom.value));
+      const pct = ((clampedForPos - sliderMin) / (sliderMax - sliderMin)) * 100;
+      _zoomBadge.style.left = `${pct}%`;
+      _zoomBadge.textContent = zoom.badgeText;
+    }
+
+    if (_zoomSlider) {
+      applySliderFill(_zoomSlider);
+    }
+  });
+
+   appActor.start();
+
+   if (_skewSlider) {
+     appActor.send({ type: 'SLIDER_INPUT', slider: 'skew', value: parseFloat(_skewSlider.value) });
+   }
+
+   if (_volumeSlider) {
+     appActor.send({ type: 'SLIDER_INPUT', slider: 'volume', value: parseFloat(_volumeSlider.value) });
+   }
+
+   if (_zoomSlider) {
+     appActor.send({ type: 'SLIDER_INPUT', slider: 'zoom', value: parseFloat(_zoomSlider.value) });
+   }
 
   // ─── Wire DOM → appActor (dual-write: DComposeApp handles services) ───────
   if (_skewSlider) {
