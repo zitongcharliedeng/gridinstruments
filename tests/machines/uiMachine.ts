@@ -1,11 +1,11 @@
 /**
  * UI state machines for model-based test generation.
  *
- * Seven independent XState v5 machines modelling user-visible UI state
+ * Ten independent XState v5 machines modelling user-visible UI state
  * transitions. Used ONLY with `getAdjacencyMap` to enumerate (state, event)
  * pairs for Playwright test generation — NOT used at runtime.
  *
- * Total (state × event) pairs across all machines: 56.
+ * Total (state × event) pairs across all machines: 76.
  */
 
 import { setup } from 'xstate';
@@ -350,12 +350,14 @@ export const waveformDomAssertions: Record<string, (page: Page) => Promise<void>
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// 5. Sustain Machine  (2 states × 2 events = 4 pairs)
+// 5. Sustain Machine  (2 states × 4 events = 8 pairs)
 // ═══════════════════════════════════════════════════════════════════════════════
 
 type SustainEvent =
   | { type: 'PRESS_SPACE' }
-  | { type: 'RELEASE_SPACE' };
+  | { type: 'RELEASE_SPACE' }
+  | { type: 'POINTERDOWN_SUSTAIN' }
+  | { type: 'POINTERUP_SUSTAIN' };
 
 export const sustainMachine = setup({
   types: { events: {} as SustainEvent },
@@ -364,10 +366,16 @@ export const sustainMachine = setup({
   initial: 'inactive',
   states: {
     inactive: {
-      on: { PRESS_SPACE: 'active' },
+      on: {
+        PRESS_SPACE: 'active',
+        POINTERDOWN_SUSTAIN: 'active',
+      },
     },
     active: {
-      on: { RELEASE_SPACE: 'inactive' },
+      on: {
+        RELEASE_SPACE: 'inactive',
+        POINTERUP_SUSTAIN: 'inactive',
+      },
     },
   },
 });
@@ -378,6 +386,12 @@ export const sustainPlaywrightActions: Record<SustainEvent['type'], (page: Page)
   },
   RELEASE_SPACE: async (page) => {
     await page.keyboard.up('Space');
+  },
+  POINTERDOWN_SUSTAIN: async (page) => {
+    await page.locator('#sustain-indicator').dispatchEvent('pointerdown', { bubbles: true });
+  },
+  POINTERUP_SUSTAIN: async (page) => {
+    await page.locator('#sustain-indicator').dispatchEvent('pointerup', { bubbles: true });
   },
 };
 
@@ -396,12 +410,14 @@ export const sustainDomAssertions: Record<string, (page: Page) => Promise<void>>
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// 6. Vibrato Machine  (2 states × 2 events = 4 pairs)
+// 6. Vibrato Machine  (2 states × 4 events = 8 pairs)
 // ═══════════════════════════════════════════════════════════════════════════════
 
 type VibratoEvent =
   | { type: 'PRESS_SHIFT' }
-  | { type: 'RELEASE_SHIFT' };
+  | { type: 'RELEASE_SHIFT' }
+  | { type: 'POINTERDOWN_VIBRATO' }
+  | { type: 'POINTERUP_VIBRATO' };
 
 export const vibratoMachine = setup({
   types: { events: {} as VibratoEvent },
@@ -410,10 +426,16 @@ export const vibratoMachine = setup({
   initial: 'inactive',
   states: {
     inactive: {
-      on: { PRESS_SHIFT: 'active' },
+      on: {
+        PRESS_SHIFT: 'active',
+        POINTERDOWN_VIBRATO: 'active',
+      },
     },
     active: {
-      on: { RELEASE_SHIFT: 'inactive' },
+      on: {
+        RELEASE_SHIFT: 'inactive',
+        POINTERUP_VIBRATO: 'inactive',
+      },
     },
   },
 });
@@ -424,6 +446,12 @@ export const vibratoPlaywrightActions: Record<VibratoEvent['type'], (page: Page)
   },
   RELEASE_SHIFT: async (page) => {
     await page.keyboard.up('Shift');
+  },
+  POINTERDOWN_VIBRATO: async (page) => {
+    await page.locator('#vibrato-indicator').dispatchEvent('pointerdown', { bubbles: true });
+  },
+  POINTERUP_VIBRATO: async (page) => {
+    await page.locator('#vibrato-indicator').dispatchEvent('pointerup', { bubbles: true });
   },
 };
 
@@ -483,6 +511,144 @@ export const midiPanelDomAssertions: Record<string, (page: Page) => Promise<void
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// 8. MPE Machine  (2 states × 1 event = 2 pairs)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+type MpeEvent = { type: 'TOGGLE_MPE' };
+
+export const mpeMachine = setup({
+  types: { events: {} as MpeEvent },
+}).createMachine({
+  id: 'mpe',
+  initial: 'disabled',
+  states: {
+    disabled: { on: { TOGGLE_MPE: 'enabled' } },
+    enabled: { on: { TOGGLE_MPE: 'disabled' } },
+  },
+});
+
+export const mpePlaywrightActions: Record<MpeEvent['type'], (page: Page) => Promise<void>> = {
+  TOGGLE_MPE: async (page) => {
+    await page.locator('#mpe-enabled').click();
+  },
+};
+
+export const mpeInvariants: Record<string, string> = {
+  disabled: 'The MPE output select dropdown is disabled/greyed out.',
+  enabled: 'The MPE output select dropdown is enabled and interactive.',
+};
+
+export const mpeDomAssertions: Record<string, (page: Page) => Promise<void>> = {
+  disabled: async (page) => {
+    await expect(page.locator('#mpe-output-select')).toBeDisabled();
+  },
+  enabled: async (page) => {
+    await expect(page.locator('#mpe-output-select')).not.toBeDisabled();
+  },
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 9. Text Input Focus Machine  (2 states × 3 events = 6 pairs)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+type TextInputFocusEvent =
+  | { type: 'CLICK_INPUT' }
+  | { type: 'PRESS_ENTER' }
+  | { type: 'PRESS_ESCAPE' };
+
+export const textInputFocusMachine = setup({
+  types: { events: {} as TextInputFocusEvent },
+}).createMachine({
+  id: 'textInputFocus',
+  initial: 'blurred',
+  states: {
+    blurred: { on: { CLICK_INPUT: 'focused' } },
+    focused: {
+      on: {
+        PRESS_ENTER: 'blurred',
+        PRESS_ESCAPE: 'blurred',
+      },
+    },
+  },
+});
+
+export const textInputFocusPlaywrightActions: Record<TextInputFocusEvent['type'], (page: Page) => Promise<void>> = {
+  CLICK_INPUT: async (page) => {
+    await page.locator('#d-ref-input').click();
+  },
+  PRESS_ENTER: async (page) => {
+    await page.keyboard.press('Enter');
+  },
+  PRESS_ESCAPE: async (page) => {
+    await page.keyboard.press('Escape');
+  },
+};
+
+export const textInputFocusInvariants: Record<string, string> = {
+  blurred: 'The D-reference frequency input is not focused.',
+  focused: 'The D-reference frequency input is focused and ready for text entry.',
+};
+
+export const textInputFocusDomAssertions: Record<string, (page: Page) => Promise<void>> = {
+  blurred: async (page) => {
+    await expect(page.locator('#d-ref-input')).not.toBeFocused();
+  },
+  focused: async (page) => {
+    await expect(page.locator('#d-ref-input')).toBeFocused();
+  },
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 10. Skew Label Machine  (2 states × 2 events = 4 pairs)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+type SkewLabelEvent =
+  | { type: 'SET_SKEW_MAX' }
+  | { type: 'SET_SKEW_MIN' };
+
+export const skewLabelMachine = setup({
+  types: { events: {} as SkewLabelEvent },
+}).createMachine({
+  id: 'skewLabel',
+  initial: 'dcompose',
+  states: {
+    dcompose: { on: { SET_SKEW_MAX: 'midimech' } },
+    midimech: { on: { SET_SKEW_MIN: 'dcompose' } },
+  },
+});
+
+export const skewLabelPlaywrightActions: Record<SkewLabelEvent['type'], (page: Page) => Promise<void>> = {
+  SET_SKEW_MAX: async (page) => {
+    await page.evaluate(() => {
+      const s = document.getElementById('skew-slider') as HTMLInputElement;
+      s.value = '1';
+      s.dispatchEvent(new Event('input'));
+    });
+  },
+  SET_SKEW_MIN: async (page) => {
+    await page.evaluate(() => {
+      const s = document.getElementById('skew-slider') as HTMLInputElement;
+      s.value = '0';
+      s.dispatchEvent(new Event('input'));
+    });
+  },
+};
+
+export const skewLabelInvariants: Record<string, string> = {
+  dcompose: 'The skew label shows DCompose annotation at minimum skew position.',
+  midimech: 'The skew label shows MidiMech annotation at maximum skew position.',
+};
+
+export const skewLabelDomAssertions: Record<string, (page: Page) => Promise<void>> = {
+  dcompose: async (page) => {
+    await expect(page.locator('#skew-label')).toContainText('DCompose');
+  },
+  midimech: async (page) => {
+    await expect(page.locator('#skew-label')).toContainText('MidiMech');
+  },
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // Aggregate export
 // ═══════════════════════════════════════════════════════════════════════════════
 
@@ -494,4 +660,7 @@ export const allMachines = [
   { name: 'sustain', machine: sustainMachine },
   { name: 'vibrato', machine: vibratoMachine },
   { name: 'midiPanel', machine: midiPanelMachine },
+  { name: 'mpe', machine: mpeMachine },
+  { name: 'textInputFocus', machine: textInputFocusMachine },
+  { name: 'skewLabel', machine: skewLabelMachine },
 ] as const;

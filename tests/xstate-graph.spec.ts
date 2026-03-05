@@ -4,7 +4,7 @@
  * @reason Every UI state transition in GridInstruments should be covered by
  *   at least one test. Hand-writing tests for every (state, event) pair is
  *   error-prone and leads to coverage gaps. Instead, we enumerate all pairs
- *   from 7 independent UI state machines using `getAdjacencyMap` from
+ *   from 10 independent UI state machines using `getAdjacencyMap` from
  *   `xstate/graph`, and generate a Playwright test for each.
  *
  * @design-intent Model-based testing via XState graph traversal ensures
@@ -19,11 +19,14 @@
  *   visualiser (3 states, 12 pairs) — panel resize
  *   pedals (3 states, 12 pairs) — panel resize
  *   waveform (4 states, 16 pairs) — waveform selection
- *   sustain (2 states, 4 pairs) — sustain hold
- *   vibrato (2 states, 4 pairs) — vibrato hold
+ *   sustain (2 states, 8 pairs) — sustain hold
+ *   vibrato (2 states, 8 pairs) — vibrato hold
  *   midiPanel (2 states, 2 pairs) — MIDI panel toggle (skipped: no DOM element)
+ *   mpe (2 states, 2 pairs) — MPE toggle
+ *   textInputFocus (2 states, 6 pairs) — text input focus/blur
+ *   skewLabel (2 states, 4 pairs) — skew label annotation
  *
- * Total: 56 pairs, ~54 active tests (midiPanel skipped).
+ * Total: 76 pairs, ~74 active tests (midiPanel skipped).
  */
 
 import { test } from '@playwright/test';
@@ -139,7 +142,7 @@ function enumerateTransitions(
 
 // ─── Machines that require overlay to be open first ──────────────────────────
 
-const NEEDS_OVERLAY_OPEN = new Set(['waveform']);
+const NEEDS_OVERLAY_OPEN = new Set(['waveform', 'mpe', 'textInputFocus', 'skewLabel']);
 
 // ─── Machines to skip (DOM elements don't exist) ─────────────────────────────
 

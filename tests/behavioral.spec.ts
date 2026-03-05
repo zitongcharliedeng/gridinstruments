@@ -216,50 +216,10 @@ test.describe('DCompose Web — Behavioral State Transitions', () => {
       await expect(page.locator('#mpe-output-select')).toBeVisible();
     });
 
-    /**
-     * @reason MPE output select starts disabled and only enables after the
-     *   MPE checkbox is checked — prevents accidental MIDI output.
-     * @design-intent Two-step activation (checkbox → select) is a safety
-     *   measure to prevent unintended MIDI data being sent to external devices.
-     */
-    test('BH-MPE-2: MPE select is disabled until checkbox is checked', async ({ page }) => {
-      expect(await page.locator('#mpe-output-select').isDisabled()).toBe(true);
-      await page.locator('#mpe-enabled').check();
-      await page.waitForTimeout(100);
-      expect(await page.locator('#mpe-output-select').isDisabled()).toBe(false);
-    });
   });
 
 
   test.describe('Keyboard Focus Behavior', () => {
-    /**
-     * @reason Enter key in the D-ref input triggers blur so keyboard events
-     *   return to the synth instead of being captured by the text input.
-     * @design-intent Musicians need Enter to confirm and immediately resume
-     *   playing — the input must release focus without requiring a mouse click.
-     */
-    test('BH-FOCUS-1: Enter blurs text input', async ({ page }) => {
-      await page.locator('#d-ref-input').click();
-      await expect(page.locator('#d-ref-input')).toBeFocused();
-      await page.keyboard.press('Enter');
-      await page.waitForTimeout(100);
-      await expect(page.locator('#d-ref-input')).not.toBeFocused();
-    });
-
-    /**
-     * @reason Escape key in the D-ref input triggers blur, matching the
-     *   standard UI pattern for cancelling/dismissing input focus.
-     * @design-intent Escape is the universal "cancel" key — users expect it
-     *   to dismiss text input focus and return control to the synth.
-     */
-    test('BH-FOCUS-2: Escape blurs text input', async ({ page }) => {
-      await page.locator('#d-ref-input').click();
-      await expect(page.locator('#d-ref-input')).toBeFocused();
-      await page.keyboard.press('Escape');
-      await page.waitForTimeout(100);
-      await expect(page.locator('#d-ref-input')).not.toBeFocused();
-    });
-
     /**
      * @reason Clicking the MIDI settings toggle must not move keyboard focus
      *   into the settings panel inputs — the synth must remain playable.
@@ -273,27 +233,6 @@ test.describe('DCompose Web — Behavioral State Transitions', () => {
       expect(activeTagName).not.toBe('INPUT');
       expect(activeTagName).not.toBe('SELECT');
     })
-  });
-
-  test.describe('Skew Slider Behavior', () => {
-    /**
-     * @reason Skew endpoint labels ("MidiMech" / "DCompose") highlight with
-     *   the .active class based on slider position — left at 0, right at 1.
-     * @design-intent Active endpoint highlighting gives users a clear sense of
-     *   which layout extreme they're closest to while dragging.
-     */
-    test('BH-SKEW-1: Inline skew label updates correctly', async ({ page }) => {
-      // At default skew=0, annotation shows nearest preset (DCompose)
-      await expect(page.locator('#skew-label')).toContainText('DCompose');
-      await page.evaluate(() => {
-        const s = document.getElementById('skew-slider') as HTMLInputElement;
-        s.value = '1';
-        s.dispatchEvent(new Event('input'));
-      });
-      await page.waitForTimeout(200);
-      // At skew=1, annotation shows MidiMech
-      await expect(page.locator('#skew-label')).toContainText('MidiMech');
-    });
   });
 
   test.describe('Modifier Key Behavior', () => {

@@ -102,44 +102,6 @@ test.describe('GridInstruments — Overlay Regression Tests', () => {
     expect(afterReset).toBeNull();
   });
 
-  test('OV-PEDAL-1: Sustain pedal activates on pointerdown', async ({ page }) => {
-    /**
-     * @reason The sustain pedal button must gain `.active` class on pointerdown
-     *   and lose it on pointerup — it's a momentary switch, not a toggle.
-     * @design-intent Sustain pedal follows physical piano pedal behavior —
-     *   press to sustain, release to dampen.
-     */
-    const pedal = page.locator('#sustain-indicator');
-    await pedal.dispatchEvent('pointerdown', { bubbles: true });
-    await page.waitForTimeout(300);
-    const activeAfterDown = await pedal.evaluate(el => el.classList.contains('active'));
-    expect(activeAfterDown).toBe(true);
-
-    await pedal.dispatchEvent('pointerup', { bubbles: true });
-    await page.waitForTimeout(300);
-    const activeAfterUp = await pedal.evaluate(el => el.classList.contains('active'));
-    expect(activeAfterUp).toBe(false);
-  });
-
-  test('OV-PEDAL-2: Vibrato pedal activates on pointerdown', async ({ page }) => {
-    /**
-     * @reason The vibrato pedal button must gain `.active` class on pointerdown
-     *   and lose it on pointerup — it's a momentary switch, not a toggle.
-     * @design-intent Vibrato pedal follows physical instrument modulation behavior —
-     *   hold to engage vibrato, release to stop.
-     */
-    const pedal = page.locator('#vibrato-indicator');
-    await pedal.dispatchEvent('pointerdown', { bubbles: true });
-    await page.waitForTimeout(300);
-    const activeAfterDown = await pedal.evaluate(el => el.classList.contains('active'));
-    expect(activeAfterDown).toBe(true);
-
-    await pedal.dispatchEvent('pointerup', { bubbles: true });
-    await page.waitForTimeout(300);
-    const activeAfterUp = await pedal.evaluate(el => el.classList.contains('active'));
-    expect(activeAfterUp).toBe(false);
-  });
-
   // ── Issue regression tests ──────────────────────────────────────────────
 
   test('ISS-14-1: R key is a note key, NOT sustain (#14)', async ({ page }) => {

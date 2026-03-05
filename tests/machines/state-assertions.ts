@@ -44,6 +44,18 @@ import {
   midiPanelPlaywrightActions,
   midiPanelInvariants,
   midiPanelDomAssertions,
+  // MPE
+  mpePlaywrightActions,
+  mpeInvariants,
+  mpeDomAssertions,
+  // Text Input Focus
+  textInputFocusPlaywrightActions,
+  textInputFocusInvariants,
+  textInputFocusDomAssertions,
+  // Skew Label
+  skewLabelPlaywrightActions,
+  skewLabelInvariants,
+  skewLabelDomAssertions,
 } from './uiMachine';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -94,6 +106,21 @@ const registry: Record<string, MachineAssertionKit> = {
     actions: midiPanelPlaywrightActions,
     invariants: midiPanelInvariants,
     domAssertions: midiPanelDomAssertions,
+  },
+  mpe: {
+    actions: mpePlaywrightActions,
+    invariants: mpeInvariants,
+    domAssertions: mpeDomAssertions,
+  },
+  textInputFocus: {
+    actions: textInputFocusPlaywrightActions,
+    invariants: textInputFocusInvariants,
+    domAssertions: textInputFocusDomAssertions,
+  },
+  skewLabel: {
+    actions: skewLabelPlaywrightActions,
+    invariants: skewLabelInvariants,
+    domAssertions: skewLabelDomAssertions,
   },
 };
 

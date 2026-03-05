@@ -210,9 +210,9 @@ test.describe('GridInstruments — Library Contract Invariants', () => {
         doubleFlat: getNoteNameFromCoord(-11),
       };
     });
-    // 𝄪 = U+1D12A (surrogate pair \uD834\uDD2A), 𝄫 = U+1D12B (\uD834\uDD2B)
-    expect(result.doubleSharp).toContain('\uD834\uDD2A');
-    expect(result.doubleFlat).toContain('\uD834\uDD2B');
+    // Double accidentals use repeated ♯♯/♭♭ (JetBrains Mono lacks SMP glyphs)
+    expect(result.doubleSharp).toContain('\u266F\u266F');
+    expect(result.doubleFlat).toContain('\u266D\u266D');
   });
 
   // ══════════════════════════════════════════════════════════════════════════
