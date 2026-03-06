@@ -203,11 +203,48 @@ function setupInfoDialogs(): void {
   });
   infoDialogActor.start();
 
+  // Track active popup to close on outside click
+  let activePopup: HTMLElement | null = null;
+
   document.querySelectorAll<HTMLButtonElement>('.slider-info-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
       const key = btn.dataset.info;
-      infoDialogActor.send({ type: 'OPEN', content: (key && SLIDER_INFO[key]) ?? '' });
+      const content = (key && SLIDER_INFO[key]) ?? '';
+      
+      // Close any existing popup
+      if (activePopup && activePopup !== btn) {
+        activePopup.classList.remove('visible');
+        activePopup = null;
+      }
+
+      // Find or create popup for this button
+      let popup = btn.nextElementSibling as HTMLElement | null;
+      if (!popup || !popup.classList.contains('info-popup')) {
+        popup = document.createElement('div');
+        popup.className = 'info-popup';
+        btn.parentElement?.insertBefore(popup, btn.nextSibling);
+      }
+
+      // Toggle popup visibility
+      const isVisible = popup.classList.contains('visible');
+      if (isVisible) {
+        popup.classList.remove('visible');
+        activePopup = null;
+      } else {
+        popup.innerHTML = content;
+        popup.classList.add('visible');
+        activePopup = popup;
+      }
     });
+  });
+
+  // Close popup on outside click
+  document.addEventListener('click', (e) => {
+    if (activePopup && !(e.target instanceof HTMLElement && (e.target.closest('.slider-info-btn') || e.target.closest('.info-popup')))) {
+      activePopup.classList.remove('visible');
+      activePopup = null;
+    }
   });
 
   closeBtn?.addEventListener('click', () => infoDialogActor.send({ type: 'CLOSE' }));

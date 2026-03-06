@@ -444,6 +444,8 @@
       top: 100%;
       pointer-events: none;
       overflow: visible;
+      min-height: 32px;
+      padding-bottom: 4px;
     }
     .slider-preset-mark {
       position: absolute;
@@ -461,10 +463,13 @@
     .slider-tick-long {
       height: 14px;
     }
-    .slider-tick-staggered {
-      height: 36px;
-    }
-    .slider-preset-btn {
+     .slider-tick-staggered {
+       height: 36px;
+     }
+     .slider-tick-staggered + .slider-preset-btn {
+       margin-top: 12px;
+     }
+     .slider-preset-btn {
       font-family: var(--font);
       font-size: 8px;
       color: var(--dim);
@@ -474,10 +479,11 @@
       padding: 2px;
       line-height: 1;
     }
-    .slider-preset-btn:hover { color: var(--fg); }
-    .slider-preset-btn.active { color: #4f4; text-decoration: underline; }
-    .slider-preset-mark.active .slider-tick { background: #4f4; }
-    .midi-panel-row {
+     .slider-preset-btn:hover { color: var(--fg); }
+     .slider-preset-btn.active { color: #4f4; text-decoration: underline; }
+     .slider-preset-mark.active .slider-tick { background: #4f4; }
+     .slider-preset-mark.active .slider-preset-btn { color: #4f4; }
+     .midi-panel-row {
       display: flex; align-items: center; gap: 4px;
       font-size: 11px; flex-wrap: wrap;
     }
@@ -496,6 +502,22 @@
       opacity: 0.8;
     }
     .slider-info-btn:hover { opacity: 1; color: var(--accent, #4af); }
+    .info-popup {
+      position: absolute;
+      background: #222;
+      color: #fff;
+      padding: 8px 12px;
+      font-size: 12px;
+      z-index: 25;
+      max-width: 300px;
+      border: 1px solid #444;
+      display: none;
+      pointer-events: auto;
+      line-height: 1.4;
+    }
+    .info-popup.visible {
+      display: block;
+    }
     .tuning-slider-area .slider-track { margin-left: 18px; }
 
     /* ── About dialog ────────────────────────────────────────── */
