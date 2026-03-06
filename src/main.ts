@@ -1738,7 +1738,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const app = new DComposeApp();
   const appActor = createActor(appMachine, {
-    input: { initialVolume: -10.5, defaultZoom: 1.0, touchDevice: 'ontouchstart' in window },
+    input: { initialVolume: -10.5, defaultZoom: (app as unknown as { defaultZoom: number }).defaultZoom, touchDevice: 'ontouchstart' in window },
   });
 
   // ─── Skew slider: appActor subscriber drives badge, label & fill ──────────
