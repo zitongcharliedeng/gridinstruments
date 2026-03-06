@@ -896,21 +896,19 @@ class DComposeApp {
     dRefInput?.addEventListener('input', () => {
       const raw = dRefInput.value.trim();
       if (raw === '') return;
-      // Try note name first (e.g. A4, G#5, Bb3)
       const fromNote = noteNameToHz(raw);
       if (fromNote !== null) {
         dRefInput.value = fromNote.toFixed(2);
-        dRefInput.style.borderColor = '';
+        dRefInput.setCustomValidity('');
         applyDRefHz(fromNote);
         return;
       }
-      // Try plain Hz
       const hz = parseFloat(raw);
       if (isFinite(hz) && hz >= 20 && hz <= 20000) {
-        dRefInput.style.borderColor = '';
+        dRefInput.setCustomValidity('');
         applyDRefHz(hz);
       } else {
-        dRefInput.style.borderColor = '#cc3333';
+        dRefInput.setCustomValidity('Invalid Hz or note name');
       }
     });
 
@@ -920,14 +918,14 @@ class DComposeApp {
       const fromNote = noteNameToHz(raw);
       if (fromNote !== null) {
         dRefInput.value = fromNote.toFixed(2);
-        dRefInput.style.borderColor = '';
+        dRefInput.setCustomValidity('');
         applyDRefHz(fromNote);
         return;
       }
       const hz = parseFloat(raw);
       if (isFinite(hz) && hz >= 20 && hz <= 20000) {
         dRefInput.value = hz.toFixed(2);
-        dRefInput.style.borderColor = '';
+        dRefInput.setCustomValidity('');
       } else {
         applyDRefHz(293.66);
       }
@@ -954,7 +952,7 @@ class DComposeApp {
     // D-ref reset button
     const dRefReset = getElementOrNull('d-ref-reset', HTMLButtonElement);
       dRefReset?.addEventListener('click', () => {
-        if (dRefInput) dRefInput.style.borderColor = '';
+        if (dRefInput) dRefInput.setCustomValidity('');
         if (dRefSlider) {
           dRefSlider.value = '293.66';
           dRefSlider.dispatchEvent(new Event('input'));

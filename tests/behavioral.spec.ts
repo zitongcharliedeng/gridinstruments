@@ -188,8 +188,8 @@ test.describe('DCompose Web — Behavioral State Transitions', () => {
     });
 
     /**
-     * @reason Invalid input sets inline borderColor to #cc3333 (red) as a
-     *   visual error indicator before auto-reverting on blur.
+     * @reason Invalid input triggers setCustomValidity, making the input
+     *   match CSS :invalid which shows #cc3333 (red) border.
      * @design-intent Red border provides immediate visual feedback that the
      *   entered value is invalid, before the auto-revert kicks in.
      */
@@ -199,7 +199,7 @@ test.describe('DCompose Web — Behavioral State Transitions', () => {
       await input.fill('xyz');
       await input.dispatchEvent('input');
       await page.waitForTimeout(200);
-      const borderColor = await input.evaluate(el => el.style.borderColor);
+      const borderColor = await input.evaluate(el => getComputedStyle(el).borderColor);
       expect(borderColor).toBe('rgb(204, 51, 51)');
     });
   });
