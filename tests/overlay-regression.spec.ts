@@ -36,8 +36,8 @@ test.describe('GridInstruments — Overlay Regression Tests', () => {
 
   test('OV-SHIMMER-1: Overlay has shimmer animation', async ({ page }) => {
     /**
-     * @reason The overlay ::before pseudo-element uses an 18s shimmer animation
-     *   for a subtle visual polish effect.
+     * @reason The overlay ::before pseudo-element uses a 60s shimmer animation
+     *   for a subtle visual polish effect (#69: longer duration prevents visible reset).
      * @design-intent The shimmer adds depth to the overlay without being distracting —
      *   a slow, ambient effect that signals "this is a live settings panel."
      */
@@ -48,7 +48,7 @@ test.describe('GridInstruments — Overlay Regression Tests', () => {
         document.querySelector('#grid-overlay')!, '::before'
       ).animationDuration
     );
-    expect(animDuration).toContain('18s');
+    expect(animDuration).toContain('60s');
   });
 
   test('OV-SECTIONS-1: All overlay sections present', async ({ page }) => {

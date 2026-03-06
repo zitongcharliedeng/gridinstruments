@@ -287,8 +287,10 @@ class DComposeApp {
   private octaveOffset: number = 0;
   private transposeOffset: number = 0;
 
-  // Active notes keyed by the input source string (keyboard code or pointer id)
+  // Active notes keyed by the input source string (keyboard code, pointer id, or midi device+note)
   private activeNotes: Map<string, { coordX: number; coordY: number }> = new Map();
+  // Reference counts per coordinate — only fires historyVisualizer noteOff when all sources release
+  private noteHoldCounts: Map<string, number> = new Map();
   private keyRepeat: Set<string> = new Set();
 
   private pointerDown: Map<number, { coordX: number; coordY: number } | null> = new Map();
@@ -425,11 +427,11 @@ class DComposeApp {
   // ─── MIDI ───────────────────────────────────────────────────────────────
 
   private setupMidiListeners(): void {
-    this.midi.onNoteOn((note, velocity, _channel) => {
-      this.handleMidiNoteOn(note, velocity);
+    this.midi.onNoteOn((note, velocity, _channel, deviceId) => {
+      this.handleMidiNoteOn(note, velocity, deviceId);
     });
-    this.midi.onNoteOff((note, _velocity, _channel) => {
-      this.handleMidiNoteOff(note);
+    this.midi.onNoteOff((note, _velocity, _channel, deviceId) => {
+      this.handleMidiNoteOff(note, deviceId);
     });
     this.midi.onStatusChange((devices) => {
       this.updateMidiDevicePanel(devices);
@@ -449,29 +451,29 @@ class DComposeApp {
     });
   }
 
-  private handleMidiNoteOn(midiNote: number, velocity: number): void {
+  private handleMidiNoteOn(midiNote: number, velocity: number, deviceId: string): void {
     this.synth.tryUnlock();
     if (!this.synth.isInitialized()) return;
     const [coordX, coordY] = midiToCoord(midiNote);
-    const noteKey = `midi_${midiNote}`;
-    const audioNoteId = `midi_${midiNote}_${coordX}_${coordY}`;
+    const noteKey = `midi_${deviceId}_${midiNote}`;
+    const audioNoteId = `midi_${deviceId}_${midiNote}_${coordX}_${coordY}`;
     this.synth.playNote(audioNoteId, coordX, coordY, 0);
     this.mpe.noteOn(audioNoteId, midiNote, velocity / 127);
     this.activeNotes.set(noteKey, { coordX, coordY });
-    this.historyVisualizer?.noteOn(coordX, coordY, midiNote);
+    this.trackNoteOn(coordX, coordY, midiNote);
     this.render();
   }
 
-  private handleMidiNoteOff(midiNote: number): void {
-    const noteKey = `midi_${midiNote}`;
+  private handleMidiNoteOff(midiNote: number, deviceId: string): void {
+    const noteKey = `midi_${deviceId}_${midiNote}`;
     const noteData = this.activeNotes.get(noteKey);
     if (!noteData) return;
     const { coordX, coordY } = noteData;
-    const audioNoteId = `midi_${midiNote}_${coordX}_${coordY}`;
+    const audioNoteId = `midi_${deviceId}_${midiNote}_${coordX}_${coordY}`;
     this.synth.stopNote(audioNoteId);
     this.mpe.noteOff(audioNoteId, midiNote);
     this.activeNotes.delete(noteKey);
-    this.historyVisualizer?.noteOff(coordX, coordY);
+    this.trackNoteOff(coordX, coordY);
     this.render();
   }
 
@@ -1180,7 +1182,7 @@ class DComposeApp {
 
     const midiNote = 62 + effectiveCoordX * 7 + effectiveCoordY * 12;
     this.mpe.noteOn(audioNoteId, midiNote, 0.7);
-    this.historyVisualizer?.noteOn(effectiveCoordX, effectiveCoordY, midiNote);
+    this.trackNoteOn(effectiveCoordX, effectiveCoordY, midiNote);
 
     this.render();
   }
@@ -1209,7 +1211,7 @@ class DComposeApp {
     this.synth.stopNote(audioNoteId);
     this.mpe.noteOff(audioNoteId, midiNote);
     this.activeNotes.delete(code);
-    this.historyVisualizer?.noteOff(effectiveCoordX, effectiveCoordY);
+    this.trackNoteOff(effectiveCoordX, effectiveCoordY);
     this.render();
   }
 
@@ -1341,7 +1343,7 @@ class DComposeApp {
     const midiNote = 62 + effectiveCoordX * 7 + effectiveCoordY * 12;
     this.mpe.noteOn(audioNoteId, midiNote, Math.max(0.01, pressure));
     this.activeNotes.set(`ptr_${pointerId}`, { coordX, coordY });
-    this.historyVisualizer?.noteOn(effectiveCoordX, effectiveCoordY, midiNote);
+    this.trackNoteOn(effectiveCoordX, effectiveCoordY, midiNote);
     this.render();
   }
 
@@ -1353,8 +1355,28 @@ class DComposeApp {
     this.synth.stopNote(audioNoteId);
     this.mpe.noteOff(audioNoteId, midiNote);
     this.activeNotes.delete(`ptr_${pointerId}`);
-    this.historyVisualizer?.noteOff(effectiveCoordX, effectiveCoordY);
+    this.trackNoteOff(effectiveCoordX, effectiveCoordY);
     this.render();
+  }
+
+  private trackNoteOn(coordX: number, coordY: number, midiNote: number): void {
+    const key = `${coordX},${coordY}`;
+    const count = this.noteHoldCounts.get(key) ?? 0;
+    if (count === 0) {
+      this.historyVisualizer?.noteOn(coordX, coordY, midiNote);
+    }
+    this.noteHoldCounts.set(key, count + 1);
+  }
+
+  private trackNoteOff(coordX: number, coordY: number): void {
+    const key = `${coordX},${coordY}`;
+    const count = this.noteHoldCounts.get(key) ?? 0;
+    if (count <= 1) {
+      this.noteHoldCounts.delete(key);
+      this.historyVisualizer?.noteOff(coordX, coordY);
+    } else {
+      this.noteHoldCounts.set(key, count - 1);
+    }
   }
 
   public stopAllNotes(): void {
@@ -1365,6 +1387,7 @@ class DComposeApp {
     this.mpe.panic();
     this.historyVisualizer?.clearAll();
     this.activeNotes.clear();
+    this.noteHoldCounts.clear();
     this.keyRepeat.clear();
     this.pointerDown.clear();
     this.render();
@@ -1430,9 +1453,17 @@ class DComposeApp {
 
     sorted.forEach((preset, i) => {
       const ratio = (preset.value - sliderMin) / range;
+      // #5: Hide marks outside the slider range entirely
+      if (ratio < -0.02 || ratio > 1.02) return;
       const mark = document.createElement('div');
       mark.className = 'slider-preset-mark';
-      mark.style.left = `calc(${ratio.toFixed(6)} * (100% - 3px) + 1.5px)`;
+      const clamped = Math.max(0, Math.min(1, ratio));
+      mark.style.left = `calc(${clamped.toFixed(6)} * (100% - 3px) + 1.5px)`;
+      // #5: Fade marks near edges of slider range
+      const edgeDist = Math.min(clamped, 1 - clamped);
+      if (edgeDist < 0.03) {
+        mark.style.opacity = String(0.3 + 0.7 * (edgeDist / 0.03));
+      }
 
       const tick = document.createElement('div');
       const tickClass = alternate && i % 2 === 1 ? 'slider-tick-staggered' : 'slider-tick-long';
@@ -1461,6 +1492,7 @@ class DComposeApp {
         const pVal = parseFloat(btn.dataset.value ?? '');
         const isActive = Math.abs(val - pVal) < 0.05;
         btn.classList.toggle('active', isActive);
+        (mark as HTMLElement).classList.toggle('active', isActive);
         (mark as HTMLElement).classList.toggle('preset-below', !isActive && pVal < val);
         (mark as HTMLElement).classList.toggle('preset-above', !isActive && pVal > val);
       });
@@ -1827,5 +1859,6 @@ document.addEventListener('DOMContentLoaded', () => {
     isAudioReady: () => (app as unknown as { synth: { isInitialized: () => boolean } }).synth.isInitialized(),
     getGridGeometry: () => (app as unknown as { visualizer: { getGridGeometry: () => { cellHv1: {x:number,y:number}, cellHv2: {x:number,y:number}, width: number, height: number } | null } }).visualizer?.getGridGeometry() ?? null,
     getDefaultZoom: () => (app as unknown as { defaultZoom: number }).defaultZoom,
-  };
+    };
 });
+

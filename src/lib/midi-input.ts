@@ -9,7 +9,7 @@
  *                (Striso / Axis-64 style — each physical row sends on a different channel)
  */
 
-export type MidiNoteCallback = (note: number, velocity: number, channel: number) => void;
+export type MidiNoteCallback = (note: number, velocity: number, channel: number, deviceId: string) => void;
 export type MidiStatusCallback = (devices: MidiDeviceInfo[]) => void;
 export type MidiExpressionCallback = (channel: number, value: number) => void;
 
@@ -170,9 +170,9 @@ export class MidiInput {
     }
 
     if (type === 0x90 && velocity > 0) {
-      for (const cb of this.noteOnCallbacks) cb(note, velocity, channel);
+      for (const cb of this.noteOnCallbacks) cb(note, velocity, channel, deviceId);
     } else if (type === 0x80 || (type === 0x90 && velocity === 0)) {
-      for (const cb of this.noteOffCallbacks) cb(note, velocity, channel);
+      for (const cb of this.noteOffCallbacks) cb(note, velocity, channel, deviceId);
     } else if (type === 0xE0) {
       // Pitch bend: 14-bit value from LSB (data[1]) and MSB (data[2])
       const raw = (data[2] << 7) | data[1];

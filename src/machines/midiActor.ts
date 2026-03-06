@@ -86,12 +86,12 @@ export const midiInputListener = fromCallback<
 
   // ── Note on / off (latency-critical) ──────────────────────────────────────
 
-  const onNoteOn: MidiNoteCallback = (note, velocity, channel) => {
-    sendBack({ type: 'MIDI_NOTE_ON', note, velocity, channel });
+  const onNoteOn: MidiNoteCallback = (note, velocity, channel, deviceId) => {
+    sendBack({ type: 'MIDI_NOTE_ON', note, velocity, channel, deviceId });
   };
 
-  const onNoteOff: MidiNoteCallback = (note, _velocity, channel) => {
-    sendBack({ type: 'MIDI_NOTE_OFF', note, channel });
+  const onNoteOff: MidiNoteCallback = (note, _velocity, channel, deviceId) => {
+    sendBack({ type: 'MIDI_NOTE_OFF', note, channel, deviceId });
   };
 
   // ── Status change (device connect / disconnect) ────────────────────────────

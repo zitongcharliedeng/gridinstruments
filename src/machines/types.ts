@@ -230,6 +230,8 @@ export interface MidiNoteOnEvent {
   velocity: number;
   /** MIDI channel (1–16) */
   channel: number;
+  /** Source device ID — distinguishes same note from different MIDI controllers */
+  deviceId: string;
 }
 
 /**
@@ -241,6 +243,8 @@ export interface MidiNoteOffEvent {
   note: number;
   /** MIDI channel (1–16) */
   channel: number;
+  /** Source device ID — distinguishes same note from different MIDI controllers */
+  deviceId: string;
 }
 
 /**
