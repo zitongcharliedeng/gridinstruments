@@ -624,5 +624,18 @@ test.describe('DCompose Web — Visual Regression (State-Machine Tests)', () => 
         maxDiffPixelRatio: 0.05,
       });
     });
+
+    /**
+     * @reason Regression guard for TET notch label spacing and readability.
+     * @design-intent Notch marks must be within slider bounds, labels must not
+     *   overlap, and stagger spacing must be consistent.
+     */
+    test('GOLDEN-8: TET notch labels snapshot', async ({ page }) => {
+      const tetPresets = page.locator('#tet-presets');
+      await expect(tetPresets).toBeVisible();
+      await expect(tetPresets).toHaveScreenshot('tuning-notch-labels.png', {
+        maxDiffPixelRatio: 0.01,
+      });
+    });
   });
 });

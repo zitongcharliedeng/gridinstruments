@@ -1488,17 +1488,11 @@ class DComposeApp {
 
     sorted.forEach((preset, i) => {
       const ratio = (preset.value - sliderMin) / range;
-      // #5: Hide marks outside the slider range entirely
-      if (ratio < -0.02 || ratio > 1.02) return;
+      // Skip marks outside the slider range entirely (keeps slider clean)
+      if (ratio < 0 || ratio > 1) return;
       const mark = document.createElement('div');
       mark.className = 'slider-preset-mark';
-      const clamped = Math.max(0, Math.min(1, ratio));
-      mark.style.left = `calc(${clamped.toFixed(6)} * (100% - 3px) + 1.5px)`;
-      // #5: Fade marks near edges of slider range
-      const edgeDist = Math.min(clamped, 1 - clamped);
-      if (edgeDist < 0.03) {
-        mark.style.opacity = String(0.3 + 0.7 * (edgeDist / 0.03));
-      }
+      mark.style.left = `calc(${ratio.toFixed(6)} * (100% - 3px) + 1.5px)`;
 
       const tick = document.createElement('div');
       const tickClass = alternate && i % 2 === 1 ? 'slider-tick-staggered' : 'slider-tick-long';
