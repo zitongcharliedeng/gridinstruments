@@ -313,6 +313,38 @@ function applySliderFill(slider: HTMLInputElement): void {
   }
 }
 
+/** Re-trigger slider fill gradients and badge positions for all overlay sliders.
+ * Called when overlay becomes visible — offsetWidth returns 0 when display:none,
+ * so fills and badge positions computed while hidden are incorrect.
+ */
+function refreshAllSliderUI(): void {
+  const sliderBadgePairs: [string, string | null, number][] = [
+    ['skew-slider', 'skew-thumb-badge', 50],
+    ['bfact-slider', 'bfact-thumb-badge', 50],
+    ['tuning-slider', 'tuning-thumb-badge', 50],
+    ['volume-slider', 'volume-thumb-badge', 50],
+    ['zoom-slider', 'zoom-thumb-badge', 50],
+    ['d-ref-slider', 'd-ref-input', 80],
+  ];
+  for (const [sliderId, badgeId, badgeWidth] of sliderBadgePairs) {
+    const slider = document.getElementById(sliderId) as HTMLInputElement | null;
+    if (!slider) continue;
+    applySliderFill(slider);
+    if (badgeId) {
+      const badge = document.getElementById(badgeId) as HTMLElement | null;
+      if (badge) {
+        const min = parseFloat(slider.min) || 0;
+        const max = parseFloat(slider.max) || 100;
+        const val = parseFloat(slider.value) || 0;
+        const ratio = (Math.max(min, Math.min(max, val)) - min) / (max - min);
+        const centerPx = thumbCenterPx(ratio, slider);
+        const clampedPx = clampBadgePosition(centerPx, slider, badgeWidth);
+        badge.style.left = `${clampedPx}px`;
+      }
+    }
+  }
+}
+
 class DComposeApp {
   private synth: Synth;
   private visualizer: KeyboardVisualizer | null = null;
@@ -1094,8 +1126,17 @@ class DComposeApp {
         const visible = snapshot.matches('visible');
         gridOverlay.classList.toggle('hidden', !visible);
         gridCog.classList.toggle('active', visible);
+        if (visible) {
+          requestAnimationFrame(refreshAllSliderUI);
+        }
       });
       overlayActor.start();
+
+      new ResizeObserver(() => {
+        if (!gridOverlay.classList.contains('hidden')) {
+          requestAnimationFrame(refreshAllSliderUI);
+        }
+      }).observe(gridOverlay);
       gridCog.addEventListener('click', () => overlayActor.send({ type: 'TOGGLE' }));
       gridOverlay.addEventListener('click', (e) => {
         if (e.target === gridOverlay) overlayActor.send({ type: 'CLOSE' });
