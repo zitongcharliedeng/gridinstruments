@@ -55,11 +55,13 @@
       flex-shrink: 0;
       position: relative;
       z-index: 30;
+      flex-wrap: wrap;
     }
     .top-bar-left {
       display: flex;
       align-items: center;
       gap: 8px;
+      min-width: 0;
     }
     .site-title { font-weight: 700; font-size: 11px; color: #fff; letter-spacing: 0.04em; }
     .gh-actions {
@@ -591,6 +593,24 @@
     }
 
     /* ── Responsive: narrow / mobile screens ─────────────────── */
+    @media (max-width: 768px) {
+      #top-bar {
+        padding: 2px 4px;
+      }
+      .top-bar-left {
+        gap: 4px;
+        min-width: 0;
+      }
+      .gh-btn {
+        padding: 2px 4px;
+        font-size: 9px;
+      }
+      #reset-layout {
+        font-size: 8px;
+        padding: 1px 4px;
+      }
+    }
+
     @media (max-width: 480px) {
       #top-bar {
         padding: 2px 4px;
@@ -619,6 +639,15 @@
       }
       #history-canvas {
         max-width: 100%;
+      }
+    }
+
+    @media (max-width: 375px) {
+      .site-title {
+        font-size: 9px;
+      }
+      #reset-layout {
+        display: none;
       }
     }
   </style>

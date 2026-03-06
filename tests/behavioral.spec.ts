@@ -674,5 +674,61 @@ test.describe('DCompose Web — Behavioral State Transitions', () => {
 
       await ctx.close();
     });
+
+    /**
+     * @reason At 375px (smallest common phone width), essential navigation elements
+     *   must remain visible and the page must not produce horizontal overflow.
+     * @design-intent Mobile users on small phones can still access the info button,
+     *   see the app name, and open grid settings. Non-essential GitHub actions are
+     *   hidden via CSS media query at ≤480px.
+     */
+    test('BH-MOB-3: Essential UI visible at 375px — no horizontal overflow', async ({ browser }) => {
+      const ctx = await browser.newContext({
+        viewport: { width: 375, height: 667 },
+        hasTouch: true,
+      });
+      const p = await ctx.newPage();
+      await p.goto('/');
+      await p.waitForLoadState('networkidle');
+      await p.waitForTimeout(1500);
+
+      // Site title visible
+      await expect(p.locator('.site-title')).toBeVisible();
+      // About button visible
+      await expect(p.locator('#about-btn')).toBeVisible();
+      // Grid settings cog visible
+      await expect(p.locator('#grid-settings-btn')).toBeVisible();
+      // No horizontal overflow
+      const noOverflow = await p.evaluate(() =>
+        document.body.scrollWidth <= window.innerWidth
+      );
+      expect(noOverflow).toBe(true);
+
+      await ctx.close();
+    });
+
+    /**
+     * @reason At 768px (common tablet width), all UI elements including GitHub
+     *   actions should remain visible — the viewport is wide enough for everything.
+     * @design-intent Tablet users get the full desktop-like experience with all
+     *   navigation, GitHub links, and settings accessible.
+     */
+    test('BH-MOB-4: All UI elements visible at 768px tablet viewport', async ({ browser }) => {
+      const ctx = await browser.newContext({
+        viewport: { width: 768, height: 1024 },
+      });
+      const p = await ctx.newPage();
+      await p.goto('/');
+      await p.waitForLoadState('networkidle');
+      await p.waitForTimeout(1500);
+
+      // All elements visible at tablet width
+      await expect(p.locator('.site-title')).toBeVisible();
+      await expect(p.locator('#about-btn')).toBeVisible();
+      await expect(p.locator('.gh-actions')).toBeVisible();
+      await expect(p.locator('#grid-settings-btn')).toBeVisible();
+
+      await ctx.close();
+    });
   });
 });
