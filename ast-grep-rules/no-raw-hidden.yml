@@ -1,7 +1,12 @@
 id: no-raw-hidden
 language: typescript
 rule:
-  pattern: $EL.hidden = $VAL
+  all:
+    - pattern: $EL.hidden = $VAL
+    - not:
+        inside:
+          pattern: $ACTOR.subscribe($$$)
+          stopBy: end
 files:
   - "src/main.ts"
 severity: error

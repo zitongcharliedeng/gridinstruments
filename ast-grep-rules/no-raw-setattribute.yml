@@ -1,9 +1,14 @@
 id: no-raw-setattribute
 language: typescript
 rule:
-  any:
-    - pattern: $EL.setAttribute($$$)
-    - pattern: $EL.removeAttribute($$$)
+  all:
+    - any:
+        - pattern: $EL.setAttribute($$$)
+        - pattern: $EL.removeAttribute($$$)
+    - not:
+        inside:
+          pattern: $ACTOR.subscribe($$$)
+          stopBy: end
 files:
   - "src/main.ts"
 severity: error

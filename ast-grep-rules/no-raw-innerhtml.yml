@@ -1,7 +1,12 @@
 id: no-raw-innerhtml
 language: typescript
 rule:
-  pattern: $EL.innerHTML = $VAL
+  all:
+    - pattern: $EL.innerHTML = $VAL
+    - not:
+        inside:
+          pattern: $ACTOR.subscribe($$$)
+          stopBy: end
 files:
   - "src/main.ts"
 severity: error

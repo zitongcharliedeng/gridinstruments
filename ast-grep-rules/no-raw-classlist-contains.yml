@@ -1,7 +1,12 @@
 id: no-raw-classlist-contains
 language: typescript
 rule:
-  pattern: $EL.classList.contains($$$)
+  all:
+    - pattern: $EL.classList.contains($$$)
+    - not:
+        inside:
+          pattern: $ACTOR.subscribe($$$)
+          stopBy: end
 files:
   - "src/main.ts"
 severity: error

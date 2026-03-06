@@ -1,7 +1,12 @@
 id: no-raw-disabled
 language: typescript
 rule:
-  pattern: $EL.disabled = $VAL
+  all:
+    - pattern: $EL.disabled = $VAL
+    - not:
+        inside:
+          pattern: $ACTOR.subscribe($$$)
+          stopBy: end
 files:
   - "src/main.ts"
 severity: error

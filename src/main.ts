@@ -960,14 +960,7 @@ class DComposeApp {
           dRefSlider.dispatchEvent(new Event('input'));
         }
       });
-    dRefReset?.addEventListener('mouseenter', () => {
-      dRefReset.style.color = 'var(--fg)';
-      dRefReset.style.borderColor = 'var(--accent)';
-    });
-    dRefReset?.addEventListener('mouseleave', () => {
-      dRefReset.style.color = '';
-      dRefReset.style.borderColor = '';
-    });
+    // Hover styling handled by CSS .slider-reset:hover — no JS needed.
     // MIDI settings toggle (XState actor)
     const midiToggle = document.getElementById('midi-settings-toggle');
     const midiPanel = document.getElementById('midi-settings-panel');
@@ -1676,11 +1669,11 @@ document.addEventListener('DOMContentLoaded', () => {
       actor.send({ type: 'DRAG_START', clientY: e.clientY });
     });
     handle.addEventListener('pointermove', (e: PointerEvent) => {
-      if (!handle.classList.contains('dragging')) return;
+      if (!actor.getSnapshot().matches('dragging')) return;
       actor.send({ type: 'DRAG_MOVE', clientY: e.clientY });
     });
     const stopDrag = () => {
-      if (!handle.classList.contains('dragging')) return;
+      if (!actor.getSnapshot().matches('dragging')) return;
       actor.send({ type: 'DRAG_END' });
     };
     handle.addEventListener('pointerup', stopDrag);

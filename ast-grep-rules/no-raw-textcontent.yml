@@ -1,7 +1,12 @@
 id: no-raw-textcontent
 language: typescript
 rule:
-  pattern: $EL.textContent = $VAL
+  all:
+    - pattern: $EL.textContent = $VAL
+    - not:
+        inside:
+          pattern: $ACTOR.subscribe($$$)
+          stopBy: end
 files:
   - "src/main.ts"
 severity: error
