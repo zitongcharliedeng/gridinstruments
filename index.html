@@ -125,8 +125,11 @@
     }
     .pedals-handle-wrap { bottom: auto; top: 0; transform: translate(-50%, -50%); }
      .panel-resize-handle {
-       width: 28px;
-       height: 24px;
+       width: auto;
+       min-width: 28px;
+       height: auto;
+       min-height: 24px;
+       padding: 3px 8px;
        cursor: row-resize;
        display: flex;
        flex-direction: column;
@@ -144,6 +147,15 @@
     .panel-resize-handle:hover .grip-arrow-up { border-bottom-color: var(--fg); }
     .panel-resize-handle:hover .grip-arrow-down { border-top-color: var(--fg); }
     .panel-resize-handle:hover .grip-line { background: var(--fg); }
+    .panel-resize-handle .handle-label {
+      font-size: 7px;
+      color: var(--dim);
+      letter-spacing: 1px;
+      font-family: var(--font);
+      line-height: 1;
+      user-select: none;
+    }
+    .panel-resize-handle:hover .handle-label { color: var(--fg); }
     #history-canvas {
       display: block;
       width: 100%;
@@ -637,7 +649,7 @@
     <div id="visualiser-panel">
       <canvas id="history-canvas" height="120"></canvas>
       <div class="panel-resize-handle-wrap">
-         <div class="panel-resize-handle" tabindex="0" role="separator" aria-orientation="horizontal" aria-label="Resize visualiser" title="Drag to resize visualiser panel" data-target="visualiser-panel" data-min="60" data-max="400" data-default="120" data-key="gi_visualiser_h" data-hidden-key="gi_history_hidden"><span class="grip-arrow grip-arrow-up"></span><span class="grip-line"></span><span class="grip-line"></span><span class="grip-arrow grip-arrow-down"></span></div>
+         <div class="panel-resize-handle" tabindex="0" role="separator" aria-orientation="horizontal" aria-label="Resize visualiser" title="Drag to resize visualiser panel" data-target="visualiser-panel" data-min="60" data-max="400" data-default="120" data-key="gi_visualiser_h" data-hidden-key="gi_history_hidden"><span class="handle-label">VISUALISER</span><span class="grip-arrow grip-arrow-up"></span><span class="grip-line"></span><span class="grip-line"></span><span class="grip-arrow grip-arrow-down"></span></div>
       </div>
     </div>
 
@@ -759,7 +771,7 @@
     <!-- Pedals -->
     <div id="pedals-panel" style="height:44px">
       <div class="panel-resize-handle-wrap pedals-handle-wrap">
-         <div class="panel-resize-handle" tabindex="0" role="separator" aria-orientation="horizontal" aria-label="Resize pedals" title="Drag to resize pedals panel" data-target="pedals-panel" data-min="30" data-max="120" data-default="44" data-key="gi_pedals_h" data-direction="up" data-hidden-key="gi_pedals_hidden"><span class="grip-arrow grip-arrow-up"></span><span class="grip-line"></span><span class="grip-line"></span><span class="grip-arrow grip-arrow-down"></span></div>
+         <div class="panel-resize-handle" tabindex="0" role="separator" aria-orientation="horizontal" aria-label="Resize pedals" title="Drag to resize pedals panel" data-target="pedals-panel" data-min="30" data-max="120" data-default="44" data-key="gi_pedals_h" data-direction="up" data-hidden-key="gi_pedals_hidden"><span class="handle-label">PEDALS</span><span class="grip-arrow grip-arrow-up"></span><span class="grip-line"></span><span class="grip-line"></span><span class="grip-arrow grip-arrow-down"></span></div>
       </div>
       <button class="pedal-btn" id="sustain-indicator" title="Sustain: hold Space or tap" style="padding-top: 4px;">SUSTAIN</button>
       <button class="pedal-btn" id="vibrato-indicator" title="Vibrato: hold Shift or tap" style="padding-top: 4px;">VIBRATO</button>
