@@ -103,5 +103,52 @@ The dev server auto-starts via `playwright.config.ts` webServer config on port 3
 1. Make changes
 2. Run `npm run build` — must exit 0
 3. Run `nix develop --command npx playwright test --project=firefox tests/behavioral.spec.ts`
-4. All 38 behavioral tests must pass
+4. All behavioral tests must pass
 5. Run panel-resize, contracts, and overlay-regression suites — all must pass
+
+## Atomic Checkpoint Protocol (MANDATORY for orchestrators)
+
+**The #1 failure mode**: completing work but not tracking it. This protocol is a BLOCKING GATE, not a suggestion.
+
+### After EVERY subagent task completion:
+
+```
+STEP 1: VERIFY  — Read changed files, run lsp_diagnostics, confirm work is correct
+STEP 2: MARK    — Edit plan file: change `- [ ]` to `- [x]` for the completed task
+STEP 3: BOULDER — Update boulder.json: append task ID to completed_tasks array, add commit hash to completed_evidence
+STEP 4: NEXT    — ONLY NOW may you delegate the next task
+```
+
+**These four steps are ATOMIC. You MUST NOT skip to STEP 4 without completing STEPS 2-3.**
+
+### boulder.json schema (required fields):
+
+```json
+{
+  "active_plan": "/absolute/path/to/plan.md",
+  "plan_name": "plan-name",
+  "status": "in_progress | complete",
+  "started_at": "ISO_TIMESTAMP",
+  "last_verified_at": "ISO_TIMESTAMP",
+  "session_ids": ["ses_..."],
+  "completed_tasks": [1, 2, 3, "F1"],
+  "completed_evidence": {
+    "1": "commit-hash-or-disposition",
+    "2": "commit-hash-or-disposition"
+  }
+}
+```
+
+### Why this exists:
+
+- Plan file checkboxes and boulder.json are TWO tracking systems that MUST stay in sync
+- `completed_tasks` in boulder.json is the machine-readable source of truth
+- `completed_evidence` maps each task to its commit hash (or "no-change-needed", "verified-current", etc.)
+- On cold-start / session resume: read boulder.json → know exactly what's done without git forensics
+- On plan reconciliation: `completed_tasks.length` MUST equal the count of `- [x]` in the plan file
+
+### Enforcement:
+
+- `/start-work` hook reads boulder.json and validates plan checkboxes match `completed_tasks`
+- If drift detected: reconcile BEFORE proceeding (mark plan checkboxes to match boulder)
+- NEVER delegate a new task if the previous task's checkpoint is incomplete
