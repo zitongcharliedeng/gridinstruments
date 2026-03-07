@@ -10,6 +10,12 @@
 
 import { setup } from 'xstate';
 import { type Page, expect } from '@playwright/test';
+import {
+  tooltipCheck,
+  visHandlePosition,
+  pianoRollVisible,
+  pedHandlePosition,
+} from './invariant-checks';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // Shared helpers
@@ -56,9 +62,18 @@ export const overlayMachine = setup({
   initial: 'hidden',
   states: {
     hidden: {
+      meta: {
+        reason: 'The settings overlay panel is NOT visible. Only the keyboard grid and optional panels are shown.',
+        designIntent: 'Default state maximizes keyboard grid area for playing',
+      },
       on: { CLICK_COG: 'visible' },
     },
     visible: {
+      meta: {
+        reason: 'A settings overlay panel is visible over the keyboard grid, showing sliders and controls.',
+        designIntent: 'Semi-transparent overlay lets musicians see grid while adjusting settings',
+        invariants: [tooltipCheck],
+      },
       on: {
         CLICK_COG: 'hidden',
         CLICK_BACKDROP: 'hidden',
@@ -112,18 +127,32 @@ export const visualiserMachine = setup({
   initial: 'default',
   states: {
     default: {
+      meta: {
+        reason: 'The visualiser panel is at its default height (~120px), showing note history. The keyboard grid fills the remaining space below it with no black gap.',
+        designIntent: 'Balanced split between note history and keyboard grid',
+        invariants: [visHandlePosition, pianoRollVisible],
+      },
       on: {
         DRAG_VIS_EXPAND: 'expanded',
         TOGGLE_VIS_COLLAPSE: 'collapsed',
       },
     },
     expanded: {
+      meta: {
+        reason: 'The visualiser panel is expanded taller than default, showing more note history. The keyboard grid fills the remaining space below with no black gap.',
+        designIntent: 'More vertical space for note history review',
+        invariants: [pianoRollVisible],
+      },
       on: {
         DBLCLICK_VIS_HANDLE: 'default',
         TOGGLE_VIS_COLLAPSE: 'collapsed',
       },
     },
     collapsed: {
+      meta: {
+        reason: 'The visualiser panel is fully collapsed — invisible, zero height, no black gap anywhere. The keyboard grid fills the entire viewport from top bar to pedals panel with no dead space.',
+        designIntent: 'Maximizes keyboard grid for focused playing',
+      },
       on: {
         TOGGLE_VIS_COLLAPSE: 'default',
         DBLCLICK_VIS_HANDLE: 'default',
@@ -195,18 +224,31 @@ export const pedalsMachine = setup({
   initial: 'default',
   states: {
     default: {
+      meta: {
+        reason: 'The pedals panel is at its default height (~44px), showing sustain and vibrato buttons. No black gap anywhere.',
+        designIntent: 'Compact pedal controls at bottom of screen',
+        invariants: [pedHandlePosition],
+      },
       on: {
         DRAG_PED_EXPAND: 'expanded',
         TOGGLE_PED_COLLAPSE: 'collapsed',
       },
     },
     expanded: {
+      meta: {
+        reason: 'The pedals panel is expanded taller than default. No black gap anywhere.',
+        designIntent: 'Larger touch targets for pedal controls',
+      },
       on: {
         DBLCLICK_PED_HANDLE: 'default',
         TOGGLE_PED_COLLAPSE: 'collapsed',
       },
     },
     collapsed: {
+      meta: {
+        reason: 'The pedals panel is fully collapsed — invisible, zero height, no black gap. The keyboard grid fills down to the very bottom of the viewport with no dead space.',
+        designIntent: 'Maximizes keyboard grid when pedals not needed',
+      },
       on: {
         TOGGLE_PED_COLLAPSE: 'default',
         DBLCLICK_PED_HANDLE: 'default',
@@ -282,6 +324,10 @@ export const waveformMachine = setup({
   initial: 'sawtooth',
   states: {
     sawtooth: {
+      meta: {
+        reason: 'The SAW waveform button is active/highlighted in the overlay.',
+        designIntent: 'Default bright waveform for melodic playing',
+      },
       on: {
         SELECT_SINE: 'sine',
         SELECT_SQUARE: 'square',
@@ -289,6 +335,10 @@ export const waveformMachine = setup({
       },
     },
     sine: {
+      meta: {
+        reason: 'The SIN waveform button is active/highlighted in the overlay.',
+        designIntent: 'Pure tone waveform for smooth timbre',
+      },
       on: {
         SELECT_SAWTOOTH: 'sawtooth',
         SELECT_SQUARE: 'square',
@@ -296,6 +346,10 @@ export const waveformMachine = setup({
       },
     },
     square: {
+      meta: {
+        reason: 'The SQR waveform button is active/highlighted in the overlay.',
+        designIntent: 'Rich harmonic content for organ-like timbre',
+      },
       on: {
         SELECT_SAWTOOTH: 'sawtooth',
         SELECT_SINE: 'sine',
@@ -303,6 +357,10 @@ export const waveformMachine = setup({
       },
     },
     triangle: {
+      meta: {
+        reason: 'The TRI waveform button is active/highlighted in the overlay.',
+        designIntent: 'Mellow waveform between sine and square',
+      },
       on: {
         SELECT_SAWTOOTH: 'sawtooth',
         SELECT_SINE: 'sine',
@@ -366,12 +424,20 @@ export const sustainMachine = setup({
   initial: 'inactive',
   states: {
     inactive: {
+      meta: {
+        reason: 'The sustain pedal indicator is in its default/inactive state.',
+        designIntent: 'Notes play and release normally',
+      },
       on: {
         PRESS_SPACE: 'active',
         POINTERDOWN_SUSTAIN: 'active',
       },
     },
     active: {
+      meta: {
+        reason: 'The sustain pedal indicator is active/highlighted, notes are being sustained.',
+        designIntent: 'Hold-on modifier keeps notes sustained until released',
+      },
       on: {
         RELEASE_SPACE: 'inactive',
         POINTERUP_SUSTAIN: 'inactive',
@@ -426,12 +492,20 @@ export const vibratoMachine = setup({
   initial: 'inactive',
   states: {
     inactive: {
+      meta: {
+        reason: 'The vibrato indicator is in its default/inactive state.',
+        designIntent: 'Notes play with normal pitch',
+      },
       on: {
         PRESS_SHIFT: 'active',
         POINTERDOWN_VIBRATO: 'active',
       },
     },
     active: {
+      meta: {
+        reason: 'The vibrato indicator is active/highlighted, vibrato is being applied.',
+        designIntent: 'Hold-on modifier applies pitch modulation until released',
+      },
       on: {
         RELEASE_SHIFT: 'inactive',
         POINTERUP_VIBRATO: 'inactive',
@@ -482,9 +556,17 @@ export const midiPanelMachine = setup({
   initial: 'closed',
   states: {
     closed: {
+      meta: {
+        reason: 'The MIDI settings panel is closed/collapsed.',
+        designIntent: 'MIDI panel hidden to reduce UI clutter',
+      },
       on: { TOGGLE_MIDI: 'open' },
     },
     open: {
+      meta: {
+        reason: 'The MIDI settings panel is open, showing MIDI device list and MPE options.',
+        designIntent: 'MIDI configuration controls accessible',
+      },
       on: { TOGGLE_MIDI: 'closed' },
     },
   },
@@ -522,8 +604,20 @@ export const mpeMachine = setup({
   id: 'mpe',
   initial: 'disabled',
   states: {
-    disabled: { on: { TOGGLE_MPE: 'enabled' } },
-    enabled: { on: { TOGGLE_MPE: 'disabled' } },
+    disabled: {
+      meta: {
+        reason: 'The MPE output select dropdown is disabled/greyed out.',
+        designIntent: 'Standard MIDI output mode',
+      },
+      on: { TOGGLE_MPE: 'enabled' },
+    },
+    enabled: {
+      meta: {
+        reason: 'The MPE output select dropdown is enabled and interactive.',
+        designIntent: 'Expressive MIDI with per-note pitch/pressure',
+      },
+      on: { TOGGLE_MPE: 'disabled' },
+    },
   },
 });
 
@@ -562,8 +656,18 @@ export const textInputFocusMachine = setup({
   id: 'textInputFocus',
   initial: 'blurred',
   states: {
-    blurred: { on: { CLICK_INPUT: 'focused' } },
+    blurred: {
+      meta: {
+        reason: 'The D-reference frequency input is not focused.',
+        designIntent: 'D-ref input not intercepting keyboard events',
+      },
+      on: { CLICK_INPUT: 'focused' },
+    },
     focused: {
+      meta: {
+        reason: 'The D-reference frequency input is focused and ready for text entry.',
+        designIntent: 'D-ref input captures text input for frequency entry',
+      },
       on: {
         PRESS_ENTER: 'blurred',
         PRESS_ESCAPE: 'blurred',
@@ -612,8 +716,20 @@ export const skewLabelMachine = setup({
   id: 'skewLabel',
   initial: 'dcompose',
   states: {
-    dcompose: { on: { SET_SKEW_MAX: 'midimech' } },
-    midimech: { on: { SET_SKEW_MIN: 'dcompose' } },
+    dcompose: {
+      meta: {
+        reason: 'The skew label shows DCompose annotation at minimum skew position.',
+        designIntent: 'DCompose isomorphic layout mode',
+      },
+      on: { SET_SKEW_MAX: 'midimech' },
+    },
+    midimech: {
+      meta: {
+        reason: 'The skew label shows MidiMech annotation at maximum skew position.',
+        designIntent: 'MidiMech isomorphic layout mode',
+      },
+      on: { SET_SKEW_MIN: 'dcompose' },
+    },
   },
 });
 

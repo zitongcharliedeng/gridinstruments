@@ -35,6 +35,8 @@ import { getAdjacencyMap } from 'xstate/graph';
 import { allMachines } from './machines/uiMachine';
 import { getKit, getAction, assertDomState, getInvariant } from './machines/state-assertions';
 import { assertVisualState } from './fixtures/visual-assert';
+import type { StateMeta } from './machines/types';
+import { handleDomParent, panelAriaCheck } from './machines/invariant-checks';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -148,6 +150,24 @@ const NEEDS_OVERLAY_OPEN = new Set(['waveform', 'mpe', 'textInputFocus', 'skewLa
 
 const SKIP_MACHINES = new Set<string>([]);
 
+// ─── Structural invariants: D(P) = {} — tested once, not per-state ───────────
+
+test.describe('[Structural] state-independent invariants', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(1500);
+  });
+
+  test('PNL-VIS-6: handle is DOM child of visualiser-panel', async ({ page }) => {
+    await handleDomParent.check(page);
+  });
+
+  test('PNL-VIS-3: panel handles have correct ARIA attributes', async ({ page }) => {
+    await panelAriaCheck.check(page);
+  });
+});
+
 // ─── Test generation ─────────────────────────────────────────────────────────
 
 for (const { name: machineName, machine } of allMachines) {
@@ -196,6 +216,17 @@ for (const { name: machineName, machine } of allMachines) {
 
         // ── Step 4: Verify target state (DOM assertions) ──────────────
         await assertDomState(machineName, t.targetState, page);
+
+        // ── Step 4b: State-level invariants (Tier 2) ──────────────────
+        const stateConfig = machine.config.states?.[t.targetState] as
+          | (Record<string, unknown> & { meta?: StateMeta })
+          | undefined;
+        const stateMeta = stateConfig?.meta;
+        if (stateMeta?.invariants) {
+          for (const inv of stateMeta.invariants) {
+            await inv.check(page);
+          }
+        }
 
         // ── Step 5: LLM vision verification (optional) ────────────────
         const invariant = getInvariant(machineName, t.targetState);
