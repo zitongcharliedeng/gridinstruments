@@ -23,6 +23,14 @@ import {
   focusPreserveCheck,
   visCap60Check,
   iconSizeCheck,
+  sliderBadgePositionCheck,
+  badgePointerEventsCheck,
+  sliderLabelPositionCheck,
+  sliderValuesCheck,
+  tetBelowTrackCheck,
+  overlayColorsCheck,
+  drefAnnotationCheck,
+  overlayControlsCheck,
 } from './invariant-checks';
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -80,7 +88,7 @@ export const overlayMachine = setup({
       meta: {
         reason: 'A settings overlay panel is visible over the keyboard grid, showing sliders and controls.',
         designIntent: 'Semi-transparent overlay lets musicians see grid while adjusting settings',
-        invariants: [tooltipCheck, overlayBgCheck, overlayShimmerCheck, overlaySectionsCheck, overlayPresetCheck, mpeUiCheck, focusPreserveCheck, iconSizeCheck],
+        invariants: [tooltipCheck, overlayBgCheck, overlayShimmerCheck, overlaySectionsCheck, overlayPresetCheck, mpeUiCheck, focusPreserveCheck, iconSizeCheck, sliderBadgePositionCheck, badgePointerEventsCheck, sliderLabelPositionCheck, sliderValuesCheck, tetBelowTrackCheck, overlayColorsCheck, drefAnnotationCheck, overlayControlsCheck],
       },
       on: {
         CLICK_COG: 'hidden',

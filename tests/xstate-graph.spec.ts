@@ -36,7 +36,15 @@ import { allMachines } from './machines/uiMachine';
 import { getKit, getAction, assertDomState, getInvariant } from './machines/state-assertions';
 import { assertVisualState } from './fixtures/visual-assert';
 import type { StateMeta } from './machines/types';
-import { handleDomParent, panelAriaCheck } from './machines/invariant-checks';
+import {
+  handleDomParent,
+  panelAriaCheck,
+  appLoadedCheck,
+  overlayGoldenCheck,
+  fullPageGoldenCheck,
+  keyboardCanvasGoldenCheck,
+  tetNotchGoldenCheck,
+} from './machines/invariant-checks';
 import { focusReturnCheck } from './machines/modifierCompoundMachine';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -191,6 +199,32 @@ test.describe('[Structural] state-independent invariants', () => {
     expect(defaultZoom).toBeGreaterThan(0.5);
 
     await ctx.close();
+  });
+
+  test('SM-APP-LOADED: app colors, font, DPR scaling, no rounded corners', async ({ page }) => {
+    await appLoadedCheck.check(page);
+  });
+
+  test('GOLDEN-1: Grid overlay snapshot', async ({ page }) => {
+    await page.locator('#grid-settings-btn').click();
+    await page.waitForTimeout(300);
+    await overlayGoldenCheck.check(page);
+  });
+
+  test('GOLDEN-4: Full page snapshot', async ({ page }) => {
+    await page.locator('#grid-settings-btn').click();
+    await page.waitForTimeout(300);
+    await fullPageGoldenCheck.check(page);
+  });
+
+  test('GOLDEN-7: Keyboard canvas snapshot', async ({ page }) => {
+    await keyboardCanvasGoldenCheck.check(page);
+  });
+
+  test('GOLDEN-8: TET notch labels snapshot', async ({ page }) => {
+    await page.locator('#grid-settings-btn').click();
+    await page.waitForTimeout(300);
+    await tetNotchGoldenCheck.check(page);
   });
 });
 

@@ -12,7 +12,6 @@ files:
   - "tests/behavioral.spec.ts"
   - "tests/panel-resize.spec.ts"
   - "tests/overlay-regression.spec.ts"
-  - "tests/visual-regression.spec.ts"
 severity: error
 message: "Imperative tests banned in this file — all behavioral tests must be XState machine-generated via xstate-graph.spec.ts"
 note: "These files were deleted during the XState migration. If recreated, tests must use the machine infrastructure."
