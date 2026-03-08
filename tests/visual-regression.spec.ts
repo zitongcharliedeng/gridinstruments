@@ -463,31 +463,6 @@ test.describe('DCompose Web — Visual Regression (State-Machine Tests)', () => 
     });
 
     /**
-     * @reason Star, bug-report, and MIDI-settings icons use inline-flex with
-     *   align-items:center to vertically center SVGs/text within their containers.
-     * @design-intent Icon containers must be vertically centered so the header
-     *   row looks clean at any viewport width.
-     */
-    test('SM-ICON-SIZE-1: Lucide icons render at correct visible dimensions', async ({ page }) => {
-      const checks = [
-        { selector: '#about-btn svg', expectedPx: 11, label: 'about-btn icon' },
-        { selector: '.star-icon svg', expectedPx: 10, label: 'star icon' },
-        { selector: '#reset-layout .icon svg', expectedPx: 9, label: 'reset-layout icon' },
-        { selector: '.slider-info-btn svg', expectedPx: 18, label: 'slider-info icon (icon-lg)' },
-        { selector: '.slider-reset svg', expectedPx: 16, label: 'slider-reset icon (icon-md)' },
-        { selector: '#grid-settings-btn svg', expectedPx: 16, label: 'grid-cog icon (icon-md)' },
-      ];
-      for (const { selector, expectedPx, label } of checks) {
-        const el = page.locator(selector).first();
-        await expect(el).toBeVisible();
-        const box = await el.boundingBox();
-        expect(box, `${label} must be visible`).toBeTruthy();
-        expect(Math.round(box!.width), `${label} width`).toBeCloseTo(expectedPx, -1);
-        expect(Math.round(box!.height), `${label} height`).toBeCloseTo(expectedPx, -1);
-      }
-    });
-
-    /**
      * @reason The tuning slider area explicitly sets padding-top:0 to prevent
      *   the slider from being pushed down relative to its siblings.
      * @design-intent The tuning area has TET presets below it (margin-bottom:28px),

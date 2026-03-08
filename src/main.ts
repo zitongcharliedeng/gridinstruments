@@ -38,13 +38,13 @@ import { MidiInput, MidiDeviceInfo } from './lib/midi-input';
 import { MPEService } from './lib/mpe-service';
 import { midiToCoord, coordToMidiNote } from './lib/note-colors';
 import { createChordGraffiti } from './lib/chord-graffiti';
-import { createIcons, Info, Star, RotateCcw, RotateCw, Settings, ChevronRight, X } from 'lucide';
+import { createIcons, Info, Star, RotateCcw, RotateCw, Settings, X } from 'lucide';
 import { appMachine } from './machines/appMachine';
 import { overlayMachine } from './machines/overlayMachine';
 import { waveformMachine } from './machines/waveformMachine';
 import { pedalMachine } from './machines/pedalMachines';
 import { panelMachine, clampPanelHeight } from './machines/panelMachine';
-import { midiPanelMachine } from './machines/midiPanelMachine';
+
 import { mpeMachine } from './machines/mpeMachine';
 import { dialogMachine } from './machines/dialogMachine';
 import { createActor } from 'xstate';
@@ -404,7 +404,7 @@ class DComposeApp {
   }
 
   private async init(): Promise<void> {
-    createIcons({ icons: { Info, Star, RotateCcw, RotateCw, Settings, ChevronRight, X } });
+    createIcons({ icons: { Info, Star, RotateCcw, RotateCw, Settings, X } });
     this.setupVisualizer();
     this.setupHistoryVisualizer();
     this.setupEventListeners();
@@ -970,27 +970,7 @@ class DComposeApp {
         }
       });
     // Hover styling handled by CSS .slider-reset:hover — no JS needed.
-    // MIDI settings toggle (XState actor)
-    const midiToggle = document.getElementById('midi-settings-toggle');
-    const midiPanel = document.getElementById('midi-settings-panel');
-    const midiPanelActor = createActor(midiPanelMachine);
 
-    midiPanelActor.subscribe((snapshot) => {
-      const isOpen = snapshot.matches('open');
-      midiPanel?.classList.toggle('open', isOpen);
-      if (midiToggle) {
-        midiToggle.innerHTML = isOpen
-          ? '<span id="midi-chevron" class="icon" style="transition:transform 0.15s ease;transform:rotate(90deg)"><i data-lucide="chevron-right"></i></span><span class="icon"><i data-lucide="settings"></i></span> MIDI settings'
-          : '<span id="midi-chevron" class="icon" style="transition:transform 0.15s ease"><i data-lucide="chevron-right"></i></span><span class="icon"><i data-lucide="settings"></i></span> MIDI';
-        createIcons({ icons: { ChevronRight, Settings }, nameAttr: 'data-lucide' });
-      }
-    });
-
-    midiPanelActor.start();
-
-    midiToggle?.addEventListener('click', () => {
-      midiPanelActor.send({ type: 'TOGGLE_MIDI' });
-    });
 
     const pbRangeInput = getElementOrNull('midi-pb-range', HTMLInputElement);
     if (pbRangeInput) {

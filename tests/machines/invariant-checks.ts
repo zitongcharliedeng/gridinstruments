@@ -146,6 +146,29 @@ export const focusPreserveCheck: StateInvariant = {
   },
 };
 
+/** D = {overlay}. Lucide icon SVGs render at text-matching pixel dimensions. Wire: overlay.visible */
+export const iconSizeCheck: StateInvariant = {
+  id: 'BH-ICON-1',
+  check: async (page: Page) => {
+    const checks: Array<{ selector: string; expectedPx: number; label: string }> = [
+      { selector: '#about-btn svg', expectedPx: 11, label: 'about-btn icon' },
+      { selector: '.star-icon svg', expectedPx: 10, label: 'star icon' },
+      { selector: '#reset-layout .icon svg', expectedPx: 9, label: 'reset-layout icon' },
+      { selector: '.slider-info-btn svg', expectedPx: 18, label: 'slider-info icon (icon-lg)' },
+      { selector: '.slider-reset svg', expectedPx: 16, label: 'slider-reset icon (icon-md)' },
+      { selector: '#grid-settings-btn svg', expectedPx: 16, label: 'grid-cog icon (icon-md)' },
+    ];
+    for (const { selector, expectedPx, label } of checks) {
+      const el = page.locator(selector).first();
+      await expect(el).toBeVisible();
+      const box = await el.boundingBox();
+      if (!box) throw new Error(`${label} must be visible`);
+      expect(Math.round(box.width), `${label} width`).toBeCloseTo(expectedPx, -1);
+      expect(Math.round(box.height), `${label} height`).toBeCloseTo(expectedPx, -1);
+    }
+  },
+};
+
 /** D = {visualiser}. 60% viewport cap on expanded. Wire: visualiser.expanded */
 export const visCap60Check: StateInvariant = {
   id: 'PNL-DRAG-4',

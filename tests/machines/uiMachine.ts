@@ -22,6 +22,7 @@ import {
   mpeUiCheck,
   focusPreserveCheck,
   visCap60Check,
+  iconSizeCheck,
 } from './invariant-checks';
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -79,7 +80,7 @@ export const overlayMachine = setup({
       meta: {
         reason: 'A settings overlay panel is visible over the keyboard grid, showing sliders and controls.',
         designIntent: 'Semi-transparent overlay lets musicians see grid while adjusting settings',
-        invariants: [tooltipCheck, overlayBgCheck, overlayShimmerCheck, overlaySectionsCheck, overlayPresetCheck, mpeUiCheck, focusPreserveCheck],
+        invariants: [tooltipCheck, overlayBgCheck, overlayShimmerCheck, overlaySectionsCheck, overlayPresetCheck, mpeUiCheck, focusPreserveCheck, iconSizeCheck],
       },
       on: {
         CLICK_COG: 'hidden',
@@ -835,7 +836,6 @@ export const allMachines = [
   { name: 'waveform', machine: waveformMachine },
   { name: 'sustain', machine: sustainMachine },
   { name: 'vibrato', machine: vibratoMachine },
-  { name: 'midiPanel', machine: midiPanelMachine },
   { name: 'mpe', machine: mpeMachine },
   { name: 'textInputFocus', machine: textInputFocusMachine },
   { name: 'skewLabel', machine: skewLabelMachine },
