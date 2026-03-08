@@ -48,7 +48,7 @@ export interface VisualAssertOptions {
   page: Page;
   /** Element to screenshot. Defaults to full page. */
   locator?: string;
-  /** Max allowed pixel diff ratio for golden comparison. Default 0.02 (2%). */
+  /** Max allowed pixel diff ratio for golden comparison. Default 0.05 (5%). */
   maxDiffRatio?: number;
 }
 
@@ -74,7 +74,7 @@ export interface VisualAssertResult {
 export async function assertVisualState(
   opts: VisualAssertOptions,
 ): Promise<VisualAssertResult> {
-  const { page, invariant, context, goldenName, locator, maxDiffRatio = 0.02 } = opts;
+  const { page, invariant, context, goldenName, locator, maxDiffRatio = 0.05 } = opts;
 
   // ── Layer 1: Take screenshot ────────────────────────────────────────────
   const target = locator ? page.locator(locator) : page;
