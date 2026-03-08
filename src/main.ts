@@ -86,7 +86,7 @@ function isWaveformType(value: unknown): value is WaveformType {
 interface SliderPresetPoint { value: number; label: string }
 
 const SKEW_PRESETS: SliderPresetPoint[] = [
-  { value: 0, label: 'DCompose' },
+  { value: 0, label: 'DCompose / Wicki-Hayden' },
   { value: 1, label: 'MidiMech' },
 ];
 

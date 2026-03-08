@@ -262,7 +262,7 @@
       overflow-y: scroll;
       overflow-x: hidden;
       scrollbar-gutter: stable;
-      scrollbar-width: auto;
+      scrollbar-width: thin;
       scrollbar-color: var(--accent) var(--subtle);
       display: flex;
       flex-direction: column;
@@ -271,6 +271,7 @@
     #grid-overlay::-webkit-scrollbar { width: 12px; }
     #grid-overlay::-webkit-scrollbar-track { background: var(--subtle); }
     #grid-overlay::-webkit-scrollbar-thumb { background: var(--accent); min-height: 40px; }
+    #grid-overlay::-webkit-scrollbar-thumb:window-inactive { background: var(--accent); }
     #grid-overlay::before {
       content: '';
       position: absolute;
@@ -342,8 +343,12 @@
       user-select: none;
       -webkit-user-select: none;
       touch-action: manipulation;
+      -webkit-touch-callout: none;
+      -webkit-tap-highlight-color: transparent;
     }
-    .pedal-btn:hover { color: var(--fg); background: var(--subtle); }
+    @media (hover: hover) {
+      .pedal-btn:hover { color: var(--fg); background: var(--subtle); }
+    }
     .pedal-btn.active { color: var(--bg); background: var(--fg); }
 
     /* ── Controls (shared) ───────────────────────────────────── */
@@ -669,8 +674,10 @@
         padding: 2px 4px;
       }
       .gh-mark svg {
-        width: 100%;
-        height: 100%;
+        width: 16px;
+        height: 16px;
+        min-width: 16px;
+        min-height: 16px;
       }
       #star-count-badge {
         display: none;

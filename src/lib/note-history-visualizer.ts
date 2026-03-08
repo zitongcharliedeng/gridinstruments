@@ -15,6 +15,26 @@
 import { noteColor } from './note-colors';
 import { detectChord } from './chord-detector';
 
+/**
+ * Word-wrap helper: splits text into lines that fit within maxWidth
+ */
+function wrapText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string[] {
+  const words = text.split(' ');
+  const lines: string[] = [];
+  let current = '';
+  for (const word of words) {
+    const test = current ? `${current} ${word}` : word;
+    if (ctx.measureText(test).width > maxWidth && current) {
+      lines.push(current);
+      current = word;
+    } else {
+      current = test;
+    }
+  }
+  if (current) lines.push(current);
+  return lines;
+}
+
 interface ActiveNote {
   coordX: number;
   coordY: number;
@@ -149,7 +169,12 @@ export class NoteHistoryVisualizer {
       ctx.font = `${subSize}px 'JetBrains Mono', monospace`;
       ctx.fillStyle = '#b8960a';
       ctx.globalAlpha = 0.85;
-      ctx.fillText('tl;dr: notes that are mathematically more harmonious are closer together spatially \u2014 make it hard to suck!', width / 2, height / 2 + 24);
+      const maxTextWidth = width * 0.85;
+      const lines = wrapText(ctx, 'tl;dr: notes that are mathematically more harmonious are closer together spatially \u2014 make it hard to suck!', maxTextWidth);
+      const lineHeight = subSize * 1.4;
+      lines.forEach((line, i) => {
+        ctx.fillText(line, width / 2, height / 2 + 24 + i * lineHeight);
+      });
       ctx.globalAlpha = 1;
       return;
     }
