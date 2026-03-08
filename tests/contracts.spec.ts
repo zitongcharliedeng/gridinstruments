@@ -455,4 +455,53 @@ test.describe('GridInstruments — Library Contract Invariants', () => {
     );
     expect(sustainActive).toBe(false);
   });
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // §11  Scrollbar Persistence Regression (#62)
+  // ══════════════════════════════════════════════════════════════════════════
+
+  /**
+   * @reason Chrome 121+ made `scrollbar-width` take precedence over
+   *   `::-webkit-scrollbar` pseudo-element rules. When `scrollbar-width: thin`
+   *   is set, Chrome ignores our custom `::-webkit-scrollbar-thumb` styling and
+   *   uses the native OS overlay scrollbar, which auto-hides on macOS after ~2s
+   *   of no scroll activity. The fix: do NOT set `scrollbar-width` on the
+   *   overlay, so Chrome uses our always-visible custom scrollbar instead.
+   * @design-intent The scrollbar must be permanently visible — it is the primary
+   *   indicator the overlay has more content below the fold. Auto-hiding it
+   *   breaks discoverability. This is a P0 UX regression (#62, reported 5×).
+   */
+  test('ISS-62-1: overlay does NOT set scrollbar-width:thin — prevents Chrome 121+ auto-hide (#62)', async ({ page }) => {
+    await page.click('#grid-settings-btn');
+    await page.waitForTimeout(500);
+    const scrollbarWidth = await page.locator('#grid-overlay').evaluate(
+      el => getComputedStyle(el).scrollbarWidth
+    );
+    // 'thin' silently overrides ::-webkit-scrollbar in Chrome 121+, causing
+    // macOS native overlay scrollbar (which auto-hides). Must be 'auto'.
+    expect(
+      scrollbarWidth,
+      'scrollbar-width must not be "thin": Chrome 121+ ignores ::-webkit-scrollbar when set, causing auto-hide on macOS'
+    ).not.toBe('thin');
+  });
+
+  /**
+   * @reason Regression guard: wait past the macOS auto-hide timeout (~2s) and
+   *   assert the overlay is still intact and its scroll contract is maintained.
+   *   Previously failing: test was taking screenshot immediately, never catching fade.
+   * @design-intent No scroll activity should make the overlay lose its scrollbar.
+   */
+  test('ISS-62-2: overlay scrollbar properties remain intact after 10s inactivity (#62)', async ({ page }) => {
+    await page.click('#grid-settings-btn');
+    await page.waitForTimeout(10000); // past any OS auto-hide timeout
+    await expect(page.locator('#grid-overlay')).toBeVisible();
+    const overflowY = await page.locator('#grid-overlay').evaluate(
+      el => getComputedStyle(el).overflowY
+    );
+    expect(overflowY, 'overflow-y must stay scroll after 10s').toBe('scroll');
+    const scrollbarGutter = await page.locator('#grid-overlay').evaluate(
+      el => getComputedStyle(el).scrollbarGutter
+    );
+    expect(scrollbarGutter, 'scrollbar-gutter must stay stable after 10s').toContain('stable');
+  });
 });

@@ -262,8 +262,6 @@
       overflow-y: scroll;
       overflow-x: hidden;
       scrollbar-gutter: stable;
-      scrollbar-width: thin;
-      scrollbar-color: var(--accent) var(--subtle);
       display: flex;
       flex-direction: column;
       gap: 8px;
@@ -271,7 +269,6 @@
     #grid-overlay::-webkit-scrollbar { width: 12px; }
     #grid-overlay::-webkit-scrollbar-track { background: var(--subtle); }
     #grid-overlay::-webkit-scrollbar-thumb { background: var(--accent); min-height: 40px; }
-    #grid-overlay::-webkit-scrollbar-thumb:window-inactive { background: var(--accent); }
     #grid-overlay::before {
       content: '';
       position: absolute;
