@@ -1,0 +1,10 @@
+id: no-raw-slider-manipulation
+language: typescript
+rule:
+  pattern: page.evaluate($$$)
+  regex: "slider\\.value|getElementById.*slider.*\\.value"
+files:
+  - "tests/*.spec.ts"
+severity: error
+message: "Raw slider manipulation via page.evaluate() banned in spec files — use sliderResetMachine PlaywrightActions"
+note: "Slider state must be managed through XState machines. Machine files in tests/machines/ are exempt."

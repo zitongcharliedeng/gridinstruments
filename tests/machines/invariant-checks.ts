@@ -44,8 +44,8 @@ export const visHandlePosition: StateInvariant = {
     expect(panelBox).not.toBeNull();
     expect(handleBox).not.toBeNull();
     const panelBottom = panelBox!.y + panelBox!.height;
-    const handleCenterY = handleBox!.y + handleBox!.height / 2;
-    expect(Math.abs(handleCenterY - panelBottom)).toBeLessThan(4);
+    const handleTop = handleBox!.y;
+    expect(Math.abs(handleTop - panelBottom)).toBeLessThan(4);
   },
 };
 
@@ -71,10 +71,118 @@ export const pedHandlePosition: StateInvariant = {
     expect(panelBox).not.toBeNull();
     expect(handleBox).not.toBeNull();
     const panelTop = panelBox!.y;
-    const handleCenterY = handleBox!.y + handleBox!.height / 2;
-    expect(Math.abs(handleCenterY - panelTop)).toBeLessThan(4);
+    const handleBottom = handleBox!.y + handleBox!.height;
+    expect(Math.abs(handleBottom - panelTop)).toBeLessThan(4);
   },
 };
+
+/** D = {overlay}. Background color check. Wire: overlay.visible */
+export const overlayBgCheck: StateInvariant = {
+  id: 'OV-BG-1',
+  check: async (page: Page) => {
+    const bg = await page.locator('#grid-overlay').evaluate(
+      el => getComputedStyle(el).backgroundColor
+    );
+    const match = bg.match(/rgba?\((\d+),\s*(\d+),\s*(\d+),?\s*([\d.]+)?\)/);
+    expect(match, 'Background should be rgba').toBeTruthy();
+    expect(parseInt(match![1])).toBeCloseTo(30, 0);
+    expect(parseInt(match![2])).toBeCloseTo(30, 0);
+    expect(parseInt(match![3])).toBeCloseTo(32, 0);
+    if (match![4]) {
+      expect(parseFloat(match![4])).toBeCloseTo(0.78, 1);
+    }
+  },
+};
+
+/** D = {overlay}. Shimmer animation check. Wire: overlay.visible */
+export const overlayShimmerCheck: StateInvariant = {
+  id: 'OV-SHIMMER-1',
+  check: async (page: Page) => {
+    const animDuration = await page.evaluate(() =>
+      getComputedStyle(
+        document.querySelector('#grid-overlay')!, '::before'
+      ).animationDuration
+    );
+    expect(animDuration).toContain('60s');
+  },
+};
+
+/** D = {overlay}. Section count check. Wire: overlay.visible */
+export const overlaySectionsCheck: StateInvariant = {
+  id: 'OV-SECTIONS-1',
+  check: async (page: Page) => {
+    const sectionCount = await page.locator('#grid-overlay .overlay-section').count();
+    expect(sectionCount).toBeGreaterThanOrEqual(8);
+  },
+};
+
+/** D = {overlay}. Active preset check at default tuning. Wire: overlay.visible */
+export const overlayPresetCheck: StateInvariant = {
+  id: 'OV-PRESET-1',
+  check: async (page: Page) => {
+    const activePreset = await page.locator('#tet-presets .slider-preset-btn.active').count();
+    expect(activePreset).toBeGreaterThanOrEqual(1);
+    const activeValue = await page.locator('#tet-presets .slider-preset-btn.active').first().getAttribute('data-value');
+    expect(parseFloat(activeValue ?? '0')).toBe(700);
+  },
+};
+
+/** D = {overlay}. MPE controls visible when overlay open. Wire: overlay.visible */
+export const mpeUiCheck: StateInvariant = {
+  id: 'BH-MPE-1',
+  check: async (page: Page) => {
+    await expect(page.locator('#mpe-enabled')).toBeVisible();
+    await expect(page.locator('#mpe-output-select')).toBeVisible();
+  },
+};
+
+/** D = {overlay}. Settings toggle doesn't steal focus. Wire: overlay.visible */
+export const focusPreserveCheck: StateInvariant = {
+  id: 'BH-FOCUS-PRESERVE-1',
+  check: async (page: Page) => {
+    const activeTagName = await page.evaluate(() => document.activeElement?.tagName);
+    expect(activeTagName).not.toBe('INPUT');
+    expect(activeTagName).not.toBe('SELECT');
+  },
+};
+
+/** D = {visualiser}. 60% viewport cap on expanded. Wire: visualiser.expanded */
+export const visCap60Check: StateInvariant = {
+  id: 'PNL-DRAG-4',
+  check: async (page: Page) => {
+    const panelH = (await page.locator('#visualiser-panel').boundingBox())!.height;
+    const viewportH = page.viewportSize()!.height;
+    expect(panelH).toBeLessThanOrEqual(viewportH * 0.61);
+  },
+};
+
+// ── Slider fill predicates: D(P) = {slider} — wired to slider machine states ─
+
+/** D = {slider}. Fill gradient check for slider in default (min) position. */
+export function createSliderFillDefaultInvariant(sliderId: string): StateInvariant {
+  return {
+    id: `FILL-DEFAULT-${sliderId}`,
+    check: async (page: Page) => {
+      const bg = await page.locator('#' + sliderId).evaluate(
+        (el) => (el as HTMLElement).style.background
+      );
+      expect(bg).toContain('linear-gradient');
+    },
+  };
+}
+
+/** D = {slider}. Fill gradient check for slider in modified position. */
+export function createSliderFillModifiedInvariant(sliderId: string): StateInvariant {
+  return {
+    id: `FILL-MODIFIED-${sliderId}`,
+    check: async (page: Page) => {
+      const bg = await page.locator('#' + sliderId).evaluate(
+        (el) => (el as HTMLElement).style.background
+      );
+      expect(bg).toContain('linear-gradient');
+    },
+  };
+}
 
 // ── Structural predicates: D(P) = {} — tested once in xstate-graph.spec.ts ──
 

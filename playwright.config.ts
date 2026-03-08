@@ -4,7 +4,7 @@ export default defineConfig({
   timeout: 60_000,
   retries: 1,
   use: {
-    baseURL: 'http://localhost:3001',
+    baseURL: 'http://localhost:3099',
     screenshot: 'only-on-failure',
     trace: 'on-first-retry',
     viewport: { width: 1920, height: 1080 },
@@ -33,8 +33,8 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'npx vite --port 3001',
-    port: 3001,
-    reuseExistingServer: false,
+    command: 'npx vite --port 3099',
+    port: 3099,
+    reuseExistingServer: true,
   },
 });

@@ -24,6 +24,42 @@
       --accent: #888;
       --gap: 8px;
       --font: 'JetBrains Mono', 'Courier New', monospace;
+      --icon-sm: 12px;
+      --icon-md: 16px;
+      --icon-lg: 18px;
+    }
+
+    /* ── Icon Design System ──────────────────────────────────── */
+    .icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      width: var(--icon-size, 1em);
+      height: var(--icon-size, 1em);
+      font-size: inherit;
+      line-height: 1;
+      vertical-align: middle;
+    }
+    .icon-sm {
+      --icon-size: var(--icon-sm);
+      font-size: var(--icon-sm);
+    }
+    .icon-md {
+      --icon-size: var(--icon-md);
+      font-size: var(--icon-md);
+    }
+    .icon-lg {
+      --icon-size: var(--icon-lg);
+      font-size: var(--icon-lg);
+    }
+    .icon-btn {
+      background: none;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+      font-family: var(--font);
+      color: inherit;
     }
 
     html, body {
@@ -121,38 +157,37 @@
     .panel-resize-handle-wrap {
       position: absolute;
       left: 50%;
-      transform: translate(-50%, 50%);
+      transform: translate(-50%, 100%);
       z-index: 20;
       bottom: 0;
     }
-    .pedals-handle-wrap { bottom: auto; top: 0; transform: translate(-50%, -50%); }
+    .pedals-handle-wrap { bottom: auto; top: 0; transform: translate(-50%, -100%); }
      .panel-resize-handle {
        width: auto;
-       min-width: 28px;
-       height: auto;
-       min-height: 24px;
-       padding: 3px 8px;
+       height: 32px;
+       padding: 0 10px;
        cursor: row-resize;
        display: flex;
-       flex-direction: column;
+       flex-direction: row;
        align-items: center;
        justify-content: center;
-       gap: 1px;
+       gap: 6px;
        background: var(--bg);
        border: 1px solid var(--border);
      }
     .panel-resize-handle:focus-visible { outline: 1px solid var(--accent); }
-    .panel-resize-handle .grip-arrow { width: 0; height: 0; border-left: 4px solid transparent; border-right: 4px solid transparent; }
-    .panel-resize-handle .grip-arrow-up { border-bottom: 4px solid var(--dim); }
-    .panel-resize-handle .grip-arrow-down { border-top: 4px solid var(--dim); }
+    .panel-resize-handle .grip-lines {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+    }
     .panel-resize-handle .grip-line { width: 14px; height: 1px; background: var(--dim); }
-    .panel-resize-handle:hover .grip-arrow-up { border-bottom-color: var(--fg); }
-    .panel-resize-handle:hover .grip-arrow-down { border-top-color: var(--fg); }
     .panel-resize-handle:hover .grip-line { background: var(--fg); }
     .panel-resize-handle .handle-label {
-      font-size: 7px;
+      font-size: 8px;
       color: var(--dim);
-      letter-spacing: 1px;
+      letter-spacing: 1.5px;
       font-family: var(--font);
       line-height: 1;
       user-select: none;
@@ -217,8 +252,8 @@
       background: rgba(30, 30, 32, 0.78);
       z-index: 12;
       padding: 48px 24px 24px;
-      overflow: hidden;
       overflow-y: scroll;
+      overflow-x: hidden;
       scrollbar-gutter: stable;
       scrollbar-width: thin;
       scrollbar-color: var(--dim) transparent;
@@ -678,7 +713,7 @@
     <div id="visualiser-panel">
       <canvas id="history-canvas" height="120"></canvas>
       <div class="panel-resize-handle-wrap">
-         <div class="panel-resize-handle" tabindex="0" role="separator" aria-orientation="horizontal" aria-label="Resize visualiser" title="Drag to resize visualiser panel" data-target="visualiser-panel" data-min="60" data-max="400" data-default="120" data-key="gi_visualiser_h" data-hidden-key="gi_history_hidden"><span class="handle-label">VISUALISER</span><span class="grip-arrow grip-arrow-up"></span><span class="grip-line"></span><span class="grip-line"></span><span class="grip-arrow grip-arrow-down"></span></div>
+         <div class="panel-resize-handle" tabindex="0" role="separator" aria-orientation="horizontal" aria-label="Resize visualiser" title="Drag to resize visualiser panel" data-target="visualiser-panel" data-min="60" data-max="400" data-default="120" data-key="gi_visualiser_h" data-hidden-key="gi_history_hidden"><span class="grip-lines"><span class="grip-line"></span><span class="grip-line"></span><span class="grip-line"></span></span><span class="handle-label">VISUALISER</span><span class="grip-lines"><span class="grip-line"></span><span class="grip-line"></span><span class="grip-line"></span></span></div>
       </div>
     </div>
 
@@ -800,7 +835,7 @@
     <!-- Pedals -->
     <div id="pedals-panel" style="height:44px">
       <div class="panel-resize-handle-wrap pedals-handle-wrap">
-         <div class="panel-resize-handle" tabindex="0" role="separator" aria-orientation="horizontal" aria-label="Resize pedals" title="Drag to resize pedals panel" data-target="pedals-panel" data-min="30" data-max="120" data-default="44" data-key="gi_pedals_h" data-direction="up" data-hidden-key="gi_pedals_hidden"><span class="handle-label">PEDALS</span><span class="grip-arrow grip-arrow-up"></span><span class="grip-line"></span><span class="grip-line"></span><span class="grip-arrow grip-arrow-down"></span></div>
+         <div class="panel-resize-handle" tabindex="0" role="separator" aria-orientation="horizontal" aria-label="Resize pedals" title="Drag to resize pedals panel" data-target="pedals-panel" data-min="30" data-max="120" data-default="44" data-key="gi_pedals_h" data-direction="up" data-hidden-key="gi_pedals_hidden"><span class="grip-lines"><span class="grip-line"></span><span class="grip-line"></span><span class="grip-line"></span></span><span class="handle-label">PEDALS</span><span class="grip-lines"><span class="grip-line"></span><span class="grip-line"></span><span class="grip-line"></span></span></div>
       </div>
       <button class="pedal-btn" id="sustain-indicator" title="Sustain: hold Space or tap" style="padding-top: 4px;">SUSTAIN</button>
       <button class="pedal-btn" id="vibrato-indicator" title="Vibrato: hold Shift or tap" style="padding-top: 4px;">VIBRATO</button>

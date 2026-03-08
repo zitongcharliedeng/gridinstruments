@@ -15,6 +15,13 @@ import {
   visHandlePosition,
   pianoRollVisible,
   pedHandlePosition,
+  overlayBgCheck,
+  overlayShimmerCheck,
+  overlaySectionsCheck,
+  overlayPresetCheck,
+  mpeUiCheck,
+  focusPreserveCheck,
+  visCap60Check,
 } from './invariant-checks';
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -72,7 +79,7 @@ export const overlayMachine = setup({
       meta: {
         reason: 'A settings overlay panel is visible over the keyboard grid, showing sliders and controls.',
         designIntent: 'Semi-transparent overlay lets musicians see grid while adjusting settings',
-        invariants: [tooltipCheck],
+        invariants: [tooltipCheck, overlayBgCheck, overlayShimmerCheck, overlaySectionsCheck, overlayPresetCheck, mpeUiCheck, focusPreserveCheck],
       },
       on: {
         CLICK_COG: 'hidden',
@@ -141,7 +148,7 @@ export const visualiserMachine = setup({
       meta: {
         reason: 'The visualiser panel is expanded taller than default, showing more note history. The keyboard grid fills the remaining space below with no black gap.',
         designIntent: 'More vertical space for note history review',
-        invariants: [pianoRollVisible],
+        invariants: [pianoRollVisible, visCap60Check],
       },
       on: {
         DBLCLICK_VIS_HANDLE: 'default',
@@ -415,7 +422,8 @@ type SustainEvent =
   | { type: 'PRESS_SPACE' }
   | { type: 'RELEASE_SPACE' }
   | { type: 'POINTERDOWN_SUSTAIN' }
-  | { type: 'POINTERUP_SUSTAIN' };
+  | { type: 'POINTERUP_SUSTAIN' }
+  | { type: 'PLAY_NOTE' };
 
 export const sustainMachine = setup({
   types: { events: {} as SustainEvent },
@@ -441,6 +449,7 @@ export const sustainMachine = setup({
       on: {
         RELEASE_SPACE: 'inactive',
         POINTERUP_SUSTAIN: 'inactive',
+        PLAY_NOTE: 'active',
       },
     },
   },
@@ -458,6 +467,9 @@ export const sustainPlaywrightActions: Record<SustainEvent['type'], (page: Page)
   },
   POINTERUP_SUSTAIN: async (page) => {
     await page.locator('#sustain-indicator').dispatchEvent('pointerup', { bubbles: true });
+  },
+  PLAY_NOTE: async (page) => {
+    await page.keyboard.press('c');
   },
 };
 
@@ -483,7 +495,8 @@ type VibratoEvent =
   | { type: 'PRESS_SHIFT' }
   | { type: 'RELEASE_SHIFT' }
   | { type: 'POINTERDOWN_VIBRATO' }
-  | { type: 'POINTERUP_VIBRATO' };
+  | { type: 'POINTERUP_VIBRATO' }
+  | { type: 'PLAY_NOTE' };
 
 export const vibratoMachine = setup({
   types: { events: {} as VibratoEvent },
@@ -509,6 +522,7 @@ export const vibratoMachine = setup({
       on: {
         RELEASE_SHIFT: 'inactive',
         POINTERUP_VIBRATO: 'inactive',
+        PLAY_NOTE: 'active',
       },
     },
   },
@@ -526,6 +540,9 @@ export const vibratoPlaywrightActions: Record<VibratoEvent['type'], (page: Page)
   },
   POINTERUP_VIBRATO: async (page) => {
     await page.locator('#vibrato-indicator').dispatchEvent('pointerup', { bubbles: true });
+  },
+  PLAY_NOTE: async (page) => {
+    await page.keyboard.press('c');
   },
 };
 
@@ -765,6 +782,49 @@ export const skewLabelDomAssertions: Record<string, (page: Page) => Promise<void
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// Slider reset machines (parameterized factory)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+import {
+  tuningSliderMachine, tuningSliderPlaywrightActions, tuningSliderDomAssertions, tuningSliderInvariants,
+  skewSliderMachine, skewSliderPlaywrightActions, skewSliderDomAssertions, skewSliderInvariants,
+  volumeSliderMachine, volumeSliderPlaywrightActions, volumeSliderDomAssertions, volumeSliderInvariants,
+  zoomSliderMachine, zoomSliderPlaywrightActions, zoomSliderDomAssertions, zoomSliderInvariants,
+} from './sliderResetMachine';
+
+import {
+  aboutDialogMachine, aboutDialogPlaywrightActions, aboutDialogDomAssertions, aboutDialogInvariants,
+} from './aboutDialogMachine';
+
+import {
+  drefInputMachine, drefInputPlaywrightActions, drefInputDomAssertions, drefInputInvariants,
+} from './drefInputMachine';
+
+import {
+  modifierCompoundMachine, modifierCompoundPlaywrightActions, modifierCompoundDomAssertions, modifierCompoundInvariants,
+} from './modifierCompoundMachine';
+
+import {
+  layoutPersistenceMachine, layoutPersistencePlaywrightActions, layoutPersistenceDomAssertions, layoutPersistenceInvariants,
+} from './layoutPersistenceMachine';
+
+import {
+  viewportMachine, viewportPlaywrightActions, viewportDomAssertions, viewportInvariants,
+} from './viewportMachine';
+
+export {
+  tuningSliderMachine, tuningSliderPlaywrightActions, tuningSliderDomAssertions, tuningSliderInvariants,
+  skewSliderMachine, skewSliderPlaywrightActions, skewSliderDomAssertions, skewSliderInvariants,
+  volumeSliderMachine, volumeSliderPlaywrightActions, volumeSliderDomAssertions, volumeSliderInvariants,
+  zoomSliderMachine, zoomSliderPlaywrightActions, zoomSliderDomAssertions, zoomSliderInvariants,
+  aboutDialogMachine, aboutDialogPlaywrightActions, aboutDialogDomAssertions, aboutDialogInvariants,
+  drefInputMachine, drefInputPlaywrightActions, drefInputDomAssertions, drefInputInvariants,
+  modifierCompoundMachine, modifierCompoundPlaywrightActions, modifierCompoundDomAssertions, modifierCompoundInvariants,
+  layoutPersistenceMachine, layoutPersistencePlaywrightActions, layoutPersistenceDomAssertions, layoutPersistenceInvariants,
+  viewportMachine, viewportPlaywrightActions, viewportDomAssertions, viewportInvariants,
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // Aggregate export
 // ═══════════════════════════════════════════════════════════════════════════════
 
@@ -779,4 +839,13 @@ export const allMachines = [
   { name: 'mpe', machine: mpeMachine },
   { name: 'textInputFocus', machine: textInputFocusMachine },
   { name: 'skewLabel', machine: skewLabelMachine },
+  { name: 'tuningSlider', machine: tuningSliderMachine },
+  { name: 'skewSlider', machine: skewSliderMachine },
+  { name: 'volumeSlider', machine: volumeSliderMachine },
+  { name: 'zoomSlider', machine: zoomSliderMachine },
+  { name: 'aboutDialog', machine: aboutDialogMachine },
+  { name: 'drefInput', machine: drefInputMachine },
+  { name: 'modifierCompound', machine: modifierCompoundMachine },
+  { name: 'layoutPersistence', machine: layoutPersistenceMachine },
+  { name: 'viewport', machine: viewportMachine },
 ] as const;

@@ -56,6 +56,39 @@ import {
   skewLabelPlaywrightActions,
   skewLabelInvariants,
   skewLabelDomAssertions,
+  // Slider reset machines
+  tuningSliderPlaywrightActions,
+  tuningSliderInvariants,
+  tuningSliderDomAssertions,
+  skewSliderPlaywrightActions,
+  skewSliderInvariants,
+  skewSliderDomAssertions,
+  volumeSliderPlaywrightActions,
+  volumeSliderInvariants,
+  volumeSliderDomAssertions,
+  zoomSliderPlaywrightActions,
+  zoomSliderInvariants,
+  zoomSliderDomAssertions,
+  // About Dialog
+  aboutDialogPlaywrightActions,
+  aboutDialogInvariants,
+  aboutDialogDomAssertions,
+  // D-ref Input
+  drefInputPlaywrightActions,
+  drefInputInvariants,
+  drefInputDomAssertions,
+  // Modifier Compound
+  modifierCompoundPlaywrightActions,
+  modifierCompoundInvariants,
+  modifierCompoundDomAssertions,
+  // Layout Persistence
+  layoutPersistencePlaywrightActions,
+  layoutPersistenceInvariants,
+  layoutPersistenceDomAssertions,
+  // Viewport
+  viewportPlaywrightActions,
+  viewportInvariants,
+  viewportDomAssertions,
 } from './uiMachine';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -121,6 +154,51 @@ const registry: Record<string, MachineAssertionKit> = {
     actions: skewLabelPlaywrightActions,
     invariants: skewLabelInvariants,
     domAssertions: skewLabelDomAssertions,
+  },
+  tuningSlider: {
+    actions: tuningSliderPlaywrightActions,
+    invariants: tuningSliderInvariants,
+    domAssertions: tuningSliderDomAssertions,
+  },
+  skewSlider: {
+    actions: skewSliderPlaywrightActions,
+    invariants: skewSliderInvariants,
+    domAssertions: skewSliderDomAssertions,
+  },
+  volumeSlider: {
+    actions: volumeSliderPlaywrightActions,
+    invariants: volumeSliderInvariants,
+    domAssertions: volumeSliderDomAssertions,
+  },
+  zoomSlider: {
+    actions: zoomSliderPlaywrightActions,
+    invariants: zoomSliderInvariants,
+    domAssertions: zoomSliderDomAssertions,
+  },
+  aboutDialog: {
+    actions: aboutDialogPlaywrightActions,
+    invariants: aboutDialogInvariants,
+    domAssertions: aboutDialogDomAssertions,
+  },
+  drefInput: {
+    actions: drefInputPlaywrightActions,
+    invariants: drefInputInvariants,
+    domAssertions: drefInputDomAssertions,
+  },
+  modifierCompound: {
+    actions: modifierCompoundPlaywrightActions,
+    invariants: modifierCompoundInvariants,
+    domAssertions: modifierCompoundDomAssertions,
+  },
+  layoutPersistence: {
+    actions: layoutPersistencePlaywrightActions,
+    invariants: layoutPersistenceInvariants,
+    domAssertions: layoutPersistenceDomAssertions,
+  },
+  viewport: {
+    actions: viewportPlaywrightActions,
+    invariants: viewportInvariants,
+    domAssertions: viewportDomAssertions,
   },
 };
 

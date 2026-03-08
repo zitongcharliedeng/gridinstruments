@@ -29,7 +29,7 @@
  * Total: 76 pairs, ~74 active tests (midiPanel skipped).
  */
 
-import { test } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 import { type AnyStateMachine } from 'xstate';
 import { getAdjacencyMap } from 'xstate/graph';
 import { allMachines } from './machines/uiMachine';
@@ -37,6 +37,7 @@ import { getKit, getAction, assertDomState, getInvariant } from './machines/stat
 import { assertVisualState } from './fixtures/visual-assert';
 import type { StateMeta } from './machines/types';
 import { handleDomParent, panelAriaCheck } from './machines/invariant-checks';
+import { focusReturnCheck } from './machines/modifierCompoundMachine';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -144,7 +145,7 @@ function enumerateTransitions(
 
 // ─── Machines that require overlay to be open first ──────────────────────────
 
-const NEEDS_OVERLAY_OPEN = new Set(['waveform', 'mpe', 'textInputFocus', 'skewLabel', 'midiPanel']);
+const NEEDS_OVERLAY_OPEN = new Set(['waveform', 'mpe', 'textInputFocus', 'skewLabel', 'midiPanel', 'tuningSlider', 'skewSlider', 'volumeSlider', 'zoomSlider', 'drefInput']);
 
 // ─── Machines to skip (DOM elements don't exist) ─────────────────────────────
 
@@ -165,6 +166,31 @@ test.describe('[Structural] state-independent invariants', () => {
 
   test('PNL-VIS-3: panel handles have correct ARIA attributes', async ({ page }) => {
     await panelAriaCheck.check(page);
+  });
+
+  test('BH-FOCUS-RETURN-1: keyboard works after clicking neutral element', async ({ page }) => {
+    await focusReturnCheck.check(page);
+  });
+
+  test('BH-MOB-2: smart zoom on 390px touch device ≤ 1.0', async ({ browser }) => {
+    const ctx = await browser.newContext({
+      viewport: { width: 390, height: 844 },
+      hasTouch: true,
+    });
+    const p = await ctx.newPage();
+    await p.goto('/');
+    await p.waitForLoadState('networkidle');
+    await p.waitForTimeout(1500);
+
+    const defaultZoom = await p.evaluate(() => {
+      const app = (window as Window & { dcomposeApp?: { getDefaultZoom: () => number } }).dcomposeApp;
+      return app?.getDefaultZoom() ?? -1;
+    });
+    expect(defaultZoom).toBeGreaterThan(0);
+    expect(defaultZoom).toBeLessThanOrEqual(1.0);
+    expect(defaultZoom).toBeGreaterThan(0.5);
+
+    await ctx.close();
   });
 });
 

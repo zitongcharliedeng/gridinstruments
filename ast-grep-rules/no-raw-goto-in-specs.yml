@@ -1,0 +1,11 @@
+id: no-raw-goto-in-specs
+language: typescript
+rule:
+  pattern: page.goto($$$)
+files:
+  - "tests/behavioral.spec.ts"
+  - "tests/panel-resize.spec.ts"
+  - "tests/overlay-regression.spec.ts"
+severity: error
+message: "page.goto() banned in deleted imperative test files — all navigation handled by xstate-graph.spec.ts beforeEach"
+note: "These files were deleted during XState migration. This rule prevents resurrection."

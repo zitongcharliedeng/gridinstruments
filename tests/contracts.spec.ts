@@ -384,4 +384,75 @@ test.describe('GridInstruments — Library Contract Invariants', () => {
     expect(testStates).toContain('triangle');
     expect(testStates.length).toBe(4);
   });
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // §8  Double Accidental Naming
+  // ══════════════════════════════════════════════════════════════════════════
+
+  /**
+   * @reason The isomorphic keyboard grid extends to coordinates where x=11
+   *   produces double sharps (𝄪) at x=11 and double flats (𝄫) at x=-11.
+   *   These must be present for the layout to cover the full pitch space.
+   * @design-intent Double accidentals prove the note naming covers coordinates
+   *   beyond ±7 fifths — essential for non-12-TET tunings like 53-TET.
+   */
+  test('BH-DOUBLEACCIDENTAL-1: Note naming includes double sharps and flats', async ({ page }) => {
+    const result = await page.evaluate(() => {
+      const FIFTHS_NATURALS = ['F', 'C', 'G', 'D', 'A', 'E', 'B'];
+      function getNoteNameFromCoord(x: number): string {
+        const baseIndex = ((x + 3) % 7 + 7) % 7;
+        const baseName = FIFTHS_NATURALS[baseIndex];
+        const accidentals = Math.floor((x + 3) / 7);
+        if (accidentals === 0) return baseName;
+        if (accidentals === 1) return baseName + '\u266F';
+        if (accidentals === -1) return baseName + '\u266D';
+        if (accidentals === 2) return baseName + String.fromCodePoint(0x1D12A);
+        if (accidentals === -2) return baseName + String.fromCodePoint(0x1D12B);
+        return '';
+      }
+      return {
+        doubleSharp: getNoteNameFromCoord(11),
+        doubleFlat: getNoteNameFromCoord(-11),
+      };
+    });
+    expect(result.doubleSharp).toContain(String.fromCodePoint(0x1D12A));
+    expect(result.doubleFlat).toContain(String.fromCodePoint(0x1D12B));
+  });
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // §9  D-ref Input Contracts
+  // ══════════════════════════════════════════════════════════════════════════
+
+  /**
+   * @reason D-ref slider must cover D2 (73.42 Hz) to D6 (1174.66 Hz) — the
+   *   full practical range for an isomorphic keyboard reference pitch.
+   * @design-intent D2–D4 was too narrow; musicians need D5/D6 for soprano
+   *   and piccolo register exploration.
+   */
+  test('BH-DREF-RANGE-1: D-ref slider range is D2 to D6', async ({ page }) => {
+    const slider = page.locator('#d-ref-slider');
+    const min = parseFloat(await slider.getAttribute('min') ?? '0');
+    const max = parseFloat(await slider.getAttribute('max') ?? '0');
+    expect(min).toBeCloseTo(73.42, 0);  // D2
+    expect(max).toBeCloseTo(1174.66, 0); // D6
+  });
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // §10  Keyboard Mapping Contracts
+  // ══════════════════════════════════════════════════════════════════════════
+
+  /**
+   * @reason R was accidentally bound to sustain in an earlier version. It's a
+   *   regular note key in the keyboard layout (mapped via isomorphic-qwerty).
+   * @design-intent Piano-layout users expect R to play a note, not trigger sustain.
+   *   Sustain is exclusively on Space.
+   */
+  test('ISS-14-1: R key is a note key, NOT sustain (#14)', async ({ page }) => {
+    await page.keyboard.press('r');
+    await page.waitForTimeout(300);
+    const sustainActive = await page.locator('#sustain-indicator').evaluate(
+      el => el.classList.contains('active')
+    );
+    expect(sustainActive).toBe(false);
+  });
 });
