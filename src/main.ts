@@ -1871,6 +1871,16 @@ document.addEventListener('DOMContentLoaded', () => {
       appActor.send({ type: 'SLIDER_INPUT', slider: 'skew', value: parseFloat(_skewSlider.value) });
     });
   }
+  if (_volumeSlider) {
+    _volumeSlider.addEventListener('input', () => {
+      appActor.send({ type: 'SLIDER_INPUT', slider: 'volume', value: parseFloat(_volumeSlider.value) });
+    });
+  }
+  if (_zoomSlider) {
+    _zoomSlider.addEventListener('input', () => {
+      appActor.send({ type: 'SLIDER_INPUT', slider: 'zoom', value: parseFloat(_zoomSlider.value) });
+    });
+  }
   if (_skewBadge) {
     _skewBadge.addEventListener('change', () => {
       const raw = parseFloat(_skewBadge.value);
