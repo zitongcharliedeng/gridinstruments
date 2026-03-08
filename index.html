@@ -259,17 +259,16 @@
       background: rgba(30, 30, 32, 0.78);
       z-index: 12;
       padding: 48px 24px 24px;
-      overflow-y: scroll;
+      overflow-y: auto;
       overflow-x: hidden;
-      scrollbar-gutter: stable;
-      scrollbar-color: var(--accent) var(--subtle);
       display: flex;
       flex-direction: column;
       gap: 8px;
     }
-    #grid-overlay::-webkit-scrollbar { width: 12px; }
-    #grid-overlay::-webkit-scrollbar-track { background: var(--subtle); }
-    #grid-overlay::-webkit-scrollbar-thumb { background: var(--accent); min-height: 40px; }
+    /* OverlayScrollbars custom theme — always-visible scrollbar (#62) */
+    .gi-scrollbar { --os-handle-bg: var(--accent); --os-handle-bg-hover: var(--fg); --os-handle-bg-active: var(--fg); }
+    .gi-scrollbar .os-scrollbar-handle { min-height: 40px; }
+    .gi-scrollbar .os-scrollbar { --os-size: 12px; padding: 0; }
     #grid-overlay::before {
       content: '';
       position: absolute;
@@ -385,6 +384,25 @@
     }
     select:focus, input:focus { border-color: var(--accent); }
     select option { background: var(--bg); }
+
+    /* slim-select theme — cross-platform identical dropdowns (#85) */
+    .ss-main { font-family: var(--font); font-size: 12px; background: var(--bg); color: var(--fg); border: 1px solid var(--border); border-radius: 0; padding: 3px 6px; min-height: 0; cursor: pointer; }
+    .ss-main:focus, .ss-main.ss-open-below, .ss-main.ss-open-above { border-color: var(--accent); box-shadow: none; }
+    .ss-main .ss-arrow { margin: 0 0 0 6px; }
+    .ss-main .ss-arrow path { stroke: var(--dim); }
+    .ss-main .ss-values .ss-single { margin: 0; padding: 0; color: var(--fg); }
+    .ss-content { font-family: var(--font); font-size: 12px; background: var(--bg); border: 1px solid var(--accent); border-radius: 0; box-shadow: 0 4px 12px rgba(0,0,0,0.6); }
+    .ss-content .ss-list .ss-option { padding: 4px 8px; color: var(--fg); background: var(--bg); }
+    .ss-content .ss-list .ss-option:hover, .ss-content .ss-list .ss-option.ss-highlighted { background: var(--subtle); color: var(--fg); }
+    .ss-content .ss-list .ss-option.ss-selected { background: var(--border); color: var(--fg); }
+
+    /* Custom checkbox — cross-platform identical (#85) */
+    .gi-checkbox { position: relative; display: inline-block; width: 14px; height: 14px; cursor: pointer; vertical-align: middle; }
+    .gi-checkbox input { position: absolute; inset: 0; margin: 0; cursor: pointer; appearance: none; -webkit-appearance: none; background: transparent; border: none; z-index: 1; }
+    .gi-checkbox .gi-check { display: block; width: 14px; height: 14px; border: 1px solid var(--border); background: var(--bg); pointer-events: none; }
+    .gi-checkbox input:checked + .gi-check { background: var(--fg); border-color: var(--fg); }
+    .gi-checkbox input:checked + .gi-check::after { content: ''; position: absolute; left: 4px; top: 1px; width: 4px; height: 8px; border: solid var(--bg); border-width: 0 2px 2px 0; transform: rotate(45deg); }
+    .gi-checkbox input:focus-visible + .gi-check { border-color: var(--accent); }
 
     input[type="range"] {
       padding: 0;
@@ -765,7 +783,7 @@
 
           <div class="overlay-section">
             <div class="ctrl-group">
-              <span class="ctrl-label">Layout</span>
+              <span class="ctrl-label">Keyboard Layout</span>
               <select id="layout-select" title="Select keyboard physical layout">
               </select>
             </div>
@@ -842,7 +860,7 @@
               <div class="midi-panel-row" id="mpe-output-row">
                 <span class="ctrl-label" style="color:#fff">MPE Out:</span>
                 <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;">
-                  <input type="checkbox" id="mpe-enabled" style="width:14px;height:14px;cursor:pointer;accent-color:#fff;">
+                  <span class="gi-checkbox"><input type="checkbox" id="mpe-enabled"><span class="gi-check"></span></span>
                   Enable
                 </label>
                 <select id="mpe-output-select" style="min-width:120px;" disabled>

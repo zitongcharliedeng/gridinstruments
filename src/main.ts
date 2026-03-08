@@ -48,6 +48,10 @@ import { panelMachine, clampPanelHeight } from './machines/panelMachine';
 import { mpeMachine } from './machines/mpeMachine';
 import { dialogMachine } from './machines/dialogMachine';
 import { createActor } from 'xstate';
+import { OverlayScrollbars, ClickScrollPlugin } from 'overlayscrollbars';
+import 'overlayscrollbars/overlayscrollbars.css';
+import SlimSelect from 'slim-select';
+import 'slim-select/styles';
 import readmeText from '../README.md?raw';
 // Type guard for WaveformType
 /** Converts a restricted subset of Markdown to HTML for the About dialog. */
@@ -535,12 +539,18 @@ class DComposeApp {
       const row = document.createElement('label');
       row.className = 'midi-device-row';
 
+      const wrapper = document.createElement('span');
+      wrapper.className = 'gi-checkbox';
       const cb = document.createElement('input');
       cb.type = 'checkbox';
       cb.checked = device.enabled;
       cb.addEventListener('change', () => {
         this.midi.setDeviceEnabled(device.id, cb.checked);
       });
+      const check = document.createElement('span');
+      check.className = 'gi-check';
+      wrapper.appendChild(cb);
+      wrapper.appendChild(check);
 
       const dot = document.createElement('span');
       dot.className = `midi-dot ${device.connected ? 'connected' : 'disconnected'}`;
@@ -549,7 +559,7 @@ class DComposeApp {
       name.className = 'midi-device-name';
       name.textContent = device.name + (device.manufacturer ? ` (${device.manufacturer})` : '');
 
-      row.appendChild(cb);
+      row.appendChild(wrapper);
       row.appendChild(dot);
       row.appendChild(name);
       this.midiDeviceList.appendChild(row);
@@ -588,9 +598,7 @@ class DComposeApp {
       });
     });
 
-    // Keyboard layout dropdown
     if (this.layoutSelect) {
-      // Populate options
       for (const variant of KEYBOARD_VARIANTS) {
         const opt = document.createElement('option');
         opt.value = variant.id;
@@ -600,10 +608,22 @@ class DComposeApp {
       const savedLayout = this.loadSetting('layout', 'ansi');
       this.layoutSelect.value = savedLayout;
       this.currentLayout = getLayout(savedLayout);
-      this.layoutSelect.addEventListener('change', () => {
-        this.currentLayout = getLayout(this.layoutSelect!.value);
-        this.saveSetting('layout', this.layoutSelect!.value);
+
+      const layoutSS = new SlimSelect({
+        select: this.layoutSelect,
+        settings: { showSearch: false },
+        events: {
+          afterChange: (newVal) => {
+            const val = newVal[0]?.value;
+            if (val) {
+              this.currentLayout = getLayout(val);
+              this.saveSetting('layout', val);
+            }
+            document.querySelector<HTMLElement>('.ss-main')?.blur();
+          },
+        },
       });
+      void layoutSS;
     }
 
     // DCompose ↔ MidiMech skew slider (DOM mutations driven by appActor subscriber)
@@ -983,35 +1003,49 @@ class DComposeApp {
       });
     }
 
-    // MPE output UI — XState actor
     const mpeCheckbox = getElementOrNull('mpe-enabled', HTMLInputElement);
     const mpeSelect = getElementOrNull('mpe-output-select', HTMLSelectElement);
     const mpeActor = createActor(mpeMachine);
 
+    let mpeSS: SlimSelect | null = null;
+    if (mpeSelect) {
+      mpeSS = new SlimSelect({
+        select: mpeSelect,
+        settings: { showSearch: false },
+        events: {
+          afterChange: (newVal) => {
+            if (!mpeActor.getSnapshot().matches('enabled')) return;
+            const outputs = this.mpe.getAvailableOutputs();
+            const selected = outputs.find(o => o.id === newVal[0]?.value) ?? null;
+            this.mpe.setOutput(selected);
+            document.querySelectorAll<HTMLElement>('.ss-main').forEach(el => el.blur());
+          },
+        },
+      });
+    }
+
     mpeActor.subscribe((snapshot) => {
       const isEnabled = snapshot.matches('enabled');
       if (mpeCheckbox) mpeCheckbox.checked = isEnabled;
-      if (mpeSelect) mpeSelect.disabled = !isEnabled;
+      if (mpeSS) {
+        if (isEnabled) { mpeSS.enable(); } else { mpeSS.disable(); }
+      }
     });
 
     mpeActor.start();
 
     const refreshMpeOutputs = () => {
-      if (!mpeSelect) return;
+      if (!mpeSS) return;
       const outputs = this.mpe.getAvailableOutputs();
-      mpeSelect.innerHTML = '';
       if (outputs.length === 0) {
-        mpeSelect.innerHTML = '<option value="">No MIDI outputs</option>';
-        mpeSelect.disabled = true;
+        mpeSS.setData([{ text: 'No MIDI outputs', value: '', placeholder: true }]);
+        mpeSS.disable();
         return;
       }
-      for (const out of outputs) {
-        const opt = document.createElement('option');
-        opt.value = out.id;
-        opt.textContent = out.name ?? out.id;
-        mpeSelect.appendChild(opt);
+      mpeSS.setData(outputs.map(o => ({ text: o.name ?? o.id, value: o.id })));
+      if (!mpeActor.getSnapshot().matches('enabled')) {
+        mpeSS.disable();
       }
-      mpeSelect.disabled = !mpeActor.getSnapshot().matches('enabled');
     };
 
     mpeCheckbox?.addEventListener('change', () => {
@@ -1026,13 +1060,6 @@ class DComposeApp {
       } else {
         this.mpe.setOutput(null);
       }
-    });
-
-    mpeSelect?.addEventListener('change', () => {
-      if (!mpeActor.getSnapshot().matches('enabled')) return;
-      const outputs = this.mpe.getAvailableOutputs();
-      const selected = outputs.find(o => o.id === mpeSelect.value) ?? null;
-      this.mpe.setOutput(selected);
     });
 
     refreshMpeOutputs();
@@ -1096,6 +1123,19 @@ class DComposeApp {
     const gridCog = getElementOrNull('grid-settings-btn', HTMLButtonElement);
     const gridOverlay = document.getElementById('grid-overlay');
     if (gridCog && gridOverlay) {
+      // Initialize OverlayScrollbars — always-visible scrollbar (#62)
+      OverlayScrollbars.plugin(ClickScrollPlugin);
+      OverlayScrollbars(gridOverlay, {
+        overflow: { x: 'hidden', y: 'scroll' },
+        scrollbars: {
+          theme: 'gi-scrollbar',
+          visibility: 'visible',
+          autoHide: 'never',
+          dragScroll: true,
+          clickScroll: true,
+        },
+      });
+
       const overlayActor = createActor(overlayMachine);
       overlayActor.subscribe((snapshot) => {
         const visible = snapshot.matches('visible');
@@ -1114,7 +1154,14 @@ class DComposeApp {
       }).observe(gridOverlay);
       gridCog.addEventListener('click', () => overlayActor.send({ type: 'TOGGLE' }));
       gridOverlay.addEventListener('click', (e) => {
-        if (e.target === gridOverlay) overlayActor.send({ type: 'CLOSE' });
+        const target = e.target as Element;
+        if (target === gridOverlay ||
+            (!target.closest('.overlay-section') &&
+             !target.closest('.overlay-section-title') &&
+             !target.closest('.os-scrollbar') &&
+             !target.closest('.ss-content'))) {
+          overlayActor.send({ type: 'CLOSE' });
+        }
       });
       (window as Window & { overlayActor?: unknown }).overlayActor = overlayActor;
     }

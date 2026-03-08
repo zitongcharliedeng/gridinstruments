@@ -461,55 +461,38 @@ test.describe('GridInstruments — Library Contract Invariants', () => {
   // ══════════════════════════════════════════════════════════════════════════
 
   /**
-   * @reason Chrome 121+ ignores `::-webkit-scrollbar` when `scrollbar-color`
-   *   or `scrollbar-width` is set to a non-initial value. But setting
-   *   `scrollbar-color` to explicit colors forces a standard (non-overlay)
-   *   scrollbar in both Chrome and Firefox — it never auto-hides.
-   *   Without `scrollbar-color`, Firefox falls back to the OS default, which
-   *   on macOS/some Linux desktops is an overlay scrollbar that auto-hides.
-   * @design-intent The scrollbar must be permanently visible. `scrollbar-color`
-   *   must be set to non-auto values so all browsers render a traditional
-   *   always-visible scrollbar. This is a P0 regression (#62, reported 5×).
+   * @reason CSS-only scrollbar approaches fail: Chrome 121+ overrides
+   *   ::-webkit-scrollbar when scrollbar-color is set, macOS/Linux overlay
+   *   scrollbars auto-hide regardless of CSS. OverlayScrollbars renders its
+   *   own DOM-based scrollbar that is always visible on every OS/browser.
+   * @design-intent The scrollbar must be permanently visible (#62, reported 5×).
+   *   OverlayScrollbars with autoHide:'never' guarantees this.
    */
-  test('ISS-62-1: overlay scrollbar-color forces non-overlay scrollbar (#62)', async ({ page }) => {
+  test('ISS-62-1: OverlayScrollbars renders always-visible scrollbar (#62)', async ({ page }) => {
     await page.click('#grid-settings-btn');
     await page.waitForTimeout(500);
-    const props = await page.locator('#grid-overlay').evaluate(el => {
-      const cs = getComputedStyle(el);
-      return {
-        overflowY: cs.overflowY,
-        scrollbarGutter: cs.scrollbarGutter,
-      };
-    });
-    expect(props.overflowY, 'overflow-y must be scroll').toBe('scroll');
-    expect(props.scrollbarGutter, 'scrollbar-gutter must be stable').toContain('stable');
+    const osElements = await page.locator('#grid-overlay .os-scrollbar-vertical').count();
+    expect(osElements, 'OverlayScrollbars vertical scrollbar must exist').toBeGreaterThan(0);
+    const handle = page.locator('#grid-overlay .os-scrollbar-handle');
+    expect(await handle.count(), 'scrollbar handle must exist').toBeGreaterThan(0);
   });
 
   /**
-   * @reason The CSS source must contain `scrollbar-color` on `#grid-overlay`
-   *   so browsers render a standard non-overlay scrollbar. We cannot check
-   *   `getComputedStyle().scrollbarColor` because headless Firefox 144+ on
-   *   Linux defaults `scrollbar-width` to `none`, which prevents scrollbar
-   *   color from being computed. Instead we verify the CSS source directly.
-   * @design-intent Source-level check bypasses headless rendering quirks.
+   * @reason OverlayScrollbars with autoHide:'never' keeps scrollbar visible
+   *   at all times — opacity stays 1, visibility stays visible. If autoHide
+   *   were active, opacity would transition to 0 after mouse leaves.
+   * @design-intent Verify always-visible config by checking scrollbar opacity.
    */
-  test('ISS-62-2: overlay CSS source includes scrollbar-color rule (#62)', async ({ page }) => {
-    const hasRule = await page.evaluate(() => {
-      for (const sheet of document.styleSheets) {
-        try {
-          for (const rule of sheet.cssRules) {
-            if (rule instanceof CSSStyleRule &&
-                rule.selectorText === '#grid-overlay' &&
-                rule.style.scrollbarColor) {
-              return rule.style.scrollbarColor;
-            }
-          }
-        } catch (_) { /* cross-origin sheets */ }
-      }
-      return null;
+  test('ISS-62-2: OverlayScrollbars scrollbar stays visible (#62)', async ({ page }) => {
+    await page.click('#grid-settings-btn');
+    await page.waitForTimeout(500);
+    const scrollbar = page.locator('#grid-overlay .os-scrollbar-vertical');
+    const styles = await scrollbar.evaluate(el => {
+      const cs = getComputedStyle(el);
+      return { opacity: cs.opacity, visibility: cs.visibility };
     });
-    expect(hasRule, 'scrollbar-color must be set in CSS source').toBeTruthy();
-    expect(hasRule, 'scrollbar-color must not be auto').not.toBe('auto');
+    expect(parseFloat(styles.opacity), 'scrollbar opacity must be 1 (always visible)').toBe(1);
+    expect(styles.visibility, 'scrollbar must be visible').toBe('visible');
   });
 
   /**
