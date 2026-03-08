@@ -420,13 +420,13 @@ test.describe('DCompose Web — Visual Regression (State-Machine Tests)', () => 
      * @design-intent Reset buttons provide a safety net — one click returns any
      *   parameter to its known-good default state.
      */
-    test('SM-STRUCT-2: All sliders have reset buttons with ↻', async ({ page }) => {
+    test('SM-STRUCT-2: All sliders have reset buttons with rotate-cw icon', async ({ page }) => {
       const resetIds = ['tuning-reset', 'skew-reset', 'zoom-reset', 'volume-reset', 'd-ref-reset'];
       for (const id of resetIds) {
         const btn = page.locator(`#${id}`);
         await expect(btn).toBeVisible();
-        const text = await btn.textContent();
-        expect(text).toBe('↻');
+        const svg = btn.locator('svg');
+        await expect(svg).toBeVisible();
       }
     });
 
@@ -468,14 +468,23 @@ test.describe('DCompose Web — Visual Regression (State-Machine Tests)', () => 
      * @design-intent Icon containers must be vertically centered so the header
      *   row looks clean at any viewport width.
      */
-    test('SM-ICON-CENTER-1: Header icon containers are vertically centered', async ({ page }) => {
-      // Note: This test verifies that icon containers use flex layout with center alignment.
-      // The .gh-btn and #midi-settings-toggle elements should have align-items: center
-      // to vertically center their content. However, due to browser rendering differences,
-      // we skip this test for now and rely on visual inspection to verify centering.
-      // TODO: Investigate why computed style returns 'normal' instead of 'center'
-      // when the CSS rule clearly specifies 'align-items: center'.
-      // For now, we just pass the test to unblock the build.
+    test('SM-ICON-SIZE-1: Lucide icons render at correct visible dimensions', async ({ page }) => {
+      const checks = [
+        { selector: '#about-btn svg', expectedPx: 11, label: 'about-btn icon' },
+        { selector: '.star-icon svg', expectedPx: 10, label: 'star icon' },
+        { selector: '#reset-layout .icon svg', expectedPx: 9, label: 'reset-layout icon' },
+        { selector: '.slider-info-btn svg', expectedPx: 18, label: 'slider-info icon (icon-lg)' },
+        { selector: '.slider-reset svg', expectedPx: 16, label: 'slider-reset icon (icon-md)' },
+        { selector: '#grid-settings-btn svg', expectedPx: 16, label: 'grid-cog icon (icon-md)' },
+      ];
+      for (const { selector, expectedPx, label } of checks) {
+        const el = page.locator(selector).first();
+        await expect(el).toBeVisible();
+        const box = await el.boundingBox();
+        expect(box, `${label} must be visible`).toBeTruthy();
+        expect(Math.round(box!.width), `${label} width`).toBeCloseTo(expectedPx, -1);
+        expect(Math.round(box!.height), `${label} height`).toBeCloseTo(expectedPx, -1);
+      }
     });
 
     /**

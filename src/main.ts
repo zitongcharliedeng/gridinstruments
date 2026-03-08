@@ -38,6 +38,7 @@ import { MidiInput, MidiDeviceInfo } from './lib/midi-input';
 import { MPEService } from './lib/mpe-service';
 import { midiToCoord, coordToMidiNote } from './lib/note-colors';
 import { createChordGraffiti } from './lib/chord-graffiti';
+import { createIcons, Info, Star, RotateCcw, RotateCw, Settings, ChevronRight, X } from 'lucide';
 import { appMachine } from './machines/appMachine';
 import { overlayMachine } from './machines/overlayMachine';
 import { waveformMachine } from './machines/waveformMachine';
@@ -403,6 +404,7 @@ class DComposeApp {
   }
 
   private async init(): Promise<void> {
+    createIcons({ icons: { Info, Star, RotateCcw, RotateCw, Settings, ChevronRight, X } });
     this.setupVisualizer();
     this.setupHistoryVisualizer();
     this.setupEventListeners();
@@ -976,7 +978,12 @@ class DComposeApp {
     midiPanelActor.subscribe((snapshot) => {
       const isOpen = snapshot.matches('open');
       midiPanel?.classList.toggle('open', isOpen);
-      if (midiToggle) midiToggle.innerHTML = isOpen ? '<span id="midi-chevron" class="icon" style="transition:transform 0.15s ease;transform:rotate(90deg)">▶</span><span class="icon">⚙</span> MIDI settings' : '<span id="midi-chevron" class="icon" style="transition:transform 0.15s ease">▶</span><span class="icon">⚙</span> MIDI';
+      if (midiToggle) {
+        midiToggle.innerHTML = isOpen
+          ? '<span id="midi-chevron" class="icon" style="transition:transform 0.15s ease;transform:rotate(90deg)"><i data-lucide="chevron-right"></i></span><span class="icon"><i data-lucide="settings"></i></span> MIDI settings'
+          : '<span id="midi-chevron" class="icon" style="transition:transform 0.15s ease"><i data-lucide="chevron-right"></i></span><span class="icon"><i data-lucide="settings"></i></span> MIDI';
+        createIcons({ icons: { ChevronRight, Settings }, nameAttr: 'data-lucide' });
+      }
     });
 
     midiPanelActor.start();
