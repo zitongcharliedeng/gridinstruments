@@ -1,12 +1,9 @@
-# Deploy to GitHub Pages — triggered only by version tags (e.g. v0.1.0)
-# Push to main freely; tag when ready to ship: git tag v0.x.y && git push origin v0.x.y
 name: Deploy to GitHub Pages
 
 on:
   push:
-    tags: ["v*"]
+    branches: [main]
   
-  # Manual trigger from Actions tab (emergency / hotfix)
   workflow_dispatch:
 
 # Sets permissions for GITHUB_TOKEN to deploy to Pages
