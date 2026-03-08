@@ -139,12 +139,14 @@ export class NoteHistoryVisualizer {
     // Empty state — single centered message across full canvas
     if (this.history.length === 0 && this.activeNotes.size === 0) {
       const ctx = this.ctx;
+      const titleSize = Math.min(48, width * 0.12);
+      const subSize = Math.min(11, width * 0.028);
       ctx.fillStyle = '#555';
-      ctx.font = "48px 'JetBrains Mono', monospace";
+      ctx.font = `${titleSize}px 'JetBrains Mono', monospace`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText('Play some notes', width / 2, height / 2 - 16);
-      ctx.font = "11px 'JetBrains Mono', monospace";
+      ctx.font = `${subSize}px 'JetBrains Mono', monospace`;
       ctx.fillStyle = '#b8960a';
       ctx.globalAlpha = 0.85;
       ctx.fillText('tl;dr: notes that are mathematically more harmonious are closer together spatially \u2014 make it hard to suck!', width / 2, height / 2 + 24);
