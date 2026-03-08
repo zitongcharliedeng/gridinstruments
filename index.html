@@ -474,12 +474,12 @@
     input.badge-input:invalid {
       border-color: #cc3333;
     }
-    .slider-reset {
-      font-family: var(--font); font-size: 14px; color: var(--dim);
-      background: var(--bg); border: 1px solid var(--border);
-      width: 22px; height: 18px; display: inline-flex; align-items: center; justify-content: center; padding: 0;
-      cursor: pointer; line-height: 1; flex-shrink: 0; margin-left: 2px;
-    }
+     .slider-reset {
+       color: var(--dim);
+       background: var(--bg); border: 1px solid var(--border);
+       width: 22px; height: 18px; padding: 0;
+       flex-shrink: 0; margin-left: 2px;
+     }
     .slider-reset:hover { color: var(--fg); border-color: var(--accent); }
 
     /* ── Tuning slider area (ⓘ button + presets) ─────────────── */
@@ -533,20 +533,15 @@
       display: flex; align-items: center; gap: 4px;
       font-size: 11px; flex-wrap: wrap;
     }
-    .slider-info-btn {
-      position: absolute;
-      left: 0; top: 50%;
-      transform: translateY(-50%);
-      z-index: 3;
-      font-size: 18px;
-      color: #fff;
-      background: none;
-      border: none;
-      cursor: pointer;
-      padding: 2px;
-      line-height: 1;
-      opacity: 0.8;
-    }
+     .slider-info-btn {
+       position: absolute;
+       left: 0; top: 50%;
+       transform: translateY(-50%);
+       z-index: 3;
+       color: #fff;
+       padding: 2px;
+       opacity: 0.8;
+     }
     .slider-info-btn:hover { opacity: 1; color: var(--accent, #4af); }
     .tuning-slider-area .slider-track { margin-left: 18px; }
 
@@ -574,11 +569,10 @@
       font-family: var(--font);
     }
     dialog::backdrop { background: rgba(0,0,0,0.7); }
-    dialog button {
-      position: absolute; top: 8px; right: 12px;
-      background: none; border: none; color: var(--dim);
-      font-size: 16px; cursor: pointer; font-family: var(--font);
-    }
+     dialog button {
+       position: absolute; top: 8px; right: 12px;
+       color: var(--dim);
+     }
     dialog button:hover { color: var(--fg); }
 
     /* ── Chord shape graffiti overlays ────────────────────────── */
@@ -642,6 +636,7 @@
         padding: 2px 4px;
         flex-wrap: wrap;
         min-height: 0;
+        gap: 4px;
       }
       .top-bar-left {
         flex-wrap: wrap;
@@ -651,7 +646,17 @@
       .site-title {
         font-size: 10px;
       }
-      .gh-actions {
+      .gh-btn {
+        flex-shrink: 0;
+      }
+      .gh-mark {
+        padding: 2px 4px;
+      }
+      .gh-mark svg {
+        width: 14px;
+        height: 14px;
+      }
+      #star-count-badge {
         display: none;
       }
       #reset-layout {
@@ -732,7 +737,7 @@
                 <span class="slider-label-overlay">VOL (dB)</span>
                 <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.3" title="Master volume">
                 <span class="slider-value-badge" id="volume-thumb-badge">-10.5</span>
-                <button class="slider-reset" id="volume-reset" title="Reset volume to default (0.3)">↻</button>
+                <button class="slider-reset icon-btn icon-md" id="volume-reset" title="Reset volume to default (0.3)">↻</button>
               </div>
             </div>
           </div>
@@ -747,12 +752,12 @@
 
           <div class="overlay-section">
             <div class="tuning-slider-area">
-              <button class="slider-info-btn" data-info="tuning">ⓘ</button>
+              <button class="slider-info-btn icon-btn icon-lg" data-info="tuning">ⓘ</button>
               <div class="slider-track">
                 <span class="slider-label-overlay" id="tuning-label">FIFTHS TUNING (cents)</span>
                 <input type="range" id="tuning-slider" min="683" max="722" step="0.01" value="700" title="Fifth interval tuning in cents (683=7-TET … 722=5-TET)">
                 <input type="text" class="badge-input" id="tuning-thumb-badge" value="700" title="Edit fifth interval in cents">
-                <button class="slider-reset" id="tuning-reset" title="Reset to 12-TET (700¢)">↻</button>
+                <button class="slider-reset icon-btn icon-md" id="tuning-reset" title="Reset to 12-TET (700¢)">↻</button>
               </div>
               <div class="tet-presets" id="tet-presets" data-alternate-ticks></div>
             </div>
@@ -760,12 +765,12 @@
 
           <div class="overlay-section">
             <div class="tuning-slider-area">
-              <button class="slider-info-btn" data-info="skew">ⓘ</button>
+              <button class="slider-info-btn icon-btn icon-lg" data-info="skew">ⓘ</button>
               <div class="slider-track">
                 <span class="slider-label-overlay" id="skew-label">MECH SKEW</span>
                 <input type="range" id="skew-slider" min="-0.5" max="1.5" step="0.01" value="0" title="Mech skew: DCompose (0) to MidiMech (1)">
                 <input type="text" class="badge-input" id="skew-thumb-badge" value="0.00" title="Edit skew value.">
-                <button class="slider-reset" id="skew-reset" title="Reset to DCompose (0)">↻</button>
+                <button class="slider-reset icon-btn icon-md" id="skew-reset" title="Reset to DCompose (0)">↻</button>
               </div>
               <div class="slider-presets" id="skew-presets"></div>
             </div>
@@ -773,12 +778,12 @@
 
           <div class="overlay-section">
             <div class="tuning-slider-area">
-              <button class="slider-info-btn" data-info="shear">ⓘ</button>
+              <button class="slider-info-btn icon-btn icon-lg" data-info="shear">ⓘ</button>
               <div class="slider-track">
                 <span class="slider-label-overlay" id="bfact-label">WICKED SHEAR</span>
                 <input type="range" id="bfact-slider" min="-0.5" max="1.5" step="0.01" value="0">
                 <input type="text" class="badge-input" id="bfact-thumb-badge" value="0.00" title="Edit wicked-ness value.">
-                <button class="slider-reset" id="bfact-reset" title="Reset to default (0)">↻</button>
+                <button class="slider-reset icon-btn icon-md" id="bfact-reset" title="Reset to default (0)">↻</button>
               </div>
               <div class="slider-presets" id="bfact-presets"></div>
             </div>
@@ -789,7 +794,7 @@
               <span class="slider-label-overlay">Zoom (x)</span>
               <input type="range" id="zoom-slider" min="0.2" max="3" step="0.01" value="1" title="Grid zoom level">
               <span class="slider-value-badge" id="zoom-thumb-badge">1.00</span>
-              <button class="slider-reset" id="zoom-reset" title="Aims to match keysize to standard keyboard key size">↻</button>
+              <button class="slider-reset icon-btn icon-md" id="zoom-reset" title="Aims to match keysize to standard keyboard key size">↻</button>
             </div>
           </div>
 
@@ -798,14 +803,21 @@
               <span class="slider-label-overlay" id="d-ref-label">D REF (Hz)</span>
               <input type="range" id="d-ref-slider" min="73.42" max="1174.66" step="0.01" value="293.66" title="Reference pitch slider (D2–D6)">
               <input type="text" class="badge-input" id="d-ref-input" value="293.66" style="width:80px; text-transform:none;" title="Edit reference pitch in Hz or note name (default: D4 = 293.66)">
-              <button id="d-ref-reset" class="slider-reset" title="Reset to D4 (293.66 Hz)">↻</button>
+              <button id="d-ref-reset" class="slider-reset icon-btn icon-md" title="Reset to D4 (293.66 Hz)">↻</button>
             </div>
           </div>
 
           <div class="overlay-section">
-            <div class="overlay-section-title" id="midi-settings-toggle" style="cursor:pointer"><span id="midi-chevron" style="display:inline-flex;align-items:center;line-height:0;transition:transform 0.15s ease">▶</span><span style="display:inline-flex;align-items:center;line-height:0">⚙</span> MIDI</div>
+             <div class="overlay-section-title" id="midi-settings-toggle" style="cursor:pointer"><span id="midi-chevron" class="icon" style="transition:transform 0.15s ease">▶</span><span class="icon">⚙</span> MIDI</div>
             <div id="midi-settings-panel">
               <div id="midi-device-list"></div>
+              <div class="midi-panel-row">
+                <span class="ctrl-label" style="color:#fff">Pitch Bend Range:</span>
+                <label style="display:inline-flex;align-items:center;gap:4px;font-size:12px;">
+                  <input type="number" id="midi-pb-range" min="2" max="48" value="24" style="width:48px;text-align:center;">
+                  <span style="color:var(--dim)">semitones</span>
+                </label>
+              </div>
               <div class="midi-panel-row" id="mpe-output-row">
                 <span class="ctrl-label" style="color:#fff">MPE Out:</span>
                 <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;">
@@ -835,12 +847,12 @@
   </div>
 
   <dialog id="about-dialog">
-    <button id="about-close" autofocus>✕</button>
+    <button id="about-close" class="icon-btn icon-md" autofocus>✕</button>
     <div id="about-content" class="about-content"></div>
   </dialog>
 
   <dialog id="info-dialog">
-    <button id="info-close" autofocus>✕</button>
+    <button id="info-close" class="icon-btn icon-md" autofocus>✕</button>
     <div id="info-content" class="about-content"></div>
   </dialog>
 

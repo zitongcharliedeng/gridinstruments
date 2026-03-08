@@ -423,6 +423,20 @@ export class Synth {
   }
   
   /**
+   * Apply pitch bend to a specific voice by detuning the oscillator.
+   * @param noteId The voice to bend
+   * @param semitones Pitch offset in semitones (can be fractional)
+   */
+  setPitchBend(noteId: string, semitones: number): void {
+    if (!this.context) return;
+    const voice = this.voices.get(noteId);
+    if (!voice) return;
+    const baseFreq = this.getFrequency(voice.coordX, voice.coordY, voice.octaveOffset);
+    const bentFreq = baseFreq * Math.pow(2, semitones / 12);
+    voice.oscillator.frequency.setTargetAtTime(bentFreq, this.context.currentTime, 0.005);
+  }
+
+  /**
    * Stop all notes
    */
   stopAll(): void {

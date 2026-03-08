@@ -11,7 +11,7 @@
 
 export type MidiNoteCallback = (note: number, velocity: number, channel: number, deviceId: string) => void;
 export type MidiStatusCallback = (devices: MidiDeviceInfo[]) => void;
-export type MidiExpressionCallback = (channel: number, value: number) => void;
+export type MidiExpressionCallback = (channel: number, value: number, deviceId: string) => void;
 
 export type MidiChannelMode = 'omni' | 'chPerNote' | 'chPerRow';
 
@@ -177,15 +177,15 @@ export class MidiInput {
       // Pitch bend: 14-bit value from LSB (data[1]) and MSB (data[2])
       const raw = (data[2] << 7) | data[1];
       const normalized = raw / 8191.5 - 1; // range -1..+1
-      for (const cb of this.pitchBendCallbacks) cb(channel, normalized);
+      for (const cb of this.pitchBendCallbacks) cb(channel, normalized, deviceId);
     } else if (type === 0xB0 && note === 74) {
       // CC74 (slide / timbre)
       const normalized = velocity / 127;
-      for (const cb of this.slideCallbacks) cb(channel, normalized);
+      for (const cb of this.slideCallbacks) cb(channel, normalized, deviceId);
     } else if (type === 0xD0) {
       // Channel pressure (aftertouch)
       const normalized = data[1] / 127;
-      for (const cb of this.pressureCallbacks) cb(channel, normalized);
+      for (const cb of this.pressureCallbacks) cb(channel, normalized, deviceId);
     }
   }
 

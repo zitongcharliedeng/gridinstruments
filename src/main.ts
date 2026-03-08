@@ -327,6 +327,8 @@ class DComposeApp {
   // Reference counts per coordinate — only fires historyVisualizer noteOff when all sources release
   private noteHoldCounts: Map<string, number> = new Map();
   private keyRepeat: Set<string> = new Set();
+  private midiChannelVoice: Map<string, string> = new Map();
+  private midiPitchBendRange: number = 24;
 
   private pointerDown: Map<number, { coordX: number; coordY: number } | null> = new Map();
   private draggingGoldenLine: boolean = false;
@@ -362,6 +364,7 @@ class DComposeApp {
   private static readonly STORAGE_KEYS = {
     zoom: 'gi_zoom', skew: 'gi_skew', bfact: 'gi_bfact', tuning: 'gi_tuning',
     volume: 'gi_volume', waveform: 'gi_waveform', dref: 'gi_dref', layout: 'gi_layout',
+    midiPbRange: 'gi_midi_pb_range',
   } as const;
 
   private loadSetting(key: keyof typeof DComposeApp.STORAGE_KEYS, fallback: string): string {
@@ -392,6 +395,9 @@ class DComposeApp {
     this.sustainIndicator = getElement('sustain-indicator', HTMLElement);
     this.midiDeviceList = getElement('midi-device-list', HTMLElement);
     this.zoomSlider = getElement('zoom-slider', HTMLInputElement);
+
+    const savedPbRange = parseInt(this.loadSetting('midiPbRange', '24'), 10);
+    this.midiPitchBendRange = (savedPbRange >= 2 && savedPbRange <= 48) ? savedPbRange : 24;
 
     this.init();
   }
@@ -462,52 +468,57 @@ class DComposeApp {
   // ─── MIDI ───────────────────────────────────────────────────────────────
 
   private setupMidiListeners(): void {
-    this.midi.onNoteOn((note, velocity, _channel, deviceId) => {
-      this.handleMidiNoteOn(note, velocity, deviceId);
+    this.midi.onNoteOn((note, velocity, channel, deviceId) => {
+      this.handleMidiNoteOn(note, velocity, channel, deviceId);
     });
-    this.midi.onNoteOff((note, _velocity, _channel, deviceId) => {
-      this.handleMidiNoteOff(note, deviceId);
+    this.midi.onNoteOff((note, _velocity, channel, deviceId) => {
+      this.handleMidiNoteOff(note, channel, deviceId);
     });
     this.midi.onStatusChange((devices) => {
       this.updateMidiDevicePanel(devices);
     });
 
-    // TODO: Forward MIDI expression to mpe once per-channel note tracking is implemented.
-    // Currently we don't track which MPE noteId maps to which MIDI input channel,
-    // so we can't route expression messages from external controllers to the correct MPE voice.
-    this.midi.onPitchBend((_channel, _value) => {
-      // TODO: mpe.sendPitchBend(noteIdForChannel, value * bendRange)
+    this.midi.onPitchBend((channel, value, deviceId) => {
+      const audioNoteId = this.midiChannelVoice.get(`${deviceId}_${channel}`);
+      if (audioNoteId) {
+        this.synth.setPitchBend(audioNoteId, value * this.midiPitchBendRange);
+        this.mpe.sendPitchBend(audioNoteId, value * this.midiPitchBendRange);
+      }
     });
-    this.midi.onSlide((_channel, _value) => {
-      // TODO: mpe.sendSlide(noteIdForChannel, value)
+    this.midi.onSlide((channel, value, deviceId) => {
+      const audioNoteId = this.midiChannelVoice.get(`${deviceId}_${channel}`);
+      if (audioNoteId) this.mpe.sendSlide(audioNoteId, value);
     });
-    this.midi.onPressure((_channel, _value) => {
-      // TODO: mpe.sendPressure(noteIdForChannel, value)
+    this.midi.onPressure((channel, value, deviceId) => {
+      const audioNoteId = this.midiChannelVoice.get(`${deviceId}_${channel}`);
+      if (audioNoteId) this.mpe.sendPressure(audioNoteId, value);
     });
   }
 
-  private handleMidiNoteOn(midiNote: number, velocity: number, deviceId: string): void {
+  private handleMidiNoteOn(midiNote: number, velocity: number, channel: number, deviceId: string): void {
     this.synth.tryUnlock();
     if (!this.synth.isInitialized()) return;
     const [coordX, coordY] = midiToCoord(midiNote);
-    const noteKey = `midi_${deviceId}_${midiNote}`;
-    const audioNoteId = `midi_${deviceId}_${midiNote}_${coordX}_${coordY}`;
+    const noteKey = `midi_${deviceId}_${channel}_${midiNote}`;
+    const audioNoteId = `midi_${deviceId}_${channel}_${midiNote}_${coordX}_${coordY}`;
     this.synth.playNote(audioNoteId, coordX, coordY, 0);
     this.mpe.noteOn(audioNoteId, midiNote, velocity / 127);
     this.activeNotes.set(noteKey, { coordX, coordY });
+    this.midiChannelVoice.set(`${deviceId}_${channel}`, audioNoteId);
     this.trackNoteOn(coordX, coordY, midiNote);
     this.render();
   }
 
-  private handleMidiNoteOff(midiNote: number, deviceId: string): void {
-    const noteKey = `midi_${deviceId}_${midiNote}`;
+  private handleMidiNoteOff(midiNote: number, channel: number, deviceId: string): void {
+    const noteKey = `midi_${deviceId}_${channel}_${midiNote}`;
     const noteData = this.activeNotes.get(noteKey);
     if (!noteData) return;
     const { coordX, coordY } = noteData;
-    const audioNoteId = `midi_${deviceId}_${midiNote}_${coordX}_${coordY}`;
+    const audioNoteId = `midi_${deviceId}_${channel}_${midiNote}_${coordX}_${coordY}`;
     this.synth.stopNote(audioNoteId);
     this.mpe.noteOff(audioNoteId, midiNote);
     this.activeNotes.delete(noteKey);
+    this.midiChannelVoice.delete(`${deviceId}_${channel}`);
     this.trackNoteOff(coordX, coordY);
     this.render();
   }
@@ -965,7 +976,7 @@ class DComposeApp {
     midiPanelActor.subscribe((snapshot) => {
       const isOpen = snapshot.matches('open');
       midiPanel?.classList.toggle('open', isOpen);
-      if (midiToggle) midiToggle.innerHTML = isOpen ? '<span id="midi-chevron" style="display:inline-flex;align-items:center;line-height:0;transition:transform 0.15s ease;transform:rotate(90deg)">▶</span><span style="display:inline-flex;align-items:center;line-height:0">⚙</span> MIDI settings' : '<span id="midi-chevron" style="display:inline-flex;align-items:center;line-height:0;transition:transform 0.15s ease">▶</span><span style="display:inline-flex;align-items:center;line-height:0">⚙</span> MIDI';
+      if (midiToggle) midiToggle.innerHTML = isOpen ? '<span id="midi-chevron" class="icon" style="transition:transform 0.15s ease;transform:rotate(90deg)">▶</span><span class="icon">⚙</span> MIDI settings' : '<span id="midi-chevron" class="icon" style="transition:transform 0.15s ease">▶</span><span class="icon">⚙</span> MIDI';
     });
 
     midiPanelActor.start();
@@ -973,6 +984,20 @@ class DComposeApp {
     midiToggle?.addEventListener('click', () => {
       midiPanelActor.send({ type: 'TOGGLE_MIDI' });
     });
+
+    const pbRangeInput = getElementOrNull('midi-pb-range', HTMLInputElement);
+    if (pbRangeInput) {
+      pbRangeInput.value = this.midiPitchBendRange.toString();
+      pbRangeInput.addEventListener('change', () => {
+        const val = parseInt(pbRangeInput.value, 10);
+        if (val >= 2 && val <= 48) {
+          this.midiPitchBendRange = val;
+          this.saveSetting('midiPbRange', val.toString());
+        } else {
+          pbRangeInput.value = this.midiPitchBendRange.toString();
+        }
+      });
+    }
 
     // MPE output UI — XState actor
     const mpeCheckbox = getElementOrNull('mpe-enabled', HTMLInputElement);
@@ -1425,6 +1450,7 @@ class DComposeApp {
     this.noteHoldCounts.clear();
     this.keyRepeat.clear();
     this.pointerDown.clear();
+    this.midiChannelVoice.clear();
     this.render();
   }
 
