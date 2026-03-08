@@ -332,9 +332,6 @@ class DComposeApp {
   private midiPitchBendRange: number = 48;
 
   private pointerDown: Map<number, { coordX: number; coordY: number } | null> = new Map();
-  private draggingGoldenLine: boolean = false;
-  private goldenLineDragStartY: number = 0;
-  private goldenLineDragStartHz: number = 293.66;
 
   // MPE vibrato state (Space key sends sinusoidal pitch bend to all active MPE notes)
   private vibratoRAF: number | null = null;
@@ -1273,53 +1270,12 @@ class DComposeApp {
 
   private handlePointerDownInner(event: PointerEvent): void {
     try { this.canvas.setPointerCapture(event.pointerId); } catch (_) { /* iOS Safari */ }
-    const rect = this.getCanvasRect();
-    const clickY = event.clientY - rect.top;
-    const goldenLineY = this.visualizer?.getGoldenLineY();
-    // Golden line drag: mouse only — touch near center hijacks D4 cell, causing D4→G2 drift
-    if (event.pointerType === 'mouse' && goldenLineY !== undefined && Math.abs(clickY - goldenLineY) < 10) {
-      this.draggingGoldenLine = true;
-      this.goldenLineDragStartY = clickY;
-      this.goldenLineDragStartHz = this.synth.getD4Hz();
-      return;
-    }
     const button = this.getButtonAtPointer(event);
     if (button) this.playPointerNote(event.pointerId, button.coordX, button.coordY, event.pressure);
     this.pointerDown.set(event.pointerId, button);
   }
 
   private handlePointerMove(event: PointerEvent): void {
-    if (this.draggingGoldenLine) {
-      const rect = this.getCanvasRect();
-      const deltaY = this.goldenLineDragStartY - (event.clientY - rect.top);
-      const newHz = Math.max(20, Math.min(20000, this.goldenLineDragStartHz + deltaY * 0.5));
-      this.synth.setD4Hz(newHz);
-      this.visualizer?.setD4Hz(newHz);
-      // Reuse the same display updater (badge=number, label=annotation, position)
-      const dInput = getElementOrNull('d-ref-input', HTMLInputElement);
-      const dSlider = getElementOrNull('d-ref-slider', HTMLInputElement);
-      const dLabel = getElementOrNull('d-ref-label', HTMLSpanElement);
-      if (dInput) dInput.value = newHz.toFixed(2);
-      if (dSlider) {
-        const min = parseFloat(dSlider.min), max = parseFloat(dSlider.max);
-        const clamped = Math.max(min, Math.min(max, newHz));
-        dSlider.value = clamped.toFixed(2);
-        this.updateSliderFill(dSlider);
-         // Position badge over slider thumb
-         if (dInput) {
-           const ratio = (clamped - min) / (max - min);
-           const centerPx = thumbCenterPx(ratio, dSlider);
-           const clampedPx = clampBadgePosition(centerPx, dSlider, 80);
-           dInput.style.left = `${clampedPx}px`;
-         }
-       }
-       if (dLabel) {
-        const ann = hzToNoteAnnotation(newHz, 293.66);
-        dLabel.innerHTML = ann ? `D REF (Hz) <span style="color:#88ff88">${ann}</span>` : 'D REF (Hz)';
-      }
-      return;
-    }
-
     if (!this.pointerDown.has(event.pointerId)) return;
     const currentButton = this.pointerDown.get(event.pointerId);
     if (!currentButton) return;
@@ -1365,11 +1321,6 @@ class DComposeApp {
   }
 
   private handlePointerUp(event: PointerEvent): void {
-    if (this.draggingGoldenLine) {
-      this.draggingGoldenLine = false;
-      this.canvas.releasePointerCapture(event.pointerId);
-      return;
-    }
     const currentButton = this.pointerDown.get(event.pointerId);
     if (currentButton) this.stopPointerNote(event.pointerId, currentButton.coordX, currentButton.coordY);
     this.pointerDown.delete(event.pointerId);
