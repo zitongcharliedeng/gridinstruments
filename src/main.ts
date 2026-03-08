@@ -328,7 +328,7 @@ class DComposeApp {
   private noteHoldCounts: Map<string, number> = new Map();
   private keyRepeat: Set<string> = new Set();
   private midiChannelVoice: Map<string, string> = new Map();
-  private midiPitchBendRange: number = 24;
+  private midiPitchBendRange: number = 48;
 
   private pointerDown: Map<number, { coordX: number; coordY: number } | null> = new Map();
   private draggingGoldenLine: boolean = false;
@@ -396,8 +396,8 @@ class DComposeApp {
     this.midiDeviceList = getElement('midi-device-list', HTMLElement);
     this.zoomSlider = getElement('zoom-slider', HTMLInputElement);
 
-    const savedPbRange = parseInt(this.loadSetting('midiPbRange', '24'), 10);
-    this.midiPitchBendRange = (savedPbRange >= 2 && savedPbRange <= 48) ? savedPbRange : 24;
+    const savedPbRange = parseInt(this.loadSetting('midiPbRange', '48'), 10);
+    this.midiPitchBendRange = (savedPbRange >= 2 && savedPbRange <= 48) ? savedPbRange : 48;
 
     this.init();
   }

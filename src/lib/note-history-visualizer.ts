@@ -139,8 +139,8 @@ export class NoteHistoryVisualizer {
     // Empty state — single centered message across full canvas
     if (this.history.length === 0 && this.activeNotes.size === 0) {
       const ctx = this.ctx;
-      const titleSize = Math.min(48, width * 0.12);
-      const subSize = Math.min(11, width * 0.028);
+      const titleSize = Math.min(48, width * 0.06);
+      const subSize = Math.min(11, width * 0.018);
       ctx.fillStyle = '#555';
       ctx.font = `${titleSize}px 'JetBrains Mono', monospace`;
       ctx.textAlign = 'center';
