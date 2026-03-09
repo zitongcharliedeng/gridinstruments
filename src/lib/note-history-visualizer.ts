@@ -53,11 +53,11 @@ interface HistoryNote {
 export class NoteHistoryVisualizer {
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
-  private width: number = 900;
-  private height: number = 220;
+  private width = 900;
+  private height = 220;
 
   // State
-  private activeNotes: Map<string, ActiveNote> = new Map();
+  private activeNotes = new Map<string, ActiveNote>();
   private history: HistoryNote[] = [];
 
   // History display window: 3 seconds visible
@@ -82,11 +82,11 @@ export class NoteHistoryVisualizer {
     const ctx = canvas.getContext('2d');
     if (!ctx) throw new Error('No canvas context');
     this.ctx = ctx;
-    this.resize(canvas.offsetWidth || 900, canvas.offsetHeight || 220);
+    this.resize(canvas.offsetWidth > 0 ? canvas.offsetWidth : 900, canvas.offsetHeight > 0 ? canvas.offsetHeight : 220);
   }
 
   resize(width: number, height: number): void {
-    const dpr = window.devicePixelRatio || 1;
+    const dpr = window.devicePixelRatio > 0 ? window.devicePixelRatio : 1;
     this.width = width;
     this.height = height;
     this.canvas.width = width * dpr;
@@ -111,7 +111,7 @@ export class NoteHistoryVisualizer {
   }
 
   /** Update MIDI connection status */
-  setMidiStatus(_status: 'unavailable' | 'no-devices' | 'connected', _deviceName: string = ''): void {
+  setMidiStatus(_status: 'unavailable' | 'no-devices' | 'connected', _deviceName = ''): void {
     // No-op: MIDI status is shown in the MIDI settings panel only
   }
 
@@ -127,7 +127,7 @@ export class NoteHistoryVisualizer {
   /** Start the 60fps render loop */
   start(): void {
     if (this.animFrame !== null) return;
-    const loop = () => {
+    const loop = (): void => {
       this.render();
       this.animFrame = requestAnimationFrame(loop);
     };
@@ -199,9 +199,9 @@ export class NoteHistoryVisualizer {
     const midiRange = this.MIDI_MAX - this.MIDI_MIN + 1; // 61 notes
     const noteH = h / midiRange;
 
-    const isBlackKey = (midi: number) => this.BLACK_KEYS.includes(((midi % 12) + 12) % 12);
+    const isBlackKey = (midi: number): boolean => this.BLACK_KEYS.includes(((midi % 12) + 12) % 12);
 
-    const midiToY = (midi: number) => h - (midi - this.MIDI_MIN + 1) * noteH;
+    const midiToY = (midi: number): number => h - (midi - this.MIDI_MIN + 1) * noteH;
 
     // Collect active midi notes set
     const activeMidis = new Set<number>();
@@ -281,13 +281,13 @@ export class NoteHistoryVisualizer {
     const midiRange = this.MIDI_MAX - this.MIDI_MIN + 1;
     const noteH = h / midiRange;
 
-    const isBlackKey = (midi: number) => this.BLACK_KEYS.includes(((midi % 12) + 12) % 12);
+    const isBlackKey = (midi: number): boolean => this.BLACK_KEYS.includes(((midi % 12) + 12) % 12);
 
-    const midiToY = (midi: number) => h - (midi - this.MIDI_MIN + 1) * noteH;
+    const midiToY = (midi: number): number => h - (midi - this.MIDI_MIN + 1) * noteH;
 
     // Time-to-x mapping: t=now → x=rollX (piano edge), t=now-WINDOW → x=rollX+rollW
     // LEFT = now, RIGHT = past
-    const timeToX = (t: number) => x + (now - t) / this.HISTORY_WINDOW_MS * w;
+    const timeToX = (t: number): number => x + (now - t) / this.HISTORY_WINDOW_MS * w;
 
     // Background stripes per semitone
     for (let midi = this.MIDI_MIN; midi <= this.MIDI_MAX; midi++) {
@@ -369,7 +369,7 @@ export class NoteHistoryVisualizer {
     const pad = 12;
 
     // Collect active note coords for chord detection
-    const activeCoords: Array<[number, number, number]> = [];
+    const activeCoords: [number, number, number][] = [];
     for (const n of this.activeNotes.values()) {
       activeCoords.push([n.coordX, n.coordY, 0]);
     }
@@ -382,7 +382,7 @@ export class NoteHistoryVisualizer {
     if (chordText) {
       // Gradient: pick first note color
       const firstNote = [...this.activeNotes.values()][0];
-      const chordColor = firstNote ? noteColor(firstNote.midiNote, 1) : '#6366f1';
+      const chordColor = noteColor(firstNote.midiNote, 1);
 
       ctx.font = `bold ${Math.min(42, w * 0.28)}px 'JetBrains Mono', monospace`;
       ctx.textAlign = 'left';
@@ -408,7 +408,7 @@ export class NoteHistoryVisualizer {
     const noteNames: string[] = [];
     const sortedNotes = [...this.activeNotes.values()].sort((a, b) => b.midiNote - a.midiNote);
     for (const n of sortedNotes) {
-      noteNames.push(this.midiToNoteName(n.midiNote) + (Math.floor(n.midiNote / 12) - 1));
+      noteNames.push(this.midiToNoteName(n.midiNote) + String(Math.floor(n.midiNote / 12) - 1));
     }
 
     const noteListY = h * 0.58;

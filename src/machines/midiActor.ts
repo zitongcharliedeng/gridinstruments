@@ -151,10 +151,8 @@ export const midiInputListener = fromCallback<
   };
 
   // 1. Explicit CLEANUP message from parent (early teardown).
-  receive((event) => {
-    if (event.type === 'CLEANUP') {
-      cleanup();
-    }
+  receive((_event) => {
+    cleanup();
   });
 
   // 2. Return value: called automatically when the actor is stopped.

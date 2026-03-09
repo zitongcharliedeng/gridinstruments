@@ -8,6 +8,6 @@ const smoke = setup({ types: { context: {} as { ok: boolean } } }).createMachine
 const actor = createActor(smoke);
 actor.start();
 
-console.assert(actor.getSnapshot().context.ok === true);
+console.assert(actor.getSnapshot().context.ok);
 
 export {};

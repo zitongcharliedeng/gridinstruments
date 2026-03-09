@@ -27,7 +27,7 @@ export class MidiInput {
   private access: MIDIAccess | null = null;
 
   // Map of MIDIInput id → the raw input + our enabled flag
-  private inputs: Map<string, { input: MIDIInput; enabled: boolean }> = new Map();
+  private inputs = new Map<string, { input: MIDIInput; enabled: boolean }>();
 
   // Callbacks
   private noteOnCallbacks: MidiNoteCallback[] = [];
@@ -43,7 +43,7 @@ export class MidiInput {
   // Public status
   private _available = false;
 
-  get isAvailable() { return this._available; }
+  get isAvailable(): boolean { return this._available; }
 
   get overallStatus(): 'unavailable' | 'no-devices' | 'connected' {
     if (!this._available) return 'unavailable';
@@ -61,7 +61,7 @@ export class MidiInput {
   // ─── Init ──────────────────────────────────────────────────────────────────
 
   async init(): Promise<void> {
-    if (!navigator.requestMIDIAccess) {
+    if (!('requestMIDIAccess' in navigator)) {
       this._available = false;
       this.notifyStatus();
       return;
@@ -69,7 +69,7 @@ export class MidiInput {
     try {
       this.access = await navigator.requestMIDIAccess({ sysex: false });
       this._available = true;
-      this.access.onstatechange = () => this.rescan();
+      this.access.onstatechange = () => { this.rescan(); };
       this.rescan();
     } catch {
       this._available = false;
@@ -94,13 +94,14 @@ export class MidiInput {
     for (const [id, input] of this.access.inputs) {
       if (!this.inputs.has(id)) {
         // New device: enabled by default
-        input.onmidimessage = (e) => this.handleMessage(id, e);
+        input.onmidimessage = (e) => { this.handleMessage(id, e); };
         this.inputs.set(id, { input, enabled: true });
       } else {
         // Existing device: re-attach listener in case it was disrupted
-        const entry = this.inputs.get(id)!;
+        const entry = this.inputs.get(id);
+        if (!entry) continue;
         entry.input.onmidimessage = entry.enabled
-          ? (e) => this.handleMessage(id, e)
+          ? (e) => { this.handleMessage(id, e); }
           : null;
       }
     }
@@ -116,7 +117,7 @@ export class MidiInput {
     if (!entry) return;
     entry.enabled = enabled;
     entry.input.onmidimessage = enabled
-      ? (e) => this.handleMessage(id, e)
+      ? (e) => { this.handleMessage(id, e); }
       : null;
     this.notifyStatus();
   }
@@ -163,7 +164,7 @@ export class MidiInput {
     } else if (this.channelMode === 'chPerNote') {
       // Pass through as-is — consumer uses channel as note slot identity
       // (no filtering here; caller responsible for MPE-style tracking)
-    } else if (this.channelMode === 'chPerRow') {
+    } else {
       // Channel N = keyboard row N (1–4 for ZXCV/ASDF/QWER/digits rows)
       // Notes outside channel 1–4 are ignored in chPerRow mode
       if (channel < 1 || channel > 4) return;

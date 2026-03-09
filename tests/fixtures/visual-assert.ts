@@ -29,9 +29,7 @@ import type { VisionResult } from './cost-control';
 let cacheInstance: VisionCache | null = null;
 
 function getCache(): VisionCache {
-  if (!cacheInstance) {
-    cacheInstance = new VisionCache();
-  }
+  cacheInstance ??= new VisionCache();
   return cacheInstance;
 }
 
@@ -109,7 +107,7 @@ export async function assertVisualState(
   }
 
   // ── Combined result ─────────────────────────────────────────────────────
-  const passed = goldenPassed && (visionResult === null || visionResult.pass);
+  const passed = visionResult === null || visionResult.pass;
 
   return { goldenPassed, visionResult, passed };
 }

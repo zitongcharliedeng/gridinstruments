@@ -93,7 +93,7 @@ export const overlayBgCheck: StateInvariant = {
     const bg = await page.locator('#grid-overlay').evaluate(
       el => getComputedStyle(el).backgroundColor
     );
-    const match = bg.match(/rgba?\((\d+),\s*(\d+),\s*(\d+),?\s*([\d.]+)?\)/);
+    const match = /rgba?\((\d+),\s*(\d+),\s*(\d+),?\s*([\d.]+)?\)/.exec(bg);
     if (!match) throw new Error('Background should be rgba');
     expect(parseInt(match[1])).toBeCloseTo(30, 0);
     expect(parseInt(match[2])).toBeCloseTo(30, 0);
@@ -160,7 +160,7 @@ export const focusPreserveCheck: StateInvariant = {
 export const iconSizeCheck: StateInvariant = {
   id: 'BH-ICON-1',
   check: async (page: Page) => {
-    const checks: Array<{ selector: string; expectedPx: number; label: string }> = [
+    const checks: { selector: string; expectedPx: number; label: string }[] = [
       { selector: '#about-btn svg', expectedPx: 11, label: 'about-btn icon' },
       { selector: '.star-icon svg', expectedPx: 10, label: 'star icon' },
       { selector: '#reset-layout .icon svg', expectedPx: 9, label: 'reset-layout icon' },
@@ -469,7 +469,7 @@ export const appLoadedCheck: StateInvariant = {
     const result = await page.evaluate(() => {
       const el = document.getElementById('keyboard-canvas');
       if (!(el instanceof HTMLCanvasElement)) return { canvasWidth: 0, cssWidth: 0, dpr: 1, ratio: 0 };
-      const dpr = window.devicePixelRatio || 1;
+      const dpr = window.devicePixelRatio > 0 ? window.devicePixelRatio : 1;
       const cssWidth = el.getBoundingClientRect().width;
       return {
         canvasWidth: el.width,
@@ -709,15 +709,16 @@ export const noWhiteBackgroundCheck: StateInvariant = {
         el.matches('.gi-check') ||            // checked checkbox mark
         el.matches('.slider-preset-btn.active'); // active TET preset
       const found: string[] = [];
-      const walk = (el: Element) => {
+      const walk = (el: Element): void => {
         if (allowedWhite(el)) { return; }
         const cs = getComputedStyle(el);
         const bg = cs.backgroundColor;
-        const match = bg.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+        const match = /rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(bg);
         if (match) {
           const [, r, g, b] = match.map(Number);
           if (r > 200 && g > 200 && b > 200) {
-            found.push(`${el.tagName}.${el.className?.toString().substring(0, 30)}: ${bg}`);
+            const cls = el.className;
+            found.push(`${el.tagName}.${typeof cls === 'string' ? cls.substring(0, 30) : ''}: ${bg}`);
           }
         }
         for (const child of el.children) walk(child);
@@ -923,7 +924,7 @@ export const ctPc1Check: StateInvariant = {
 export const ctPc2Check: StateInvariant = {
   id: 'CT-PC-2',
   check: async (_page: Page) => {
-    const calc = (x: number) => ((2 + x * 7) % 12 + 12) % 12;
+    const calc = (x: number): number => ((2 + x * 7) % 12 + 12) % 12;
     expect(calc(1)).toBe(9);   // A
     expect(calc(-2)).toBe(0);  // C
     expect(calc(2)).toBe(4);   // E
@@ -1120,7 +1121,7 @@ export const iscMpe2Check: StateInvariant = {
       const sent: number[][] = [];
       const mock = {
         send(data: number[]) { sent.push([...data]); },
-        clear() {},
+        clear() { /* MIDIOutput interface noop */ },
       };
       const mpe = new MpeOutput();
       mpe.setOutput(mock);
@@ -1183,7 +1184,7 @@ export const iscMpe3Check: StateInvariant = {
       const sent: number[][] = [];
       const mock = {
         send(data: number[]) { sent.push([...data]); },
-        clear() {},
+        clear() { /* MIDIOutput interface noop */ },
       };
       const mpe = new MpeOutput();
       mpe.setOutput(mock);
@@ -1243,7 +1244,7 @@ export const iscMpe4Check: StateInvariant = {
       const sent: number[][] = [];
       const mock = {
         send(data: number[]) { sent.push([...data]); },
-        clear() {},
+        clear() { /* MIDIOutput interface noop */ },
       };
       const mpe = new MpeOutput();
       mpe.setOutput(mock);
@@ -1295,7 +1296,7 @@ export const iscMpe5Check: StateInvariant = {
       const sent: number[][] = [];
       const mock = {
         send(data: number[]) { sent.push([...data]); },
-        clear() {},
+        clear() { /* MIDIOutput interface noop */ },
       };
       const mpe = new MpeOutput();
       mpe.setOutput(mock); // triggers sendMCM
@@ -1333,7 +1334,7 @@ export const iscAMpe1Check: StateInvariant = {
       const sent: number[][] = [];
       const mock = {
         send(data: number[]) { sent.push([...data]); },
-        clear() {},
+        clear() { /* MIDIOutput interface noop */ },
       };
       const mpe = new MpeOutput();
       mpe.setOutput(mock);
@@ -1411,7 +1412,7 @@ export const iscSvc3Check: StateInvariant = {
       const sent: number[][] = [];
       const mock = {
         send(data: number[]) { sent.push([...data]); },
-        clear() {},
+        clear() { /* MIDIOutput interface noop */ },
       };
       const svc = new MPEService();
       svc.setOutput(mock);
@@ -1444,7 +1445,7 @@ export const iscSvc4Check: StateInvariant = {
       const sent: number[][] = [];
       const mock = {
         send(data: number[]) { sent.push([...data]); },
-        clear() {},
+        clear() { /* MIDIOutput interface noop */ },
       };
       const svc = new MPEService();
       svc.setOutput(mock);
@@ -1476,7 +1477,7 @@ export const iscSvc5Check: StateInvariant = {
       const sent: number[][] = [];
       const mock = {
         send(data: number[]) { sent.push([...data]); },
-        clear() {},
+        clear() { /* MIDIOutput interface noop */ },
       };
       const svc = new MPEService();
       svc.setOutput(mock);
@@ -1512,7 +1513,7 @@ export const iscSvc6Check: StateInvariant = {
       const sent: number[][] = [];
       const mock = {
         send(data: number[]) { sent.push([...data]); },
-        clear() {},
+        clear() { /* MIDIOutput interface noop */ },
       };
       const svc = new MPEService();
       svc.setOutput(mock);
@@ -1544,7 +1545,7 @@ export const iscSvc7Check: StateInvariant = {
       const sent: number[][] = [];
       const mock = {
         send(data: number[]) { sent.push([...data]); },
-        clear() {},
+        clear() { /* MIDIOutput interface noop */ },
       };
       const svc = new MPEService();
       svc.setOutput(mock);
@@ -1583,7 +1584,7 @@ export const iscSvc8Check: StateInvariant = {
       const sentPolyAt: number[][] = [];
       const mockPolyAt = {
         send(data: number[]) { sentPolyAt.push([...data]); },
-        clear() {},
+        clear() { /* MIDIOutput interface noop */ },
       };
       const svcPolyAt = new MPEService({ pressureMode: 'poly-at' });
       svcPolyAt.setOutput(mockPolyAt);
@@ -1597,7 +1598,7 @@ export const iscSvc8Check: StateInvariant = {
       const sentCC: number[][] = [];
       const mockCC = {
         send(data: number[]) { sentCC.push([...data]); },
-        clear() {},
+        clear() { /* MIDIOutput interface noop */ },
       };
       const svcCC = new MPEService({ pressureMode: 'cc', pressureCC: 11 });
       svcCC.setOutput(mockCC);
@@ -1629,7 +1630,7 @@ export const iscSvc9Check: StateInvariant = {
       const sent: number[][] = [];
       const mock = {
         send(data: number[]) { sent.push([...data]); },
-        clear() {},
+        clear() { /* MIDIOutput interface noop */ },
       };
       const svc = new MPEService();
       svc.setOutput(mock);
@@ -1672,7 +1673,7 @@ export const iscSvc10Check: StateInvariant = {
       const sent: number[][] = [];
       const mock = {
         send(data: number[]) { sent.push([...data]); },
-        clear() {},
+        clear() { /* MIDIOutput interface noop */ },
       };
       const svc = new MPEService({ timbreCC: 1 });
       svc.setOutput(mock);

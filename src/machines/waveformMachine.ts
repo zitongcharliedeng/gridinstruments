@@ -1,7 +1,7 @@
 import { setup, assign, assertEvent } from 'xstate';
 import type { WaveformType } from '../lib/synth';
 
-type WaveformEvent = { type: 'SELECT'; waveform: WaveformType };
+interface WaveformEvent { type: 'SELECT'; waveform: WaveformType }
 
 export const waveformMachine = setup({
   types: {

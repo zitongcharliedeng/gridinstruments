@@ -52,8 +52,8 @@ export class KeyboardVisualizer {
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
   private buttons: Button[] = [];
-  private activeNotes: Set<string> = new Set();
-  private sustainedNotes: Set<string> = new Set();
+  private activeNotes = new Set<string>();
+  private sustainedNotes = new Set<string>();
 
   // Half-vectors for parallelogram cells (computed in generateButtons)
   private hv1 = { x: 0, y: 0 }; // half-step in coordX direction
@@ -98,7 +98,7 @@ export class KeyboardVisualizer {
 
 
   private setupCanvas(): void {
-    const dpr = window.devicePixelRatio || 1;
+    const dpr = window.devicePixelRatio > 0 ? window.devicePixelRatio : 1;
     this.canvas.width = this.options.width * dpr;
     this.canvas.height = this.options.height * dpr;
     // Do NOT set canvas.style.width/height — let CSS (width:100%; height:100%) control layout.
@@ -531,8 +531,8 @@ export class KeyboardVisualizer {
     const h2x = hv2.x * s, h2y = hv2.y * s;
 
     // corners: ±hv1 ± hv2
-    const px = (a: number, b: number) => x + a * h1x + b * h2x;
-    const py = (a: number, b: number) => y + a * h1y + b * h2y;
+    const px = (a: number, b: number): number => x + a * h1x + b * h2x;
+    const py = (a: number, b: number): number => y + a * h1y + b * h2y;
 
     // No vignette — all cells render at full brightness
 

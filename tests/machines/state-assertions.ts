@@ -94,17 +94,14 @@ import {
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 export interface MachineAssertionKit {
-  /** Map from event type → Playwright action to trigger that event. */
-  actions: Record<string, (page: Page) => Promise<void>>;
-  /** Map from state name → human-readable LLM vision invariant. */
-  invariants: Record<string, string>;
-  /** Map from state name → deterministic DOM assertion function. */
-  domAssertions: Record<string, (page: Page) => Promise<void>>;
+  actions: Partial<Record<string, (page: Page) => Promise<void>>>;
+  invariants: Partial<Record<string, string>>;
+  domAssertions: Partial<Record<string, (page: Page) => Promise<void>>>;
 }
 
 // ─── Registry ────────────────────────────────────────────────────────────────
 
-const registry: Record<string, MachineAssertionKit> = {
+const registry: Partial<Record<string, MachineAssertionKit>> = {
   overlay: {
     actions: overlayPlaywrightActions,
     invariants: overlayInvariants,
@@ -251,7 +248,8 @@ export function getInvariant(
   machineName: string,
   stateName: string,
 ): string | undefined {
-  return registry[machineName]?.invariants[stateName];
+  const kit = registry[machineName];
+  return kit?.invariants[stateName];
 }
 
 /** Re-export the machine list for the graph spec. */

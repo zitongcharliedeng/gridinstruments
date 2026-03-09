@@ -11,13 +11,13 @@ import type { SliderComponentConfig } from '../components/NumericSlider';
 // Duplicated from the module-level helper in main.ts (not exported there).
 // Must stay in sync with noteNameToHz in main.ts.
 
-const NOTE_SEMITONES: Record<string, number> = {
+const NOTE_SEMITONES: Partial<Record<string, number>> = {
   C: 0, 'C#': 1, Db: 1, D: 2, 'D#': 3, Eb: 3, E: 4, F: 5,
   'F#': 6, Gb: 6, G: 7, 'G#': 8, Ab: 8, A: 9, 'A#': 10, Bb: 10, B: 11,
 };
 
 function noteNameToHz(input: string): number | null {
-  const m = input.trim().match(/^([A-Ga-g][#b]?)(\d+)$/);
+  const m = /^([A-Ga-g][#b]?)(\d+)$/.exec(input.trim());
   if (!m) return null;
   const noteKey = m[1].charAt(0).toUpperCase() + m[1].slice(1);
   const semitone = NOTE_SEMITONES[noteKey];

@@ -38,6 +38,7 @@ interface SliderResetConfig {
 
 type SliderEvent = { type: 'SET_VALUE' } | { type: 'RESET' };
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type -- return type is complex XState generic, inferred is correct
 function createSliderResetMachine(config: SliderResetConfig) {
   const fillDefault = createSliderFillDefaultInvariant(config.sliderId);
   const fillModified = createSliderFillModifiedInvariant(config.sliderId);

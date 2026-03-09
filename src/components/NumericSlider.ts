@@ -32,12 +32,12 @@ export class NumericSlider {
   private readonly badge: HTMLElement;
   readonly config: SliderComponentConfig;
 
-  private readonly _inputCbs: Array<(value: number) => void> = [];
-  private readonly _badgeEditCbs: Array<(rawValue: string) => void> = [];
-  private readonly _resetCbs: Array<() => void> = [];
+  private readonly _inputCbs: ((value: number) => void)[] = [];
+  private readonly _badgeEditCbs: ((rawValue: string) => void)[] = [];
+  private readonly _resetCbs: (() => void)[] = [];
 
   /** [target, eventType, listener] tuples stored for disposal */
-  private readonly _attached: Array<[EventTarget, string, EventListener]> = [];
+  private readonly _attached: [EventTarget, string, EventListener][] = [];
 
   constructor(
     rangeInput: HTMLInputElement,
@@ -155,9 +155,9 @@ export class NumericSlider {
    * the thumb center precisely. Uses offsetWidth for pixel-exact alignment.
    */
   updateFill(): void {
-    const min = parseFloat(this.rangeInput.min) || 0;
-    const max = parseFloat(this.rangeInput.max) || 100;
-    const val = parseFloat(this.rangeInput.value) || 0;
+    const min = Number.isFinite(parseFloat(this.rangeInput.min)) ? parseFloat(this.rangeInput.min) : 0;
+    const max = Number.isFinite(parseFloat(this.rangeInput.max)) ? parseFloat(this.rangeInput.max) : 100;
+    const val = Number.isFinite(parseFloat(this.rangeInput.value)) ? parseFloat(this.rangeInput.value) : 0;
     const ratio = (val - min) / (max - min);
     const thumbW = 3;
     const trackW = this.rangeInput.offsetWidth;
@@ -186,8 +186,8 @@ export class NumericSlider {
    */
   updateBadge(): void {
     const value = parseFloat(this.rangeInput.value);
-    const min = parseFloat(this.rangeInput.min) || 0;
-    const max = parseFloat(this.rangeInput.max) || 100;
+    const min = Number.isFinite(parseFloat(this.rangeInput.min)) ? parseFloat(this.rangeInput.min) : 0;
+    const max = Number.isFinite(parseFloat(this.rangeInput.max)) ? parseFloat(this.rangeInput.max) : 100;
     const ratio = (value - min) / (max - min);
     const thumbW = 3;
     const trackW = this.rangeInput.offsetWidth;

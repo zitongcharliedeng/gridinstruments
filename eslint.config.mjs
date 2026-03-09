@@ -44,9 +44,12 @@ export default tseslint.config(
       '@typescript-eslint/no-unsafe-member-access': 'error',
       '@typescript-eslint/no-unsafe-return': 'error',
 
-      // ── No `as` type assertions (use type guards / satisfies instead) ──
+      // ── Concrete type assertions allowed; `no-explicit-any` still blocks `as any` ──
+      // objectLiteralTypeAssertions: 'allow' is needed for XState v5 `types: { context: {} as T }` pattern.
+      // `no-explicit-any` still blocks `as any`.
       '@typescript-eslint/consistent-type-assertions': ['error', {
-        assertionStyle: 'never',
+        assertionStyle: 'as',
+        objectLiteralTypeAssertions: 'allow',
       }],
 
       // ── No non-null assertions (x!) ─────────────────────────────
@@ -75,11 +78,40 @@ export default tseslint.config(
         allowNumber: false,              // no if (count) — use if (count > 0)
       }],
 
+      // ── Numbers in template literals are idiomatic ──
+      '@typescript-eslint/restrict-template-expressions': ['error', {
+        allowNumber: true,
+        allowBoolean: false,
+        allowAny: false,
+        allowNullish: false,
+      }],
+
       // ── Unused vars: error (already in tsconfig, but enforce in lint too) ──
       '@typescript-eslint/no-unused-vars': ['error', {
         argsIgnorePattern: '^_',
         varsIgnorePattern: '^_',
       }],
+    },
+  },
+
+  // Test files: relax rules that conflict with Playwright patterns.
+  // - no-unsafe-*: page.evaluate() runs in browser context where dynamic import()
+  //   returns untyped values — TypeScript cannot track types across the boundary.
+  // - require-await: StateInvariant.check must return Promise<void> per interface,
+  //   but pure-math invariants have no async operations.
+  // - no-empty-function: mock MIDIOutput.clear() methods are intentionally empty.
+  // This override MUST come after the global rules block.
+  {
+    files: ['tests/**/*.ts'],
+    rules: {
+      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-return': 'off',
+      '@typescript-eslint/no-unsafe-argument': 'off',
+      '@typescript-eslint/require-await': 'off',
+      '@typescript-eslint/no-empty-function': 'off',
+      'no-empty': 'off',
     },
   },
 

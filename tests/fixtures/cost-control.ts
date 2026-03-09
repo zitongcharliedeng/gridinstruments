@@ -23,9 +23,7 @@ export interface VisionResult {
   timestamp: string;
 }
 
-interface CacheStore {
-  [hash: string]: VisionResult;
-}
+type CacheStore = Record<string, VisionResult>;
 
 // ─── Env gate ────────────────────────────────────────────────────────────────
 

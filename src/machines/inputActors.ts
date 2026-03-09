@@ -27,7 +27,7 @@ import type {
 // ─── Internal cleanup event ──────────────────────────────────────────────────
 
 /** Sent to an actor to request manual listener teardown (dual-cleanup pattern). */
-type CleanupEvent = { type: 'CLEANUP' };
+interface CleanupEvent { type: 'CLEANUP' }
 
 // ─── keyboardListener ────────────────────────────────────────────────────────
 
@@ -64,11 +64,9 @@ export const keyboardListener = fromCallback<CleanupEvent>(
     document.addEventListener('keyup', onKeyUp);
 
     // Dual cleanup: receive() for manual CLEANUP + return function as backup
-    receive((event) => {
-      if (event.type === 'CLEANUP') {
-        document.removeEventListener('keydown', onKeyDown);
-        document.removeEventListener('keyup', onKeyUp);
-      }
+    receive((_event) => {
+      document.removeEventListener('keydown', onKeyDown);
+      document.removeEventListener('keyup', onKeyUp);
     });
 
     return () => {
@@ -192,11 +190,9 @@ export const pointerListener = fromCallback<CleanupEvent, PointerListenerInput>(
     };
 
     // Dual cleanup: receive() for manual CLEANUP + return function as backup
-    receive((event) => {
-      if (event.type === 'CLEANUP') {
-        removeListeners();
-        lastSent.clear();
-      }
+    receive((_event) => {
+      removeListeners();
+      lastSent.clear();
     });
 
     return () => {
@@ -235,11 +231,9 @@ export const windowListener = fromCallback<CleanupEvent>(
     window.addEventListener('blur', onBlur);
 
     // Dual cleanup: receive() for manual CLEANUP + return function as backup
-    receive((event) => {
-      if (event.type === 'CLEANUP') {
-        window.removeEventListener('resize', onResize);
-        window.removeEventListener('blur', onBlur);
-      }
+    receive((_event) => {
+      window.removeEventListener('resize', onResize);
+      window.removeEventListener('blur', onBlur);
     });
 
     return () => {

@@ -52,8 +52,8 @@ export class MPEService {
   private output: MIDIOutput | null = null;
   private settings: MPESettings;
   private freeChannels: number[];
-  private voiceByNoteId: Map<string, MPEVoice> = new Map();
-  private listeners: Set<MPEListener> = new Set();
+  private voiceByNoteId = new Map<string, MPEVoice>();
+  private listeners = new Set<MPEListener>();
   private _enabled = false;
 
   constructor(settings?: Partial<MPESettings>) {
@@ -64,7 +64,7 @@ export class MPEService {
   // ─── Init ──────────────────────────────────────────────────────────────────
 
   async init(): Promise<void> {
-    if (!navigator.requestMIDIAccess) return;
+    if (!('requestMIDIAccess' in navigator)) return;
     try {
       this.access = await navigator.requestMIDIAccess({ sysex: false });
     } catch {
@@ -250,7 +250,9 @@ export class MPEService {
 
   private allocate(): number | null {
     if (this.freeChannels.length === 0) return null;
-    return this.freeChannels.shift()!;
+    const ch = this.freeChannels.shift();
+    if (ch === undefined) return null;
+    return ch;
   }
 
   private release(noteId: string): void {

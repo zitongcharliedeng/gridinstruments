@@ -19,7 +19,7 @@ interface GraffitiConfig {
   visualizer: KeyboardVisualizer;
 }
 
-type ButtonLike = { x: number; y: number; coordX: number; coordY: number };
+interface ButtonLike { x: number; y: number; coordX: number; coordY: number }
 
 /**
  * Create dynamic chord graffiti overlays on the keyboard canvas.

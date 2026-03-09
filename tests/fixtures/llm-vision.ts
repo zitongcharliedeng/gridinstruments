@@ -26,9 +26,7 @@ export interface VisionAssertionResult {
 let client: Anthropic | null = null;
 
 function getClient(): Anthropic {
-  if (!client) {
-    client = new Anthropic();
-  }
+  client ??= new Anthropic();
   return client;
 }
 

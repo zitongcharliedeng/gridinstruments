@@ -9,7 +9,7 @@ const bracketAnnotationCheck: StateInvariant = {
   check: async (page: Page) => {
     const html = await page.locator('#d-ref-label').innerHTML();
     expect(html).toContain('style=');
-    const greenMatch = html.match(/color:\s*([^;"]+)/);
+    const greenMatch = /color:\s*([^;"]+)/.exec(html);
     expect(greenMatch, 'Annotation should have a color style').toBeTruthy();
   },
 };
@@ -153,7 +153,7 @@ export const drefInputPlaywrightActions: Record<DrefEvent['type'], (page: Page) 
     await page.waitForTimeout(100);
   },
   BLUR: async (page) => {
-    await page.evaluate(() => (document.activeElement as HTMLElement)?.blur());
+    await page.evaluate(() => { (document.activeElement as HTMLElement).blur(); });
     await page.waitForTimeout(200);
   },
   PRESS_ENTER: async (page) => {

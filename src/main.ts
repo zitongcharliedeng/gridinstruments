@@ -88,6 +88,12 @@ function isWaveformType(value: unknown): value is WaveformType {
   return typeof value === 'string' && ['sine', 'square', 'sawtooth', 'triangle'].includes(value);
 }
 
+/** Parse a numeric string with a fallback for NaN. */
+function parseNum(s: string, fallback: number): number {
+  const n = parseFloat(s);
+  return Number.isFinite(n) ? n : fallback;
+}
+
 interface SliderPresetPoint { value: number; label: string }
 
 const SKEW_PRESETS: SliderPresetPoint[] = [
@@ -106,7 +112,7 @@ function formatSliderAnnotation(
   value: number,
   presets: SliderPresetPoint[],
   precision: number,
-  unit: string = '',
+  unit = '',
 ): string {
   let nearest = presets[0];
   let minDist = Math.abs(value - nearest.value);
@@ -125,7 +131,7 @@ function formatSliderAnnotation(
 
 const tuningTableRows = TUNING_MARKERS
   .slice().sort((a, b) => a.fifth - b.fifth)
-  .map(m => `<tr><td><strong>${m.fifth % 1 === 0 ? m.fifth : '~' + m.fifth}¢</strong></td><td>${m.description}</td></tr>`)
+  .map(m => `<tr><td><strong>${m.fifth % 1 === 0 ? m.fifth : `~${String(m.fifth)}`}¢</strong></td><td>${m.description}</td></tr>`)
   .join('\n');
 
 const SLIDER_INFO: Record<string, string> = {
@@ -219,7 +225,7 @@ function setupInfoDialogs(): void {
     });
   });
 
-  closeBtn?.addEventListener('click', () => infoDialogActor.send({ type: 'CLOSE' }));
+  closeBtn?.addEventListener('click', () => { infoDialogActor.send({ type: 'CLOSE' }); });
 
   dialog.addEventListener('click', (e) => {
     if (e.target === dialog) infoDialogActor.send({ type: 'CLOSE' });
@@ -262,7 +268,7 @@ function thumbCenterPx(ratio: number, slider: HTMLInputElement): number {
  * Badge has transform: translateX(-50%), so we clamp the center position
  * to ensure the badge doesn't extend beyond the slider edges.
  */
-function clampBadgePosition(centerPx: number, slider: HTMLInputElement, badgeWidth: number = 50): number {
+function clampBadgePosition(centerPx: number, slider: HTMLInputElement, badgeWidth = 50): number {
   const trackW = slider.offsetWidth;
   if (trackW <= 0) return centerPx;
   const halfBadgeW = badgeWidth / 2;
@@ -271,9 +277,9 @@ function clampBadgePosition(centerPx: number, slider: HTMLInputElement, badgeWid
 
 /** Apply fill gradient to a range input (module-level for use in actor subscribers). */
 function applySliderFill(slider: HTMLInputElement): void {
-  const min = parseFloat(slider.min) || 0;
-  const max = parseFloat(slider.max) || 100;
-  const val = parseFloat(slider.value) || 0;
+  const min = parseNum(slider.min, 0);
+  const max = parseNum(slider.max, 100);
+  const val = parseNum(slider.value, 0);
   const ratio = (val - min) / (max - min);
   const trackW = slider.offsetWidth;
   if (trackW > 0) {
@@ -303,11 +309,11 @@ function refreshAllSliderUI(): void {
     if (!slider) continue;
     applySliderFill(slider);
     if (badgeId) {
-      const badge = document.getElementById(badgeId) as HTMLElement | null;
+      const badge = document.getElementById(badgeId);
       if (badge) {
-        const min = parseFloat(slider.min) || 0;
-        const max = parseFloat(slider.max) || 100;
-        const val = parseFloat(slider.value) || 0;
+        const min = parseNum(slider.min, 0);
+        const max = parseNum(slider.max, 100);
+        const val = parseNum(slider.value, 0);
         const ratio = (Math.max(min, Math.min(max, val)) - min) / (max - min);
         const centerPx = thumbCenterPx(ratio, slider);
         const clampedPx = clampBadgePosition(centerPx, slider, badgeWidth);
@@ -325,18 +331,18 @@ class DComposeApp {
   private mpe: MPEService;
   private currentLayout: KeyboardLayout;
 
-  private octaveOffset: number = 0;
-  private transposeOffset: number = 0;
+  private octaveOffset = 0;
+  private transposeOffset = 0;
 
   // Active notes keyed by the input source string (keyboard code, pointer id, or midi device+note)
-  private activeNotes: Map<string, { coordX: number; coordY: number }> = new Map();
+  private activeNotes = new Map<string, { coordX: number; coordY: number }>();
   // Reference counts per coordinate — only fires historyVisualizer noteOff when all sources release
-  private noteHoldCounts: Map<string, number> = new Map();
-  private keyRepeat: Set<string> = new Set();
-  private midiChannelVoice: Map<string, string> = new Map();
-  private midiPitchBendRange: number = 48;
+  private noteHoldCounts = new Map<string, number>();
+  private keyRepeat = new Set<string>();
+  private midiChannelVoice = new Map<string, string>();
+  private midiPitchBendRange = 48;
 
-  private pointerDown: Map<number, { coordX: number; coordY: number } | null> = new Map();
+  private pointerDown = new Map<number, { coordX: number; coordY: number } | null>();
 
   // MPE vibrato state (Space key sends sinusoidal pitch bend to all active MPE notes)
   private vibratoRAF: number | null = null;
@@ -345,7 +351,7 @@ class DComposeApp {
   // Cached canvas rect — invalidated on resize only
   private cachedCanvasRect: DOMRect | null = null;
   // RAF-throttled render scheduling
-  private renderScheduled: boolean = false;
+  private renderScheduled = false;
   // DOM
   private canvas: HTMLCanvasElement;
   private historyCanvas: HTMLCanvasElement;
@@ -361,7 +367,7 @@ class DComposeApp {
   private vibratoActor: ReturnType<typeof createActor<typeof pedalMachine>> | null = null;
   private midiDeviceList: HTMLElement | null = null;
   private zoomSlider: HTMLInputElement | null = null;
-  private defaultZoom: number = 1.0;
+  private defaultZoom = 1.0;
   private updateGraffiti: (() => void) | null = null;
 
   private static readonly STORAGE_KEYS = {
@@ -402,7 +408,7 @@ class DComposeApp {
     const savedPbRange = parseInt(this.loadSetting('midiPbRange', '48'), 10);
     this.midiPitchBendRange = (savedPbRange >= 2 && savedPbRange <= 48) ? savedPbRange : 48;
 
-    this.init();
+    void this.init();
   }
 
   private async init(): Promise<void> {
@@ -452,7 +458,6 @@ class DComposeApp {
   }
 
   private setupHistoryVisualizer(): void {
-    if (!this.historyCanvas) return;
     this.historyVisualizer = new NoteHistoryVisualizer(this.historyCanvas);
     this.historyVisualizer.start();
 
@@ -462,8 +467,8 @@ class DComposeApp {
         if (!this.historyVisualizer) return;
         const entry = entries[0];
         this.historyVisualizer.resize(
-          entry.contentRect.width || 900,
-          entry.contentRect.height || 120
+          entry.contentRect.width > 0 ? entry.contentRect.width : 900,
+          entry.contentRect.height > 0 ? entry.contentRect.height : 120
         );
       }).observe(historyContainer);
     }
@@ -579,7 +584,7 @@ class DComposeApp {
     this.canvas.addEventListener('pointerleave', this.handlePointerUp.bind(this));
     this.canvas.addEventListener('pointercancel', this.handlePointerUp.bind(this));
     // touch-action: none in CSS eliminates the need for touchstart preventDefault
-    this.canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+    this.canvas.addEventListener('contextmenu', (e) => { e.preventDefault(); });
     const savedWaveform = this.loadSetting('waveform', 'sawtooth');
     const initialWaveform = isWaveformType(savedWaveform) ? savedWaveform : 'sawtooth' as WaveformType;
     const waveformActor = createActor(waveformMachine, { input: { initial: initialWaveform } });
@@ -596,7 +601,7 @@ class DComposeApp {
       if (isWaveformType(wf)) waveformActor.send({ type: 'SELECT', waveform: wf });
     });
     const waveReset = document.getElementById('wave-reset') as HTMLButtonElement | null;
-    waveReset?.addEventListener('click', () => waveformActor.send({ type: 'SELECT', waveform: 'sawtooth' }));
+    waveReset?.addEventListener('click', () => { waveformActor.send({ type: 'SELECT', waveform: 'sawtooth' }); });
 
     if (this.layoutSelect) {
       for (const variant of KEYBOARD_VARIANTS) {
@@ -631,17 +636,18 @@ class DComposeApp {
 
     // DCompose ↔ MidiMech skew slider (DOM mutations driven by appActor subscriber)
     if (this.skewSlider) {
+      const skewRef = this.skewSlider;
       const skewBadge = getElementOrNull('skew-thumb-badge', HTMLInputElement);
 
       const savedSkew = this.loadSetting('skew', '0');
-      this.skewSlider.value = savedSkew;
+      skewRef.value = savedSkew;
       this.visualizer?.setSkewFactor(parseFloat(savedSkew));
 
-      this.skewSlider.addEventListener('input', () => {
-        const val = parseFloat(this.skewSlider!.value);
+      skewRef.addEventListener('input', () => {
+        const val = parseFloat(skewRef.value);
         this.visualizer?.setSkewFactor(val);
         this.updateGraffiti?.();
-        this.saveSetting('skew', this.skewSlider!.value);
+        this.saveSetting('skew', skewRef.value);
       });
 
       // Skew reset
@@ -670,7 +676,7 @@ class DComposeApp {
             skewBadge.value = current.toFixed(2);
           }
         });
-        skewBadge.addEventListener('focus', () => skewBadge.select());
+        skewBadge.addEventListener('focus', () => { skewBadge.select(); });
       }
 
       this.populateSliderPresets('skew-presets', this.skewSlider, [
@@ -681,6 +687,7 @@ class DComposeApp {
 
     // Shear (bFact) slider — row-flattening toward Wicki-Hayden
     if (this.bfactSlider) {
+      const bfactRef = this.bfactSlider;
       const bfactBadge = getElementOrNull('bfact-thumb-badge', HTMLInputElement);
       const bfactLabel = getElementOrNull('bfact-label', HTMLSpanElement);
 
@@ -690,32 +697,32 @@ class DComposeApp {
         bfactLabel.innerHTML = `WICKED SHEAR <span style='color:#88ff88'>${ann}</span>`;
       };
 
-      const updateBfactBadge = (value: number) => {
+      const updateBfactBadge = (value: number): void => {
         if (!bfactBadge) return;
-        const sliderMin = parseFloat(this.bfactSlider!.min);
-        const sliderMax = parseFloat(this.bfactSlider!.max);
+        const sliderMin = parseFloat(bfactRef.min);
+        const sliderMax = parseFloat(bfactRef.max);
         const clampedForPos = Math.max(sliderMin, Math.min(sliderMax, value));
         const ratio = (clampedForPos - sliderMin) / (sliderMax - sliderMin);
-        const centerPx = thumbCenterPx(ratio, this.bfactSlider!);
-        const clampedPx = clampBadgePosition(centerPx, this.bfactSlider!, 50);
+        const centerPx = thumbCenterPx(ratio, bfactRef);
+        const clampedPx = clampBadgePosition(centerPx, bfactRef, 50);
         bfactBadge.style.left = `${clampedPx}px`;
         bfactBadge.value = value.toFixed(2);
       };
 
       const savedBfact = this.loadSetting('bfact', '0');
-      this.bfactSlider.value = savedBfact;
+      bfactRef.value = savedBfact;
       updateBfactBadge(parseFloat(savedBfact));
       updateBfactLabel(parseFloat(savedBfact));
       this.visualizer?.setBFact(parseFloat(savedBfact));
 
-      this.bfactSlider.addEventListener('input', () => {
-        const val = parseFloat(this.bfactSlider!.value);
+      bfactRef.addEventListener('input', () => {
+        const val = parseFloat(bfactRef.value);
         this.visualizer?.setBFact(val);
         this.updateGraffiti?.();
         updateBfactBadge(val);
         updateBfactLabel(val);
-        this.updateSliderFill(this.bfactSlider!);
-        this.saveSetting('bfact', this.bfactSlider!.value);
+        this.updateSliderFill(bfactRef);
+        this.saveSetting('bfact', bfactRef.value);
       });
 
       const bfactReset = getElementOrNull('bfact-reset', HTMLButtonElement);
@@ -745,7 +752,7 @@ class DComposeApp {
             bfactBadge.value = current.toFixed(2);
           }
         });
-        bfactBadge.addEventListener('focus', () => bfactBadge.select());
+        bfactBadge.addEventListener('focus', () => { bfactBadge.select(); });
       }
 
       this.populateSliderPresets('bfact-presets', this.bfactSlider, [
@@ -757,23 +764,24 @@ class DComposeApp {
     // Tuning slider
 
     if (this.tuningSlider) {
-      this.tuningSlider.min = FIFTH_MIN.toString();
-      this.tuningSlider.max = FIFTH_MAX.toString();
-      this.tuningSlider.step = '0.01';
-      this.tuningSlider.value = FIFTH_DEFAULT.toString();
+      const tuningRef = this.tuningSlider;
+      tuningRef.min = FIFTH_MIN.toString();
+      tuningRef.max = FIFTH_MAX.toString();
+      tuningRef.step = '0.01';
+      tuningRef.value = FIFTH_DEFAULT.toString();
 
       const thumbBadge = getElementOrNull('tuning-thumb-badge', HTMLInputElement);
       const range = FIFTH_MAX - FIFTH_MIN;
-      const updateThumbBadge = (value: number) => {
+      const updateThumbBadge = (value: number): void => {
         if (!thumbBadge) return;
         const ratio = (value - FIFTH_MIN) / range;
-        const centerPx = thumbCenterPx(ratio, this.tuningSlider!);
-        const clampedPx = clampBadgePosition(centerPx, this.tuningSlider!, 50);
+        const centerPx = thumbCenterPx(ratio, tuningRef);
+        const clampedPx = clampBadgePosition(centerPx, tuningRef, 50);
         thumbBadge.style.left = `${clampedPx}px`;
         thumbBadge.value = value.toFixed(1);
       };
       const tuningLabel = getElementOrNull('tuning-label', HTMLSpanElement);
-      const updateTuningLabel = (value: number) => {
+      const updateTuningLabel = (value: number): void => {
         if (!tuningLabel) return;
         const ann = formatSliderAnnotation(value, TUNING_LABEL_PRESETS, 1, '\u00a2');
         tuningLabel.innerHTML = `FIFTHS TUNING (cents) <span style='color:#88ff88'>${ann}</span>`;
@@ -782,31 +790,31 @@ class DComposeApp {
       updateThumbBadge(FIFTH_DEFAULT);
 
       const savedTuning = this.loadSetting('tuning', FIFTH_DEFAULT.toString());
-      this.tuningSlider.value = savedTuning;
+      tuningRef.value = savedTuning;
       updateThumbBadge(parseFloat(savedTuning));
       updateTuningLabel(parseFloat(savedTuning));
       this.synth.setFifth(parseFloat(savedTuning));
       this.visualizer?.setGenerator([parseFloat(savedTuning), 1200]);
 
-      this.tuningSlider.addEventListener('input', () => {
-        const value = parseFloat(this.tuningSlider!.value);
+      tuningRef.addEventListener('input', () => {
+        const value = parseFloat(tuningRef.value);
         this.synth.setFifth(value);
         this.visualizer?.setGenerator([value, 1200]);
         this.updateGraffiti?.();
 
         updateThumbBadge(value);
         updateTuningLabel(value);
-        this.updateSliderFill(this.tuningSlider!);
-        this.saveSetting('tuning', this.tuningSlider!.value);
+        this.updateSliderFill(tuningRef);
+        this.saveSetting('tuning', tuningRef.value);
       });
 
-      this.tuningSlider.addEventListener('dblclick', () => {
-        const currentValue = parseFloat(this.tuningSlider!.value);
+      tuningRef.addEventListener('dblclick', () => {
+        const currentValue = parseFloat(tuningRef.value);
         const { marker } = findNearestMarker(currentValue);
-        this.tuningSlider!.value = marker.fifth.toString();
+        tuningRef.value = marker.fifth.toString();
         this.synth.setFifth(marker.fifth);
         this.visualizer?.setGenerator([marker.fifth, 1200]);
-        this.updateSliderFill(this.tuningSlider!);
+        this.updateSliderFill(tuningRef);
         updateThumbBadge(marker.fifth);
         updateTuningLabel(marker.fifth);
       });
@@ -838,7 +846,7 @@ class DComposeApp {
             thumbBadge.value = current.toFixed(1);
           }
         });
-        thumbBadge.addEventListener('focus', () => thumbBadge.select());
+        thumbBadge.addEventListener('focus', () => { thumbBadge.select(); });
       }
     }
     // Note: #fifth-custom-input was removed; #tuning-thumb-badge input handles direct value entry
@@ -858,11 +866,14 @@ class DComposeApp {
        this.volumeSlider.value = savedVolume;
        this.synth.setMasterVolume(parseFloat(savedVolume));
      }
-     this.volumeSlider?.addEventListener('input', () => {
-       const val = parseFloat(this.volumeSlider!.value);
-       this.synth.setMasterVolume(val);
-       this.saveSetting('volume', this.volumeSlider!.value);
-     });
+     if (this.volumeSlider) {
+       const volRef = this.volumeSlider;
+       volRef.addEventListener('input', () => {
+         const val = parseFloat(volRef.value);
+         this.synth.setMasterVolume(val);
+         this.saveSetting('volume', volRef.value);
+       });
+     }
      const volReset = getElementOrNull('volume-reset', HTMLButtonElement);
      volReset?.addEventListener('click', () => {
        if (this.volumeSlider) {
@@ -874,7 +885,7 @@ class DComposeApp {
     // Button spacing
     const spacingInput = getElementOrNull('spacing-input', HTMLInputElement);
     spacingInput?.addEventListener('input', () => {
-      this.visualizer?.setButtonSpacing(parseFloat(spacingInput.value) || 0);
+      this.visualizer?.setButtonSpacing(parseNum(spacingInput.value, 0));
     });
 
     // D ref — slider (D2–D6 range) + text badge (just Hz, like all other sliders)
@@ -1021,7 +1032,7 @@ class DComposeApp {
             const outputs = this.mpe.getAvailableOutputs();
             const selected = outputs.find(o => o.id === newVal[0]?.value) ?? null;
             this.mpe.setOutput(selected);
-            document.querySelectorAll<HTMLElement>('.ss-main').forEach(el => el.blur());
+            document.querySelectorAll<HTMLElement>('.ss-main').forEach(el => { el.blur(); });
           },
         },
       });
@@ -1037,7 +1048,7 @@ class DComposeApp {
 
     mpeActor.start();
 
-    const refreshMpeOutputs = () => {
+    const refreshMpeOutputs = (): void => {
       if (!mpeSS) return;
       const outputs = this.mpe.getAvailableOutputs();
       if (outputs.length === 0) {
@@ -1058,7 +1069,7 @@ class DComposeApp {
       if (enabled) {
         const selectedId = mpeSelect?.value;
         const outputs = this.mpe.getAvailableOutputs();
-        const selected = outputs.find(o => o.id === selectedId) ?? outputs[0] ?? null;
+        const selected = outputs.find(o => o.id === selectedId) ?? outputs[0];
         this.mpe.setOutput(selected);
       } else {
         this.mpe.setOutput(null);
@@ -1069,7 +1080,7 @@ class DComposeApp {
     // Refresh on MIDI device connection changes
     const midiAccess = this.mpe.getMidiAccess();
     if (midiAccess) {
-      midiAccess.onstatechange = () => refreshMpeOutputs();
+      midiAccess.onstatechange = () => { refreshMpeOutputs(); };
     }
 
     // Prevent space scroll
@@ -1086,12 +1097,15 @@ class DComposeApp {
        this.zoomSlider.value = savedZoom;
        this.visualizer?.setZoom(parseFloat(savedZoom));
      }
-     this.zoomSlider?.addEventListener('input', () => {
-       const zoom = parseFloat(this.zoomSlider!.value);
-       this.visualizer?.setZoom(zoom);
-       this.updateGraffiti?.();
-       this.saveSetting('zoom', this.zoomSlider!.value);
-     });
+     if (this.zoomSlider) {
+       const zoomRef = this.zoomSlider;
+       zoomRef.addEventListener('input', () => {
+         const zoom = parseFloat(zoomRef.value);
+         this.visualizer?.setZoom(zoom);
+         this.updateGraffiti?.();
+         this.saveSetting('zoom', zoomRef.value);
+       });
+     }
      const zoomReset = getElementOrNull('zoom-reset', HTMLButtonElement);
      zoomReset?.addEventListener('click', () => {
        if (this.zoomSlider) {
@@ -1099,15 +1113,15 @@ class DComposeApp {
          this.zoomSlider.dispatchEvent(new Event('input'));
        }
      });
-    window.addEventListener('blur', () => this.stopAllNotes());
+    window.addEventListener('blur', () => { this.stopAllNotes(); });
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'hidden') this.stopAllNotes();
     });
 
     // Auto-return focus to body after using range/select controls so keyboard always works
     document.querySelectorAll<HTMLElement>('select, input[type="range"], input[type="checkbox"]').forEach(el => {
-      el.addEventListener('pointerup', () => setTimeout(() => el.blur(), 0));
-      el.addEventListener('change', () => setTimeout(() => el.blur(), 0));
+      el.addEventListener('pointerup', () => setTimeout(() => { el.blur(); }, 0));
+      el.addEventListener('change', () => setTimeout(() => { el.blur(); }, 0));
     });
 
     // Text inputs: Enter/Escape blur to restore keyboard focus
@@ -1135,18 +1149,16 @@ class DComposeApp {
         gridOverlay.classList.toggle('hidden', !visible);
         gridCog.classList.toggle('active', visible);
         if (visible) {
-          if (!osInstance) {
-            osInstance = OverlayScrollbars(gridOverlay, {
-              overflow: { x: 'hidden', y: 'scroll' },
-              scrollbars: {
-                theme: 'gi-scrollbar',
-                visibility: 'visible',
-                autoHide: 'never',
-                dragScroll: true,
-                clickScroll: true,
-              },
-            });
-          }
+          osInstance ??= OverlayScrollbars(gridOverlay, {
+            overflow: { x: 'hidden', y: 'scroll' },
+            scrollbars: {
+              theme: 'gi-scrollbar',
+              visibility: 'visible',
+              autoHide: 'never',
+              dragScroll: true,
+              clickScroll: true,
+            },
+          });
           requestAnimationFrame(refreshAllSliderUI);
         }
       });
@@ -1157,7 +1169,7 @@ class DComposeApp {
           requestAnimationFrame(refreshAllSliderUI);
         }
       }).observe(gridOverlay);
-      gridCog.addEventListener('click', () => overlayActor.send({ type: 'TOGGLE' }));
+      gridCog.addEventListener('click', () => { overlayActor.send({ type: 'TOGGLE' }); });
       gridOverlay.addEventListener('click', (e) => {
         const target = e.target as Element;
         if (target === gridOverlay ||
@@ -1192,31 +1204,33 @@ class DComposeApp {
     this.vibratoActor.start();
 
     if (sustainPedal) {
+      const susRef = this.sustainActor;
       sustainPedal.addEventListener('pointerdown', (e) => {
         e.preventDefault();
-        this.sustainActor!.send({ type: 'ACTIVATE' });
+        susRef.send({ type: 'ACTIVATE' });
       });
       sustainPedal.addEventListener('pointerup', () => {
-        this.sustainActor!.send({ type: 'DEACTIVATE' });
+        susRef.send({ type: 'DEACTIVATE' });
       });
       sustainPedal.addEventListener('pointerleave', () => {
-        this.sustainActor!.send({ type: 'DEACTIVATE' });
+        susRef.send({ type: 'DEACTIVATE' });
       });
     }
     if (vibratoPedal) {
+      const vibRef = this.vibratoActor;
       vibratoPedal.addEventListener('pointerdown', (e) => {
         e.preventDefault();
-        this.vibratoActor!.send({ type: 'ACTIVATE' });
+        vibRef.send({ type: 'ACTIVATE' });
       });
       vibratoPedal.addEventListener('pointerup', () => {
-        this.vibratoActor!.send({ type: 'DEACTIVATE' });
+        vibRef.send({ type: 'DEACTIVATE' });
       });
       vibratoPedal.addEventListener('pointerleave', () => {
-        this.vibratoActor!.send({ type: 'DEACTIVATE' });
+        vibRef.send({ type: 'DEACTIVATE' });
       });
     }
     // Initialize slider progress fills
-    document.querySelectorAll<HTMLInputElement>('input[type="range"]').forEach(s => this.updateSliderFill(s));
+    document.querySelectorAll<HTMLInputElement>('input[type="range"]').forEach(s => { this.updateSliderFill(s); });
   }
 
   // ─── Keyboard input ─────────────────────────────────────────────────────
@@ -1266,8 +1280,8 @@ class DComposeApp {
     this.synth.tryUnlock();                  // synchronous, iOS-safe
     if (!this.synth.isInitialized()) return; // not running yet — drop this keypress
 
+    if (!(code in this.currentLayout.keyMap)) return;
     const coord = this.currentLayout.keyMap[code];
-    if (!coord) return;
 
     const [coordX, coordY] = coord;
     const effectiveCoordX = coordX + this.transposeOffset;
@@ -1321,7 +1335,7 @@ class DComposeApp {
   }
 
   private handlePointerDownInner(event: PointerEvent): void {
-    try { this.canvas.setPointerCapture(event.pointerId); } catch (_) { /* iOS Safari */ }
+    try { this.canvas.setPointerCapture(event.pointerId); } catch { /* iOS Safari */ }
     const button = this.getButtonAtPointer(event);
     if (button) this.playPointerNote(event.pointerId, button.coordX, button.coordY, event.pressure);
     this.pointerDown.set(event.pointerId, button);
@@ -1336,10 +1350,10 @@ class DComposeApp {
     const newId = newButton ? `${newButton.coordX}_${newButton.coordY}` : null;
 
     if (currentId !== newId) {
-      if (currentButton) this.stopPointerNote(event.pointerId, currentButton.coordX, currentButton.coordY);
+      this.stopPointerNote(event.pointerId, currentButton.coordX, currentButton.coordY);
       if (newButton) this.playPointerNote(event.pointerId, newButton.coordX, newButton.coordY, event.pressure);
       this.pointerDown.set(event.pointerId, newButton);
-    } else if (currentButton && this.mpe.isEnabled()) {
+    } else if (this.mpe.isEnabled()) {
       const effectiveCoordX = currentButton.coordX + this.transposeOffset;
       const effectiveCoordY = currentButton.coordY + this.octaveOffset;
       const noteId = `ptr_${event.pointerId}_${effectiveCoordX}_${effectiveCoordY}`;
@@ -1376,7 +1390,7 @@ class DComposeApp {
     const currentButton = this.pointerDown.get(event.pointerId);
     if (currentButton) this.stopPointerNote(event.pointerId, currentButton.coordX, currentButton.coordY);
     this.pointerDown.delete(event.pointerId);
-    try { this.canvas.releasePointerCapture(event.pointerId); } catch (_) {}
+    try { this.canvas.releasePointerCapture(event.pointerId); } catch { /* iOS Safari */ }
   }
 
   private getButtonAtPointer(event: PointerEvent): { coordX: number; coordY: number } | null {
@@ -1385,7 +1399,7 @@ class DComposeApp {
     return this.visualizer.getButtonAtPoint(event.clientX - rect.left, event.clientY - rect.top);
   }
 
-  private playPointerNote(pointerId: number, coordX: number, coordY: number, pressure: number = 0.7): void {
+  private playPointerNote(pointerId: number, coordX: number, coordY: number, pressure = 0.7): void {
     const effectiveCoordX = coordX + this.transposeOffset;
     const effectiveCoordY = coordY + this.octaveOffset;
     const audioNoteId = `ptr_${pointerId}_${effectiveCoordX}_${effectiveCoordY}`;
@@ -1465,7 +1479,7 @@ class DComposeApp {
   private startMpeVibrato(): void {
     if (!this.mpe.isEnabled() || this.vibratoRAF !== null) return;
     this.vibratoPhase = 0;
-    const tick = () => {
+    const tick = (): void => {
       this.vibratoPhase += 0.314; // ≈5Hz at 60fps
       const bend = Math.sin(this.vibratoPhase) * 0.5; // ±0.5 semitones
       for (const noteId of this.getMpeNoteIds()) {
@@ -1492,7 +1506,7 @@ class DComposeApp {
   private populateSliderPresets(
     containerId: string,
     slider: HTMLInputElement,
-    presets: Array<{ value: number; label: string; description: string }>,
+    presets: { value: number; label: string; description: string }[],
   ): void {
     const container = document.getElementById(containerId);
     if (!container) return;
@@ -1529,10 +1543,10 @@ class DComposeApp {
       container.appendChild(mark);
     });
 
-    const updateActive = () => {
+    const updateActive = (): void => {
       const val = parseFloat(slider.value);
       container.querySelectorAll('.slider-preset-mark').forEach(mark => {
-        const btn = mark.querySelector('.slider-preset-btn') as HTMLElement | null;
+        const btn = mark.querySelector<HTMLElement>('.slider-preset-btn');
         if (!btn) return;
         const pVal = parseFloat(btn.dataset.value ?? '');
         const isActive = Math.abs(val - pVal) < 0.05;
@@ -1587,11 +1601,11 @@ const NOTE_SEMITONES: Record<string, number> = {
 };
 
 function noteNameToHz(input: string): number | null {
-  const m = input.trim().match(/^([A-Ga-g][#b]?)(\d+)$/);
+  const m = /^([A-Ga-g][#b]?)(\d+)$/.exec(input.trim());
   if (!m) return null;
   const noteKey = m[1].charAt(0).toUpperCase() + m[1].slice(1);
+  if (!(noteKey in NOTE_SEMITONES)) return null;
   const semitone = NOTE_SEMITONES[noteKey];
-  if (semitone === undefined) return null;
   const octave = parseInt(m[2], 10);
   // D4 = 293.66Hz, D = semitone 2
   const semitonesFromD4 = (octave - 4) * 12 + (semitone - 2);
@@ -1605,8 +1619,8 @@ function hzToNoteAnnotation(hz: number, _d4Hz: number): string {
   const cents = Math.round((semisFromD4 - roundedSemis) * 100);
   const noteIdx = ((roundedSemis % 12) + 12) % 12;
   const octave = 4 + Math.floor(roundedSemis / 12);
-  const noteName = NOTE_NAMES[noteIdx] + octave;
-  if (Math.abs(cents) < 1) return `${noteName}`;
+  const noteName = `${NOTE_NAMES[noteIdx]}${String(octave)}`;
+  if (Math.abs(cents) < 1) return noteName;
   return `${noteName} ${cents > 0 ? '+' : ''}${cents}¢`;
 }
 
@@ -1615,7 +1629,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (parseInt(localStorage.getItem('gi_pedals_h') ?? '0', 10) > window.innerHeight * 0.6) localStorage.removeItem('gi_pedals_h');
 
   document.getElementById('reset-layout')?.addEventListener('click', () => {
-    Object.keys(localStorage).filter(k => k.startsWith('gi_')).forEach(k => localStorage.removeItem(k));
+    Object.keys(localStorage).filter(k => k.startsWith('gi_')).forEach(k => { localStorage.removeItem(k); });
     location.reload();
   });
 
@@ -1659,7 +1673,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (isCollapsed) {
         panel.style.height = '';
       } else {
-        panel.style.height = clampPanelHeight(height, minH, dataMax) + 'px';
+        panel.style.height = `${clampPanelHeight(height, minH, dataMax)}px`;
       }
 
       if (state !== prevState && !isDragging) {
@@ -1687,7 +1701,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!actor.getSnapshot().matches('dragging')) return;
       actor.send({ type: 'DRAG_MOVE', clientY: e.clientY });
     });
-    const stopDrag = () => {
+    const stopDrag = (): void => {
       if (!actor.getSnapshot().matches('dragging')) return;
       actor.send({ type: 'DRAG_END' });
     };
@@ -1711,8 +1725,8 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   document.addEventListener('wheel', (e) => { if (e.ctrlKey) e.preventDefault(); }, { passive: false });
-  document.addEventListener('gesturestart', (e) => e.preventDefault());
-  document.addEventListener('gesturechange', (e) => e.preventDefault());
+  document.addEventListener('gesturestart', (e) => { e.preventDefault(); });
+  document.addEventListener('gesturechange', (e) => { e.preventDefault(); });
 
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
@@ -1744,7 +1758,7 @@ document.addEventListener('DOMContentLoaded', () => {
     aboutBtn?.addEventListener('click', () => {
       aboutDialogActor.send({ type: 'OPEN', content: aboutRendered });
     });
-    aboutClose?.addEventListener('click', () => aboutDialogActor.send({ type: 'CLOSE' }));
+    aboutClose?.addEventListener('click', () => { aboutDialogActor.send({ type: 'CLOSE' }); });
     aboutDialog.addEventListener('click', (e) => {
       if (e.target === aboutDialog) aboutDialogActor.send({ type: 'CLOSE' });
     });
@@ -1911,7 +1925,7 @@ document.addEventListener('DOMContentLoaded', () => {
     getSnapshot: () => appActor.getSnapshot(),
     getActiveNoteCount: () => (app as unknown as { activeNotes: Map<string, unknown> }).activeNotes.size,
     isAudioReady: () => (app as unknown as { synth: { isInitialized: () => boolean } }).synth.isInitialized(),
-    getGridGeometry: () => (app as unknown as { visualizer: { getGridGeometry: () => { cellHv1: {x:number,y:number}, cellHv2: {x:number,y:number}, width: number, height: number } | null } }).visualizer?.getGridGeometry() ?? null,
+    getGridGeometry: () => (app as unknown as { visualizer: { getGridGeometry: () => { cellHv1: {x:number,y:number}, cellHv2: {x:number,y:number}, width: number, height: number } } | null }).visualizer?.getGridGeometry() ?? null,
     getDefaultZoom: () => (app as unknown as { defaultZoom: number }).defaultZoom,
     };
 });

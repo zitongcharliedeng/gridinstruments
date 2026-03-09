@@ -28,7 +28,7 @@ interface Voice {
  * These are just labels - the slider is continuous from ~650 to ~750+ cents
  * Users can set ANY value, these are just common reference points
  */
-export const TUNING_MARKERS: Array<{ id: string; name: string; fifth: number; description: string }> = [
+export const TUNING_MARKERS: { id: string; name: string; fifth: number; description: string }[] = [
   { id: 'tet5', name: '5', fifth: 720, description: '5-TET · Indonesian slendro' },
   { id: 'tet17', name: '17', fifth: 705.88, description: '17-TET · 17 equal divisions' },
   { id: 'pythagorean', name: 'Pyth', fifth: 701.96, description: 'Pythagorean · Pure fifths (3:2)' },
@@ -67,34 +67,32 @@ export class Synth {
   private context: AudioContext | null = null;
   private masterGain: GainNode | null = null;
   private eqFilter: BiquadFilterNode | null = null;
-  private voices: Map<string, Voice> = new Map();
-  private sustainedVoices: Set<string> = new Set();
-  private sustain: boolean = false;
+  private voices = new Map<string, Voice>();
+  private sustainedVoices = new Set<string>();
+  private sustain = false;
   private waveform: WaveformType = 'sawtooth';
   
   // Vibrato (LFO modulating pitch)
   // Shared LFO for all voices, per-voice gain nodes for individual control
   private vibratoLFO: OscillatorNode | null = null;
-  private _vibratoEnabled: boolean = false;
-  private vibratoRate: number = 5; // Hz
-  private vibratoDepth: number = 10; // cents
+  private _vibratoEnabled = false;
+  private vibratoRate = 5; // Hz
+  private vibratoDepth = 10; // cents
   
   // Tuning parameters (can be changed live!)
   private generator: [number, number] = [700, 1200]; // [fifth, octave] in cents
-  private baseFreq: number = 293.66; // D4 base frequency
-  private _d4Hz: number = 293.66; // D4 reference frequency
+  private baseFreq = 293.66; // D4 base frequency
+  private _d4Hz = 293.66; // D4 reference frequency
   
   // Envelope parameters
-  private attackTime: number = 0.01;
-  private releaseTime: number = 0.1;
-  private _masterVolume: number = 0.3;
+  private attackTime = 0.01;
+  private releaseTime = 0.1;
+  private _masterVolume = 0.3;
   
   // EQ parameter (-1 = bass boost, 0 = flat, +1 = treble boost)
-  private _eqValue: number = 0;
+  private _eqValue = 0;
   
-  constructor() {
-    // AudioContext will be created on first user interaction
-  }
+  // AudioContext will be created on first user interaction (initSync)
   
   private initSync(): void {
     if (this.context) return;
@@ -120,14 +118,14 @@ export class Synth {
    *  Creates the context if needed, then calls resume() synchronously (iOS-safe). */
   tryUnlock(): void {
     this.initSync();
-    if (this.context && this.context.state === 'suspended') {
+    if (this.context?.state === 'suspended') {
       void this.context.resume();
     }
   }
 
   async init(): Promise<void> {
     this.initSync();
-    if (this.context && this.context.state === 'suspended') {
+    if (this.context?.state === 'suspended') {
       await this.context.resume();
     }
   }
@@ -315,13 +313,13 @@ export class Synth {
         const freq = this.getFrequency(voice.coordX, voice.coordY, voice.octaveOffset);
         const depthHz = freq * (this.vibratoDepth / 1200);
         voice.vibratoGainNode.gain.setValueAtTime(depthHz, now);
-        this.vibratoLFO!.connect(voice.vibratoGainNode);
+        if (this.vibratoLFO) this.vibratoLFO.connect(voice.vibratoGainNode);
         voice.vibratoGainNode.connect(voice.oscillator.frequency);
       }
     } else {
       for (const voice of this.voices.values()) {
         voice.vibratoGainNode.gain.setValueAtTime(0, now);
-        try { this.vibratoLFO?.disconnect(voice.vibratoGainNode); } catch {}
+        try { this.vibratoLFO?.disconnect(voice.vibratoGainNode); } catch { /* vibrato node may not be connected */ }
       }
     }
   }
@@ -339,7 +337,7 @@ export class Synth {
    * - Halving D4 Hz = down 1 octave (divide by 2)
    * - Formula: freq = D4 * 2^(cents/1200)
    */
-  private getFrequency(x: number, y: number, octaveOffset: number = 0): number {
+  private getFrequency(x: number, y: number, octaveOffset = 0): number {
     const cents = y * this.generator[1] + x * this.generator[0] + octaveOffset * 1200;
     return this.baseFreq * Math.pow(2, cents / 1200);
   }
@@ -351,7 +349,7 @@ export class Synth {
    * @param y Octave offset
    * @param octaveOffset Global octave offset
    */
-  playNote(noteId: string, x: number, y: number, octaveOffset: number = 0, velocity: number = 1): void {
+  playNote(noteId: string, x: number, y: number, octaveOffset = 0, velocity = 1): void {
     if (!this.context || !this.masterGain || this.context.state !== 'running') return;
     if (this.voices.has(noteId)) return;
     const frequency = this.getFrequency(x, y, octaveOffset);
@@ -392,7 +390,7 @@ export class Synth {
    * @param noteId The note to stop
    * @param force Force stop even if sustained
    */
-  stopNote(noteId: string, force: boolean = false): void {
+  stopNote(noteId: string, force = false): void {
     if (!this.context) return;
     
     const voice = this.voices.get(noteId);
@@ -416,7 +414,7 @@ export class Synth {
     
     // Clean up
     // Disconnect vibrato gain node
-    try { this.vibratoLFO?.disconnect(voice.vibratoGainNode); } catch {}
+    try { this.vibratoLFO?.disconnect(voice.vibratoGainNode); } catch { /* vibrato node may not be connected */ }
 
     this.voices.delete(noteId);
     this.sustainedVoices.delete(noteId);
@@ -466,7 +464,7 @@ export class Synth {
   dispose(): void {
     this.stopAll();
     if (this.context) {
-      this.context.close();
+      void this.context.close();
       this.context = null;
     }
     this.masterGain = null;

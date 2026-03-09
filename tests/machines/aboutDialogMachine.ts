@@ -37,7 +37,7 @@ const aboutFooterCheck: StateInvariant = {
     expect(contentText).toContain('MIDImech');
     expect(contentText).toContain('Striso');
     const allLinks = await page.locator('#about-content a').allTextContents();
-    expect(allLinks.every(t => !t.match(/^GitHub$/i))).toBe(true);
+    expect(allLinks.every(t => !(/^GitHub$/i.exec(t)))).toBe(true);
   },
 };
 

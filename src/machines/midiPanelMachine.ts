@@ -1,6 +1,6 @@
 import { setup } from 'xstate';
 
-type MidiPanelEvent = { type: 'TOGGLE_MIDI' };
+interface MidiPanelEvent { type: 'TOGGLE_MIDI' }
 
 export const midiPanelMachine = setup({
   types: {

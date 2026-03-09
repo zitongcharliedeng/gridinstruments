@@ -123,9 +123,10 @@ interface AdjNode {
 function computeShortestPaths(machine: AnyStateMachine): Map<string, string[]> {
   const adj = getAdjacencyMap(machine, {
     serializeState: (state) => JSON.stringify(state.value),
-  }) as unknown as Record<string, AdjNode>;
+  }) as unknown as Partial<Record<string, AdjNode>>;
 
-  const initialState = String(machine.config.initial);
+  const rawInitial = machine.config.initial;
+  const initialState = typeof rawInitial === 'string' ? rawInitial : JSON.stringify(rawInitial ?? '');
   const paths = new Map<string, string[]>();
   paths.set(initialState, []);
 
@@ -134,10 +135,11 @@ function computeShortestPaths(machine: AnyStateMachine): Map<string, string[]> {
   const visited = new Set<string>([initialState]);
 
   while (queue.length > 0) {
-    const current = queue.shift()!;
+    const current = queue.shift();
+    if (current === undefined) break;
     const serialized = `"${current}"`;
     const node = adj[serialized];
-    if (!node) continue;
+    if (node === undefined) continue;
 
     for (const [, transition] of Object.entries(node.transitions)) {
       const targetSerialized = transition.state
@@ -459,7 +461,7 @@ for (const { name: machineName, machine } of allMachines) {
   if (SKIP_MACHINES.has(machineName)) continue;
 
   const transitions = enumerateTransitions(machineName, machine);
-  const kit = getKit(machineName);
+  const _kit = getKit(machineName);
 
   test.describe(`[Graph] ${machineName}`, () => {
     test.beforeEach(async ({ page }) => {

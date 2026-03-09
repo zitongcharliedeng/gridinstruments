@@ -19,9 +19,11 @@ const resetClearsCustomValues: StateInvariant = {
 const insaneHeightDiscarded: StateInvariant = {
   id: 'PNL-LS-3',
   check: async (page: Page) => {
-    const panelH = (await page.locator('#visualiser-panel').boundingBox())!.height;
-    const viewportH = page.viewportSize()!.height;
-    expect(panelH).toBeLessThanOrEqual(viewportH * 0.61);
+    const panelBox = await page.locator('#visualiser-panel').boundingBox();
+    if (!panelBox) throw new Error('#visualiser-panel not visible');
+    const viewport = page.viewportSize();
+    if (!viewport) throw new Error('viewport not available');
+    expect(panelBox.height).toBeLessThanOrEqual(viewport.height * 0.61);
   },
 };
 
@@ -113,7 +115,7 @@ export const layoutPersistencePlaywrightActions: Record<LayoutEvent['type'], (pa
     await page.waitForTimeout(1500);
   },
   SET_INSANE_LS: async (page) => {
-    await page.evaluate(() => localStorage.setItem('gi_visualiser_h', '9999'));
+    await page.evaluate(() => { localStorage.setItem('gi_visualiser_h', '9999'); });
     await page.reload();
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(1500);
@@ -135,27 +137,32 @@ export const layoutPersistenceInvariants: Record<string, string> = {
 
 export const layoutPersistenceDomAssertions: Record<string, (page: Page) => Promise<void>> = {
   pristine: async (page) => {
-    const panelH = (await page.locator('#visualiser-panel').boundingBox())!.height;
-    expect(Math.abs(panelH - 120)).toBeLessThanOrEqual(10);
+    const box = await page.locator('#visualiser-panel').boundingBox();
+    if (!box) throw new Error('#visualiser-panel not visible');
+    expect(Math.abs(box.height - 120)).toBeLessThanOrEqual(10);
   },
   customized: async (page) => {
     const stored = await page.evaluate(() => localStorage.getItem('gi_visualiser_h'));
-    expect(stored).not.toBeNull();
-    expect(parseFloat(stored!)).toBeGreaterThan(130);
+    if (stored === null) throw new Error('gi_visualiser_h not in localStorage');
+    expect(parseFloat(stored)).toBeGreaterThan(130);
   },
   reloaded: async (page) => {
     const stored = await page.evaluate(() => localStorage.getItem('gi_visualiser_h'));
-    expect(stored).not.toBeNull();
-    const panelH = (await page.locator('#visualiser-panel').boundingBox())!.height;
-    expect(Math.abs(panelH - parseFloat(stored!))).toBeLessThanOrEqual(10);
+    if (stored === null) throw new Error('gi_visualiser_h not in localStorage');
+    const box = await page.locator('#visualiser-panel').boundingBox();
+    if (!box) throw new Error('#visualiser-panel not visible');
+    expect(Math.abs(box.height - parseFloat(stored))).toBeLessThanOrEqual(10);
   },
   insaneRestored: async (page) => {
-    const panelH = (await page.locator('#visualiser-panel').boundingBox())!.height;
-    const viewportH = page.viewportSize()!.height;
-    expect(panelH).toBeLessThanOrEqual(viewportH * 0.61);
+    const box = await page.locator('#visualiser-panel').boundingBox();
+    if (!box) throw new Error('#visualiser-panel not visible');
+    const viewport = page.viewportSize();
+    if (!viewport) throw new Error('viewport not available');
+    expect(box.height).toBeLessThanOrEqual(viewport.height * 0.61);
   },
   reset: async (page) => {
-    const panelH = (await page.locator('#visualiser-panel').boundingBox())!.height;
-    expect(Math.abs(panelH - 120)).toBeLessThanOrEqual(10);
+    const box = await page.locator('#visualiser-panel').boundingBox();
+    if (!box) throw new Error('#visualiser-panel not visible');
+    expect(Math.abs(box.height - 120)).toBeLessThanOrEqual(10);
   },
 };

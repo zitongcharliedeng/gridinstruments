@@ -8,9 +8,9 @@ const canvasValidAfterResize: StateInvariant = {
     const canvas = page.locator('#keyboard-canvas');
     await expect(canvas).toBeVisible();
     const box = await canvas.boundingBox();
-    expect(box).not.toBeNull();
-    expect(box!.width).toBeGreaterThan(100);
-    expect(box!.height).toBeGreaterThan(50);
+    if (!box) throw new Error('#keyboard-canvas not visible');
+    expect(box.width).toBeGreaterThan(100);
+    expect(box.height).toBeGreaterThan(50);
   },
 };
 
@@ -37,14 +37,20 @@ const tabletAllVisible: StateInvariant = {
 const mobileCanvasFillsWidth: StateInvariant = {
   id: 'BH-MOB-1',
   check: async (page: Page) => {
-    const overlayHidden = await page.evaluate(() =>
-      document.getElementById('grid-overlay')!.classList.contains('hidden')
-    );
+    const overlayHidden = await page.evaluate(() => {
+      const el = document.getElementById('grid-overlay');
+      if (!el) throw new Error('#grid-overlay not found');
+      return el.classList.contains('hidden');
+    });
     expect(overlayHidden).toBe(true);
-    const canvasWidth = await page.evaluate(() =>
-      document.getElementById('keyboard-canvas')!.getBoundingClientRect().width
-    );
-    const vpWidth = page.viewportSize()!.width;
+    const canvasWidth = await page.evaluate(() => {
+      const el = document.getElementById('keyboard-canvas');
+      if (!el) throw new Error('#keyboard-canvas not found');
+      return el.getBoundingClientRect().width;
+    });
+    const viewport = page.viewportSize();
+    if (!viewport) throw new Error('viewport not available');
+    const vpWidth = viewport.width;
     expect(canvasWidth).toBeGreaterThanOrEqual(vpWidth - 10);
   },
 };
@@ -144,7 +150,8 @@ export const viewportDomAssertions: Record<string, (page: Page) => Promise<void>
     await expect(page.locator('#grid-settings-btn')).toBeVisible();
     const canvas = page.locator('#keyboard-canvas');
     const box = await canvas.boundingBox();
-    expect(box!.width).toBeGreaterThan(500);
+    if (!box) throw new Error('#keyboard-canvas not visible');
+    expect(box.width).toBeGreaterThan(500);
   },
   tablet_768: async (page) => {
     await expect(page.locator('.site-title')).toBeVisible();
@@ -154,7 +161,8 @@ export const viewportDomAssertions: Record<string, (page: Page) => Promise<void>
     await expect(page.locator('#grid-settings-btn')).toBeVisible();
     const canvas = page.locator('#keyboard-canvas');
     const box = await canvas.boundingBox();
-    expect(box!.width).toBeGreaterThanOrEqual(380);
+    if (!box) throw new Error('#keyboard-canvas not visible');
+    expect(box.width).toBeGreaterThanOrEqual(380);
   },
   mobile_375: async (page) => {
     await expect(page.locator('.site-title')).toBeVisible();

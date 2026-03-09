@@ -1,6 +1,6 @@
 import { setup } from 'xstate';
 
-type MpeEvent = { type: 'TOGGLE' };
+interface MpeEvent { type: 'TOGGLE' }
 
 export const mpeMachine = setup({
   types: {

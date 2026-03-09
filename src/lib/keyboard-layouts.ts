@@ -154,14 +154,14 @@ const SEVENTY_FIVE_PCT_EXCLUDE = new Set([
   'PrintScreen','ScrollLock','Pause',
 ]);
 
-const LAYOUTS_RAW: Array<{
+const LAYOUTS_RAW: {
   id: string;
   name: string;
   hasIntlBackslash: boolean;
   hasBackslash: boolean;
   hasNumpad: boolean;
   excludeKeys?: Set<string>;
-}> = [
+}[] = [
   // Full-size ANSI (standard US — has Backslash, no IntlBackslash)
   { id: 'ansi',       name: 'ANSI (US QWERTY)',        hasIntlBackslash: false, hasBackslash: true,  hasNumpad: false },
   { id: 'ansi-np',    name: 'ANSI + Numpad',            hasIntlBackslash: false, hasBackslash: true,  hasNumpad: true  },
@@ -247,7 +247,7 @@ export function getCentDeviation(x: number, fifth: number): number {
  * Convert coordinate to MIDI note number
  * D4 (MIDI 62) is at [0, 0]
  */
-export function coordToMidi(x: number, y: number, octaveOffset: number = 0): number {
+export function coordToMidi(x: number, y: number, octaveOffset = 0): number {
   return 62 + x * 7 + y * 12 + octaveOffset * 12;
 }
 
@@ -257,9 +257,9 @@ export function coordToMidi(x: number, y: number, octaveOffset: number = 0): num
 export function coordToFrequency(
   x: number,
   y: number,
-  octaveOffset: number = 0,
+  octaveOffset = 0,
   generator: [number, number] = [700, 1200],
-  baseFreq: number = 293.66
+  baseFreq = 293.66
 ): number {
   const cents = y * generator[1] + x * generator[0] + octaveOffset * 1200;
   return baseFreq * Math.pow(2, cents / 1200);

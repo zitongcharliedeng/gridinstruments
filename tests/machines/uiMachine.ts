@@ -199,7 +199,7 @@ export const visualiserPlaywrightActions: Record<VisualiserEvent['type'], (page:
   },
   DBLCLICK_VIS_HANDLE: async (page) => {
     await page.evaluate(() => {
-      const h = document.querySelector('#visualiser-panel .panel-resize-handle') as HTMLElement | null;
+      const h = document.querySelector('#visualiser-panel .panel-resize-handle');
       h?.dispatchEvent(new MouseEvent('dblclick', { bubbles: true, cancelable: true }));
     });
   },
@@ -220,12 +220,14 @@ export const visualiserDomAssertions: Record<string, (page: Page) => Promise<voi
     await expect(page.locator('#visualiser-panel')).toBeVisible();
     await expect(page.locator('#visualiser-panel')).not.toHaveClass(/collapsed/);
     const box = await page.locator('#visualiser-panel').boundingBox();
-    expect(box!.height).toBeGreaterThan(30);
+    if (!box) throw new Error('#visualiser-panel not visible');
+    expect(box.height).toBeGreaterThan(30);
   },
   collapsed: async (page) => {
     await expect(page.locator('#visualiser-panel')).toHaveClass(/collapsed/);
     const box = await page.locator('#visualiser-panel').boundingBox();
-    expect(box!.height).toBeLessThan(4);
+    if (!box) throw new Error('#visualiser-panel not visible');
+    expect(box.height).toBeLessThan(4);
   },
 };
 
@@ -320,12 +322,14 @@ export const pedalsDomAssertions: Record<string, (page: Page) => Promise<void>> 
     await expect(page.locator('#pedals-panel')).toBeVisible();
     await expect(page.locator('#pedals-panel')).not.toHaveClass(/collapsed/);
     const box = await page.locator('#pedals-panel').boundingBox();
-    expect(box!.height).toBeGreaterThan(20);
+    if (!box) throw new Error('#pedals-panel not visible');
+    expect(box.height).toBeGreaterThan(20);
   },
   collapsed: async (page) => {
     await expect(page.locator('#pedals-panel')).toHaveClass(/collapsed/);
     const box = await page.locator('#pedals-panel').boundingBox();
-    expect(box!.height).toBeLessThan(4);
+    if (!box) throw new Error('#pedals-panel not visible');
+    expect(box.height).toBeLessThan(4);
   },
 };
 
@@ -580,7 +584,7 @@ export const vibratoDomAssertions: Record<string, (page: Page) => Promise<void>>
 // 7. MIDI Panel Machine  (2 states × 1 event = 2 pairs)
 // ═══════════════════════════════════════════════════════════════════════════════
 
-type MidiPanelEvent = { type: 'TOGGLE_MIDI' };
+interface MidiPanelEvent { type: 'TOGGLE_MIDI' }
 
 export const midiPanelMachine = setup({
   types: { events: {} as MidiPanelEvent },
@@ -629,7 +633,7 @@ export const midiPanelDomAssertions: Record<string, (page: Page) => Promise<void
 // 8. MPE Machine  (2 states × 1 event = 2 pairs)
 // ═══════════════════════════════════════════════════════════════════════════════
 
-type MpeEvent = { type: 'TOGGLE_MPE' };
+interface MpeEvent { type: 'TOGGLE_MPE' }
 
 export const mpeMachine = setup({
   types: { events: {} as MpeEvent },

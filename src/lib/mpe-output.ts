@@ -11,7 +11,7 @@ export class MpeOutput {
   private access: MIDIAccess | null = null;
   private output: MIDIOutput | null = null;
   private freeChannels: number[];              // FIFO queue of available member channels (1-indexed: 2–16)
-  private channelByNoteId: Map<string, number> = new Map();
+  private channelByNoteId = new Map<string, number>();
   private _enabled = false;
   private _bendRange = 48;                     // pitch bend range in semitones
 
@@ -24,7 +24,7 @@ export class MpeOutput {
   // ─── Init ──────────────────────────────────────────────────────────────────
 
   async init(): Promise<void> {
-    if (!navigator.requestMIDIAccess) return;
+    if (!('requestMIDIAccess' in navigator)) return;
     try {
       this.access = await navigator.requestMIDIAccess({ sysex: false });
     } catch {
@@ -63,7 +63,8 @@ export class MpeOutput {
 
   private allocate(noteId: string): number | null {
     if (this.freeChannels.length === 0) return null;
-    const ch = this.freeChannels.shift()!;
+    const ch = this.freeChannels.shift();
+    if (ch === undefined) return null;
     this.channelByNoteId.set(noteId, ch);
     return ch;
   }

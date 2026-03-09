@@ -28,12 +28,12 @@ function oklchToRgb(L: number, C: number, H: number): [number, number, number] {
   const s = s_ * s_ * s_;
 
   // LMS → linear sRGB
-  const lr = +4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s;
+  const lr = 4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s;
   const lg = -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s;
   const lb = -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s;
 
   // Linear → sRGB gamma
-  const gamma = (x: number) =>
+  const gamma = (x: number): number =>
     x >= 0.0031308 ? 1.055 * Math.pow(x, 1 / 2.4) - 0.055 : 12.92 * x;
 
   return [
