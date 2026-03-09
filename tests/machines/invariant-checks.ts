@@ -34,8 +34,7 @@ export const tooltipCheck: StateInvariant = {
       '#zoom-slider', '#zoom-reset',
       '#volume-slider', '#volume-reset',
       '#d-ref-input', '#d-ref-reset',
-      '.wave-btn[data-waveform="sawtooth"]', '.wave-btn[data-waveform="sine"]',
-      '.wave-btn[data-waveform="square"]', '.wave-btn[data-waveform="triangle"]',
+      '#wave-select', '#wave-reset',
       '#layout-select',
     ];
     for (const sel of selectors) {
@@ -707,7 +706,6 @@ export const noWhiteBackgroundCheck: StateInvariant = {
       if (!overlay) return ['overlay missing'];
       // Elements that are intentionally white by design
       const allowedWhite = (el: Element): boolean =>
-        el.matches('.wave-btn.active') ||     // active waveform = white indicator
         el.matches('.gi-check') ||            // checked checkbox mark
         el.matches('.slider-preset-btn.active'); // active TET preset
       const found: string[] = [];
@@ -1696,5 +1694,109 @@ export const iscSvc10Check: StateInvariant = {
     expect(result.slideMsg[0] & 0xF0).toBe(0xB0);
     expect(result.slideMsg[1]).toBe(1);
     expect(result.slideMsg[2]).toBe(Math.round(0.75 * 127));
+  },
+};
+
+// ── Issue regression invariants ─────────────────────────────────────────────
+
+/** D = {overlay}. Skew notch at value 0 reads "DCompose / Wicki-Hayden" (#81). */
+export const iss81SkewNotchCheck: StateInvariant = {
+  id: 'ISS-81-1',
+  check: async (page: Page) => {
+    await page.locator('#grid-settings-btn').click();
+    await page.waitForTimeout(300);
+    // Verify the preset notch button text
+    const notchBtn = page.locator('#skew-presets .slider-preset-btn[data-value="0"]');
+    await expect(notchBtn).toBeVisible();
+    const notchText = await notchBtn.textContent();
+    if (!notchText) throw new Error('skew preset notch button has no text');
+    expect(notchText).toContain('DCompose / Wicki-Hayden');
+    // Verify the skew-label annotation contains both names
+    const labelText = await page.locator('#skew-label').textContent();
+    if (!labelText) throw new Error('#skew-label has no text');
+    expect(labelText).toContain('DCompose');
+    expect(labelText).toContain('Wicki-Hayden');
+  },
+};
+
+/** D = {overlay}. Cog button does not overlap overlay content (#87). */
+export const iss87CogNoOverlapCheck: StateInvariant = {
+  id: 'ISS-87-1',
+  check: async (page: Page) => {
+    await page.locator('#grid-settings-btn').click();
+    await page.waitForTimeout(300);
+    const cogBox = await page.locator('#grid-settings-btn').boundingBox();
+    if (!cogBox) throw new Error('#grid-settings-btn not visible');
+    const sectionBox = await page.locator('.overlay-section').first().boundingBox();
+    if (!sectionBox) throw new Error('.overlay-section not visible');
+    // Overlay section left edge must be >= cog right edge
+    expect(sectionBox.x, 'overlay content must not overlap cog').toBeGreaterThanOrEqual(cogBox.x + cogBox.width);
+  },
+};
+
+/** D = {overlay}. WAVE is a select dropdown with reset button (#96). */
+export const iss96WaveSelectCheck: StateInvariant = {
+  id: 'ISS-96-1',
+  check: async (page: Page) => {
+    await page.locator('#grid-settings-btn').click();
+    await page.waitForTimeout(300);
+    // Verify #wave-select exists and is a SELECT
+    const waveSelect = page.locator('#wave-select');
+    await expect(waveSelect).toBeVisible();
+    const tagName = await waveSelect.evaluate(el => el.tagName);
+    expect(tagName).toBe('SELECT');
+    // Verify #wave-reset exists
+    const waveReset = page.locator('#wave-reset');
+    await expect(waveReset).toBeVisible();
+    // Verify all 4 options exist
+    const options = await waveSelect.locator('option').evaluateAll(
+      els => els.map(el => (el as HTMLOptionElement).value)
+    );
+    expect(options).toEqual(['sawtooth', 'sine', 'square', 'triangle']);
+    // Select sine, then click reset → should go back to sawtooth
+    await waveSelect.selectOption('sine');
+    await page.waitForTimeout(100);
+    await waveReset.click();
+    await page.waitForTimeout(200);
+    await expect(waveSelect).toHaveValue('sawtooth');
+  },
+};
+
+/** D = {overlay}. KEYBOARD LAYOUT has a reset button that resets to ANSI (#97). */
+export const iss97LayoutResetCheck: StateInvariant = {
+  id: 'ISS-97-1',
+  check: async (page: Page) => {
+    await page.locator('#grid-settings-btn').click();
+    await page.waitForTimeout(300);
+    // Verify #layout-reset exists
+    const layoutReset = page.locator('#layout-reset');
+    await expect(layoutReset).toBeVisible();
+    // Click reset and verify layout select value is 'ansi'
+    await layoutReset.click();
+    await page.waitForTimeout(200);
+    const layoutVal = await page.locator('#layout-select').inputValue();
+    expect(layoutVal).toBe('ansi');
+  },
+};
+
+/** D = {overlay}. All slider-track rows share same left/right edges (#98). */
+export const iss98AlignmentCheck: StateInvariant = {
+  id: 'ISS-98-1',
+  check: async (page: Page) => {
+    await page.locator('#grid-settings-btn').click();
+    await page.waitForTimeout(300);
+    const tracks = page.locator('#grid-overlay .slider-track');
+    const count = await tracks.count();
+    expect(count).toBeGreaterThanOrEqual(3);
+    const rights: number[] = [];
+    for (let i = 0; i < count; i++) {
+      const box = await tracks.nth(i).boundingBox();
+      if (!box) continue;
+      rights.push(Math.round(box.x + box.width));
+    }
+    // All right edges within 2px tolerance
+    const maxRight = Math.max(...rights);
+    const minRight = Math.min(...rights);
+    expect(maxRight - minRight, 'slider-track right edges must align within 2px').toBeLessThanOrEqual(2);
   },
 };

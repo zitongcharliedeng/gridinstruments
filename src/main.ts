@@ -583,21 +583,20 @@ class DComposeApp {
     const savedWaveform = this.loadSetting('waveform', 'sawtooth');
     const initialWaveform = isWaveformType(savedWaveform) ? savedWaveform : 'sawtooth' as WaveformType;
     const waveformActor = createActor(waveformMachine, { input: { initial: initialWaveform } });
+    const waveSelect = document.getElementById('wave-select') as HTMLSelectElement | null;
     waveformActor.subscribe((snapshot) => {
       const active = snapshot.context.active;
-      document.querySelectorAll<HTMLButtonElement>('.wave-btn').forEach(b => {
-        b.classList.toggle('active', b.dataset.waveform === active);
-      });
+      if (waveSelect) waveSelect.value = active;
       this.synth.setWaveform(active);
       this.saveSetting('waveform', active);
     });
     waveformActor.start();
-    document.querySelectorAll<HTMLButtonElement>('.wave-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const waveform = btn.dataset.waveform;
-        if (isWaveformType(waveform)) waveformActor.send({ type: 'SELECT', waveform });
-      });
+    waveSelect?.addEventListener('change', () => {
+      const wf = waveSelect.value;
+      if (isWaveformType(wf)) waveformActor.send({ type: 'SELECT', waveform: wf });
     });
+    const waveReset = document.getElementById('wave-reset') as HTMLButtonElement | null;
+    waveReset?.addEventListener('click', () => waveformActor.send({ type: 'SELECT', waveform: 'sawtooth' }));
 
     if (this.layoutSelect) {
       for (const variant of KEYBOARD_VARIANTS) {
@@ -624,7 +623,10 @@ class DComposeApp {
           },
         },
       });
-      void layoutSS;
+      const layoutReset = getElementOrNull('layout-reset', HTMLButtonElement);
+      layoutReset?.addEventListener('click', () => {
+        layoutSS.setSelected('ansi');
+      });
     }
 
     // DCompose ↔ MidiMech skew slider (DOM mutations driven by appActor subscriber)
@@ -672,7 +674,7 @@ class DComposeApp {
       }
 
       this.populateSliderPresets('skew-presets', this.skewSlider, [
-        { value: 0, label: 'DCompose', description: 'DCompose: diagonal parallelogram grid (Striso angle). Wicki-Hayden shares this skew — use WICKED SHEAR to differentiate.' },
+        { value: 0, label: 'DCompose / Wicki-Hayden', description: 'DCompose: diagonal parallelogram grid (Striso angle). Wicki-Hayden shares this skew — use WICKED SHEAR to differentiate.' },
         { value: 1, label: 'MidiMech', description: 'MidiMech: orthogonal rectangular grid' },
       ]);
     }
@@ -1892,11 +1894,10 @@ document.addEventListener('DOMContentLoaded', () => {
       appActor.send({ type: 'MPE_SELECT_OUTPUT', outputId: _mpeSelect.value });
     });
   }
-  document.querySelectorAll<HTMLButtonElement>('.wave-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const waveform = btn.dataset.waveform;
-      if (isWaveformType(waveform)) appActor.send({ type: 'SET_WAVEFORM', waveform });
-    });
+  const _waveSelect = getElementOrNull('wave-select', HTMLSelectElement);
+  _waveSelect?.addEventListener('change', () => {
+    const wf = _waveSelect.value;
+    if (isWaveformType(wf)) appActor.send({ type: 'SET_WAVEFORM', waveform: wf });
   });
   const _layoutSelect = getElementOrNull('layout-select', HTMLSelectElement);
   if (_layoutSelect) {

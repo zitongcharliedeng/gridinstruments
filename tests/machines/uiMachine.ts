@@ -347,7 +347,7 @@ export const waveformMachine = setup({
   states: {
     sawtooth: {
       meta: {
-        reason: 'The SAW waveform button is active/highlighted in the overlay.',
+        reason: 'The SAW waveform is selected in the WAVE dropdown in the overlay.',
         designIntent: 'Default bright waveform for melodic playing',
       },
       on: {
@@ -358,7 +358,7 @@ export const waveformMachine = setup({
     },
     sine: {
       meta: {
-        reason: 'The SIN waveform button is active/highlighted in the overlay.',
+        reason: 'The SIN waveform is selected in the WAVE dropdown in the overlay.',
         designIntent: 'Pure tone waveform for smooth timbre',
       },
       on: {
@@ -369,7 +369,7 @@ export const waveformMachine = setup({
     },
     square: {
       meta: {
-        reason: 'The SQR waveform button is active/highlighted in the overlay.',
+        reason: 'The SQR waveform is selected in the WAVE dropdown in the overlay.',
         designIntent: 'Rich harmonic content for organ-like timbre',
       },
       on: {
@@ -380,7 +380,7 @@ export const waveformMachine = setup({
     },
     triangle: {
       meta: {
-        reason: 'The TRI waveform button is active/highlighted in the overlay.',
+        reason: 'The TRI waveform is selected in the WAVE dropdown in the overlay.',
         designIntent: 'Mellow waveform between sine and square',
       },
       on: {
@@ -394,38 +394,38 @@ export const waveformMachine = setup({
 
 export const waveformPlaywrightActions: Record<WaveformEvent['type'], (page: Page) => Promise<void>> = {
   SELECT_SAWTOOTH: async (page) => {
-    await page.locator('.wave-btn[data-waveform="sawtooth"]').click();
+    await page.locator('#wave-select').selectOption('sawtooth');
   },
   SELECT_SINE: async (page) => {
-    await page.locator('.wave-btn[data-waveform="sine"]').click();
+    await page.locator('#wave-select').selectOption('sine');
   },
   SELECT_SQUARE: async (page) => {
-    await page.locator('.wave-btn[data-waveform="square"]').click();
+    await page.locator('#wave-select').selectOption('square');
   },
   SELECT_TRIANGLE: async (page) => {
-    await page.locator('.wave-btn[data-waveform="triangle"]').click();
+    await page.locator('#wave-select').selectOption('triangle');
   },
 };
 
 export const waveformInvariants: Record<string, string> = {
-  sawtooth: 'The SAW waveform button is active/highlighted in the overlay.',
-  sine: 'The SIN waveform button is active/highlighted in the overlay.',
-  square: 'The SQR waveform button is active/highlighted in the overlay.',
-  triangle: 'The TRI waveform button is active/highlighted in the overlay.',
+  sawtooth: 'The SAW waveform is selected in the WAVE dropdown in the overlay.',
+  sine: 'The SIN waveform is selected in the WAVE dropdown in the overlay.',
+  square: 'The SQR waveform is selected in the WAVE dropdown in the overlay.',
+  triangle: 'The TRI waveform is selected in the WAVE dropdown in the overlay.',
 };
 
 export const waveformDomAssertions: Record<string, (page: Page) => Promise<void>> = {
   sawtooth: async (page) => {
-    await expect(page.locator('.wave-btn[data-waveform="sawtooth"]')).toHaveClass(/active/);
+    await expect(page.locator('#wave-select')).toHaveValue('sawtooth');
   },
   sine: async (page) => {
-    await expect(page.locator('.wave-btn[data-waveform="sine"]')).toHaveClass(/active/);
+    await expect(page.locator('#wave-select')).toHaveValue('sine');
   },
   square: async (page) => {
-    await expect(page.locator('.wave-btn[data-waveform="square"]')).toHaveClass(/active/);
+    await expect(page.locator('#wave-select')).toHaveValue('square');
   },
   triangle: async (page) => {
-    await expect(page.locator('.wave-btn[data-waveform="triangle"]')).toHaveClass(/active/);
+    await expect(page.locator('#wave-select')).toHaveValue('triangle');
   },
 };
 

@@ -83,6 +83,11 @@ import {
   iscSvc8Check,
   iscSvc9Check,
   iscSvc10Check,
+  iss81SkewNotchCheck,
+  iss87CogNoOverlapCheck,
+  iss96WaveSelectCheck,
+  iss97LayoutResetCheck,
+  iss98AlignmentCheck,
 } from './machines/invariant-checks';
 import { focusReturnCheck } from './machines/modifierCompoundMachine';
 
@@ -420,6 +425,26 @@ test.describe('[Structural] state-independent invariants', () => {
 
   test('ISC-SVC-10: configurable timbreCC uses custom CC number', async ({ page }) => {
     await iscSvc10Check.check(page);
+  });
+
+  test('ISS-81-1: skew notch at DCompose shows "DCompose / Wicki-Hayden"', async ({ page }) => {
+    await iss81SkewNotchCheck.check(page);
+  });
+
+  test('ISS-87-1: cog button does not overlap overlay content', async ({ page }) => {
+    await iss87CogNoOverlapCheck.check(page);
+  });
+
+  test('ISS-96-1: WAVE is a select dropdown with reset button', async ({ page }) => {
+    await iss96WaveSelectCheck.check(page);
+  });
+
+  test('ISS-97-1: KEYBOARD LAYOUT has reset button that resets to ANSI', async ({ page }) => {
+    await iss97LayoutResetCheck.check(page);
+  });
+
+  test('ISS-98-1: all slider-track rows share same right edge', async ({ page }) => {
+    await iss98AlignmentCheck.check(page);
   });
 });
 

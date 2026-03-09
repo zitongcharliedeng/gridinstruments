@@ -259,6 +259,7 @@
       background: rgba(30, 30, 32, 0.78);
       z-index: 12;
       padding: 48px 24px 24px 24px;
+      padding-left: 48px;
       padding-right: 36px;
       overflow-y: auto;
       overflow-x: hidden;
@@ -293,7 +294,7 @@
       width: 100%;
       margin-bottom: 40px;
     }
-    .overlay-section .tuning-slider-area .slider-track { width: 100%; }
+    .overlay-section .tuning-slider-area .slider-track { width: calc(100% - 18px); }
     .overlay-section-title {
        font-size: 11px;
        color: var(--dim);
@@ -566,7 +567,7 @@
        opacity: 0.8;
      }
     .slider-info-btn:hover { opacity: 1; color: var(--accent, #4af); }
-    .tuning-slider-area .slider-track { margin-left: 18px; }
+    .tuning-slider-area .slider-track { margin-left: 18px; width: calc(100% - 18px); }
 
     /* ── About dialog ────────────────────────────────────────── */
     .about-content h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent, #4af); margin: 24px 0 8px; border-bottom: 1px solid #222; padding-bottom: 4px; }
@@ -613,11 +614,8 @@
       opacity: 0.9;
     }
 
-    /* ── Wave buttons ────────────────────────────────────────── */
-    .wave-group { display: flex; gap: 1px; background: var(--border); border: 1px solid var(--border); position: relative; z-index: 0; }
-    .wave-btn { flex: 1; padding: 5px 2px; background: var(--bg); border: none; color: var(--dim); font-family: var(--font); font-size: 10px; cursor: pointer; text-transform: uppercase; letter-spacing: 0.04em; }
-    .wave-btn.active { background: var(--fg); color: var(--bg); }
-    .wave-btn:hover:not(.active) { background: var(--subtle); color: var(--fg); }
+    /* ── Wave / layout selects inside slider-track ─────────── */
+    .slider-track select { flex: 1; min-width: 0; }
 
     /* ── Instructions ────────────────────────────────────────── */
     #instructions {
@@ -748,14 +746,15 @@
         <div id="grid-overlay" class="hidden">
 
           <div class="overlay-section">
-            <div class="ctrl-group">
-              <span class="ctrl-label">Wave</span>
-              <div class="wave-group" role="group" aria-label="Waveform">
-                <button class="wave-btn active" data-waveform="sawtooth" title="Sawtooth wave">SAW</button>
-                <button class="wave-btn" data-waveform="sine" title="Sine wave">SIN</button>
-                <button class="wave-btn" data-waveform="square" title="Square wave">SQR</button>
-                <button class="wave-btn" data-waveform="triangle" title="Triangle wave">TRI</button>
-              </div>
+            <div class="slider-track">
+              <span class="slider-label-overlay">WAVE</span>
+              <select id="wave-select" title="Select waveform (sawtooth/sine/square/triangle)">
+                <option value="sawtooth">SAW</option>
+                <option value="sine">SIN</option>
+                <option value="square">SQR</option>
+                <option value="triangle">TRI</option>
+              </select>
+              <button class="slider-reset icon-btn icon-md" id="wave-reset" title="Reset waveform to sawtooth (default)"><i data-lucide="rotate-cw"></i></button>
             </div>
             <div class="ctrl-group" style="margin-top: 18px">
               <div class="slider-track">
@@ -768,10 +767,11 @@
           </div>
 
           <div class="overlay-section">
-            <div class="ctrl-group">
-              <span class="ctrl-label">Keyboard Layout</span>
+            <div class="slider-track">
+              <span class="slider-label-overlay">KEYBOARD LAYOUT</span>
               <select id="layout-select" title="Select keyboard physical layout">
               </select>
+              <button class="slider-reset icon-btn icon-md" id="layout-reset" title="Reset keyboard layout to ANSI (US QWERTY)"><i data-lucide="rotate-cw"></i></button>
             </div>
           </div>
 
