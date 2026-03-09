@@ -4,7 +4,7 @@ A browser synthesizer built on the [Wicki-Hayden](https://en.wikipedia.org/wiki/
 
 **[Try it live](https://gridinstruments.xyz)** · [⭐ Star on GitHub](https://github.com/zitongcharliedeng/gridinstruments) · [PolyForm NC License](LICENSE) — open source, always free. Donations welcome but never required.
 
-![GridInstruments screenshot](tests/visual-regression.spec.ts-snapshots/full-page-chromium-linux.png)
+![GridInstruments screenshot](tests/xstate-graph.spec.ts-snapshots/full-page-firefox-linux.png)
 
 ## Features
 
@@ -41,5 +41,5 @@ A browser synthesizer built on the [Wicki-Hayden](https://en.wikipedia.org/wiki/
 npm install
 npm run dev      # Vite dev server on :5173
 npm run build    # tsc + vite build
-npx playwright test --project=chromium  # run tests
+nix develop --command npx playwright test --project=firefox --workers=1  # run tests
 ```
