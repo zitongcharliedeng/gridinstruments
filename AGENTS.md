@@ -2,25 +2,41 @@
 
 This file tells AI agents how to work on and test this project.
 
-## Project Overview
+---
+
+## Project Mission
+
+GridInstruments exists to make isomorphic grid keyboard layouts — especially Wicki-Hayden and DCompose — mainstream and accessible. The goal is harmonic literacy for everyone: an instrument that makes music theory intuitive, runs in the browser with zero install, works on as many hardware inputs as possible (computer keyboard, MIDI controllers, touchscreen, MPE devices), and is free forever.
+
+Core values:
+- **Web-first** — no install, runs in any modern browser
+- **Isomorphic grids** — every pattern of notes looks the same regardless of key
+- **Microtonal** — continuous tuning from 5-TET to 7-TET and beyond
+- **Expressive** — MPE, vibrato, sustain, velocity
+- **Open** — PolyForm NC license, always free, donations never required
+
+---
+
+## Technical Overview
 
 GridInstruments is a browser-based isomorphic keyboard synthesizer. It uses Web Audio API for sound, Web MIDI API for MIDI input, and Canvas 2D for rendering the keyboard grid and note history.
 
 - **Stack**: TypeScript, Vite, Canvas 2D, Web Audio, Web MIDI
 - **Build**: `npm run build` (tsc + vite build)
 - **Dev**: `npm run dev` (Vite dev server, default http://localhost:3000)
-- **Tests**: `nix develop --command npx playwright test --project=firefox` (must use nix devshell — NixOS system playwright binary is broken)
+- **Tests**: `nix develop --command npx playwright test --project=firefox --workers=1` (must use nix devshell — NixOS system playwright binary is broken)
 - **No framework** — vanilla TS, single-page app, all rendering via Canvas
+
+---
 
 ## Key Files
 
 | File | Purpose |
 |------|---------|
-| `tests/behavioral.spec.ts` | **Source of truth** — behavioral test invariants with `@reason` and `@design-intent` docs |
-| `tests/panel-resize.spec.ts` | Drag handle regression tests — 19 deterministic tests |
-| `tests/contracts.spec.ts` | Pure function invariants — library contract tests |
-| `tests/overlay-regression.spec.ts` | Overlay + issue regression tests |
-| `tests/visual-regression.spec.ts` | Visual regression tests with golden screenshots |
+| `tests/xstate-graph.spec.ts` | **Only spec file** — XState graph-generated tests + structural invariants |
+| `tests/machines/invariant-checks.ts` | All `StateInvariant` objects — the source of truth for design constraints |
+| `tests/machines/uiMachine.ts` | UI state machine definitions + DOM assertions |
+| `tests/machines/types.ts` | `StateInvariant` interface |
 | `index.html` | UI structure, all CSS inline in `<style>` block |
 | `src/main.ts` | App wiring — event listeners, DOM bindings |
 | `src/lib/keyboard-visualizer.ts` | Canvas keyboard grid — geometry, rendering, hit detection |
@@ -33,6 +49,8 @@ GridInstruments is a browser-based isomorphic keyboard synthesizer. It uses Web 
 | `src/lib/mpe-service.ts` | MPE service |
 | `src/lib/chord-graffiti.ts` | Yellow chord shape hints (roughjs SVG overlay) |
 
+---
+
 ## NixOS / Playwright Setup
 
 The project has a `flake.nix` devshell that provides the correct nixpkgs Firefox matching the npm `@playwright/test` version.
@@ -41,46 +59,47 @@ The project has a `flake.nix` devshell that provides the correct nixpkgs Firefox
 # Enter devshell (sets PLAYWRIGHT_BROWSERS_PATH automatically)
 nix develop
 
-# Run all tests inside the devshell
-nix develop --command npx playwright test --project=firefox
+# Run all tests inside the devshell (single worker required)
+nix develop --command npx playwright test --project=firefox --workers=1
 
-# Or enter interactive shell first
-nix develop
-npx playwright test --project=firefox tests/behavioral.spec.ts
+# Run a subset by name pattern
+nix develop --command npx playwright test --project=firefox --workers=1 -g "Structural"
+
+# List all tests without running
+nix develop --command npx playwright test --project=firefox --workers=1 --list
 ```
 
 **Never** use the bare system `npx playwright test` — it will fail on NixOS due to missing browser binaries.
 
+---
+
 ## Testing
 
-**Playwright tests are the single source of truth for all design constraints.**
+**All tests live in `tests/xstate-graph.spec.ts`.** It is the only spec file Playwright runs (enforced via `testMatch` in `playwright.config.ts`).
 
-Each test has `@reason` and `@design-intent` JSDoc explaining the design decision it protects.
+- **Structural invariants** — state-independent checks (DOM structure, library contracts, visual properties)
+- **Graph-generated tests** — XState `getAdjacencyMap` generates one test per `(state, event)` pair per machine
+
+**All new tests must be `StateInvariant` objects** in `tests/machines/invariant-checks.ts`, wired into the `[Structural]` block in `tests/xstate-graph.spec.ts`. No standalone `test()` calls in any other file — this is enforced by ast-grep CI rules.
 
 ```bash
-# All behavioral tests (fastest)
-nix develop --command npx playwright test --project=firefox tests/behavioral.spec.ts
+# Full suite (~10 minutes, 171+ tests)
+nix develop --command npx playwright test --project=firefox --workers=1
 
-# Panel resize / drag handle tests
-nix develop --command npx playwright test --project=firefox tests/panel-resize.spec.ts
-
-# Library contract invariants
-nix develop --command npx playwright test --project=firefox tests/contracts.spec.ts
-
-# Overlay + issue regressions
-nix develop --command npx playwright test --project=firefox tests/overlay-regression.spec.ts
-
-# Full suite
-nix develop --command npx playwright test --project=firefox
+# Structural tests only (~2 minutes, faster feedback loop)
+nix develop --command npx playwright test --project=firefox --workers=1 -g "Structural"
 ```
 
 The dev server auto-starts via `playwright.config.ts` webServer config on port 3000.
+
+---
 
 ## Constraints for Code Changes
 
 - **JetBrains Mono** is the ONLY allowed font
 - **#000 background, #fff text, no border-radius**
 - **No `as any`, `@ts-ignore`, `@ts-expect-error`** — strict TypeScript
+- **No `!` non-null assertions** — use `if (!x) throw new Error(msg)` or optional chaining
 - **Shift** = vibrato (hold), **Space** = sustain (hold), **R** is a note key
 - **Ctrl** passes through to browser (no synth shortcuts)
 - Modifiers are hold-on, off-by-default (not toggle)
@@ -89,22 +108,29 @@ The dev server auto-starts via `playwright.config.ts` webServer config on port 3
 - **Drag handles** live on the inner border of panels — never touch the grid-area element or keyboard-canvas
 - **Never close GitHub issues** — only label "ready for review"
 - **`grim` is banned** for screenshots
+- **Overlay style**: greyish (`var(--dim)`) for macro category headings, white for individual setting labels
+
+---
 
 ## UI Structure
 
 - `#grid-settings-btn` — cog button (top-left of keyboard-container, z-index 15)
-- `#grid-overlay` — per-grid settings overlay (replaces old sidebar); toggle via cog; `hidden` class = closed
+- `#grid-overlay` — per-grid settings overlay; toggle via cog; `hidden` class = closed; `padding-left: 48px` clears the cog
 - `#visualiser-panel` — top panel with drag handle at its bottom border
 - `#pedals-panel` — bottom panel with drag handle at its top border
 - Panels use `position: relative; overflow: visible` so handles can straddle the seam
+- Overlay sections use `.overlay-section-title` (greyish) for category headings
+
+---
 
 ## Development Workflow
 
 1. Make changes
 2. Run `npm run build` — must exit 0
-3. Run `nix develop --command npx playwright test --project=firefox tests/behavioral.spec.ts`
-4. All behavioral tests must pass
-5. Run panel-resize, contracts, and overlay-regression suites — all must pass
+3. Run `nix develop --command npx playwright test --project=firefox --workers=1 -g "Structural"` — all structural tests must pass
+4. Run full suite to confirm nothing regressed
+
+---
 
 ## Atomic Checkpoint Protocol (MANDATORY for orchestrators)
 
@@ -145,7 +171,6 @@ STEP 4: NEXT    — ONLY NOW may you delegate the next task
 - `completed_tasks` in boulder.json is the machine-readable source of truth
 - `completed_evidence` maps each task to its commit hash (or "no-change-needed", "verified-current", etc.)
 - On cold-start / session resume: read boulder.json → know exactly what's done without git forensics
-- On plan reconciliation: `completed_tasks.length` MUST equal the count of `- [x]` in the plan file
 
 ### Enforcement:
 
