@@ -351,7 +351,7 @@ export class Synth {
    * @param y Octave offset
    * @param octaveOffset Global octave offset
    */
-  playNote(noteId: string, x: number, y: number, octaveOffset: number = 0): void {
+  playNote(noteId: string, x: number, y: number, octaveOffset: number = 0, velocity: number = 1): void {
     if (!this.context || !this.masterGain || this.context.state !== 'running') return;
     if (this.voices.has(noteId)) return;
     const frequency = this.getFrequency(x, y, octaveOffset);
@@ -364,7 +364,7 @@ export class Synth {
     oscillator.connect(gainNode);
     gainNode.connect(this.masterGain);
     oscillator.start();
-    gainNode.gain.setTargetAtTime(1, this.context.currentTime, this.attackTime);
+    gainNode.gain.setTargetAtTime(Math.max(0.01, Math.min(1, velocity)), this.context.currentTime, this.attackTime);
     // Always create vibrato gain node (gain=0 = no modulation by default)
     const vibratoGainNode = this.context.createGain();
     vibratoGainNode.gain.value = 0;

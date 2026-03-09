@@ -505,7 +505,7 @@ class DComposeApp {
     const [coordX, coordY] = midiToCoord(midiNote);
     const noteKey = `midi_${deviceId}_${channel}_${midiNote}`;
     const audioNoteId = `midi_${deviceId}_${channel}_${midiNote}_${coordX}_${coordY}`;
-    this.synth.playNote(audioNoteId, coordX, coordY, 0);
+    this.synth.playNote(audioNoteId, coordX, coordY, 0, velocity / 127);
     this.mpe.noteOn(audioNoteId, midiNote, velocity / 127);
     this.activeNotes.set(noteKey, { coordX, coordY });
     this.midiChannelVoice.set(`${deviceId}_${channel}`, audioNoteId);

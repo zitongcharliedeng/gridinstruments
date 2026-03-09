@@ -745,9 +745,10 @@
         <!-- Grid settings overlay (was sidebar) -->
         <div id="grid-overlay" class="hidden">
 
-          <div class="overlay-section">
-            <div class="slider-track">
-              <span class="slider-label-overlay">WAVE</span>
+           <div class="overlay-section-title">SOUND</div>
+           <div class="overlay-section">
+             <div class="slider-track">
+               <span class="slider-label-overlay">WAVE</span>
               <select id="wave-select" title="Select waveform (sawtooth/sine/square/triangle)">
                 <option value="sawtooth">SAW</option>
                 <option value="sine">SIN</option>
@@ -764,22 +765,24 @@
                 <button class="slider-reset icon-btn icon-md" id="volume-reset" title="Reset volume to default (0.3)"><i data-lucide="rotate-cw"></i></button>
               </div>
             </div>
-          </div>
+           </div>
 
-          <div class="overlay-section">
-            <div class="slider-track">
-              <span class="slider-label-overlay">KEYBOARD LAYOUT</span>
+           <div class="overlay-section-title">LAYOUT</div>
+           <div class="overlay-section">
+             <div class="slider-track">
+               <span class="slider-label-overlay">KEYBOARD LAYOUT</span>
               <select id="layout-select" title="Select keyboard physical layout">
               </select>
               <button class="slider-reset icon-btn icon-md" id="layout-reset" title="Reset keyboard layout to ANSI (US QWERTY)"><i data-lucide="rotate-cw"></i></button>
             </div>
-          </div>
+           </div>
 
-          <div class="overlay-section">
-            <div class="tuning-slider-area">
-              <button class="slider-info-btn icon-btn icon-lg" data-info="tuning"><i data-lucide="info"></i></button>
-              <div class="slider-track">
-                <span class="slider-label-overlay" id="tuning-label">FIFTHS TUNING (cents)</span>
+           <div class="overlay-section-title">TUNING</div>
+           <div class="overlay-section">
+             <div class="tuning-slider-area">
+               <button class="slider-info-btn icon-btn icon-lg" data-info="tuning"><i data-lucide="info"></i></button>
+               <div class="slider-track">
+                 <span class="slider-label-overlay" id="tuning-label">FIFTHS TUNING (cents)</span>
                 <input type="range" id="tuning-slider" min="683" max="722" step="0.01" value="700" title="Fifth interval tuning in cents (683=7-TET … 722=5-TET)">
                 <input type="text" class="badge-input" id="tuning-thumb-badge" value="700" title="Edit fifth interval in cents">
                 <button class="slider-reset icon-btn icon-md" id="tuning-reset" title="Reset to 12-TET (700¢)"><i data-lucide="rotate-cw"></i></button>
@@ -812,20 +815,22 @@
               </div>
               <div class="slider-presets" id="bfact-presets"></div>
             </div>
-          </div>
+           </div>
 
-          <div class="overlay-section">
-            <div class="slider-track">
-              <span class="slider-label-overlay">Zoom (x)</span>
+           <div class="overlay-section-title">DISPLAY</div>
+           <div class="overlay-section">
+             <div class="slider-track">
+               <span class="slider-label-overlay">Zoom (x)</span>
               <input type="range" id="zoom-slider" min="0.2" max="3" step="0.01" value="1" title="Grid zoom level">
               <span class="slider-value-badge" id="zoom-thumb-badge">1.00</span>
               <button class="slider-reset icon-btn icon-md" id="zoom-reset" title="Aims to match keysize to standard keyboard key size"><i data-lucide="rotate-cw"></i></button>
             </div>
-          </div>
+           </div>
 
-          <div class="overlay-section d-ref-group">
-            <div class="slider-track">
-              <span class="slider-label-overlay" id="d-ref-label">D REF (Hz)</span>
+           <div class="overlay-section-title">REFERENCE</div>
+           <div class="overlay-section d-ref-group">
+             <div class="slider-track">
+               <span class="slider-label-overlay" id="d-ref-label">D REF (Hz)</span>
               <input type="range" id="d-ref-slider" min="73.42" max="1174.66" step="0.01" value="293.66" title="Reference pitch slider (D2–D6)">
               <input type="text" class="badge-input" id="d-ref-input" value="293.66" style="width:80px; text-transform:none;" title="Edit reference pitch in Hz or note name (default: D4 = 293.66)">
               <button id="d-ref-reset" class="slider-reset icon-btn icon-md" title="Reset to D4 (293.66 Hz)"><i data-lucide="rotate-cw"></i></button>

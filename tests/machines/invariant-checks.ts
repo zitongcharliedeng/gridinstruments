@@ -1800,3 +1800,26 @@ export const iss98AlignmentCheck: StateInvariant = {
     expect(maxRight - minRight, 'slider-track right edges must align within 2px').toBeLessThanOrEqual(2);
   },
 };
+
+/** D = {overlay}. Overlay has organized category headings in correct style (#92). */
+export const iss92OverlayHeadingsCheck: StateInvariant = {
+  id: 'ISS-92-1',
+  check: async (page: Page) => {
+    // Open overlay first
+    await page.locator('#grid-settings-btn').click();
+    await page.waitForTimeout(300);
+    // Verify all 6 category headings exist
+    const headings = page.locator('#grid-overlay .overlay-section-title');
+    const texts = await headings.allTextContents();
+    for (const expected of ['SOUND', 'LAYOUT', 'TUNING', 'DISPLAY', 'REFERENCE', 'MIDI']) {
+      if (!texts.some(t => t.trim() === expected)) {
+        throw new Error(`Missing overlay category heading: ${expected}`);
+      }
+    }
+    // Verify headings are greyish (not white)
+    const firstHeading = headings.first();
+    const color = await firstHeading.evaluate((el) => getComputedStyle(el).color);
+    // var(--dim) resolves to a grey — should not be rgb(255, 255, 255)
+    if (color === 'rgb(255, 255, 255)') throw new Error('Category heading is white — should be greyish (var(--dim))');
+  },
+};

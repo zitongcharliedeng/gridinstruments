@@ -83,12 +83,13 @@ import {
   iscSvc8Check,
   iscSvc9Check,
   iscSvc10Check,
-  iss81SkewNotchCheck,
-  iss87CogNoOverlapCheck,
-  iss96WaveSelectCheck,
-  iss97LayoutResetCheck,
-  iss98AlignmentCheck,
-} from './machines/invariant-checks';
+   iss81SkewNotchCheck,
+   iss87CogNoOverlapCheck,
+   iss96WaveSelectCheck,
+   iss97LayoutResetCheck,
+   iss98AlignmentCheck,
+   iss92OverlayHeadingsCheck,
+ } from './machines/invariant-checks';
 import { focusReturnCheck } from './machines/modifierCompoundMachine';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -443,10 +444,14 @@ test.describe('[Structural] state-independent invariants', () => {
     await iss97LayoutResetCheck.check(page);
   });
 
-  test('ISS-98-1: all slider-track rows share same right edge', async ({ page }) => {
-    await iss98AlignmentCheck.check(page);
-  });
-});
+   test('ISS-98-1: all slider-track rows share same right edge', async ({ page }) => {
+     await iss98AlignmentCheck.check(page);
+   });
+
+   test('ISS-92-1: overlay has organized category headings in correct style', async ({ page }) => {
+     await iss92OverlayHeadingsCheck.check(page);
+   });
+ });
 
 // ─── Test generation ─────────────────────────────────────────────────────────
 
