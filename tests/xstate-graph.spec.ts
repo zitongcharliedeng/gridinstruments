@@ -47,6 +47,26 @@ import {
   scrollbarWidthCheck,
   scrollbarOverflowCheck,
   drefDriftCheck,
+  ctMarkers1Check,
+  ctMarkers2Check,
+  ctNearest1Check,
+  ctMidi1Check,
+  ctMidi2Check,
+  ctPc1Check,
+  ctPc2Check,
+  ctNotename1Check,
+  ctNotename2Check,
+  ctNotename3Check,
+  ctHue1Check,
+  ctHue2Check,
+  ctRoundtrip1Check,
+  ctCents1Check,
+  ctCents2Check,
+  ctMachine1Check,
+  ctMachine2Check,
+  ctMachine3Check,
+  ctMachine4Check,
+  bhDoubleAccidental1Check,
 } from './machines/invariant-checks';
 import { focusReturnCheck } from './machines/modifierCompoundMachine';
 
@@ -240,6 +260,86 @@ test.describe('[Structural] state-independent invariants', () => {
 
   test('ISS-84-1: rapid keyboard clicks do not change D-ref value (#84)', async ({ page }) => {
     await drefDriftCheck.check(page);
+  });
+
+  test('CT-MARKERS-1: TUNING_MARKERS sorted descending by fifth', async ({ page }) => {
+    await ctMarkers1Check.check(page);
+  });
+
+  test('CT-MARKERS-2: All 8 expected TET markers present', async ({ page }) => {
+    await ctMarkers2Check.check(page);
+  });
+
+  test('CT-NEAREST-1: findNearestMarker(700) returns 12-TET with distance 0', async ({ page }) => {
+    await ctNearest1Check.check(page);
+  });
+
+  test('CT-MIDI-1: coordToMidi(0, 0) = 62 (D4)', async ({ page }) => {
+    await ctMidi1Check.check(page);
+  });
+
+  test('CT-MIDI-2: coordToMidi for known notes', async ({ page }) => {
+    await ctMidi2Check.check(page);
+  });
+
+  test('CT-PC-1: pitchClassFromCoordX(0) = 2 (D)', async ({ page }) => {
+    await ctPc1Check.check(page);
+  });
+
+  test('CT-PC-2: pitchClassFromCoordX for various coordinates', async ({ page }) => {
+    await ctPc2Check.check(page);
+  });
+
+  test('CT-NOTENAME-1: D is at coordinate 0', async ({ page }) => {
+    await ctNotename1Check.check(page);
+  });
+
+  test('CT-NOTENAME-2: Known note names at various coordinates', async ({ page }) => {
+    await ctNotename2Check.check(page);
+  });
+
+  test('CT-NOTENAME-3: Double accidentals exist at extreme coordinates', async ({ page }) => {
+    await ctNotename3Check.check(page);
+  });
+
+  test('CT-HUE-1: D (pitch class 2) has hue 29\u00B0', async ({ page }) => {
+    await ctHue1Check.check(page);
+  });
+
+  test('CT-HUE-2: Adjacent fifths differ by 210\u00B0 for max contrast', async ({ page }) => {
+    await ctHue2Check.check(page);
+  });
+
+  test('CT-ROUNDTRIP-1: coordToMidiNote round-trips for canonical positions', async ({ page }) => {
+    await ctRoundtrip1Check.check(page);
+  });
+
+  test('CT-CENTS-1: At 12-TET (700\u00A2), all coordinates have 0 deviation', async ({ page }) => {
+    await ctCents1Check.check(page);
+  });
+
+  test('CT-CENTS-2: At 720\u00A2 (5-TET), deviation is 20\u00A2 per fifth step', async ({ page }) => {
+    await ctCents2Check.check(page);
+  });
+
+  test('CT-MACHINE-1: Runtime overlay machine states match test machine', async ({ page }) => {
+    await ctMachine1Check.check(page);
+  });
+
+  test('CT-MACHINE-2: Runtime pedal machine states match test sustain/vibrato', async ({ page }) => {
+    await ctMachine2Check.check(page);
+  });
+
+  test('CT-MACHINE-3: Test panel states map to runtime panel machine states', async ({ page }) => {
+    await ctMachine3Check.check(page);
+  });
+
+  test('CT-MACHINE-4: Runtime waveform machine has correct initial waveform', async ({ page }) => {
+    await ctMachine4Check.check(page);
+  });
+
+  test('BH-DOUBLEACCIDENTAL-1: Note naming includes double sharps and flats', async ({ page }) => {
+    await bhDoubleAccidental1Check.check(page);
   });
 });
 

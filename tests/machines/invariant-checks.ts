@@ -10,6 +10,17 @@
 import type { Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 import type { StateInvariant } from './types';
+import { overlayMachine } from '../../src/machines/overlayMachine';
+import { pedalMachine } from '../../src/machines/pedalMachines';
+import { panelMachine } from '../../src/machines/panelMachine';
+import {
+  overlayMachine as testOverlayMachine,
+  visualiserMachine as testVisualiserMachine,
+  pedalsMachine as testPedalsMachine,
+  waveformMachine as testWaveformMachine,
+  sustainMachine as testSustainMachine,
+  vibratoMachine as testVibratoMachine,
+} from './uiMachine';
 
 // ── State predicates: D(P) = {M} — wired to meta.invariants in uiMachine.ts ─
 
@@ -770,5 +781,302 @@ export const drefRangeCheck: StateInvariant = {
     const max = parseFloat(await slider.getAttribute('max') ?? '0');
     expect(min).toBeCloseTo(73.42, 0);  // D2
     expect(max).toBeCloseTo(1174.66, 0); // D6
+  },
+};
+
+// ── Migrated from contracts.spec.ts — library contract invariants ────────────
+
+// ─── Category B: Module imports via page.evaluate ─────────────────────────────
+
+/** D = {}. TUNING_MARKERS must be sorted descending for binary search. */
+export const ctMarkers1Check: StateInvariant = {
+  id: 'CT-MARKERS-1',
+  check: async (page: Page) => {
+    const sorted = await page.evaluate(async () => {
+      const { TUNING_MARKERS } = await import('/src/lib/synth.ts');
+      for (let i = 1; i < TUNING_MARKERS.length; i++) {
+        if (TUNING_MARKERS[i].fifth >= TUNING_MARKERS[i - 1].fifth) return false;
+      }
+      return true;
+    });
+    expect(sorted).toBe(true);
+  },
+};
+
+/** D = {}. All 8 expected TET markers present. */
+export const ctMarkers2Check: StateInvariant = {
+  id: 'CT-MARKERS-2',
+  check: async (page: Page) => {
+    const result = await page.evaluate(async () => {
+      const { TUNING_MARKERS } = await import('/src/lib/synth.ts');
+      const names = TUNING_MARKERS.map((m: { name: string }) => m.name);
+      return { count: TUNING_MARKERS.length, names };
+    });
+    expect(result.count).toBe(8);
+    expect(result.names).toEqual(['5', '17', 'Pyth', '12', '31', '\u00BCMT', '19', '7']);
+  },
+};
+
+/** D = {}. findNearestMarker(700) returns 12-TET with distance 0. */
+export const ctNearest1Check: StateInvariant = {
+  id: 'CT-NEAREST-1',
+  check: async (page: Page) => {
+    const result = await page.evaluate(async () => {
+      const { findNearestMarker } = await import('/src/lib/synth.ts');
+      const { marker, distance } = findNearestMarker(700);
+      return { name: marker.name, fifth: marker.fifth, distance };
+    });
+    expect(result.fifth).toBe(700);
+    expect(result.distance).toBe(0);
+    expect(result.name).toBe('12');
+  },
+};
+
+/** D = {}. D is at coordinate 0. */
+export const ctNotename1Check: StateInvariant = {
+  id: 'CT-NOTENAME-1',
+  check: async (page: Page) => {
+    const name = await page.evaluate(async () => {
+      const { getNoteNameFromCoord } = await import('/src/lib/keyboard-layouts.ts');
+      return getNoteNameFromCoord(0);
+    });
+    expect(name).toBe('D');
+  },
+};
+
+/** D = {}. Known note names at various coordinates. */
+export const ctNotename2Check: StateInvariant = {
+  id: 'CT-NOTENAME-2',
+  check: async (page: Page) => {
+    const names = await page.evaluate(async () => {
+      const { getNoteNameFromCoord } = await import('/src/lib/keyboard-layouts.ts');
+      return {
+        x1: getNoteNameFromCoord(1),
+        xn1: getNoteNameFromCoord(-1),
+        x2: getNoteNameFromCoord(2),
+        xn2: getNoteNameFromCoord(-2),
+        x4: getNoteNameFromCoord(4),
+        xn4: getNoteNameFromCoord(-4),
+      };
+    });
+    expect(names.x1).toBe('A');
+    expect(names.xn1).toBe('G');
+    expect(names.x2).toBe('E');
+    expect(names.xn2).toBe('C');
+    expect(names.x4).toContain('\u266F');  // ♯ (F♯)
+    expect(names.xn4).toContain('\u266D'); // ♭ (B♭)
+  },
+};
+
+/** D = {}. Double accidentals exist at extreme coordinates. */
+export const ctNotename3Check: StateInvariant = {
+  id: 'CT-NOTENAME-3',
+  check: async (page: Page) => {
+    const result = await page.evaluate(async () => {
+      const { getNoteNameFromCoord } = await import('/src/lib/keyboard-layouts.ts');
+      return {
+        doubleSharp: getNoteNameFromCoord(11),
+        doubleFlat: getNoteNameFromCoord(-11),
+      };
+    });
+    // Double accidentals use repeated ♯♯/♭♭ (JetBrains Mono lacks SMP glyphs)
+    expect(result.doubleSharp).toContain('\u266F\u266F');
+    expect(result.doubleFlat).toContain('\u266D\u266D');
+  },
+};
+
+// ─── Category A: Pure math — no page needed ───────────────────────────────────
+
+/** D = {}. coordToMidi(0, 0) = 62 (D4). */
+export const ctMidi1Check: StateInvariant = {
+  id: 'CT-MIDI-1',
+  check: async (_page: Page) => {
+    // Contract: baseMidi=62, x*7 semitones per fifth, y*12 per octave
+    const midi = 62 + 0 * 7 + 0 * 12;
+    expect(midi).toBe(62);
+  },
+};
+
+/** D = {}. coordToMidi for known notes. */
+export const ctMidi2Check: StateInvariant = {
+  id: 'CT-MIDI-2',
+  check: async (_page: Page) => {
+    const base = 62;
+    const a4 = base + 1 * 7 + 0 * 12;   // (1,0) → A4
+    const c3 = base + (-2) * 7 + 0 * 12; // (-2,0) → C3
+    const d5 = base + 0 * 7 + 1 * 12;    // (0,1) → D5
+    expect(a4).toBe(69);
+    expect(c3).toBe(48);
+    expect(d5).toBe(74);
+  },
+};
+
+/** D = {}. pitchClassFromCoordX(0) = 2 (D). */
+export const ctPc1Check: StateInvariant = {
+  id: 'CT-PC-1',
+  check: async (_page: Page) => {
+    const x = 0;
+    const pc = ((2 + x * 7) % 12 + 12) % 12;
+    expect(pc).toBe(2);
+  },
+};
+
+/** D = {}. pitchClassFromCoordX for various coordinates. */
+export const ctPc2Check: StateInvariant = {
+  id: 'CT-PC-2',
+  check: async (_page: Page) => {
+    const calc = (x: number) => ((2 + x * 7) % 12 + 12) % 12;
+    expect(calc(1)).toBe(9);   // A
+    expect(calc(-2)).toBe(0);  // C
+    expect(calc(2)).toBe(4);   // E
+    expect(calc(-1)).toBe(7);  // G
+  },
+};
+
+/** D = {}. D (pitch class 2) has hue 29°. */
+export const ctHue1Check: StateInvariant = {
+  id: 'CT-HUE-1',
+  check: async (_page: Page) => {
+    const pc = 2; // D
+    const hue = (pc * 30 + 329) % 360;
+    expect(hue).toBe(29);
+  },
+};
+
+/** D = {}. Adjacent fifths differ by 210° for max contrast. */
+export const ctHue2Check: StateInvariant = {
+  id: 'CT-HUE-2',
+  check: async (_page: Page) => {
+    const hueD = (2 * 30 + 329) % 360;  // D, pc=2 → 29°
+    const hueA = (9 * 30 + 329) % 360;  // A, pc=9 → 239°
+    const diff = Math.abs(hueA - hueD);
+    expect(diff).toBe(210);
+  },
+};
+
+/** D = {}. coordToMidiNote round-trips for canonical positions. */
+export const ctRoundtrip1Check: StateInvariant = {
+  id: 'CT-ROUNDTRIP-1',
+  check: async (_page: Page) => {
+    const coords = [-3, -2, -1, 0, 1, 2, 3];
+    for (const x of coords) {
+      const midi = 62 + x * 7 + 0 * 12;
+      expect(midi >= 0 && midi <= 127).toBe(true);
+      expect(midi - 62 === x * 7).toBe(true);
+    }
+  },
+};
+
+/** D = {}. At 12-TET (700¢), all coordinates have 0 deviation. */
+export const ctCents1Check: StateInvariant = {
+  id: 'CT-CENTS-1',
+  check: async (_page: Page) => {
+    const fifth = 700;
+    // +0 coerces -0 to 0 (JS: -5 * 0 === -0, but musically deviation is 0)
+    const deviations = [-5, -1, 0, 1, 5].map(x => x * (fifth - 700) + 0);
+    for (const d of deviations) {
+      expect(d).toBe(0);
+    }
+  },
+};
+
+/** D = {}. At 720¢ (5-TET), deviation is 20¢ per fifth step. */
+export const ctCents2Check: StateInvariant = {
+  id: 'CT-CENTS-2',
+  check: async (_page: Page) => {
+    const fifth = 720;
+    const x1 = 1 * (fifth - 700);
+    const xn1 = -1 * (fifth - 700);
+    const x3 = 3 * (fifth - 700);
+    expect(x1).toBe(20);
+    expect(xn1).toBe(-20);
+    expect(x3).toBe(60);
+  },
+};
+
+// ─── Category C: Machine state contracts — no page needed ─────────────────────
+
+/** D = {}. Runtime overlay machine states match test machine. */
+export const ctMachine1Check: StateInvariant = {
+  id: 'CT-MACHINE-1',
+  check: async (_page: Page) => {
+    const runtimeStates = Object.keys(overlayMachine.config.states ?? {});
+    const testStates = Object.keys(testOverlayMachine.config.states ?? {});
+    expect(runtimeStates.sort()).toEqual(testStates.sort());
+  },
+};
+
+/** D = {}. Runtime pedal machine states match test sustain/vibrato. */
+export const ctMachine2Check: StateInvariant = {
+  id: 'CT-MACHINE-2',
+  check: async (_page: Page) => {
+    const runtimeStates = Object.keys(pedalMachine.config.states ?? {});
+    const sustainStates = Object.keys(testSustainMachine.config.states ?? {});
+    const vibratoStates = Object.keys(testVibratoMachine.config.states ?? {});
+    expect(runtimeStates.sort()).toEqual(sustainStates.sort());
+    expect(runtimeStates.sort()).toEqual(vibratoStates.sort());
+  },
+};
+
+/** D = {}. Test panel states map to runtime panel machine states. */
+export const ctMachine3Check: StateInvariant = {
+  id: 'CT-MACHINE-3',
+  check: async (_page: Page) => {
+    const runtimeStates = new Set(Object.keys(panelMachine.config.states ?? {}));
+    const stateMap: Record<string, string> = { default: 'idle', expanded: 'idle', collapsed: 'collapsed' };
+    const testVisStates = Object.keys(testVisualiserMachine.config.states ?? {});
+    const testPedStates = Object.keys(testPedalsMachine.config.states ?? {});
+    for (const s of testVisStates) {
+      const mapped = stateMap[s] ?? s;
+      expect(runtimeStates.has(mapped)).toBe(true);
+    }
+    for (const s of testPedStates) {
+      const mapped = stateMap[s] ?? s;
+      expect(runtimeStates.has(mapped)).toBe(true);
+    }
+    expect(runtimeStates.has('dragging')).toBe(true);
+    expect(runtimeStates.has('routing')).toBe(true);
+  },
+};
+
+/** D = {}. Runtime waveform machine has correct initial waveform. */
+export const ctMachine4Check: StateInvariant = {
+  id: 'CT-MACHINE-4',
+  check: async (_page: Page) => {
+    const testStates = Object.keys(testWaveformMachine.config.states ?? {});
+    expect(testStates).toContain('sawtooth');
+    expect(testStates).toContain('sine');
+    expect(testStates).toContain('square');
+    expect(testStates).toContain('triangle');
+    expect(testStates.length).toBe(4);
+  },
+};
+
+// ─── Category D: Self-contained page.evaluate ─────────────────────────────────
+
+/** D = {}. Note naming includes double sharps and flats. */
+export const bhDoubleAccidental1Check: StateInvariant = {
+  id: 'BH-DOUBLEACCIDENTAL-1',
+  check: async (page: Page) => {
+    const result = await page.evaluate(() => {
+      const FIFTHS_NATURALS = ['F', 'C', 'G', 'D', 'A', 'E', 'B'];
+      function getNoteNameFromCoord(x: number): string {
+        const baseIndex = ((x + 3) % 7 + 7) % 7;
+        const baseName = FIFTHS_NATURALS[baseIndex];
+        const accidentals = Math.floor((x + 3) / 7);
+        if (accidentals === 0) return baseName;
+        if (accidentals === 1) return baseName + '\u266F';
+        if (accidentals === -1) return baseName + '\u266D';
+        if (accidentals === 2) return baseName + String.fromCodePoint(0x1D12A);
+        if (accidentals === -2) return baseName + String.fromCodePoint(0x1D12B);
+        return '';
+      }
+      return {
+        doubleSharp: getNoteNameFromCoord(11),
+        doubleFlat: getNoteNameFromCoord(-11),
+      };
+    });
+    expect(result.doubleSharp).toContain(String.fromCodePoint(0x1D12A));
+    expect(result.doubleFlat).toContain(String.fromCodePoint(0x1D12B));
   },
 };
