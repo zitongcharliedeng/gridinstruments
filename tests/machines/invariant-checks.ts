@@ -1364,3 +1364,337 @@ export const iscAMpe1Check: StateInvariant = {
     }
   },
 };
+
+// ── Migrated from mpe-service.spec.ts — MPE service invariants ──────────────
+
+/** D = {}. MPEService constructor creates default settings. */
+export const iscSvc1Check: StateInvariant = {
+  id: 'ISC-SVC-1',
+  check: async (page: Page) => {
+    const settings = await page.evaluate(async () => {
+      const { MPEService } = await import('/src/lib/mpe-service.ts');
+      const svc = new MPEService();
+      return svc.getSettings();
+    });
+    expect(settings.masterChannel).toBe(1);
+    expect(settings.memberChannelCount).toBe(15);
+    expect(settings.pitchBendRange).toBe(48);
+    expect(settings.pressureMode).toBe('channel-at');
+    expect(settings.timbreCC).toBe(74);
+    expect(settings.pressureCC).toBe(11);
+    expect(settings.bendAutoReset).toBe(true);
+  },
+};
+
+/** D = {}. updateSettings changes configuration. */
+export const iscSvc2Check: StateInvariant = {
+  id: 'ISC-SVC-2',
+  check: async (page: Page) => {
+    const settings = await page.evaluate(async () => {
+      const { MPEService } = await import('/src/lib/mpe-service.ts');
+      const svc = new MPEService();
+      svc.updateSettings({ timbreCC: 1 });
+      return svc.getSettings();
+    });
+    expect(settings.timbreCC).toBe(1);
+    // Other defaults remain unchanged
+    expect(settings.masterChannel).toBe(1);
+    expect(settings.pitchBendRange).toBe(48);
+    expect(settings.pressureMode).toBe('channel-at');
+  },
+};
+
+/** D = {}. noteOn allocates member channel and sends correct MIDI. */
+export const iscSvc3Check: StateInvariant = {
+  id: 'ISC-SVC-3',
+  check: async (page: Page) => {
+    const sent = await page.evaluate(async () => {
+      const { MPEService } = await import('/src/lib/mpe-service.ts');
+      const sent: number[][] = [];
+      const mock = {
+        send(data: number[]) { sent.push([...data]); },
+        clear() {},
+      };
+      const svc = new MPEService();
+      svc.setOutput(mock);
+      sent.length = 0; // clear MCM
+      svc.setEnabled(true);
+      svc.noteOn('n1', 60, 0.8);
+      return sent;
+    });
+    // noteOn sends 4 messages: pitch-bend reset, CC74 reset, pressure reset, note-on
+    expect(sent).toHaveLength(4);
+    const noteOn = sent[3];
+    // Status high nibble = 0x90 (Note On)
+    expect(noteOn[0] & 0xF0).toBe(0x90);
+    // Channel must be a member channel (2–16, i.e. index 1–15)
+    const channel = (noteOn[0] & 0x0F) + 1;
+    expect(channel).toBeGreaterThanOrEqual(2);
+    expect(channel).toBeLessThanOrEqual(16);
+    // Payload
+    expect(noteOn[1]).toBe(60);
+    expect(noteOn[2]).toBe(Math.round(0.8 * 127));
+  },
+};
+
+/** D = {}. noteOff sends correct note-off message. */
+export const iscSvc4Check: StateInvariant = {
+  id: 'ISC-SVC-4',
+  check: async (page: Page) => {
+    const result = await page.evaluate(async () => {
+      const { MPEService } = await import('/src/lib/mpe-service.ts');
+      const sent: number[][] = [];
+      const mock = {
+        send(data: number[]) { sent.push([...data]); },
+        clear() {},
+      };
+      const svc = new MPEService();
+      svc.setOutput(mock);
+      sent.length = 0;
+      svc.setEnabled(true);
+      svc.noteOn('n1', 60, 0.8);
+      const noteOnChannel = sent[3][0] & 0x0F;
+      sent.length = 0;
+      svc.noteOff('n1', 60);
+      return { noteOff: sent[0], noteOnChannel };
+    });
+    // Status high nibble = 0x80 (Note Off)
+    expect(result.noteOff[0] & 0xF0).toBe(0x80);
+    // Same channel as note-on
+    expect(result.noteOff[0] & 0x0F).toBe(result.noteOnChannel);
+    // MIDI note
+    expect(result.noteOff[1]).toBe(60);
+    // Release velocity
+    expect(result.noteOff[2]).toBe(64);
+  },
+};
+
+/** D = {}. subscribe receives voice state updates. */
+export const iscSvc5Check: StateInvariant = {
+  id: 'ISC-SVC-5',
+  check: async (page: Page) => {
+    const result = await page.evaluate(async () => {
+      const { MPEService } = await import('/src/lib/mpe-service.ts');
+      const sent: number[][] = [];
+      const mock = {
+        send(data: number[]) { sent.push([...data]); },
+        clear() {},
+      };
+      const svc = new MPEService();
+      svc.setOutput(mock);
+      svc.setEnabled(true);
+      const updates: { count: number; firstState?: string; firstNote?: number }[] = [];
+      svc.subscribe((voices) => {
+        updates.push({
+          count: voices.length,
+          firstState: voices[0]?.state,
+          firstNote: voices[0]?.midiNote,
+        });
+      });
+      svc.noteOn('n1', 60, 0.8);
+      svc.noteOff('n1', 60);
+      return updates;
+    });
+    // noteOn triggers notify → 1 voice (active)
+    expect(result[0].count).toBe(1);
+    expect(result[0].firstState).toBe('active');
+    expect(result[0].firstNote).toBe(60);
+    // noteOff triggers notify → voice still in map but state = released
+    expect(result[1].count).toBe(1);
+    expect(result[1].firstState).toBe('released');
+  },
+};
+
+/** D = {}. panic sends all-notes-off on all member channels. */
+export const iscSvc6Check: StateInvariant = {
+  id: 'ISC-SVC-6',
+  check: async (page: Page) => {
+    const result = await page.evaluate(async () => {
+      const { MPEService } = await import('/src/lib/mpe-service.ts');
+      const sent: number[][] = [];
+      const mock = {
+        send(data: number[]) { sent.push([...data]); },
+        clear() {},
+      };
+      const svc = new MPEService();
+      svc.setOutput(mock);
+      sent.length = 0; // clear MCM
+      svc.panic();
+      return sent;
+    });
+    // Default: 15 member channels (2–16), each gets CC123
+    expect(result).toHaveLength(15);
+    for (let i = 0; i < 15; i++) {
+      const ch = (result[i][0] & 0x0F) + 1;
+      expect(ch).toBeGreaterThanOrEqual(2);
+      expect(ch).toBeLessThanOrEqual(16);
+      // CC status
+      expect(result[i][0] & 0xF0).toBe(0xB0);
+      // CC123 = All Notes Off
+      expect(result[i][1]).toBe(123);
+      expect(result[i][2]).toBe(0);
+    }
+  },
+};
+
+/** D = {}. dispose cleans up resources. */
+export const iscSvc7Check: StateInvariant = {
+  id: 'ISC-SVC-7',
+  check: async (page: Page) => {
+    const result = await page.evaluate(async () => {
+      const { MPEService } = await import('/src/lib/mpe-service.ts');
+      const sent: number[][] = [];
+      const mock = {
+        send(data: number[]) { sent.push([...data]); },
+        clear() {},
+      };
+      const svc = new MPEService();
+      svc.setOutput(mock);
+      svc.setEnabled(true);
+      const voiceUpdates: number[] = [];
+      svc.subscribe((voices) => { voiceUpdates.push(voices.length); });
+      svc.noteOn('n1', 60, 0.8);
+      // voiceUpdates: [1]
+      svc.dispose();
+      // dispose → panic → notify([]) → voiceUpdates: [1, 0]
+      // then listeners.clear()
+      // Re-wire output to prove listener is cleared
+      svc.setOutput(mock);
+      sent.length = 0;
+      // _enabled still true (dispose doesn't reset it)
+      svc.noteOn('n2', 62, 0.8);
+      const messagesAfterReuse = sent.length;
+      return { voiceUpdates, messagesAfterReuse };
+    });
+    // Callback fired during noteOn and during dispose → panic
+    expect(result.voiceUpdates).toEqual([1, 0]);
+    // noteOn after dispose sent messages (output re-wired, service still functional)
+    expect(result.messagesAfterReuse).toBeGreaterThan(0);
+    // But no new callback — listener was cleared by dispose
+    expect(result.voiceUpdates).toHaveLength(2);
+  },
+};
+
+/** D = {}. configurable pressureMode changes message type. */
+export const iscSvc8Check: StateInvariant = {
+  id: 'ISC-SVC-8',
+  check: async (page: Page) => {
+    const result = await page.evaluate(async () => {
+      const { MPEService } = await import('/src/lib/mpe-service.ts');
+      // ── Test poly-at mode ──
+      const sentPolyAt: number[][] = [];
+      const mockPolyAt = {
+        send(data: number[]) { sentPolyAt.push([...data]); },
+        clear() {},
+      };
+      const svcPolyAt = new MPEService({ pressureMode: 'poly-at' });
+      svcPolyAt.setOutput(mockPolyAt);
+      sentPolyAt.length = 0;
+      svcPolyAt.setEnabled(true);
+      svcPolyAt.noteOn('n1', 60, 0.8);
+      sentPolyAt.length = 0;
+      svcPolyAt.sendPressure('n1', 0.5);
+      const polyAtMsg = [...sentPolyAt[0]];
+      // ── Test cc mode ──
+      const sentCC: number[][] = [];
+      const mockCC = {
+        send(data: number[]) { sentCC.push([...data]); },
+        clear() {},
+      };
+      const svcCC = new MPEService({ pressureMode: 'cc', pressureCC: 11 });
+      svcCC.setOutput(mockCC);
+      sentCC.length = 0;
+      svcCC.setEnabled(true);
+      svcCC.noteOn('n1', 60, 0.8);
+      sentCC.length = 0;
+      svcCC.sendPressure('n1', 0.5);
+      const ccMsg = [...sentCC[0]];
+      return { polyAtMsg, ccMsg };
+    });
+    // Poly aftertouch: status = 0xA0 | channel
+    expect(result.polyAtMsg[0] & 0xF0).toBe(0xA0);
+    expect(result.polyAtMsg[1]).toBe(60);                    // MIDI note
+    expect(result.polyAtMsg[2]).toBe(Math.round(0.5 * 127)); // pressure value
+    // CC mode: status = 0xB0 | channel, CC11 (expression)
+    expect(result.ccMsg[0] & 0xF0).toBe(0xB0);
+    expect(result.ccMsg[1]).toBe(11);                        // pressureCC
+    expect(result.ccMsg[2]).toBe(Math.round(0.5 * 127));     // pressure value
+  },
+};
+
+/** D = {}. setEnabled(false) prevents note output. */
+export const iscSvc9Check: StateInvariant = {
+  id: 'ISC-SVC-9',
+  check: async (page: Page) => {
+    const result = await page.evaluate(async () => {
+      const { MPEService } = await import('/src/lib/mpe-service.ts');
+      const sent: number[][] = [];
+      const mock = {
+        send(data: number[]) { sent.push([...data]); },
+        clear() {},
+      };
+      const svc = new MPEService();
+      svc.setOutput(mock);
+      sent.length = 0;
+      // Enable then disable to test the gate
+      svc.setEnabled(true);
+      svc.setEnabled(false);
+      // setEnabled(false) calls panic → sends CC123 on all 15 channels
+      sent.length = 0; // clear panic messages
+      svc.noteOn('n1', 60, 0.8);
+      const noteOnMessages = sent.length;
+      svc.sendPitchBend('n1', 12);
+      const afterBend = sent.length;
+      svc.sendSlide('n1', 0.5);
+      const afterSlide = sent.length;
+      svc.sendPressure('n1', 0.5);
+      const afterPressure = sent.length;
+      return {
+        noteOnMessages,
+        afterBend,
+        afterSlide,
+        afterPressure,
+        isEnabled: svc.isEnabled(),
+      };
+    });
+    expect(result.noteOnMessages).toBe(0);
+    expect(result.afterBend).toBe(0);
+    expect(result.afterSlide).toBe(0);
+    expect(result.afterPressure).toBe(0);
+    expect(result.isEnabled).toBe(false);
+  },
+};
+
+/** D = {}. configurable timbreCC uses custom CC number. */
+export const iscSvc10Check: StateInvariant = {
+  id: 'ISC-SVC-10',
+  check: async (page: Page) => {
+    const result = await page.evaluate(async () => {
+      const { MPEService } = await import('/src/lib/mpe-service.ts');
+      const sent: number[][] = [];
+      const mock = {
+        send(data: number[]) { sent.push([...data]); },
+        clear() {},
+      };
+      const svc = new MPEService({ timbreCC: 1 });
+      svc.setOutput(mock);
+      sent.length = 0;
+      svc.setEnabled(true);
+      svc.noteOn('n1', 60, 0.8);
+      // noteOn sends: pitch bend reset, CC1 reset (custom timbre), pressure reset, note-on
+      const timbreReset = [...sent[1]]; // second message = timbre reset
+      sent.length = 0;
+      svc.sendSlide('n1', 0.75);
+      const slideMsg = [...sent[0]];
+      return { timbreReset, slideMsg };
+    });
+    // Timbre reset during noteOn uses CC1 instead of CC74
+    expect(result.timbreReset[0] & 0xF0).toBe(0xB0);
+    expect(result.timbreReset[1]).toBe(1);  // CC1 = mod wheel
+    expect(result.timbreReset[2]).toBe(64); // center value
+    // Slide message uses CC1
+    expect(result.slideMsg[0] & 0xF0).toBe(0xB0);
+    expect(result.slideMsg[1]).toBe(1);
+    expect(result.slideMsg[2]).toBe(Math.round(0.75 * 127));
+  },
+};

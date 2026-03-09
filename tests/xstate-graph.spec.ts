@@ -73,6 +73,16 @@ import {
   iscMpe4Check,
   iscMpe5Check,
   iscAMpe1Check,
+  iscSvc1Check,
+  iscSvc2Check,
+  iscSvc3Check,
+  iscSvc4Check,
+  iscSvc5Check,
+  iscSvc6Check,
+  iscSvc7Check,
+  iscSvc8Check,
+  iscSvc9Check,
+  iscSvc10Check,
 } from './machines/invariant-checks';
 import { focusReturnCheck } from './machines/modifierCompoundMachine';
 
@@ -370,6 +380,46 @@ test.describe('[Structural] state-independent invariants', () => {
 
   test('ISC-A-MPE-1: no per-note messages go to manager channel 1', async ({ page }) => {
     await iscAMpe1Check.check(page);
+  });
+
+  test('ISC-SVC-1: MPEService constructor creates default settings', async ({ page }) => {
+    await iscSvc1Check.check(page);
+  });
+
+  test('ISC-SVC-2: updateSettings changes configuration', async ({ page }) => {
+    await iscSvc2Check.check(page);
+  });
+
+  test('ISC-SVC-3: noteOn allocates member channel and sends correct MIDI', async ({ page }) => {
+    await iscSvc3Check.check(page);
+  });
+
+  test('ISC-SVC-4: noteOff sends correct note-off message', async ({ page }) => {
+    await iscSvc4Check.check(page);
+  });
+
+  test('ISC-SVC-5: subscribe receives voice state updates', async ({ page }) => {
+    await iscSvc5Check.check(page);
+  });
+
+  test('ISC-SVC-6: panic sends all-notes-off on all member channels', async ({ page }) => {
+    await iscSvc6Check.check(page);
+  });
+
+  test('ISC-SVC-7: dispose cleans up resources', async ({ page }) => {
+    await iscSvc7Check.check(page);
+  });
+
+  test('ISC-SVC-8: configurable pressureMode changes message type', async ({ page }) => {
+    await iscSvc8Check.check(page);
+  });
+
+  test('ISC-SVC-9: setEnabled(false) prevents note output', async ({ page }) => {
+    await iscSvc9Check.check(page);
+  });
+
+  test('ISC-SVC-10: configurable timbreCC uses custom CC number', async ({ page }) => {
+    await iscSvc10Check.check(page);
   });
 });
 
