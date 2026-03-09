@@ -1093,10 +1093,22 @@ class DComposeApp {
 
 
      // Zoom slider — DOM mutations driven by appActor subscriber
+     //
+     // At zoom=1.0, keyboard-visualizer renders each cell at PIANO_KEY_MM = 23.5mm
+     // in W3C CSS-spec units (1 CSS px = 1/96 inch). Browsers don't expose physical
+     // screen DPI, so CSS-spec mm is our best metric-unit anchor.
+     //
+     // Target: computer keyboard key pitch = 15mm cap + 4mm gap = 19mm.
+     // Our grid has zero inter-key padding, so each cell IS the full pitch.
+     // Desktop default = 19.0 / 23.5 ≈ 0.81 → each cell ≈ 19mm (keyboard pitch).
+     // Touch default = 22.0 / 23.5 ≈ 0.94 → slightly larger for finger targets.
+     const PIANO_KEY_MM = 23.5;
+     const KEYBOARD_PITCH_MM = 19.0;
+     const TOUCH_TARGET_MM = 22.0;
      const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-      this.defaultZoom = isTouchDevice
-        ? Math.min(1.4, window.innerWidth / 480)
-        : Math.max(0.7, Math.min(1.0, 768 / window.screen.height));
+     this.defaultZoom = isTouchDevice
+       ? TOUCH_TARGET_MM / PIANO_KEY_MM
+       : KEYBOARD_PITCH_MM / PIANO_KEY_MM;
      const savedZoom = this.loadSetting('zoom', this.defaultZoom.toString());
      if (this.zoomSlider) {
        this.zoomSlider.value = savedZoom;
@@ -1283,7 +1295,6 @@ class DComposeApp {
     // Shift+=/- zoom shortcuts removed — Shift is now vibrato-only
 
     this.synth.tryUnlock();                  // synchronous, iOS-safe
-    if (!this.synth.isInitialized()) return; // not running yet — drop this keypress
 
     if (!(code in this.currentLayout.keyMap)) return;
     const coord = this.currentLayout.keyMap[code];
@@ -1292,14 +1303,16 @@ class DComposeApp {
     const effectiveCoordX = coordX + this.transposeOffset;
     const effectiveCoordY = coordY + this.octaveOffset;
     const audioNoteId = `key_${code}_${effectiveCoordX}_${effectiveCoordY}`;
-    this.synth.playNote(audioNoteId, effectiveCoordX, coordY, this.octaveOffset);
-    this.activeNotes.set(code, { coordX, coordY });
-
     const midiNote = 62 + effectiveCoordX * 7 + effectiveCoordY * 12;
-    this.mpe.noteOn(audioNoteId, midiNote, 0.7);
+    // Visual always fires regardless of audio state — sound and visualisation are logically decoupled
+    this.activeNotes.set(code, { coordX, coordY });
     this.trackNoteOn(effectiveCoordX, effectiveCoordY, midiNote);
-
     this.render();
+    // Audio only when synth is ready (first interaction wakes AudioContext silently)
+    if (this.synth.isInitialized()) {
+      this.synth.playNote(audioNoteId, effectiveCoordX, coordY, this.octaveOffset);
+      this.mpe.noteOn(audioNoteId, midiNote, 0.7);
+    }
   }
 
   private handleKeyUp(event: KeyboardEvent): void {
@@ -1334,8 +1347,7 @@ class DComposeApp {
 
   private handlePointerDown(event: PointerEvent): void {
     this.pointerDown.set(event.pointerId, null);
-    this.synth.tryUnlock();                  // synchronous, iOS-safe
-    if (!this.synth.isInitialized()) return; // not running yet — first touch silently wakes audio
+    this.synth.tryUnlock();
     this.handlePointerDownInner(event);
   }
 

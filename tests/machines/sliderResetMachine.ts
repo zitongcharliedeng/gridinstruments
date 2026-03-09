@@ -180,7 +180,7 @@ export const {
   sliderId: 'zoom-slider',
   badgeId: 'zoom-thumb-badge',
   resetBtnId: 'zoom-reset',
-  defaultDisplay: '1.00',
+  defaultDisplay: '0.81',
   modifiedValue: '2.5',
   badgeReadMode: 'textContent',
 });

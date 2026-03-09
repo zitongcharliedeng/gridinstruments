@@ -73,7 +73,7 @@ export const appMachine = setup({
 
     handleSliderReset: assign(({ context, event }) => {
       assertEvent(event, 'SLIDER_RESET');
-      const defaultVal = SLIDER_DEFAULTS[event.slider];
+      const defaultVal = event.slider === 'zoom' ? context.defaultZoom : SLIDER_DEFAULTS[event.slider];
       const newSliders = { ...context.sliders };
       newSliders[event.slider] = {
         ...newSliders[event.slider],
@@ -152,6 +152,7 @@ export const appMachine = setup({
     mpeEnabled: false,
     mpeOutputId: null,
     audioReady: false,
+    defaultZoom: input.defaultZoom,
   }),
   initial: 'uninitialized',
   states: {

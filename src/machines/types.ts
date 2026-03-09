@@ -121,6 +121,8 @@ export interface AppContext {
   mpeOutputId: string | null;
   /** True once the Web Audio context has been resumed by a user gesture */
   audioReady: boolean;
+  /** Computed default zoom level (screen-size-dependent), used by SLIDER_RESET */
+  defaultZoom: number;
 }
 
 // ─── Events ───────────────────────────────────────────────────────────────────
