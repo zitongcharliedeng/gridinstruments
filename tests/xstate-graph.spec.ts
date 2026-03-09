@@ -67,6 +67,12 @@ import {
   ctMachine3Check,
   ctMachine4Check,
   bhDoubleAccidental1Check,
+  iscMpe1Check,
+  iscMpe2Check,
+  iscMpe3Check,
+  iscMpe4Check,
+  iscMpe5Check,
+  iscAMpe1Check,
 } from './machines/invariant-checks';
 import { focusReturnCheck } from './machines/modifierCompoundMachine';
 
@@ -340,6 +346,30 @@ test.describe('[Structural] state-independent invariants', () => {
 
   test('BH-DOUBLEACCIDENTAL-1: Note naming includes double sharps and flats', async ({ page }) => {
     await bhDoubleAccidental1Check.check(page);
+  });
+
+  test('ISC-MPE-1: noteOn sends correct status byte on member channel 2–16', async ({ page }) => {
+    await iscMpe1Check.check(page);
+  });
+
+  test('ISC-MPE-2: pitch bend produces valid 14-bit LSB/MSB encoding', async ({ page }) => {
+    await iscMpe2Check.check(page);
+  });
+
+  test('ISC-MPE-3: CC74 slide normalizes 0–1 to 0–127', async ({ page }) => {
+    await iscMpe3Check.check(page);
+  });
+
+  test('ISC-MPE-4: FIFO channel allocation across channels 2–16', async ({ page }) => {
+    await iscMpe4Check.check(page);
+  });
+
+  test('ISC-MPE-5: MCM sent on output selection', async ({ page }) => {
+    await iscMpe5Check.check(page);
+  });
+
+  test('ISC-A-MPE-1: no per-note messages go to manager channel 1', async ({ page }) => {
+    await iscAMpe1Check.check(page);
   });
 });
 
