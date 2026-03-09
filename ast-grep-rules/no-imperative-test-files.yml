@@ -2,14 +2,10 @@ id: no-imperative-test-files
 language: typescript
 rule:
   pattern: test($NAME, $$$)
-  not:
-    inside:
-      pattern: for (const $_ of $$$) { $$$ }
-      stopBy: end
 files:
-  - "tests/contracts.spec.ts"
-  - "tests/mpe-output.spec.ts"
-  - "tests/mpe-service.spec.ts"
+  - "tests/**/*.spec.ts"
+ignores:
+  - "tests/xstate-graph.spec.ts"
 severity: error
 message: "Imperative tests banned in this file — all behavioral tests must be XState machine-generated via xstate-graph.spec.ts"
 note: "Only xstate-graph.spec.ts may contain tests. All other spec files should be migrated to machine-generated tests."
