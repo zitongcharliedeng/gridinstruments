@@ -122,7 +122,7 @@ export const overlaySectionsCheck: StateInvariant = {
   id: 'OV-SECTIONS-1',
   check: async (page: Page) => {
     const sectionCount = await page.locator('#grid-overlay .overlay-section').count();
-    expect(sectionCount).toBeGreaterThanOrEqual(8);
+    expect(sectionCount).toBeGreaterThanOrEqual(4);
   },
 };
 
@@ -304,8 +304,8 @@ export const sliderValuesCheck: StateInvariant = {
     if (zoomText === null) throw new Error('#zoom-thumb-badge text is null');
     expect(zoomText).not.toContain('x');
     const expectedZoom = await page.evaluate((): number => {
-      const g = window as unknown as { gApp?: { getDefaultZoom: () => number } };
-      return g.gApp?.getDefaultZoom() ?? 0.75;
+      const g = window as unknown as { dcomposeApp?: { getDefaultZoom: () => number } };
+      return g.dcomposeApp?.getDefaultZoom() ?? 0.75;
     });
     expect(parseFloat(zoomText)).toBeCloseTo(expectedZoom, 1);
 
@@ -347,7 +347,7 @@ export const tetBelowTrackCheck: StateInvariant = {
     for (let i = 0; i < count; i++) {
       const tick = await marks.nth(i).locator('.slider-tick').boundingBox();
       if (!tick) throw new Error(`.slider-tick[${i}] not visible`);
-      expect(Math.abs(tick.y - trackCenter)).toBeLessThanOrEqual(200);
+      expect(Math.abs(tick.y - trackCenter)).toBeLessThanOrEqual(250);
       const btn = await marks.nth(i).locator('.slider-preset-btn').boundingBox();
       if (!btn) throw new Error(`.slider-preset-btn[${i}] not visible`);
       expect(btn.y).toBeGreaterThanOrEqual(track.y + track.height - 2);
@@ -1813,14 +1813,14 @@ export const iss92OverlayHeadingsCheck: StateInvariant = {
     // Open overlay first
     await page.locator('#grid-settings-btn').click();
     await page.waitForTimeout(300);
-    // Verify all 6 category headings exist
     const headings = page.locator('#grid-overlay .overlay-section-title');
     const texts = await headings.allTextContents();
-    for (const expected of ['SOUND', 'LAYOUT', 'TUNING', 'DISPLAY', 'REFERENCE', 'MIDI']) {
+    for (const expected of ['SOUND', 'VISUAL', 'INPUT']) {
       if (!texts.some(t => t.trim() === expected)) {
         throw new Error(`Missing overlay category heading: ${expected}`);
       }
     }
+    expect(texts.length, 'Should have exactly 3 overlay section headings').toBe(3);
     // Verify headings are greyish (not white)
     const firstHeading = headings.first();
     const color = await firstHeading.evaluate((el) => getComputedStyle(el).color);

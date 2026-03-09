@@ -15,12 +15,12 @@ export type WaveformType = 'sine' | 'square' | 'sawtooth' | 'triangle';
 
 interface Voice {
   oscillator: OscillatorNode;
+  timbreFilter: BiquadFilterNode;
   gainNode: GainNode;
-  coordX: number;  // Store coordinates for live tuning updates
+  coordX: number;
   coordY: number;
   octaveOffset: number;
   vibratoGainNode: GainNode;
-
 }
 
 /**
@@ -353,30 +353,35 @@ export class Synth {
     if (!this.context || !this.masterGain || this.context.state !== 'running') return;
     if (this.voices.has(noteId)) return;
     const frequency = this.getFrequency(x, y, octaveOffset);
-    // Create oscillator
     const oscillator = this.context.createOscillator();
     oscillator.type = this.waveform;
     oscillator.frequency.value = frequency;
+
+    const timbreFilter = this.context.createBiquadFilter();
+    timbreFilter.type = 'lowpass';
+    const clampedVel = Math.max(0, Math.min(1, velocity));
+    timbreFilter.frequency.value = 500 * Math.pow(36, clampedVel);
+
     const gainNode = this.context.createGain();
     gainNode.gain.value = 0;
-    oscillator.connect(gainNode);
+    oscillator.connect(timbreFilter);
+    timbreFilter.connect(gainNode);
     gainNode.connect(this.masterGain);
     oscillator.start();
-    gainNode.gain.setTargetAtTime(Math.max(0.01, Math.min(1, velocity)), this.context.currentTime, this.attackTime);
-    // Always create vibrato gain node (gain=0 = no modulation by default)
+    gainNode.gain.setTargetAtTime(Math.max(0.01, clampedVel), this.context.currentTime, this.attackTime);
+
     const vibratoGainNode = this.context.createGain();
     vibratoGainNode.gain.value = 0;
-    
-    // If vibrato is currently active, connect immediately
+
     if (this._vibratoEnabled && this.vibratoLFO) {
       const depthHz = frequency * (this.vibratoDepth / 1200);
       vibratoGainNode.gain.setValueAtTime(depthHz, this.context.currentTime);
       this.vibratoLFO.connect(vibratoGainNode);
       vibratoGainNode.connect(oscillator.frequency);
     }
-    // Store voice with coordinates for live tuning updates
     this.voices.set(noteId, {
       oscillator,
+      timbreFilter,
       gainNode,
       coordX: x,
       coordY: y,

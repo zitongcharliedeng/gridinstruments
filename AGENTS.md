@@ -1,35 +1,81 @@
-# GridInstruments — Agent Instructions
+# GridInstruments
 
-This file tells AI agents how to work on and test this project.
+A browser synthesizer built on the [Wicki-Hayden](https://en.wikipedia.org/wiki/Wicki-Hayden_note_layout) isomorphic keyboard layout — discovered through [WickiSynth](https://www.toverlamp.org/static/wickisynth/wickisynth_lowlatency.html) by Piers Titus van der Torren, the [MIDImech](https://github.com/flipcoder/midimech) visualizer by flipcoder, and the physical [Striso board](https://www.striso.org/the-note-layout/) by Piers Titus van der Torren.
 
----
+**[Try it live](https://gridinstruments.xyz)** · [⭐ Star on GitHub](https://github.com/zitongcharliedeng/gridinstruments) · [PolyForm NC License](LICENSE) — open source, always free. Donations welcome but never required.
 
-## Project Mission
-
-GridInstruments exists to make isomorphic grid keyboard layouts — especially Wicki-Hayden and DCompose — mainstream and accessible. The goal is harmonic literacy for everyone: an instrument that makes music theory intuitive, runs in the browser with zero install, works on as many hardware inputs as possible (computer keyboard, MIDI controllers, touchscreen, MPE devices), and is free forever.
-
-Core values:
-- **Web-first** — no install, runs in any modern browser
-- **Isomorphic grids** — every pattern of notes looks the same regardless of key
-- **Microtonal** — continuous tuning from 5-TET to 7-TET and beyond
-- **Expressive** — MPE, vibrato, sustain, velocity
-- **Open** — PolyForm NC license, always free, donations never required
+![GridInstruments screenshot](tests/xstate-graph.spec.ts-snapshots/full-page-firefox-linux.png)
 
 ---
 
-## Technical Overview
+## Mission
 
-GridInstruments is a browser-based isomorphic keyboard synthesizer. It uses Web Audio API for sound, Web MIDI API for MIDI input, and Canvas 2D for rendering the keyboard grid and note history.
+Make isomorphic grid keyboard layouts — especially Wicki-Hayden and DCompose — mainstream and accessible. Harmonic literacy for everyone: an instrument that makes music theory intuitive, runs in the browser with zero install, works on as many hardware inputs as possible, and is free forever.
 
-- **Stack**: TypeScript, Vite, Canvas 2D, Web Audio, Web MIDI
-- **Build**: `npm run build` (tsc + vite build)
-- **Dev**: `npm run dev` (Vite dev server, default http://localhost:3000)
-- **Tests**: `nix develop --command npx playwright test --project=firefox --workers=1` (must use nix devshell — NixOS system playwright binary is broken)
-- **No framework** — vanilla TS, single-page app, all rendering via Canvas
+We want to gamify music theory through grid layouts that make intervals and chords visually obvious. Tutorials, easy multi-hardware input support, and zero-friction web access are how we spread this instrument and harmonic literacy to as many people as possible.
 
 ---
 
-## Key Files
+## What It Does
+
+- **Isomorphic grid keyboard** — DCompose and Wicki-Hayden layouts where every chord shape is the same in every key
+- **Web-first synthesizer** — runs in any modern browser, no install, Web Audio for zero-latency sound
+- **Microtonal** — continuous tuning via a fifth-size slider, from 5-TET through 7-TET and beyond, with equal temperament reference markers
+- **Multi-hardware input** — computer keyboard, MIDI controllers, touchscreen, and MPE devices
+- **Expressive playing** — MPE support, vibrato, sustain, velocity-sensitive timbre
+- **Visual feedback** — note history waterfall, staff notation, chord detection, pitch-class colors (chromesthesia in OKLCH)
+- **Continuous layout morphing** — skew slider smoothly blends between DCompose and MidiMech geometries
+
+---
+
+## Controls
+
+| Control | Action |
+|---------|--------|
+| Letter/number keys | Play notes |
+| `Shift` hold | Vibrato |
+| `Space` hold | Sustain |
+| Skew slider | DCompose ↔ MidiMech layout morph |
+| Fifth slider | Tune the generator interval (double-click = nearest TET) |
+| Volume slider | Master volume |
+| Zoom slider | Key size |
+
+---
+
+## Credits
+
+- **[Wicki-Hayden layout](https://en.wikipedia.org/wiki/Wicki-Hayden_note_layout)** by Kaspar Wicki and Brian Hayden — the isomorphic keyboard layout this is built on
+- **[WickiSynth](https://www.toverlamp.org/static/wickisynth/wickisynth_lowlatency.html)** by Piers Titus van der Torren — original browser synthesizer for this layout; the gateway to finding it
+- **[MIDImech](https://github.com/flipcoder/midimech)** by flipcoder — isomorphic layout visualizer and engine
+- **[Striso board](https://www.striso.org/the-note-layout/)** by Piers Titus van der Torren — physical isomorphic instrument with the same layout
+- **[isomorphic-qwerty](https://github.com/xenharmonic-devs/isomorphic-qwerty)** by Xenharmonic Devs — keyboard coordinate library
+
+---
+
+## Development
+
+Everything below this heading is for AI agents and contributors — it does not appear in the app's About dialog.
+
+---
+
+### Technical Stack
+
+TypeScript, Vite, Canvas 2D, Web Audio, Web MIDI. Vanilla TS single-page app — no framework. All rendering via Canvas.
+
+### Build & Test
+
+All commands must be run through the Nix devshell. Never use bare `npm` or `npx` — the flake is the only sanctioned entry point.
+
+```bash
+nix develop --command npm run build
+nix develop --command npm run dev                # Vite dev server on :3000
+nix develop --command npx playwright test --project=firefox --workers=1
+nix develop --command npx playwright test --project=firefox --workers=1 -g "Structural"
+```
+
+The `flake.nix` devshell provides the correct nixpkgs Firefox matching the npm `@playwright/test` version. The dev server auto-starts via `playwright.config.ts` webServer config.
+
+### Key Files
 
 | File | Purpose |
 |------|---------|
@@ -49,52 +95,16 @@ GridInstruments is a browser-based isomorphic keyboard synthesizer. It uses Web 
 | `src/lib/mpe-service.ts` | MPE service |
 | `src/lib/chord-graffiti.ts` | Yellow chord shape hints (roughjs SVG overlay) |
 
----
+### Testing
 
-## NixOS / Playwright Setup
-
-The project has a `flake.nix` devshell that provides the correct nixpkgs Firefox matching the npm `@playwright/test` version.
-
-```bash
-# Enter devshell (sets PLAYWRIGHT_BROWSERS_PATH automatically)
-nix develop
-
-# Run all tests inside the devshell (single worker required)
-nix develop --command npx playwright test --project=firefox --workers=1
-
-# Run a subset by name pattern
-nix develop --command npx playwright test --project=firefox --workers=1 -g "Structural"
-
-# List all tests without running
-nix develop --command npx playwright test --project=firefox --workers=1 --list
-```
-
-**Never** use the bare system `npx playwright test` — it will fail on NixOS due to missing browser binaries.
-
----
-
-## Testing
-
-**All tests live in `tests/xstate-graph.spec.ts`.** It is the only spec file Playwright runs (enforced via `testMatch` in `playwright.config.ts`).
+All tests live in a single spec file. It is the only spec file Playwright runs (enforced via `testMatch` in config).
 
 - **Structural invariants** — state-independent checks (DOM structure, library contracts, visual properties)
 - **Graph-generated tests** — XState `getAdjacencyMap` generates one test per `(state, event)` pair per machine
 
-**All new tests must be `StateInvariant` objects** in `tests/machines/invariant-checks.ts`, wired into the `[Structural]` block in `tests/xstate-graph.spec.ts`. No standalone `test()` calls in any other file — this is enforced by ast-grep CI rules.
+All new tests must be `StateInvariant` objects in the invariant-checks file, wired into the `[Structural]` block in the spec file. No standalone `test()` calls in any other file — enforced by ast-grep CI rules.
 
-```bash
-# Full suite (~10 minutes, 171+ tests)
-nix develop --command npx playwright test --project=firefox --workers=1
-
-# Structural tests only (~2 minutes, faster feedback loop)
-nix develop --command npx playwright test --project=firefox --workers=1 -g "Structural"
-```
-
-The dev server auto-starts via `playwright.config.ts` webServer config on port 3000.
-
----
-
-## Constraints for Code Changes
+### Constraints for Code Changes
 
 - **JetBrains Mono** is the ONLY allowed font
 - **#000 background, #fff text, no border-radius**
@@ -110,9 +120,7 @@ The dev server auto-starts via `playwright.config.ts` webServer config on port 3
 - **`grim` is banned** for screenshots
 - **Overlay style**: greyish (`var(--dim)`) for macro category headings, white for individual setting labels
 
----
-
-## UI Structure
+### UI Structure
 
 - `#grid-settings-btn` — cog button (top-left of keyboard-container, z-index 15)
 - `#grid-overlay` — per-grid settings overlay; toggle via cog; `hidden` class = closed; `padding-left: 48px` clears the cog
@@ -121,22 +129,18 @@ The dev server auto-starts via `playwright.config.ts` webServer config on port 3
 - Panels use `position: relative; overflow: visible` so handles can straddle the seam
 - Overlay sections use `.overlay-section-title` (greyish) for category headings
 
----
-
-## Development Workflow
+### Development Workflow
 
 1. Make changes
-2. Run `npm run build` — must exit 0
-3. Run `nix develop --command npx playwright test --project=firefox --workers=1 -g "Structural"` — all structural tests must pass
+2. Build — must exit 0
+3. Run structural tests — all must pass
 4. Run full suite to confirm nothing regressed
 
----
-
-## Atomic Checkpoint Protocol (MANDATORY for orchestrators)
+### Atomic Checkpoint Protocol (MANDATORY for orchestrators)
 
 **The #1 failure mode**: completing work but not tracking it. This protocol is a BLOCKING GATE, not a suggestion.
 
-### After EVERY subagent task completion:
+After EVERY subagent task completion:
 
 ```
 STEP 1: VERIFY  — Read changed files, run lsp_diagnostics, confirm work is correct
@@ -145,9 +149,9 @@ STEP 3: BOULDER — Update boulder.json: append task ID to completed_tasks array
 STEP 4: NEXT    — ONLY NOW may you delegate the next task
 ```
 
-**These four steps are ATOMIC. You MUST NOT skip to STEP 4 without completing STEPS 2-3.**
+These four steps are ATOMIC. You MUST NOT skip to STEP 4 without completing STEPS 2-3.
 
-### boulder.json schema (required fields):
+#### boulder.json schema (required fields):
 
 ```json
 {
@@ -165,15 +169,10 @@ STEP 4: NEXT    — ONLY NOW may you delegate the next task
 }
 ```
 
-### Why this exists:
-
 - Plan file checkboxes and boulder.json are TWO tracking systems that MUST stay in sync
 - `completed_tasks` in boulder.json is the machine-readable source of truth
 - `completed_evidence` maps each task to its commit hash (or "no-change-needed", "verified-current", etc.)
 - On cold-start / session resume: read boulder.json → know exactly what's done without git forensics
-
-### Enforcement:
-
 - `/start-work` hook reads boulder.json and validates plan checkboxes match `completed_tasks`
-- If drift detected: reconcile BEFORE proceeding (mark plan checkboxes to match boulder)
+- If drift detected: reconcile BEFORE proceeding
 - NEVER delegate a new task if the previous task's checkpoint is incomplete

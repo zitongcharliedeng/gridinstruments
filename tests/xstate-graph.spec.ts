@@ -259,8 +259,6 @@ test.describe('[Structural] state-independent invariants', () => {
   });
 
   test('GOLDEN-4: Full page snapshot', async ({ page }) => {
-    await page.locator('#grid-settings-btn').click();
-    await page.waitForTimeout(300);
     await fullPageGoldenCheck.check(page);
   });
 

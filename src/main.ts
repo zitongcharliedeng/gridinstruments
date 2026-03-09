@@ -53,7 +53,7 @@ import 'overlayscrollbars/overlayscrollbars.css';
 import SlimSelect from 'slim-select';
 import 'slim-select/styles';
 import './ui-overrides.css';
-import readmeText from '../README.md?raw';
+import agentsText from '../AGENTS.md?raw';
 // Type guard for WaveformType
 /** Converts a restricted subset of Markdown to HTML for the About dialog. */
 function renderMarkdown(md: string): string {
@@ -505,17 +505,20 @@ class DComposeApp {
   }
 
   private handleMidiNoteOn(midiNote: number, velocity: number, channel: number, deviceId: string): void {
-    this.synth.tryUnlock();
-    if (!this.synth.isInitialized()) return;
     const [coordX, coordY] = midiToCoord(midiNote);
     const noteKey = `midi_${deviceId}_${channel}_${midiNote}`;
     const audioNoteId = `midi_${deviceId}_${channel}_${midiNote}_${coordX}_${coordY}`;
-    this.synth.playNote(audioNoteId, coordX, coordY, 0, velocity / 127);
-    this.mpe.noteOn(audioNoteId, midiNote, velocity / 127);
+    // Visual always fires regardless of audio state — sound and visualisation are logically decoupled
     this.activeNotes.set(noteKey, { coordX, coordY });
     this.midiChannelVoice.set(`${deviceId}_${channel}`, audioNoteId);
     this.trackNoteOn(coordX, coordY, midiNote);
     this.render();
+    // Audio only when synth is ready
+    this.synth.tryUnlock();
+    if (this.synth.isInitialized()) {
+      this.synth.playNote(audioNoteId, coordX, coordY, 0, velocity / 127);
+      this.mpe.noteOn(audioNoteId, midiNote, velocity / 127);
+    }
   }
 
   private handleMidiNoteOff(midiNote: number, channel: number, deviceId: string): void {
@@ -1091,11 +1094,9 @@ class DComposeApp {
 
      // Zoom slider — DOM mutations driven by appActor subscriber
      const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-      // At zoom=1.0 key width = 23.5mm (piano key). Target is midpoint between
-      // keyboard key (15mm) and piano key (23.5mm) ≈ 17.5mm → zoom ≈ 0.75.
-      // Touch: scale with viewport width but cap lower (1.2 vs 1.6) so foldable
-      // phones open to a large screen don't get oversized keys.
-      this.defaultZoom = isTouchDevice ? Math.min(1.2, window.innerWidth / 480) : 0.75;
+      this.defaultZoom = isTouchDevice
+        ? Math.min(1.4, window.innerWidth / 480)
+        : Math.max(0.7, Math.min(1.0, 768 / window.screen.height));
      const savedZoom = this.loadSetting('zoom', this.defaultZoom.toString());
      if (this.zoomSlider) {
        this.zoomSlider.value = savedZoom;
@@ -1747,7 +1748,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const aboutClose = document.getElementById('about-close');
   const aboutContentEl = document.getElementById('about-content');
   if (aboutDialog instanceof HTMLDialogElement) {
-    const aboutRendered = renderMarkdown(readmeText);
+    const aboutRendered = renderMarkdown(agentsText);
     const aboutDialogActor = createActor(dialogMachine);
     aboutDialogActor.subscribe((snapshot) => {
       if (snapshot.matches('open')) {
