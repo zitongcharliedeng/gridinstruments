@@ -69,7 +69,7 @@ export const VOLUME_SLIDER_CONFIG: SliderComponentConfig = {
 export const ZOOM_SLIDER_CONFIG: SliderComponentConfig = {
   name: 'zoom',
   defaultValue: 1.0,
-  formatBadge: (v) => `${v.toFixed(2)}\u00d7`,
+  formatBadge: (v) => v.toFixed(2),
   editable: false,
 };
 
