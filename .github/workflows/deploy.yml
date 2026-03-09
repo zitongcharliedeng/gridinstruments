@@ -38,6 +38,12 @@ jobs:
       - name: TypeScript check
         run: npx tsc --noEmit
 
+      - name: AST-grep scan
+        run: npx ast-grep scan
+
+      - name: Lint
+        run: npm run lint
+
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium firefox
 
