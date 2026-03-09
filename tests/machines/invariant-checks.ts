@@ -299,11 +299,15 @@ export const sliderValuesCheck: StateInvariant = {
     if (volText === null) throw new Error('#volume-thumb-badge text is null');
     expect(parseFloat(volText)).toBeCloseTo(-10.5, 0);
 
-    // SM-VAL-3: zoom badge no 'x', value ≈ 1.0
+    // SM-VAL-3: zoom badge no 'x', value matches app's computed default zoom
     const zoomText = await page.locator('#zoom-thumb-badge').textContent();
     if (zoomText === null) throw new Error('#zoom-thumb-badge text is null');
     expect(zoomText).not.toContain('x');
-    expect(parseFloat(zoomText)).toBeCloseTo(1.0, 1);
+    const expectedZoom = await page.evaluate((): number => {
+      const g = window as unknown as { gApp?: { getDefaultZoom: () => number } };
+      return g.gApp?.getDefaultZoom() ?? 0.75;
+    });
+    expect(parseFloat(zoomText)).toBeCloseTo(expectedZoom, 1);
 
     // SM-VAL-4: skew badge = '0.00'
     const skewVal = await page.locator('#skew-thumb-badge').inputValue();

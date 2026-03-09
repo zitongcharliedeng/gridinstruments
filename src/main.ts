@@ -1091,7 +1091,11 @@ class DComposeApp {
 
      // Zoom slider — DOM mutations driven by appActor subscriber
      const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-     this.defaultZoom = isTouchDevice ? Math.min(1.6, window.innerWidth / 480) : 1.0;
+      // At zoom=1.0 key width = 23.5mm (piano key). Target is midpoint between
+      // keyboard key (15mm) and piano key (23.5mm) ≈ 17.5mm → zoom ≈ 0.75.
+      // Touch: scale with viewport width but cap lower (1.2 vs 1.6) so foldable
+      // phones open to a large screen don't get oversized keys.
+      this.defaultZoom = isTouchDevice ? Math.min(1.2, window.innerWidth / 480) : 0.75;
      const savedZoom = this.loadSetting('zoom', this.defaultZoom.toString());
      if (this.zoomSlider) {
        this.zoomSlider.value = savedZoom;
