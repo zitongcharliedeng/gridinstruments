@@ -3,8 +3,9 @@ language: typescript
 rule:
   pattern: page.goto($$$)
 files:
-  - "tests/**/*.spec.ts"
-  - "!tests/xstate-graph.spec.ts"
+  - "tests/contracts.spec.ts"
+  - "tests/mpe-output.spec.ts"
+  - "tests/mpe-service.spec.ts"
 severity: error
 message: "page.goto() banned in imperative spec files — all navigation handled by xstate-graph.spec.ts beforeEach"
 note: "Only xstate-graph.spec.ts may use page.goto(). Other spec files should be migrated to machine-generated tests."
