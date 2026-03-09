@@ -9,9 +9,8 @@ rule:
         - pattern: test.describe($$$)
       stopBy: end
 files:
-  - "tests/behavioral.spec.ts"
-  - "tests/panel-resize.spec.ts"
-  - "tests/overlay-regression.spec.ts"
+  - "tests/**/*.spec.ts"
+  - "!tests/xstate-graph.spec.ts"
 severity: error
 message: "Imperative tests banned in this file — all behavioral tests must be XState machine-generated via xstate-graph.spec.ts"
-note: "These files were deleted during the XState migration. If recreated, tests must use the machine infrastructure."
+note: "Only xstate-graph.spec.ts may contain tests. All other spec files should be migrated to machine-generated tests."

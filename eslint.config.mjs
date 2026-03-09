@@ -11,11 +11,23 @@ export default tseslint.config(
   ...tseslint.configs.strictTypeChecked,
   ...tseslint.configs.stylisticTypeChecked,
 
-  // Project-wide settings
+  // Project-wide settings for src/
   {
+    files: ['src/**/*.ts'],
     languageOptions: {
       parserOptions: {
         projectService: true,
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+  },
+
+  // Test files use tsconfig.test.json (projectService disabled for this config)
+  {
+    files: ['tests/**/*.ts'],
+    languageOptions: {
+      parserOptions: {
+        project: './tsconfig.test.json',
         tsconfigRootDir: import.meta.dirname,
       },
     },

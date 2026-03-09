@@ -1,9 +1,0 @@
-id: no-test-in-visual-regression
-language: typescript
-rule:
-  pattern: test($NAME, $$$)
-files:
-  - "tests/visual-regression.spec.ts"
-severity: error
-message: "visual-regression.spec.ts is banned — migrate all assertions to StateInvariant objects in invariant-checks.ts wired to machine meta.invariants or xstate-graph.spec.ts structural section"
-note: "D(P)={M} invariants → wire to machine state meta.invariants. D(P)={} invariants → structural section of xstate-graph.spec.ts."

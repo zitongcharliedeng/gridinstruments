@@ -3,9 +3,8 @@ language: typescript
 rule:
   pattern: page.goto($$$)
 files:
-  - "tests/behavioral.spec.ts"
-  - "tests/panel-resize.spec.ts"
-  - "tests/overlay-regression.spec.ts"
+  - "tests/**/*.spec.ts"
+  - "!tests/xstate-graph.spec.ts"
 severity: error
-message: "page.goto() banned in deleted imperative test files — all navigation handled by xstate-graph.spec.ts beforeEach"
-note: "These files were deleted during XState migration. This rule prevents resurrection."
+message: "page.goto() banned in imperative spec files — all navigation handled by xstate-graph.spec.ts beforeEach"
+note: "Only xstate-graph.spec.ts may use page.goto(). Other spec files should be migrated to machine-generated tests."
