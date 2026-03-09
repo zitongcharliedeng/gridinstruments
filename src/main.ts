@@ -341,6 +341,9 @@ class DComposeApp {
   private keyRepeat = new Set<string>();
   private midiChannelVoice = new Map<string, string>();
   private midiPitchBendRange = 48;
+  private expressionBend = true;
+  private expressionVelocity = true;
+  private expressionPressure = true;
 
   private pointerDown = new Map<number, { coordX: number; coordY: number } | null>();
 
@@ -374,6 +377,7 @@ class DComposeApp {
     zoom: 'gi_zoom', skew: 'gi_skew', bfact: 'gi_bfact', tuning: 'gi_tuning',
     volume: 'gi_volume', waveform: 'gi_waveform', dref: 'gi_dref', layout: 'gi_layout',
     midiPbRange: 'gi_midi_pb_range',
+    exprBend: 'gi_expr_bend', exprVelocity: 'gi_expr_velocity', exprPressure: 'gi_expr_pressure',
   } as const;
 
   private loadSetting(key: keyof typeof DComposeApp.STORAGE_KEYS, fallback: string): string {
@@ -407,6 +411,9 @@ class DComposeApp {
 
     const savedPbRange = parseInt(this.loadSetting('midiPbRange', '48'), 10);
     this.midiPitchBendRange = (savedPbRange >= 2 && savedPbRange <= 48) ? savedPbRange : 48;
+    this.expressionBend = this.loadSetting('exprBend', 'true') === 'true';
+    this.expressionVelocity = this.loadSetting('exprVelocity', 'true') === 'true';
+    this.expressionPressure = this.loadSetting('exprPressure', 'true') === 'true';
 
     void this.init();
   }
@@ -490,17 +497,23 @@ class DComposeApp {
     this.midi.onPitchBend((channel, value, deviceId) => {
       const audioNoteId = this.midiChannelVoice.get(`${deviceId}_${channel}`);
       if (audioNoteId) {
-        this.synth.setPitchBend(audioNoteId, value * this.midiPitchBendRange);
+        if (this.expressionBend) this.synth.setPitchBend(audioNoteId, value * this.midiPitchBendRange);
         this.mpe.sendPitchBend(audioNoteId, value * this.midiPitchBendRange);
       }
     });
     this.midi.onSlide((channel, value, deviceId) => {
       const audioNoteId = this.midiChannelVoice.get(`${deviceId}_${channel}`);
-      if (audioNoteId) this.mpe.sendSlide(audioNoteId, value);
+      if (audioNoteId) {
+        if (this.expressionBend) this.synth.setTimbre(audioNoteId, value);
+        this.mpe.sendSlide(audioNoteId, value);
+      }
     });
     this.midi.onPressure((channel, value, deviceId) => {
       const audioNoteId = this.midiChannelVoice.get(`${deviceId}_${channel}`);
-      if (audioNoteId) this.mpe.sendPressure(audioNoteId, value);
+      if (audioNoteId) {
+        if (this.expressionPressure) this.synth.setPressure(audioNoteId, value);
+        this.mpe.sendPressure(audioNoteId, value);
+      }
     });
   }
 
@@ -516,7 +529,7 @@ class DComposeApp {
     // Audio only when synth is ready
     this.synth.tryUnlock();
     if (this.synth.isInitialized()) {
-      this.synth.playNote(audioNoteId, coordX, coordY, 0, velocity / 127);
+      this.synth.playNote(audioNoteId, coordX, coordY, 0, this.expressionVelocity ? velocity / 127 : 1);
       this.mpe.noteOn(audioNoteId, midiNote, velocity / 127);
     }
   }
@@ -1017,6 +1030,31 @@ class DComposeApp {
         } else {
           pbRangeInput.value = this.midiPitchBendRange.toString();
         }
+      });
+    }
+
+    const exprBendCb = getElementOrNull('expr-bend', HTMLInputElement);
+    if (exprBendCb) {
+      exprBendCb.checked = this.expressionBend;
+      exprBendCb.addEventListener('change', () => {
+        this.expressionBend = exprBendCb.checked;
+        this.saveSetting('exprBend', exprBendCb.checked.toString());
+      });
+    }
+    const exprVelCb = getElementOrNull('expr-velocity', HTMLInputElement);
+    if (exprVelCb) {
+      exprVelCb.checked = this.expressionVelocity;
+      exprVelCb.addEventListener('change', () => {
+        this.expressionVelocity = exprVelCb.checked;
+        this.saveSetting('exprVelocity', exprVelCb.checked.toString());
+      });
+    }
+    const exprPressCb = getElementOrNull('expr-pressure', HTMLInputElement);
+    if (exprPressCb) {
+      exprPressCb.checked = this.expressionPressure;
+      exprPressCb.addEventListener('change', () => {
+        this.expressionPressure = exprPressCb.checked;
+        this.saveSetting('exprPressure', exprPressCb.checked.toString());
       });
     }
 

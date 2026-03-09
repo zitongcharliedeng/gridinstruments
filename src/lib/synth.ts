@@ -368,7 +368,7 @@ export class Synth {
     timbreFilter.connect(gainNode);
     gainNode.connect(this.masterGain);
     oscillator.start();
-    gainNode.gain.setTargetAtTime(Math.max(0.01, clampedVel), this.context.currentTime, this.attackTime);
+    gainNode.gain.setTargetAtTime(Math.max(0.01, Math.pow(clampedVel, 0.5)), this.context.currentTime, this.attackTime);
 
     const vibratoGainNode = this.context.createGain();
     vibratoGainNode.gain.value = 0;
@@ -437,6 +437,34 @@ export class Synth {
     const baseFreq = this.getFrequency(voice.coordX, voice.coordY, voice.octaveOffset);
     const bentFreq = baseFreq * Math.pow(2, semitones / 12);
     voice.oscillator.frequency.setTargetAtTime(bentFreq, this.context.currentTime, 0.005);
+  }
+
+  /**
+   * Update timbre (lowpass filter cutoff) for a specific voice.
+   * Maps 0→1 to 500Hz→18000Hz via exponential curve.
+   * Called from MPE CC74 (slide) input.
+   */
+  setTimbre(noteId: string, value: number): void {
+    if (!this.context) return;
+    const voice = this.voices.get(noteId);
+    if (!voice) return;
+    const clamped = Math.max(0, Math.min(1, value));
+    const cutoff = 500 * Math.pow(36, clamped);
+    voice.timbreFilter.frequency.setTargetAtTime(cutoff, this.context.currentTime, 0.01);
+  }
+
+  /**
+   * Update gain for a specific voice from aftertouch/pressure.
+   * Uses sqrt curve so light pressure → noticeable volume.
+   * Called from MPE channel pressure input.
+   */
+  setPressure(noteId: string, value: number): void {
+    if (!this.context) return;
+    const voice = this.voices.get(noteId);
+    if (!voice) return;
+    const clamped = Math.max(0, Math.min(1, value));
+    const gain = Math.max(0.01, Math.pow(clamped, 0.5));
+    voice.gainNode.gain.setTargetAtTime(gain, this.context.currentTime, 0.01);
   }
 
   /**
