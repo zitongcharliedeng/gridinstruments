@@ -7,6 +7,14 @@ rule:
         inside:
           pattern: $ACTOR.subscribe($$$)
           stopBy: end
+    - not:
+        inside:
+          kind: function_declaration
+          stopBy: end
+    - not:
+        inside:
+          kind: method_definition
+          stopBy: end
 files:
   - "src/main.ts"
 severity: error
