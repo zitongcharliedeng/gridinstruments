@@ -549,3 +549,226 @@ export const panelAriaCheck: StateInvariant = {
     await expect(pedHandle).toHaveAttribute('aria-label', 'Resize pedals');
   },
 };
+
+// ── Migrated from contracts.spec.ts — UI behavioral invariants ───────────────
+
+/** D = {}. Scrollbar 12px width at small viewport (#62). Structural test. */
+export const scrollbarWidthCheck: StateInvariant = {
+  id: 'ISS-62-1',
+  check: async (page: Page) => {
+    await page.setViewportSize({ width: 1280, height: 500 });
+    await page.waitForTimeout(500);
+    await page.click('#grid-settings-btn');
+    await page.waitForTimeout(800);
+    const result = await page.evaluate(() => {
+      const scrollbar = document.querySelector('#grid-overlay .os-scrollbar-vertical');
+      const handle = scrollbar?.querySelector('.os-scrollbar-handle');
+      if (!scrollbar || !handle) return null;
+      const cs = getComputedStyle(scrollbar);
+      return {
+        width: parseFloat(cs.width),
+        opacity: parseFloat(cs.opacity),
+        visibility: cs.visibility,
+        handleWidth: handle.getBoundingClientRect().width,
+        handleHeight: handle.getBoundingClientRect().height,
+      };
+    });
+    if (!result) throw new Error('scrollbar elements must exist');
+    expect(result.width, 'scrollbar width must be 12px, not 0').toBe(12);
+    expect(result.handleWidth, 'handle must have 12px width').toBe(12);
+    expect(result.handleHeight, 'handle must have non-zero height').toBeGreaterThan(0);
+    expect(result.opacity, 'scrollbar opacity must be 1').toBe(1);
+    expect(result.visibility, 'scrollbar must be visible').toBe('visible');
+  },
+};
+
+/** D = {}. Scrollbar overflow at small viewport (#62). Structural test. */
+export const scrollbarOverflowCheck: StateInvariant = {
+  id: 'ISS-62-2',
+  check: async (page: Page) => {
+    await page.setViewportSize({ width: 1280, height: 500 });
+    await page.waitForTimeout(500);
+    await page.click('#grid-settings-btn');
+    await page.waitForTimeout(800);
+    const result = await page.evaluate(() => {
+      const viewport = document.querySelector('#grid-overlay [data-overlayscrollbars-viewport]');
+      const scrollbar = document.querySelector('#grid-overlay .os-scrollbar-vertical');
+      if (!viewport || !scrollbar) return null;
+      return {
+        clientH: viewport.clientHeight,
+        scrollH: viewport.scrollHeight,
+        hasUnusable: scrollbar.classList.contains('os-scrollbar-unusable'),
+      };
+    });
+    if (!result) throw new Error('OverlayScrollbars viewport must exist');
+    expect(result.scrollH, 'scroll content must exceed viewport').toBeGreaterThan(result.clientH);
+    expect(result.hasUnusable, 'scrollbar must not be marked unusable').toBe(false);
+  },
+};
+
+/** D = {overlay}. slim-select dark theme check (#85). Wire: overlay.visible */
+export const slimSelectThemeCheck: StateInvariant = {
+  id: 'ISS-85-1',
+  check: async (page: Page) => {
+    const result = await page.evaluate(() => {
+      const ssMain = document.querySelector('#grid-overlay .ss-main');
+      if (!ssMain) return null;
+      const cs = getComputedStyle(ssMain);
+      return {
+        bg: cs.backgroundColor,
+        color: cs.color,
+        font: cs.fontFamily,
+        borderRadius: cs.borderRadius,
+        height: parseFloat(cs.height),
+      };
+    });
+    if (!result) throw new Error('.ss-main must exist (slim-select initialized)');
+    expect(result.bg, 'dropdown bg must be black').toBe('rgb(0, 0, 0)');
+    expect(result.color, 'dropdown text must be white').toBe('rgb(255, 255, 255)');
+    expect(result.font, 'dropdown font must be JetBrains Mono').toContain('JetBrains Mono');
+    expect(result.borderRadius, 'dropdown must have no rounded corners').toBe('0px');
+    expect(result.height, 'dropdown must be compact (≤30px)').toBeLessThanOrEqual(30);
+  },
+};
+
+/** D = {overlay}. Native selects hidden by slim-select, .ss-main visible (#85). Wire: overlay.visible */
+export const nativeSelectHiddenCheck: StateInvariant = {
+  id: 'ISS-85-2',
+  check: async (page: Page) => {
+    // slim-select v3 hides native selects with accessible hiding:
+    // opacity:0, position:absolute, width/height:1px, clip:rect(0,0,0,0), aria-hidden:true
+    // It does NOT use display:none — check aria-hidden + opacity + .ss-main sibling instead.
+    const result = await page.evaluate(() => {
+      const selects = ['layout-select', 'mpe-output-select'];
+      return selects.map(id => {
+        const native = document.getElementById(id);
+        if (!native) return { id, ariaHidden: 'missing', opacity: 'missing', hasSsMain: false };
+        const cs = getComputedStyle(native);
+        const sibling = native.nextElementSibling;
+        return {
+          id,
+          ariaHidden: native.getAttribute('aria-hidden'),
+          opacity: cs.opacity,
+          position: cs.position,
+          width: cs.width,
+          hasSsMain: sibling?.classList.contains('ss-main') ?? false,
+        };
+      });
+    });
+    for (const sel of result) {
+      expect(sel.ariaHidden, `${sel.id} native select must be aria-hidden by slim-select`).toBe('true');
+      expect(sel.opacity, `${sel.id} native select must be visually hidden`).toBe('0');
+      expect(sel.hasSsMain, `${sel.id} must have .ss-main sibling from slim-select`).toBe(true);
+    }
+  },
+};
+
+/** D = {overlay}. MPE checkbox uses custom .gi-checkbox component (#85). Wire: overlay.visible */
+export const customCheckboxCheck: StateInvariant = {
+  id: 'ISS-85-3',
+  check: async (page: Page) => {
+    const result = await page.evaluate(() => {
+      const cb = document.getElementById('mpe-enabled');
+      if (!cb) return null;
+      const wrapper = cb.closest('.gi-checkbox');
+      const check = wrapper?.querySelector('.gi-check');
+      if (!wrapper || !check) return { hasWrapper: false, hasCheck: false, checkBg: '' };
+      const cs = getComputedStyle(check);
+      return {
+        hasWrapper: true,
+        hasCheck: true,
+        checkBg: cs.backgroundColor,
+      };
+    });
+    if (!result) throw new Error('#mpe-enabled must exist');
+    expect(result.hasWrapper, 'checkbox must be in .gi-checkbox wrapper').toBe(true);
+    expect(result.hasCheck, '.gi-check visual element must exist').toBe(true);
+    expect(result.checkBg, 'unchecked checkbox bg must be black').toBe('rgb(0, 0, 0)');
+  },
+};
+
+/** D = {overlay}. No unexpected white backgrounds in overlay (#85). Wire: overlay.visible */
+export const noWhiteBackgroundCheck: StateInvariant = {
+  id: 'ISS-85-4',
+  check: async (page: Page) => {
+    const whites = await page.evaluate(() => {
+      const overlay = document.getElementById('grid-overlay');
+      if (!overlay) return ['overlay missing'];
+      // Elements that are intentionally white by design
+      const allowedWhite = (el: Element): boolean =>
+        el.matches('.wave-btn.active') ||     // active waveform = white indicator
+        el.matches('.gi-check') ||            // checked checkbox mark
+        el.matches('.slider-preset-btn.active'); // active TET preset
+      const found: string[] = [];
+      const walk = (el: Element) => {
+        if (allowedWhite(el)) { return; }
+        const cs = getComputedStyle(el);
+        const bg = cs.backgroundColor;
+        const match = bg.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+        if (match) {
+          const [, r, g, b] = match.map(Number);
+          if (r > 200 && g > 200 && b > 200) {
+            found.push(`${el.tagName}.${el.className?.toString().substring(0, 30)}: ${bg}`);
+          }
+        }
+        for (const child of el.children) walk(child);
+      };
+      walk(overlay);
+      return found;
+    });
+    expect(whites, 'no element in overlay may have white/light background').toEqual([]);
+  },
+};
+
+/** D = {}. D-ref must not drift from keyboard canvas interaction (#84). Structural test. */
+export const drefDriftCheck: StateInvariant = {
+  id: 'ISS-84-1',
+  check: async (page: Page) => {
+    await page.click('#grid-settings-btn');
+    await page.waitForTimeout(500);
+    const drefBefore = await page.locator('#d-ref-input').inputValue();
+    await page.click('#grid-settings-btn');
+    await page.waitForTimeout(300);
+    const canvas = page.locator('#keyboard-canvas');
+    const box = await canvas.boundingBox();
+    if (!box) throw new Error('keyboard-canvas not visible');
+    const centerX = box.x + box.width / 2;
+    const centerY = box.y + box.height / 2;
+    for (let i = 0; i < 20; i++) {
+      await page.mouse.move(centerX, centerY - 20 + i * 2);
+      await page.mouse.down();
+      await page.mouse.move(centerX, centerY - 40 + i * 2);
+      await page.mouse.up();
+    }
+    await page.waitForTimeout(500);
+    await page.click('#grid-settings-btn');
+    await page.waitForTimeout(500);
+    const drefAfter = await page.locator('#d-ref-input').inputValue();
+    expect(drefAfter, 'D-ref must not drift from keyboard interaction').toBe(drefBefore);
+  },
+};
+
+/** D = {sustain}. R key must not activate sustain (#14). Wire: sustain.inactive */
+export const rKeyNotSustainCheck: StateInvariant = {
+  id: 'ISS-14-1',
+  check: async (page: Page) => {
+    await page.keyboard.press('r');
+    await page.waitForTimeout(300);
+    const sustainActive = await page.locator('#sustain-indicator').evaluate(
+      el => el.classList.contains('active')
+    );
+    expect(sustainActive, 'R key must not activate sustain').toBe(false);
+  },
+};
+
+/** D = {overlay}. D-ref slider range covers D2 to D6. Wire: overlay.visible */
+export const drefRangeCheck: StateInvariant = {
+  id: 'BH-DREF-RANGE-1',
+  check: async (page: Page) => {
+    const slider = page.locator('#d-ref-slider');
+    const min = parseFloat(await slider.getAttribute('min') ?? '0');
+    const max = parseFloat(await slider.getAttribute('max') ?? '0');
+    expect(min).toBeCloseTo(73.42, 0);  // D2
+    expect(max).toBeCloseTo(1174.66, 0); // D6
+  },
+};

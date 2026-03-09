@@ -261,14 +261,8 @@
       padding: 48px 24px 24px;
       overflow-y: auto;
       overflow-x: hidden;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
     }
-    /* OverlayScrollbars custom theme — always-visible scrollbar (#62) */
-    .gi-scrollbar { --os-handle-bg: var(--accent); --os-handle-bg-hover: var(--fg); --os-handle-bg-active: var(--fg); }
-    .gi-scrollbar .os-scrollbar-handle { min-height: 40px; }
-    .gi-scrollbar .os-scrollbar { --os-size: 12px; padding: 0; }
+    
     #grid-overlay::before {
       content: '';
       position: absolute;
@@ -289,7 +283,7 @@
       display: flex;
       flex-direction: column;
       gap: 5px;
-      padding-bottom: 8px;
+      margin-bottom: 8px;
     }
     .overlay-section .ctrl-label { color: #fff; }
     .overlay-section .slider-track { width: 100%; }
@@ -385,16 +379,7 @@
     select:focus, input:focus { border-color: var(--accent); }
     select option { background: var(--bg); }
 
-    /* slim-select theme — cross-platform identical dropdowns (#85) */
-    .ss-main { font-family: var(--font); font-size: 12px; background: var(--bg); color: var(--fg); border: 1px solid var(--border); border-radius: 0; padding: 3px 6px; min-height: 0; cursor: pointer; }
-    .ss-main:focus, .ss-main.ss-open-below, .ss-main.ss-open-above { border-color: var(--accent); box-shadow: none; }
-    .ss-main .ss-arrow { margin: 0 0 0 6px; }
-    .ss-main .ss-arrow path { stroke: var(--dim); }
-    .ss-main .ss-values .ss-single { margin: 0; padding: 0; color: var(--fg); }
-    .ss-content { font-family: var(--font); font-size: 12px; background: var(--bg); border: 1px solid var(--accent); border-radius: 0; box-shadow: 0 4px 12px rgba(0,0,0,0.6); }
-    .ss-content .ss-list .ss-option { padding: 4px 8px; color: var(--fg); background: var(--bg); }
-    .ss-content .ss-list .ss-option:hover, .ss-content .ss-list .ss-option.ss-highlighted { background: var(--subtle); color: var(--fg); }
-    .ss-content .ss-list .ss-option.ss-selected { background: var(--border); color: var(--fg); }
+    
 
     /* Custom checkbox — cross-platform identical (#85) */
     .gi-checkbox { position: relative; display: inline-block; width: 14px; height: 14px; cursor: pointer; vertical-align: middle; }

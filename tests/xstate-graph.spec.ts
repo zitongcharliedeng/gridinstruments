@@ -44,6 +44,9 @@ import {
   fullPageGoldenCheck,
   keyboardCanvasGoldenCheck,
   tetNotchGoldenCheck,
+  scrollbarWidthCheck,
+  scrollbarOverflowCheck,
+  drefDriftCheck,
 } from './machines/invariant-checks';
 import { focusReturnCheck } from './machines/modifierCompoundMachine';
 
@@ -225,6 +228,18 @@ test.describe('[Structural] state-independent invariants', () => {
     await page.locator('#grid-settings-btn').click();
     await page.waitForTimeout(300);
     await tetNotchGoldenCheck.check(page);
+  });
+
+  test('ISS-62-1: OverlayScrollbars scrollbar has 12px width when content overflows (#62)', async ({ page }) => {
+    await scrollbarWidthCheck.check(page);
+  });
+
+  test('ISS-62-2: OverlayScrollbars viewport has real overflow at small viewport (#62)', async ({ page }) => {
+    await scrollbarOverflowCheck.check(page);
+  });
+
+  test('ISS-84-1: rapid keyboard clicks do not change D-ref value (#84)', async ({ page }) => {
+    await drefDriftCheck.check(page);
   });
 });
 

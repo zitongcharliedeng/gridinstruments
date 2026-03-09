@@ -31,6 +31,12 @@ import {
   overlayColorsCheck,
   drefAnnotationCheck,
   overlayControlsCheck,
+  slimSelectThemeCheck,
+  nativeSelectHiddenCheck,
+  customCheckboxCheck,
+  noWhiteBackgroundCheck,
+  drefRangeCheck,
+  rKeyNotSustainCheck,
 } from './invariant-checks';
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -88,7 +94,7 @@ export const overlayMachine = setup({
       meta: {
         reason: 'A settings overlay panel is visible over the keyboard grid, showing sliders and controls.',
         designIntent: 'Semi-transparent overlay lets musicians see grid while adjusting settings',
-        invariants: [tooltipCheck, overlayBgCheck, overlayShimmerCheck, overlaySectionsCheck, overlayPresetCheck, mpeUiCheck, focusPreserveCheck, iconSizeCheck, sliderBadgePositionCheck, badgePointerEventsCheck, sliderLabelPositionCheck, sliderValuesCheck, tetBelowTrackCheck, overlayColorsCheck, drefAnnotationCheck, overlayControlsCheck],
+        invariants: [tooltipCheck, overlayBgCheck, overlayShimmerCheck, overlaySectionsCheck, overlayPresetCheck, mpeUiCheck, focusPreserveCheck, iconSizeCheck, sliderBadgePositionCheck, badgePointerEventsCheck, sliderLabelPositionCheck, sliderValuesCheck, tetBelowTrackCheck, overlayColorsCheck, drefAnnotationCheck, overlayControlsCheck, slimSelectThemeCheck, nativeSelectHiddenCheck, customCheckboxCheck, noWhiteBackgroundCheck, drefRangeCheck],
       },
       on: {
         CLICK_COG: 'hidden',
@@ -444,6 +450,7 @@ export const sustainMachine = setup({
       meta: {
         reason: 'The sustain pedal indicator is in its default/inactive state.',
         designIntent: 'Notes play and release normally',
+        invariants: [rKeyNotSustainCheck],
       },
       on: {
         PRESS_SPACE: 'active',

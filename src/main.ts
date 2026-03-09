@@ -52,6 +52,7 @@ import { OverlayScrollbars, ClickScrollPlugin } from 'overlayscrollbars';
 import 'overlayscrollbars/overlayscrollbars.css';
 import SlimSelect from 'slim-select';
 import 'slim-select/styles';
+import './ui-overrides.css';
 import readmeText from '../README.md?raw';
 // Type guard for WaveformType
 /** Converts a restricted subset of Markdown to HTML for the About dialog. */
@@ -1123,18 +1124,8 @@ class DComposeApp {
     const gridCog = getElementOrNull('grid-settings-btn', HTMLButtonElement);
     const gridOverlay = document.getElementById('grid-overlay');
     if (gridCog && gridOverlay) {
-      // Initialize OverlayScrollbars — always-visible scrollbar (#62)
       OverlayScrollbars.plugin(ClickScrollPlugin);
-      OverlayScrollbars(gridOverlay, {
-        overflow: { x: 'hidden', y: 'scroll' },
-        scrollbars: {
-          theme: 'gi-scrollbar',
-          visibility: 'visible',
-          autoHide: 'never',
-          dragScroll: true,
-          clickScroll: true,
-        },
-      });
+      let osInstance: ReturnType<typeof OverlayScrollbars> | null = null;
 
       const overlayActor = createActor(overlayMachine);
       overlayActor.subscribe((snapshot) => {
@@ -1142,6 +1133,18 @@ class DComposeApp {
         gridOverlay.classList.toggle('hidden', !visible);
         gridCog.classList.toggle('active', visible);
         if (visible) {
+          if (!osInstance) {
+            osInstance = OverlayScrollbars(gridOverlay, {
+              overflow: { x: 'hidden', y: 'scroll' },
+              scrollbars: {
+                theme: 'gi-scrollbar',
+                visibility: 'visible',
+                autoHide: 'never',
+                dragScroll: true,
+                clickScroll: true,
+              },
+            });
+          }
           requestAnimationFrame(refreshAllSliderUI);
         }
       });
