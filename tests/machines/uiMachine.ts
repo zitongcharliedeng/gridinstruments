@@ -791,6 +791,7 @@ export const skewLabelInvariants: Record<string, string> = {
 export const skewLabelDomAssertions: Record<string, (page: Page) => Promise<void>> = {
   dcompose: async (page) => {
     await expect(page.locator('#skew-label')).toContainText('DCompose');
+    await expect(page.locator('#skew-label')).toContainText('Wicki-Hayden');
   },
   midimech: async (page) => {
     await expect(page.locator('#skew-label')).toContainText('MidiMech');

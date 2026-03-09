@@ -80,6 +80,8 @@
   --os-handle-bg-hover: #fff;
   --os-handle-bg-active: #fff;
   padding: 0;
+  /* z-index: render above overlay content but below cog (z-index: 15) — fixes #87 */
+  z-index: 10;
 }
 
 .os-scrollbar.gi-scrollbar .os-scrollbar-handle {
