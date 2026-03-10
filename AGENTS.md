@@ -52,6 +52,18 @@ We want to gamify music theory through grid layouts that make intervals and chor
 
 ---
 
+## Tuning
+
+**EDO** (Equal Division of the Octave) and **TET** (Tone Equal Temperament) are the same thing for integer tunings — 12-EDO = 12-TET. The distinction only matters for non-octave-repeating tunings (rare). This app uses EDO consistently.
+
+The grid is a **rank-2 pitch lattice**: the x-axis follows the circle of fifths (each step = a fifth), the y-axis follows octaves. Every isomorphic keyboard — [Wicki-Hayden](https://en.wikipedia.org/wiki/Wicki-Hayden_note_layout), DCompose, [Striso](https://www.striso.org/the-note-layout/), MidiMech — is a 2D slice of this lattice.
+
+**Just intonation** lives in a 3D lattice (three generators: 2/1 octave, 3/2 fifth, 5/4 major third). The grid is a 2D projection of that 3D space. **The fifth slider selects which projection**: 700¢ = 12-TET, 701.96¢ = Pythagorean (pure fifths), 696.58¢ = meantone (pure major thirds). Commas — like the syntonic comma (81/80 ≈ 21.5¢) — measure the "curvature" that equal temperament eliminates.
+
+**Isomorphism**: every chord has the same shape in every key. Learn one chord fingering; it works everywhere on the grid, in any key, in any tuning.
+
+---
+
 ## Development
 
 Everything below this heading is for AI agents and contributors — it does not appear in the app's About dialog.
