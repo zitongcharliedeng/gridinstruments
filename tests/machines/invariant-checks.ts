@@ -1991,8 +1991,8 @@ export const gameMachineTransitions: StateInvariant = {
 
     // loading → playing
     const mockGroups: NoteGroup[] = [
-      { cellIds: ['0_0', '1_0'], startMs: 0 },
-      { cellIds: ['2_0'], startMs: 500 },
+      { cellIds: ['0_0', '1_0'], midiNotes: [60, 64], startMs: 0 },
+      { cellIds: ['2_0'], midiNotes: [67], startMs: 500 },
     ];
     actor.send({ type: 'SONG_LOADED', noteGroups: mockGroups });
     states.push(actor.getSnapshot().value as string);
@@ -2001,11 +2001,11 @@ export const gameMachineTransitions: StateInvariant = {
     const targetCellIds = actor.getSnapshot().context.targetCellIds;
 
     // playing → playing (advance to next group)
-    actor.send({ type: 'NOTE_PRESSED', cellId: '0_0' });
+    actor.send({ type: 'NOTE_PRESSED', cellId: '0_0', midiNote: 60 });
     const afterAdvance = actor.getSnapshot().context.currentGroupIndex;
 
     // playing → complete (last group, correct note)
-    actor.send({ type: 'NOTE_PRESSED', cellId: '2_0' });
+    actor.send({ type: 'NOTE_PRESSED', cellId: '2_0', midiNote: 67 });
     states.push(actor.getSnapshot().value as string);
 
     actor.stop();
@@ -2024,7 +2024,7 @@ export const gameMachineReset: StateInvariant = {
     actor.start();
 
     actor.send({ type: 'FILE_DROPPED', file: new File([], 'test.mid') });
-    actor.send({ type: 'SONG_LOADED', noteGroups: [{ cellIds: ['0_0'], startMs: 0 }] });
+    actor.send({ type: 'SONG_LOADED', noteGroups: [{ cellIds: ['0_0'], midiNotes: [60], startMs: 0 }] });
     const playingState = actor.getSnapshot().value;
 
     actor.send({ type: 'GAME_RESET' });

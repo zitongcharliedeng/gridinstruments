@@ -536,7 +536,7 @@ class DComposeApp {
     this.midiChannelVoice.set(`${deviceId}_${channel}`, audioNoteId);
     this.trackNoteOn(coordX, coordY, midiNote);
     if (this.gameActor?.getSnapshot().matches('playing')) {
-      this.gameActor.send({ type: 'NOTE_PRESSED', cellId: `${coordX}_${coordY}` });
+      this.gameActor.send({ type: 'NOTE_PRESSED', cellId: `${coordX}_${coordY}`, midiNote });
     }
     this.render();
     // Audio only when synth is ready
@@ -1527,7 +1527,7 @@ class DComposeApp {
     this.activeNotes.set(code, { coordX, coordY });
     this.trackNoteOn(effectiveCoordX, effectiveCoordY, midiNote);
     if (this.gameActor?.getSnapshot().matches('playing')) {
-      this.gameActor.send({ type: 'NOTE_PRESSED', cellId: `${effectiveCoordX}_${effectiveCoordY}` });
+      this.gameActor.send({ type: 'NOTE_PRESSED', cellId: `${effectiveCoordX}_${effectiveCoordY}`, midiNote });
     }
     this.render();
     if (this.synth.isInitialized()) {
@@ -1648,7 +1648,7 @@ class DComposeApp {
     this.activeNotes.set(`ptr_${pointerId}`, { coordX, coordY });
     this.trackNoteOn(effectiveCoordX, effectiveCoordY, midiNote);
     if (this.gameActor?.getSnapshot().matches('playing')) {
-      this.gameActor.send({ type: 'NOTE_PRESSED', cellId: `${effectiveCoordX}_${effectiveCoordY}` });
+      this.gameActor.send({ type: 'NOTE_PRESSED', cellId: `${effectiveCoordX}_${effectiveCoordY}`, midiNote });
     }
     this.render();
   }

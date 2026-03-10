@@ -31,6 +31,8 @@ export interface GameNote {
 export interface NoteGroup {
   /** All cell IDs in this chord group (press ANY one to advance) */
   cellIds: string[];
+  /** MIDI note numbers for this chord group */
+  midiNotes: number[];
   /** Group start time in milliseconds */
   startMs: number;
 }
@@ -58,7 +60,7 @@ export type GameEvent =
   | { type: 'FILE_DROPPED'; file: File }
   | { type: 'SONG_LOADED'; noteGroups: NoteGroup[] }
   | { type: 'LOAD_FAILED'; error: string }
-  | { type: 'NOTE_PRESSED'; cellId: string }
+  | { type: 'NOTE_PRESSED'; cellId: string; midiNote: number }
   | { type: 'GAME_RESET' }
   | { type: 'TUNING_WARN_ACK' };
 

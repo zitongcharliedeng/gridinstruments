@@ -15,10 +15,8 @@ import { midiToCoord } from './note-colors';
  */
 const CHORD_THRESHOLD_MS = 20;
 
-/** Extended NoteGroup with MIDI note numbers for transposition support. */
-export interface GameNoteGroup extends NoteGroup {
-  midiNotes: number[];
-}
+/** Type alias for NoteGroup used in game engine (now identical to base NoteGroup). */
+export type GameNoteGroup = NoteGroup;
 
 /**
  * Convert MIDI note number to grid cell ID: "${coordX}_${coordY}"

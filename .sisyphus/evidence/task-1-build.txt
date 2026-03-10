@@ -1,0 +1,16 @@
+warning: Git tree '/home/firstinstallusername/gridinstruments' is dirty
+[devshell] PLAYWRIGHT_BROWSERS_PATH=/nix/store/bas6dg486nm7lc5b9529da43418mymbz-playwright-browsers
+[devshell] Firefox: firefox-1497
+
+> gridinstruments@1.0.0 build
+> tsc && vite build
+
+vite v5.4.21 building for production...
+transforming...
+✓ 1791 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                  36.42 kB │ gzip:  8.10 kB
+dist/assets/index-QbBGEGjX.css   26.57 kB │ gzip:  4.67 kB
+dist/assets/index-b9_KHfS2.js   286.92 kB │ gzip: 92.16 kB │ map: 1,153.32 kB
+✓ built in 1.30s
