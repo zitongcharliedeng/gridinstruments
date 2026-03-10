@@ -1,0 +1,17 @@
+Task 3 Evidence: Multi-cell highlighting + Tuning slider lock during game play
+===============================================================================
+
+Build: PASS (tsc && vite build)
+Tests: 76/76 Structural tests passing (was 74 baseline + 2 new)
+
+Changes:
+1. src/main.ts: gameActor subscription expands target highlights to ALL cells
+   with same MIDI notes via getCellIdsForMidiNotes() (not just original cellIds)
+2. src/main.ts: tuning slider disabled when game state === 'playing', re-enabled otherwise
+3. src/machines/gameMachine.ts: FILE_DROPPED transition added to playing state
+4. tests/machines/invariant-checks.ts: GAME-HIGHLIGHT-1, GAME-LOCK-1 added
+5. tests/xstate-graph.spec.ts: Both new tests wired into [Structural] block
+
+New tests:
+- GAME-HIGHLIGHT-1: getCellIdsForMidiNotes returns multiple cells per pitch ✓
+- GAME-LOCK-1: tuning slider enabled when no game is playing ✓

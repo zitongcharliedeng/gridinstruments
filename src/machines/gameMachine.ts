@@ -179,6 +179,7 @@ export const gameMachine = setup({
         ],
         GAME_RESET: { target: 'idle', actions: 'resetGame' },
         TUNING_WARN_ACK: { actions: 'ackTuningWarn' },
+        FILE_DROPPED: { target: 'loading', actions: 'resetGame' },
       },
     },
     complete: {
