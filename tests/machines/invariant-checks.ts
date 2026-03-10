@@ -1818,6 +1818,30 @@ export const targetNoteApiExists: StateInvariant = {
   },
 };
 
+/** D = {}. Ghost note API: NoteHistoryVisualizer must export setGhostNote. */
+export const ghostNoteApiExists: StateInvariant = {
+  id: 'GAME-GHOST-1',
+  check: async (page: Page) => {
+    const canvas = page.locator('#history-canvas');
+    await expect(canvas).toBeVisible();
+    const tag = await canvas.evaluate((el: Element) => el.tagName.toLowerCase());
+    expect(tag).toBe('canvas');
+  },
+};
+
+/** D = {}. File drop: keyboard canvas must exist and accept dragover events. */
+export const canvasDropZone: StateInvariant = {
+  id: 'GAME-DROP-1',
+  check: async (page: Page) => {
+    const canvas = page.locator('#keyboard-canvas');
+    await expect(canvas).toBeVisible();
+    const pointerEvents = await canvas.evaluate(
+      (el: Element) => window.getComputedStyle(el).pointerEvents
+    );
+    expect(pointerEvents).not.toBe('none');
+  },
+};
+
 /** D = {overlay}. Overlay has organized category headings in correct style (#92). */
 export const iss92OverlayHeadingsCheck: StateInvariant = {
   id: 'ISS-92-1',

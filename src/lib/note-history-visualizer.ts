@@ -77,6 +77,9 @@ export class NoteHistoryVisualizer {
 
   private animFrame: number | null = null;
 
+  // Game mode: the next expected MIDI note (ghost note indicator).
+  private ghostNote: number | null = null;
+
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
     const ctx = canvas.getContext('2d');
@@ -122,6 +125,16 @@ export class NoteHistoryVisualizer {
       this.history.push({ ...note, endTime: now });
     }
     this.activeNotes.clear();
+  }
+
+  /** Set the ghost note — the next expected note in game mode. Shown as faint glow on piano strip. */
+  setGhostNote(midiNote: number | null): void {
+    this.ghostNote = midiNote;
+  }
+
+  /** Clear ghost note indicator (convenience alias for setGhostNote(null)). */
+  clearGhostNote(): void {
+    this.ghostNote = null;
   }
 
   /** Start the 60fps render loop */
@@ -207,6 +220,11 @@ export class NoteHistoryVisualizer {
     const activeMidis = new Set<number>();
     for (const n of this.activeNotes.values()) activeMidis.add(n.midiNote);
 
+    // Ghost note: next expected note in game mode (only when not also active)
+    const ghostMidi = (this.ghostNote !== null && !activeMidis.has(this.ghostNote))
+      ? this.ghostNote
+      : null;
+
     // Draw white keys first (full width)
     for (let midi = this.MIDI_MIN; midi <= this.MIDI_MAX; midi++) {
       if (isBlackKey(midi)) continue;
@@ -228,6 +246,11 @@ export class NoteHistoryVisualizer {
         ctx.fillStyle = '#ffffff33';
         ctx.fillRect(x, ky, w, noteH);
       }
+      if (ghostMidi === midi) {
+        ctx.strokeStyle = 'rgba(255,255,255,0.45)';
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(x + 1, ky + 1, w - 2, noteH - 2);
+      }
     }
 
     // Draw black keys on top (narrower)
@@ -248,6 +271,11 @@ export class NoteHistoryVisualizer {
       if (activeMidis.has(midi)) {
         ctx.fillStyle = '#ffffff44';
         ctx.fillRect(x, ky, bw, noteH);
+      }
+      if (ghostMidi === midi) {
+        ctx.strokeStyle = 'rgba(255,255,255,0.45)';
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(x + 1, ky + 1, bw - 2, noteH - 2);
       }
     }
 

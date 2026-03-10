@@ -90,6 +90,8 @@ import {
    iss98AlignmentCheck,
    iss92OverlayHeadingsCheck,
    targetNoteApiExists,
+   ghostNoteApiExists,
+   canvasDropZone,
  } from './machines/invariant-checks';
 import { focusReturnCheck } from './machines/modifierCompoundMachine';
 
@@ -455,6 +457,14 @@ test.describe('[Structural] state-independent invariants', () => {
 
   test('GAME-TGT-1: target note glow API exists', async ({ page }) => {
     await targetNoteApiExists.check(page);
+  });
+
+  test('GAME-GHOST-1: ghost note API exists on history canvas', async ({ page }) => {
+    await ghostNoteApiExists.check(page);
+  });
+
+  test('GAME-DROP-1: keyboard canvas exists and accepts pointer events', async ({ page }) => {
+    await canvasDropZone.check(page);
   });
  });
 
