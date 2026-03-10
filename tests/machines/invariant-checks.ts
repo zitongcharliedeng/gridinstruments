@@ -653,7 +653,7 @@ export const nativeSelectHiddenCheck: StateInvariant = {
     // opacity:0, position:absolute, width/height:1px, clip:rect(0,0,0,0), aria-hidden:true
     // It does NOT use display:none — check aria-hidden + opacity + .ss-main sibling instead.
     const result = await page.evaluate(() => {
-      const selects = ['layout-select', 'mpe-output-select'];
+      const selects = ['wave-select', 'layout-select', 'mpe-output-select'];
       return selects.map(id => {
         const native = document.getElementById(id);
         if (!native) return { id, ariaHidden: 'missing', opacity: 'missing', hasSsMain: false };
@@ -1745,22 +1745,21 @@ export const iss96WaveSelectCheck: StateInvariant = {
   check: async (page: Page) => {
     await page.locator('#grid-settings-btn').click();
     await page.waitForTimeout(300);
-    // Verify #wave-select exists and is a SELECT
     const waveSelect = page.locator('#wave-select');
-    await expect(waveSelect).toBeVisible();
     const tagName = await waveSelect.evaluate(el => el.tagName);
     expect(tagName).toBe('SELECT');
-    // Verify #wave-reset exists
+    const ssMain = page.locator('#wave-select + .ss-main');
+    await expect(ssMain).toBeVisible();
     const waveReset = page.locator('#wave-reset');
     await expect(waveReset).toBeVisible();
-    // Verify all 4 options exist
     const options = await waveSelect.locator('option').evaluateAll(
       els => els.map(el => (el as HTMLOptionElement).value)
     );
     expect(options).toEqual(['sawtooth', 'sine', 'square', 'triangle']);
-    // Select sine, then click reset → should go back to sawtooth
-    await waveSelect.selectOption('sine');
+    await ssMain.click();
+    await page.locator('.ss-list .ss-option', { hasText: 'SIN' }).click();
     await page.waitForTimeout(100);
+    await expect(waveSelect).toHaveValue('sine');
     await waveReset.click();
     await page.waitForTimeout(200);
     await expect(waveSelect).toHaveValue('sawtooth');

@@ -396,19 +396,23 @@ export const waveformMachine = setup({
   },
 });
 
+const WAVEFORM_LABELS: Record<string, string> = {
+  sawtooth: 'SAW', sine: 'SIN', square: 'SQR', triangle: 'TRI',
+};
+
+async function selectWaveform(page: Page, value: string): Promise<void> {
+  const label = WAVEFORM_LABELS[value];
+  if (!label) throw new Error(`Unknown waveform: ${value}`);
+  await page.locator('#wave-select + .ss-main').click();
+  await page.locator('.ss-list .ss-option', { hasText: label }).click();
+  await page.waitForTimeout(100);
+}
+
 export const waveformPlaywrightActions: Record<WaveformEvent['type'], (page: Page) => Promise<void>> = {
-  SELECT_SAWTOOTH: async (page) => {
-    await page.locator('#wave-select').selectOption('sawtooth');
-  },
-  SELECT_SINE: async (page) => {
-    await page.locator('#wave-select').selectOption('sine');
-  },
-  SELECT_SQUARE: async (page) => {
-    await page.locator('#wave-select').selectOption('square');
-  },
-  SELECT_TRIANGLE: async (page) => {
-    await page.locator('#wave-select').selectOption('triangle');
-  },
+  SELECT_SAWTOOTH: async (page) => { await selectWaveform(page, 'sawtooth'); },
+  SELECT_SINE: async (page) => { await selectWaveform(page, 'sine'); },
+  SELECT_SQUARE: async (page) => { await selectWaveform(page, 'square'); },
+  SELECT_TRIANGLE: async (page) => { await selectWaveform(page, 'triangle'); },
 };
 
 export const waveformInvariants: Record<string, string> = {

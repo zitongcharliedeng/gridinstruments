@@ -604,18 +604,29 @@ class DComposeApp {
     const savedWaveform = this.loadSetting('waveform', 'sawtooth');
     const initialWaveform = isWaveformType(savedWaveform) ? savedWaveform : 'sawtooth' as WaveformType;
     const waveformActor = createActor(waveformMachine, { input: { initial: initialWaveform } });
-    const waveSelect = document.getElementById('wave-select') as HTMLSelectElement | null;
+    const waveSelect = getElementOrNull('wave-select', HTMLSelectElement);
+    let waveSS: SlimSelect | null = null;
+    if (waveSelect) {
+      waveSelect.value = initialWaveform;
+      waveSS = new SlimSelect({
+        select: waveSelect,
+        settings: { showSearch: false },
+        events: {
+          afterChange: (newVal) => {
+            const wf = newVal[0]?.value;
+            if (wf && isWaveformType(wf)) waveformActor.send({ type: 'SELECT', waveform: wf });
+            document.querySelectorAll<HTMLElement>('.ss-main').forEach(el => { el.blur(); });
+          },
+        },
+      });
+    }
     waveformActor.subscribe((snapshot) => {
       const active = snapshot.context.active;
-      if (waveSelect) waveSelect.value = active;
+      if (waveSS) waveSS.setSelected(active);
       this.synth.setWaveform(active);
       this.saveSetting('waveform', active);
     });
     waveformActor.start();
-    waveSelect?.addEventListener('change', () => {
-      const wf = waveSelect.value;
-      if (isWaveformType(wf)) waveformActor.send({ type: 'SELECT', waveform: wf });
-    });
     const waveReset = document.getElementById('wave-reset') as HTMLButtonElement | null;
     waveReset?.addEventListener('click', () => { waveformActor.send({ type: 'SELECT', waveform: 'sawtooth' }); });
 
