@@ -1315,14 +1315,24 @@ class DComposeApp {
     calibrateConfirm?.addEventListener('click', () => { this.exitCalibrationMode(true); });
     calibrateCancel?.addEventListener('click', () => { this.exitCalibrationMode(false); });
 
+    const gameResetBtn = document.getElementById('game-reset-btn');
+    gameResetBtn?.addEventListener('click', () => {
+      this.gameActor?.send({ type: 'GAME_RESET' });
+      const statusEl = document.getElementById('game-status') as HTMLElement | null;
+      if (statusEl) statusEl.style.display = 'none';
+    });
+
     // Game: file drop on canvas
     this.gameActor = createActor(gameMachine);
     this.gameActor.start();
 
-    // Subscribe to game state changes — drive target notes, ghost note, score overlay
+    // Subscribe to game state changes — drive target notes, ghost note, score overlay, status UI
     this.gameActor.subscribe((snapshot) => {
       const state = snapshot.value as string;
       const ctx = snapshot.context;
+
+      const statusEl = document.getElementById('game-status') as HTMLElement | null;
+      const progressEl = document.getElementById('game-progress') as HTMLElement | null;
 
       if (state === 'playing') {
         this.visualizer?.setTargetNotes(ctx.targetCellIds);
@@ -1338,6 +1348,11 @@ class DComposeApp {
           this.historyVisualizer?.setGhostNote(null);
         }
         this.render();
+        if (statusEl) statusEl.style.display = 'flex';
+        if (progressEl) progressEl.textContent = `${ctx.currentGroupIndex + 1} / ${ctx.noteGroups.length}`;
+      } else if (state === 'loading') {
+        if (statusEl) statusEl.style.display = 'flex';
+        if (progressEl) progressEl.textContent = 'Loading\u2026';
       } else if (state === 'complete') {
         this.visualizer?.setTargetNotes([]);
         this.historyVisualizer?.setGhostNote(null);
@@ -1346,11 +1361,14 @@ class DComposeApp {
         const elapsedMs = ctx.finishTimeMs - ctx.startTimeMs;
         const elapsedSec = (elapsedMs / 1000).toFixed(1);
         this.showGameScore(elapsedSec);
+        if (statusEl) statusEl.style.display = 'flex';
+        if (progressEl) progressEl.textContent = `${ctx.noteGroups.length} / ${ctx.noteGroups.length} \u2713`;
       } else {
-        // idle, loading, error — clear everything
+        // idle or error — clear everything and hide status
         this.visualizer?.setTargetNotes([]);
         this.historyVisualizer?.setGhostNote(null);
         this.render();
+        if (statusEl) statusEl.style.display = 'none';
       }
     });
 
@@ -1386,6 +1404,12 @@ class DComposeApp {
         const actor = this.gameActor;
         if (!actor) return;
         actor.send({ type: 'FILE_DROPPED', file });
+
+        const titleEl = document.getElementById('game-song-title') as HTMLElement | null;
+        if (titleEl) {
+          const name = file.name.replace(/\.(mid|midi)$/i, '');
+          titleEl.textContent = name;
+        }
 
         // Full pipeline: read → parse → D-ref center → calibration range → build groups → send to game actor
         file.arrayBuffer().then((buffer) => {

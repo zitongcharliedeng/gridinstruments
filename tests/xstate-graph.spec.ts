@@ -95,6 +95,7 @@ import {
     gameScoreOverlay,
     gameCalibrateBtnExists,
     gameCalibrationStorage,
+    gameOverlayUiExists,
   } from './machines/invariant-checks';
 import { focusReturnCheck } from './machines/modifierCompoundMachine';
 
@@ -480,6 +481,10 @@ test.describe('[Structural] state-independent invariants', () => {
 
   test('GAME-CAL-2: gi_calibrated_range localStorage key is valid JSON array when set', async ({ page }) => {
     await gameCalibrationStorage.check(page);
+  });
+
+  test('GAME-UI-1: game overlay UI elements exist in DOM', async ({ page }) => {
+    await gameOverlayUiExists.check(page);
   });
  });
 

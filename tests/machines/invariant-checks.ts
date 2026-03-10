@@ -1893,6 +1893,15 @@ export const gameCalibrateBtnExists: StateInvariant = {
   },
 };
 
+export const gameOverlayUiExists: StateInvariant = {
+  id: 'GAME-UI-1',
+  check: async (page: Page) => {
+    await expect(page.locator('#game-reset-btn')).toBeAttached();
+    await expect(page.locator('#game-progress')).toBeAttached();
+    await expect(page.locator('#game-song-title')).toBeAttached();
+  },
+};
+
 export const gameCalibrationStorage: StateInvariant = {
   id: 'GAME-CAL-2',
   check: async (page: Page) => {

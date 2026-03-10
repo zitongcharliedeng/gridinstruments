@@ -895,10 +895,15 @@
                  <button id="calibrate-confirm" class="overlay-btn" style="flex:1;" title="Save calibrated range">Confirm</button>
                  <button id="calibrate-cancel" class="overlay-btn" style="flex:1;color:var(--dim);" title="Cancel calibration">Cancel</button>
                </div>
-             </div>
-           </div>
+              </div>
+              <div id="game-status" style="display:none;flex-direction:column;gap:6px;margin-top:8px;">
+                <div id="game-song-title" style="font-family:var(--font);font-size:11px;color:var(--fg);text-transform:uppercase;letter-spacing:0.06em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px;"></div>
+                <div id="game-progress" style="font-family:var(--font);font-size:11px;color:var(--dim);"></div>
+                <button id="game-reset-btn" class="overlay-btn" title="Reset game and drop a new MIDI file">Reset</button>
+              </div>
+            </div>
 
-        </div>
+         </div>
       </div>
     </div>
 
