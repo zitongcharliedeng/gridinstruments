@@ -96,6 +96,10 @@ import {
     gameCalibrateBtnExists,
     gameCalibrationStorage,
     gameOverlayUiExists,
+    gameMidiParserIntegration,
+    gameBuildNoteGroupsIntegration,
+    gameMachineTransitions,
+    gameMachineReset,
   } from './machines/invariant-checks';
 import { focusReturnCheck } from './machines/modifierCompoundMachine';
 
@@ -485,6 +489,22 @@ test.describe('[Structural] state-independent invariants', () => {
 
   test('GAME-UI-1: game overlay UI elements exist in DOM', async ({ page }) => {
     await gameOverlayUiExists.check(page);
+  });
+
+  test('GAME-INT-1: MIDI parser produces valid NoteEvent array from fixture', async ({ page }) => {
+    await gameMidiParserIntegration.check(page);
+  });
+
+  test('GAME-INT-2: buildNoteGroups produces valid NoteGroup array', async ({ page }) => {
+    await gameBuildNoteGroupsIntegration.check(page);
+  });
+
+  test('GAME-INT-3: gameMachine transitions correctly on SONG_LOADED', async ({ page }) => {
+    await gameMachineTransitions.check(page);
+  });
+
+  test('GAME-INT-4: game reset returns to idle with cleared context', async ({ page }) => {
+    await gameMachineReset.check(page);
   });
  });
 

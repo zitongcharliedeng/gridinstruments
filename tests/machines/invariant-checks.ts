@@ -13,6 +13,8 @@ import type { StateInvariant } from './types';
 import { overlayMachine } from '../../src/machines/overlayMachine';
 import { pedalMachine } from '../../src/machines/pedalMachines';
 import { panelMachine } from '../../src/machines/panelMachine';
+import { gameMachine, type NoteGroup } from '../../src/machines/gameMachine';
+import { createActor } from 'xstate';
 import {
   overlayMachine as testOverlayMachine,
   visualiserMachine as testVisualiserMachine,
@@ -1921,5 +1923,119 @@ export const gameCalibrationStorage: StateInvariant = {
       }
     });
     expect(result.valid, 'gi_calibrated_range must be a valid JSON array of strings').toBe(true);
+  },
+};
+
+// ── Game integration invariants: D(P) = {} — full pipeline tests ─────────────
+
+/** D = {}. MIDI parser produces valid NoteEvent array from fixture file. */
+export const gameMidiParserIntegration: StateInvariant = {
+  id: 'GAME-INT-1',
+  check: async (page: Page) => {
+    const result = await page.evaluate(async () => {
+      const { parseMidi } = await import('/src/lib/midi-parser.ts');
+      const resp = await fetch('/tests/fixtures/twinkle-type0.mid');
+      const buffer = await resp.arrayBuffer();
+      const events = parseMidi(buffer);
+      return {
+        count: events.length,
+        allHaveStartMs: events.every(e => typeof e.startMs === 'number'),
+        allHaveDuration: events.every(e => typeof e.durationMs === 'number'),
+        noDrums: events.every(e => e.channel !== 9),
+      };
+    });
+    expect(result.count, 'twinkle fixture should have notes').toBeGreaterThan(0);
+    expect(result.allHaveStartMs, 'all events should have startMs').toBe(true);
+    expect(result.allHaveDuration, 'all events should have durationMs').toBe(true);
+    expect(result.noDrums, 'no drum channel events').toBe(true);
+  },
+};
+
+/** D = {}. buildNoteGroups produces valid NoteGroup array from parsed MIDI. */
+export const gameBuildNoteGroupsIntegration: StateInvariant = {
+  id: 'GAME-INT-2',
+  check: async (page: Page) => {
+    const result = await page.evaluate(async () => {
+      const { parseMidi } = await import('/src/lib/midi-parser.ts');
+      const { buildNoteGroups } = await import('/src/lib/game-engine.ts');
+      const resp = await fetch('/tests/fixtures/twinkle-type0.mid');
+      const buffer = await resp.arrayBuffer();
+      const events = parseMidi(buffer);
+      const groups = buildNoteGroups(events);
+      return {
+        count: groups.length,
+        allHaveCellIds: groups.every(g => g.cellIds.length > 0),
+        allHaveStartMs: groups.every(g => typeof g.startMs === 'number'),
+        firstCellIdFormat: groups[0]?.cellIds[0]?.includes('_') ?? false,
+      };
+    });
+    expect(result.count, 'should have note groups').toBeGreaterThan(0);
+    expect(result.allHaveCellIds, 'all groups have cellIds').toBe(true);
+    expect(result.allHaveStartMs, 'all groups have startMs').toBe(true);
+    expect(result.firstCellIdFormat, 'cellId uses underscore format').toBe(true);
+  },
+};
+
+/** D = {}. gameMachine transitions: idle → loading → playing → complete. */
+export const gameMachineTransitions: StateInvariant = {
+  id: 'GAME-INT-3',
+  check: async (_page: Page) => {
+    const actor = createActor(gameMachine);
+    actor.start();
+
+    const states: string[] = [actor.getSnapshot().value as string];
+
+    // idle → loading
+    actor.send({ type: 'FILE_DROPPED', file: new File([], 'test.mid') });
+    states.push(actor.getSnapshot().value as string);
+
+    // loading → playing
+    const mockGroups: NoteGroup[] = [
+      { cellIds: ['0_0', '1_0'], startMs: 0 },
+      { cellIds: ['2_0'], startMs: 500 },
+    ];
+    actor.send({ type: 'SONG_LOADED', noteGroups: mockGroups });
+    states.push(actor.getSnapshot().value as string);
+
+    // Verify targetCellIds set from first group
+    const targetCellIds = actor.getSnapshot().context.targetCellIds;
+
+    // playing → playing (advance to next group)
+    actor.send({ type: 'NOTE_PRESSED', cellId: '0_0' });
+    const afterAdvance = actor.getSnapshot().context.currentGroupIndex;
+
+    // playing → complete (last group, correct note)
+    actor.send({ type: 'NOTE_PRESSED', cellId: '2_0' });
+    states.push(actor.getSnapshot().value as string);
+
+    actor.stop();
+
+    expect(states).toEqual(['idle', 'loading', 'playing', 'complete']);
+    expect(targetCellIds).toContain('0_0');
+    expect(afterAdvance).toBe(1);
+  },
+};
+
+/** D = {}. Game reset returns to idle with cleared context. */
+export const gameMachineReset: StateInvariant = {
+  id: 'GAME-INT-4',
+  check: async (_page: Page) => {
+    const actor = createActor(gameMachine);
+    actor.start();
+
+    actor.send({ type: 'FILE_DROPPED', file: new File([], 'test.mid') });
+    actor.send({ type: 'SONG_LOADED', noteGroups: [{ cellIds: ['0_0'], startMs: 0 }] });
+    const playingState = actor.getSnapshot().value;
+
+    actor.send({ type: 'GAME_RESET' });
+    const afterReset = actor.getSnapshot();
+
+    actor.stop();
+
+    expect(playingState).toBe('playing');
+    expect(afterReset.value).toBe('idle');
+    expect(afterReset.context.noteGroups.length).toBe(0);
+    expect(afterReset.context.targetCellIds.length).toBe(0);
+    expect(afterReset.context.currentGroupIndex).toBe(0);
   },
 };
