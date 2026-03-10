@@ -48,6 +48,9 @@ import { panelMachine, clampPanelHeight } from './machines/panelMachine';
 import { mpeMachine } from './machines/mpeMachine';
 import { dialogMachine } from './machines/dialogMachine';
 import { gameMachine } from './machines/gameMachine';
+import { parseMidi } from './lib/midi-parser';
+import { buildNoteGroups, computeMedianMidiNote, findOptimalTransposition, transposeSong, cropToRange } from './lib/game-engine';
+import { loadCalibratedRange, saveCalibratedRange } from './lib/calibration';
 import { createActor } from 'xstate';
 import { OverlayScrollbars, ClickScrollPlugin } from 'overlayscrollbars';
 import 'overlayscrollbars/overlayscrollbars.css';
@@ -373,6 +376,11 @@ class DComposeApp {
   private zoomSlider: HTMLInputElement | null = null;
   private defaultZoom = 1.0;
   private updateGraffiti: (() => void) | null = null;
+  private gameActor: ReturnType<typeof createActor<typeof gameMachine>> | null = null;
+
+  private calibrating = false;
+  private calibratedCells = new Set<string>();
+  private calibratedRange: ReadonlySet<string> | null = null;
 
   private static readonly STORAGE_KEYS = {
     zoom: 'gi_zoom', skew: 'gi_skew', bfact: 'gi_bfact', tuning: 'gi_tuning',
@@ -421,6 +429,7 @@ class DComposeApp {
 
   private async init(): Promise<void> {
     createIcons({ icons: { Info, Star, RotateCcw, RotateCw, Settings, X } });
+    this.calibratedRange = loadCalibratedRange();
     this.setupVisualizer();
     this.setupHistoryVisualizer();
     this.setupEventListeners();
@@ -522,10 +531,13 @@ class DComposeApp {
     const [coordX, coordY] = midiToCoord(midiNote);
     const noteKey = `midi_${deviceId}_${channel}_${midiNote}`;
     const audioNoteId = `midi_${deviceId}_${channel}_${midiNote}_${coordX}_${coordY}`;
-    // Visual always fires regardless of audio state — sound and visualisation are logically decoupled
+    if (this.calibrating) this.calibratedCells.add(`${coordX}_${coordY}`);
     this.activeNotes.set(noteKey, { coordX, coordY });
     this.midiChannelVoice.set(`${deviceId}_${channel}`, audioNoteId);
     this.trackNoteOn(coordX, coordY, midiNote);
+    if (this.gameActor?.getSnapshot().matches('playing')) {
+      this.gameActor.send({ type: 'NOTE_PRESSED', cellId: `${coordX}_${coordY}` });
+    }
     this.render();
     // Audio only when synth is ready
     this.synth.tryUnlock();
@@ -1296,9 +1308,51 @@ class DComposeApp {
         vibRef.send({ type: 'DEACTIVATE' });
       });
     }
+    const calibrateBtn = document.getElementById('calibrate-btn');
+    const calibrateConfirm = document.getElementById('calibrate-confirm');
+    const calibrateCancel = document.getElementById('calibrate-cancel');
+    calibrateBtn?.addEventListener('click', () => { this.enterCalibrationMode(); });
+    calibrateConfirm?.addEventListener('click', () => { this.exitCalibrationMode(true); });
+    calibrateCancel?.addEventListener('click', () => { this.exitCalibrationMode(false); });
+
     // Game: file drop on canvas
-    const gameActor = createActor(gameMachine);
-    gameActor.start();
+    this.gameActor = createActor(gameMachine);
+    this.gameActor.start();
+
+    // Subscribe to game state changes — drive target notes, ghost note, score overlay
+    this.gameActor.subscribe((snapshot) => {
+      const state = snapshot.value as string;
+      const ctx = snapshot.context;
+
+      if (state === 'playing') {
+        this.visualizer?.setTargetNotes(ctx.targetCellIds);
+        // Ghost note: first cell ID → MIDI note for piano strip indicator
+        const firstCellId = ctx.targetCellIds[0];
+        if (firstCellId) {
+          const parts = firstCellId.split('_');
+          const x = parseInt(parts[0] ?? '0', 10);
+          const y = parseInt(parts[1] ?? '0', 10);
+          const midiNote = coordToMidiNote(x, y);
+          this.historyVisualizer?.setGhostNote(midiNote);
+        } else {
+          this.historyVisualizer?.setGhostNote(null);
+        }
+        this.render();
+      } else if (state === 'complete') {
+        this.visualizer?.setTargetNotes([]);
+        this.historyVisualizer?.setGhostNote(null);
+        this.render();
+        // Show score overlay
+        const elapsedMs = ctx.finishTimeMs - ctx.startTimeMs;
+        const elapsedSec = (elapsedMs / 1000).toFixed(1);
+        this.showGameScore(elapsedSec);
+      } else {
+        // idle, loading, error — clear everything
+        this.visualizer?.setTargetNotes([]);
+        this.historyVisualizer?.setGhostNote(null);
+        this.render();
+      }
+    });
 
     const keyboardCanvas = document.getElementById('keyboard-canvas');
     if (keyboardCanvas) {
@@ -1329,7 +1383,61 @@ class DComposeApp {
           return;
         }
 
-        gameActor.send({ type: 'FILE_DROPPED', file });
+        const actor = this.gameActor;
+        if (!actor) return;
+        actor.send({ type: 'FILE_DROPPED', file });
+
+        // Full pipeline: read → parse → D-ref center → calibration range → build groups → send to game actor
+        file.arrayBuffer().then((buffer) => {
+          try {
+            const events = parseMidi(buffer);
+
+            // D-ref auto-centering: set slider to median note Hz
+            const medianMidi = computeMedianMidiNote(events);
+            const medianHz = 440 * Math.pow(2, (medianMidi - 69) / 12);
+            const dRefSlider = document.getElementById('d-ref-slider') as HTMLInputElement | null;
+            if (dRefSlider) {
+              const dMin = parseFloat(dRefSlider.min);
+              const dMax = parseFloat(dRefSlider.max);
+              dRefSlider.value = Math.max(dMin, Math.min(dMax, medianHz)).toFixed(2);
+              dRefSlider.dispatchEvent(new Event('input'));
+            }
+
+            let groups = buildNoteGroups(events);
+
+            // Apply calibrated range: auto-transpose + crop
+            const range = this.calibratedRange;
+            if (range && range.size > 0) {
+              const semitones = findOptimalTransposition(groups, range);
+              groups = transposeSong(groups, semitones);
+              groups = cropToRange(groups, range);
+            }
+
+            if (groups.length === 0) {
+              actor.send({ type: 'LOAD_FAILED', error: 'No playable notes found in MIDI file' });
+              return;
+            }
+            // Check tuning before auto-setting (for warning)
+            const currentTuning = parseFloat(this.tuningSlider?.value ?? '700');
+            const needsTuningWarning = Math.abs(currentTuning - 700) > 0.5;
+            // Auto-set tuning to 12-TET (700¢)
+            if (this.tuningSlider) {
+              this.tuningSlider.value = '700';
+              this.tuningSlider.dispatchEvent(new Event('input'));
+            }
+            actor.send({ type: 'SONG_LOADED', noteGroups: groups });
+            // Show tuning warning if tuning was different
+            if (needsTuningWarning) {
+              this.showTuningWarning();
+            }
+          } catch (err) {
+            const msg = err instanceof Error ? err.message : 'Failed to parse MIDI file';
+            actor.send({ type: 'LOAD_FAILED', error: msg });
+          }
+        }).catch((err: unknown) => {
+          const msg = err instanceof Error ? err.message : 'Failed to read file';
+          actor.send({ type: 'LOAD_FAILED', error: msg });
+        });
       });
     }
 
@@ -1391,11 +1499,13 @@ class DComposeApp {
     const effectiveCoordY = coordY + this.octaveOffset;
     const audioNoteId = `key_${code}_${effectiveCoordX}_${effectiveCoordY}`;
     const midiNote = 62 + effectiveCoordX * 7 + effectiveCoordY * 12;
-    // Visual always fires regardless of audio state — sound and visualisation are logically decoupled
+    if (this.calibrating) this.calibratedCells.add(`${effectiveCoordX}_${effectiveCoordY}`);
     this.activeNotes.set(code, { coordX, coordY });
     this.trackNoteOn(effectiveCoordX, effectiveCoordY, midiNote);
+    if (this.gameActor?.getSnapshot().matches('playing')) {
+      this.gameActor.send({ type: 'NOTE_PRESSED', cellId: `${effectiveCoordX}_${effectiveCoordY}` });
+    }
     this.render();
-    // Audio only when synth is ready (first interaction wakes AudioContext silently)
     if (this.synth.isInitialized()) {
       this.synth.playNote(audioNoteId, effectiveCoordX, coordY, this.octaveOffset);
       this.mpe.noteOn(audioNoteId, midiNote, 0.7);
@@ -1507,11 +1617,15 @@ class DComposeApp {
     const effectiveCoordX = coordX + this.transposeOffset;
     const effectiveCoordY = coordY + this.octaveOffset;
     const audioNoteId = `ptr_${pointerId}_${effectiveCoordX}_${effectiveCoordY}`;
+    if (this.calibrating) this.calibratedCells.add(`${effectiveCoordX}_${effectiveCoordY}`);
     this.synth.playNote(audioNoteId, effectiveCoordX, coordY, this.octaveOffset);
     const midiNote = 62 + effectiveCoordX * 7 + effectiveCoordY * 12;
     this.mpe.noteOn(audioNoteId, midiNote, Math.max(0.01, pressure));
     this.activeNotes.set(`ptr_${pointerId}`, { coordX, coordY });
     this.trackNoteOn(effectiveCoordX, effectiveCoordY, midiNote);
+    if (this.gameActor?.getSnapshot().matches('playing')) {
+      this.gameActor.send({ type: 'NOTE_PRESSED', cellId: `${effectiveCoordX}_${effectiveCoordY}` });
+    }
     this.render();
   }
 
@@ -1560,6 +1674,54 @@ class DComposeApp {
     this.pointerDown.clear();
     this.midiChannelVoice.clear();
     this.render();
+  }
+
+  // ─── Game overlays ───────────────────────────────────────────────────────
+
+  private showGameScore(elapsedSec: string): void {
+    const existing = document.getElementById('game-score-overlay');
+    if (existing) existing.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'game-score-overlay';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:"JetBrains Mono",monospace;color:#fff;';
+
+    const heading = document.createElement('div');
+    heading.style.cssText = 'font-size:48px;font-weight:700;margin-bottom:16px;';
+    heading.textContent = 'Complete!';
+
+    const time = document.createElement('div');
+    time.style.cssText = 'font-size:24px;color:#888;margin-bottom:32px;';
+    time.textContent = `${elapsedSec}s`;
+
+    const btn = document.createElement('button');
+    btn.style.cssText = 'font-family:"JetBrains Mono",monospace;font-size:14px;color:#fff;background:#000;border:1px solid #333;padding:12px 24px;cursor:pointer;';
+    btn.textContent = 'Play again';
+    btn.addEventListener('click', () => {
+      overlay.remove();
+      this.gameActor?.send({ type: 'GAME_RESET' });
+    });
+
+    overlay.appendChild(heading);
+    overlay.appendChild(time);
+    overlay.appendChild(btn);
+    document.body.appendChild(overlay);
+  }
+
+  private showTuningWarning(): void {
+    const existing = document.getElementById('game-tuning-warning');
+    if (existing) existing.remove();
+
+    const banner = document.createElement('div');
+    banner.id = 'game-tuning-warning';
+    banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:50;background:#000;color:#fff;font-family:"JetBrains Mono",monospace;font-size:12px;padding:8px 16px;text-align:center;border-bottom:1px solid #333;cursor:pointer;';
+    banner.textContent = 'Tuning set to 12-TET for game mode';
+
+    const dismiss = (): void => { banner.remove(); };
+    banner.addEventListener('click', dismiss);
+    setTimeout(dismiss, 3000);
+
+    document.body.appendChild(banner);
   }
 
   // ─── MPE vibrato ─────────────────────────────────────────────────────────
@@ -1694,6 +1856,36 @@ class DComposeApp {
   private getCanvasRect(): DOMRect {
     this.cachedCanvasRect = this.canvas.getBoundingClientRect();
     return this.cachedCanvasRect;
+  }
+
+  private enterCalibrationMode(): void {
+    this.calibrating = true;
+    this.calibratedCells = new Set();
+    const banner = document.getElementById('calibration-banner');
+    const msg = document.getElementById('calibration-msg');
+    if (banner) banner.style.display = 'flex';
+    if (msg) msg.textContent = 'Play all reachable notes, then confirm';
+    const btn = document.getElementById('calibrate-btn');
+    if (btn) btn.textContent = 'Calibrating…';
+  }
+
+  private exitCalibrationMode(confirm: boolean): void {
+    this.calibrating = false;
+    if (confirm) {
+      saveCalibratedRange(this.calibratedCells);
+      this.calibratedRange = new Set(this.calibratedCells);
+      const count = this.calibratedCells.size;
+      const msg = document.getElementById('calibration-msg');
+      if (msg) {
+        msg.textContent = `Range saved (${count} keys)`;
+        setTimeout(() => { msg.textContent = 'Play all reachable notes, then confirm'; }, 2000);
+      }
+    }
+    this.calibratedCells = new Set();
+    const banner = document.getElementById('calibration-banner');
+    if (banner) banner.style.display = 'none';
+    const btn = document.getElementById('calibrate-btn');
+    if (btn) btn.textContent = 'Calibrate range';
   }
 }
 

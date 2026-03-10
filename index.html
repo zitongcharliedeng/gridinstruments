@@ -315,6 +315,21 @@
      .overlay-section-title:hover {
        color: var(--fg);
      }
+    .overlay-btn {
+      font-family: var(--font);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      background: #000;
+      color: #fff;
+      border: 1px solid var(--dim);
+      padding: 6px 12px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .overlay-btn:hover { border-color: var(--fg); }
+    .overlay-btn:active { background: var(--subtle); }
 
     /* ── Pedals panel ────────────────────────────────────────── */
     #pedals-panel {
@@ -869,6 +884,18 @@
                 </div>
               </div>
             </div>
+           </div>
+
+           <div class="overlay-section-title">GAME</div>
+           <div class="overlay-section">
+             <button id="calibrate-btn" class="overlay-btn" title="Enter calibration mode: play all notes reachable on your input devices">Calibrate range</button>
+             <div id="calibration-banner" style="display:none;flex-direction:column;gap:8px;margin-top:8px;">
+               <span id="calibration-msg" style="font-family:var(--font);font-size:11px;color:var(--fg);text-transform:uppercase;letter-spacing:0.06em;">Play all reachable notes, then confirm</span>
+               <div style="display:flex;gap:8px;">
+                 <button id="calibrate-confirm" class="overlay-btn" style="flex:1;" title="Save calibrated range">Confirm</button>
+                 <button id="calibrate-cancel" class="overlay-btn" style="flex:1;color:var(--dim);" title="Cancel calibration">Cancel</button>
+               </div>
+             </div>
            </div>
 
         </div>

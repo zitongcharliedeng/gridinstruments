@@ -1,0 +1,33 @@
+[
+  {
+    "selector": "#about-btn",
+    "diff": 0,
+    "pass": true
+  },
+  {
+    "selector": ".star-icon",
+    "diff": 0,
+    "pass": true
+  },
+  {
+    "selector": ".slider-info-btn",
+    "diff": 0,
+    "pass": true
+  },
+  {
+    "selector": ".slider-reset",
+    "diff": 0,
+    "pass": true
+  },
+  {
+    "selector": "#midi-chevron",
+    "diff": 0.0000152587890625,
+    "pass": true
+  },
+  {
+    "selector": "#about-close",
+    "diff": 0,
+    "pass": true,
+    "note": "position:absolute in dialog — checked visible+non-zero-dims instead of parent-center"
+  }
+]

@@ -91,8 +91,11 @@ import {
    iss92OverlayHeadingsCheck,
    targetNoteApiExists,
    ghostNoteApiExists,
-   canvasDropZone,
- } from './machines/invariant-checks';
+    canvasDropZone,
+    gameScoreOverlay,
+    gameCalibrateBtnExists,
+    gameCalibrationStorage,
+  } from './machines/invariant-checks';
 import { focusReturnCheck } from './machines/modifierCompoundMachine';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -465,6 +468,18 @@ test.describe('[Structural] state-independent invariants', () => {
 
   test('GAME-DROP-1: keyboard canvas exists and accepts pointer events', async ({ page }) => {
     await canvasDropZone.check(page);
+  });
+
+  test('GAME-SCORE-1: game score overlay can be dynamically created', async ({ page }) => {
+    await gameScoreOverlay.check(page);
+  });
+
+  test('GAME-CAL-1: calibrate-btn exists in DOM', async ({ page }) => {
+    await gameCalibrateBtnExists.check(page);
+  });
+
+  test('GAME-CAL-2: gi_calibrated_range localStorage key is valid JSON array when set', async ({ page }) => {
+    await gameCalibrationStorage.check(page);
   });
  });
 

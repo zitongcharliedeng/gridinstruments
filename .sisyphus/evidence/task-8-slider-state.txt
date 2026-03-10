@@ -1,0 +1,33 @@
+Task 8: Migrate slider state to XState machine context
+
+## Files Created
+- src/machines/sliderConfigs.ts — 5 SliderComponentConfig objects (tuning, skew, volume, zoom, dref)
+
+## Files Modified
+- src/machines/appMachine.ts — Full rewrite with SLIDER_INPUT/SLIDER_RESET/SLIDER_BADGE_EDIT handlers
+- src/main.ts — All 5 slider blocks replaced with NumericSlider instances; DOMContentLoaded updated
+
+## Key Changes
+1. appMachine.ts: Added assign/assertEvent imports, formatBadge/formatLabel helpers, SLIDER_DEFAULTS,
+   handleSliderInput/handleSliderReset/handleSliderBadgeEdit actions, transitions in both states
+2. main.ts: Added imports for AppEvent, NumericSlider, and 5 slider configs
+3. main.ts: DComposeApp constructor now accepts sendToMachine callback
+4. main.ts: All 5 slider blocks replaced with NumericSlider instances that send machine events
+5. main.ts: DOMContentLoaded creates appActor FIRST, passes callback to DComposeApp, adds subscribe
+
+## Verification
+- npx tsc --noEmit: PASS (0 errors)
+- npx playwright test --workers=4: 88 passed, 0 failed
+
+## Critical Test Results
+- BH-RESET-1: PASS (tuning badge = '700.0' after reset)
+- BH-RESET-2: PASS (skew badge = '0.00' after reset)
+- BH-RESET-3: PASS (volume badge = '-10.5' after reset)
+- BH-RESET-4: PASS (zoom badge = '1.00' after reset)
+- BH-DREF-1: PASS (C5 → 523.25 Hz)
+- BH-DREF-2: PASS (invalid input reverts to 293.66)
+- BH-DREF-3: PASS (empty input reverts to 293.66)
+- BH-DREF-4: PASS (reset restores 293.66 with D4 label)
+- BH-DREF-5: PASS (page load shows 293.66 with D4 label)
+- BH-DREF-6: PASS (440 Hz shows A4 annotation)
+- BH-DREF-7: PASS (invalid input shows red border)

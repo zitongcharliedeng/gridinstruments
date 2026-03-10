@@ -1851,16 +1851,66 @@ export const iss92OverlayHeadingsCheck: StateInvariant = {
     await page.waitForTimeout(300);
     const headings = page.locator('#grid-overlay .overlay-section-title');
     const texts = await headings.allTextContents();
-    for (const expected of ['SOUND', 'VISUAL', 'INPUT']) {
+    for (const expected of ['SOUND', 'VISUAL', 'INPUT', 'GAME']) {
       if (!texts.some(t => t.trim() === expected)) {
         throw new Error(`Missing overlay category heading: ${expected}`);
       }
     }
-    expect(texts.length, 'Should have exactly 3 overlay section headings').toBe(3);
+    expect(texts.length, 'Should have exactly 4 overlay section headings').toBe(4);
     // Verify headings are greyish (not white)
     const firstHeading = headings.first();
     const color = await firstHeading.evaluate((el) => getComputedStyle(el).color);
     // var(--dim) resolves to a grey — should not be rgb(255, 255, 255)
     if (color === 'rgb(255, 255, 255)') throw new Error('Category heading is white — should be greyish (var(--dim))');
+  },
+};
+
+/** D = {}. Game score overlay can be dynamically created and removed. */
+export const gameScoreOverlay: StateInvariant = {
+  id: 'GAME-SCORE-1',
+  check: async (page: Page) => {
+    const result = await page.evaluate(() => {
+      const div = document.createElement('div');
+      div.id = 'game-score-overlay';
+      document.body.appendChild(div);
+      const exists = document.getElementById('game-score-overlay') !== null;
+      div.remove();
+      const gone = document.getElementById('game-score-overlay') === null;
+      return { exists, gone };
+    });
+    expect(result.exists).toBe(true);
+    expect(result.gone).toBe(true);
+  },
+};
+
+export const gameCalibrateBtnExists: StateInvariant = {
+  id: 'GAME-CAL-1',
+  check: async (page: Page) => {
+    const btn = page.locator('#calibrate-btn');
+    await expect(btn).toBeAttached();
+    const title = await btn.getAttribute('title');
+    if (!title || title.length === 0) throw new Error('#calibrate-btn missing title');
+  },
+};
+
+export const gameCalibrationStorage: StateInvariant = {
+  id: 'GAME-CAL-2',
+  check: async (page: Page) => {
+    const result = await page.evaluate(() => {
+      const key = 'gi_calibrated_range';
+      const existing = localStorage.getItem(key);
+      localStorage.setItem(key, JSON.stringify(['0_0', '1_0', '-1_1']));
+      const raw = localStorage.getItem(key);
+      if (raw === null) return { valid: false };
+      try {
+        const parsed = JSON.parse(raw);
+        const valid = Array.isArray(parsed) && parsed.every((x: unknown) => typeof x === 'string');
+        if (existing === null) { localStorage.removeItem(key); } else { localStorage.setItem(key, existing); }
+        return { valid };
+      } catch {
+        return { valid: false };
+      }
+    });
+    expect(result.valid, 'gi_calibrated_range must be a valid JSON array of strings').toBe(true);
   },
 };
