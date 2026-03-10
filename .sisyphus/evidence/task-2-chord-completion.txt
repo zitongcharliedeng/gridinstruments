@@ -1,0 +1,13 @@
+GAME-CHORD-1: multi-note chord [60,64,67] requires ALL 3 notes before advancing — PASS
+GAME-CHORD-2: single-note groups advance immediately (backward compatible) — PASS  
+GAME-CHORD-3: pressedMidiNotes clears on group advance — PASS
+
+Chord completion logic:
+- isChordComplete guard checks: all midiNotes in current group present in (pressedMidiNotes + event.midiNote)
+- accumulateNote action appends event.midiNote (dedup)
+- advanceGroup action resets pressedMidiNotes to []
+
+Transitions use xstate `and()` combinator:
+1. and(['isCorrectNote', 'isChordComplete', 'isLastGroup']) → complete
+2. and(['isCorrectNote', 'isChordComplete']) → advanceGroup
+3. isCorrectNote → accumulateNote (stay in playing)

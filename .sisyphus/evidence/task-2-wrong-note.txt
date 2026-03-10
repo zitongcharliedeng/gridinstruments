@@ -1,0 +1,9 @@
+GAME-FREQ-2 verifies wrong-note rejection:
+- Group has midiNotes: [60], cellIds: ['0_0']
+- Sent: NOTE_PRESSED { cellId: '0_0', midiNote: 61 }
+- Result: state stays 'playing', pressedMidiNotes empty
+- The cellId matches the group's cellIds but midiNote 61 != 60
+- Proves: frequency-based matching rejects wrong pitch even with "correct" grid position
+
+Full test suite: 70/70 passed (65 existing + 5 new)
+Build: tsc && vite build — exit 0

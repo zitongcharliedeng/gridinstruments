@@ -5,13 +5,14 @@
  *   idle -> loading -> playing -> complete
  *                  \-> error (on load failure)
  *
- * NOTE_PRESSED in `playing` checks the current NoteGroup:
- *   - correct note + last group  -> `complete`
- *   - correct note + more groups -> advance index, stay in `playing`
- *   - wrong note                 -> no-op (extra presses don't invalidate)
+ * NOTE_PRESSED in `playing` uses frequency-based (midiNote) matching:
+ *   - correct note + chord complete + last group  -> `complete`
+ *   - correct note + chord complete + more groups -> advance, stay in `playing`
+ *   - correct note + chord incomplete             -> accumulate, stay in `playing`
+ *   - wrong note                                  -> no-op
  */
 
-import { setup, assign, assertEvent } from 'xstate';
+import { setup, assign, assertEvent, and } from 'xstate';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -29,9 +30,9 @@ export interface GameNote {
 
 /** A chord group — one or more simultaneous notes that glow together. */
 export interface NoteGroup {
-  /** All cell IDs in this chord group (press ANY one to advance) */
+  /** All cell IDs in this chord group (for visual highlighting on the grid) */
   cellIds: string[];
-  /** MIDI note numbers for this chord group */
+  /** MIDI note numbers — press ALL to advance to the next group */
   midiNotes: number[];
   /** Group start time in milliseconds */
   startMs: number;
@@ -45,6 +46,8 @@ export interface GameContext {
   currentGroupIndex: number;
   /** cellIds of current group (what glows white) */
   targetCellIds: string[];
+  /** MIDI notes pressed so far in the current chord group */
+  pressedMidiNotes: number[];
   /** Game start timestamp (Date.now()) */
   startTimeMs: number;
   /** Game finish timestamp (Date.now()) */
@@ -78,6 +81,7 @@ export const gameMachine = setup({
         noteGroups: event.noteGroups,
         currentGroupIndex: 0,
         targetCellIds: event.noteGroups[0]?.cellIds ?? [],
+        pressedMidiNotes: [] as number[],
         startTimeMs: Date.now(),
         finishTimeMs: 0,
         error: null,
@@ -87,11 +91,19 @@ export const gameMachine = setup({
       assertEvent(event, 'LOAD_FAILED');
       return { error: event.error };
     }),
+    accumulateNote: assign(({ context, event }) => {
+      assertEvent(event, 'NOTE_PRESSED');
+      if (context.pressedMidiNotes.includes(event.midiNote)) {
+        return { pressedMidiNotes: context.pressedMidiNotes };
+      }
+      return { pressedMidiNotes: [...context.pressedMidiNotes, event.midiNote] };
+    }),
     advanceGroup: assign(({ context }) => {
       const nextIndex = context.currentGroupIndex + 1;
       return {
         currentGroupIndex: nextIndex,
         targetCellIds: context.noteGroups[nextIndex]?.cellIds ?? [],
+        pressedMidiNotes: [] as number[],
       };
     }),
     setFinishTime: assign(() => ({ finishTimeMs: Date.now() })),
@@ -99,6 +111,7 @@ export const gameMachine = setup({
       noteGroups: [] as NoteGroup[],
       currentGroupIndex: 0,
       targetCellIds: [] as string[],
+      pressedMidiNotes: [] as number[],
       startTimeMs: 0,
       finishTimeMs: 0,
       error: null as string | null,
@@ -109,7 +122,14 @@ export const gameMachine = setup({
   guards: {
     isCorrectNote: ({ context, event }) => {
       assertEvent(event, 'NOTE_PRESSED');
-      return context.noteGroups[context.currentGroupIndex]?.cellIds.includes(event.cellId) ?? false;
+      return context.noteGroups[context.currentGroupIndex]?.midiNotes.includes(event.midiNote) ?? false;
+    },
+    isChordComplete: ({ context, event }) => {
+      assertEvent(event, 'NOTE_PRESSED');
+      const group = context.noteGroups[context.currentGroupIndex];
+      if (!group) return false;
+      const withNew = new Set([...context.pressedMidiNotes, event.midiNote]);
+      return group.midiNotes.every(n => withNew.has(n));
     },
     isLastGroup: ({ context }) =>
       context.currentGroupIndex + 1 >= context.noteGroups.length,
@@ -120,6 +140,7 @@ export const gameMachine = setup({
     noteGroups: [],
     currentGroupIndex: 0,
     targetCellIds: [],
+    pressedMidiNotes: [],
     startTimeMs: 0,
     finishTimeMs: 0,
     error: null,
@@ -143,18 +164,17 @@ export const gameMachine = setup({
       on: {
         NOTE_PRESSED: [
           {
-            guard: ({ context, event }) => {
-              assertEvent(event, 'NOTE_PRESSED');
-              const isCorrect =
-                context.noteGroups[context.currentGroupIndex]?.cellIds.includes(event.cellId) ?? false;
-              return isCorrect && context.currentGroupIndex + 1 >= context.noteGroups.length;
-            },
+            guard: and(['isCorrectNote', 'isChordComplete', 'isLastGroup']),
             target: 'complete',
-            actions: ['advanceGroup', 'setFinishTime'],
+            actions: ['accumulateNote', 'advanceGroup', 'setFinishTime'],
+          },
+          {
+            guard: and(['isCorrectNote', 'isChordComplete']),
+            actions: ['accumulateNote', 'advanceGroup'],
           },
           {
             guard: 'isCorrectNote',
-            actions: 'advanceGroup',
+            actions: 'accumulateNote',
           },
         ],
         GAME_RESET: { target: 'idle', actions: 'resetGame' },

@@ -100,6 +100,11 @@ import {
     gameBuildNoteGroupsIntegration,
     gameMachineTransitions,
     gameMachineReset,
+    gameFreqMatch,
+    gameFreqReject,
+    gameChordAll,
+    gameChordSingle,
+    gameChordClear,
   } from './machines/invariant-checks';
 import { focusReturnCheck } from './machines/modifierCompoundMachine';
 
@@ -505,6 +510,26 @@ test.describe('[Structural] state-independent invariants', () => {
 
   test('GAME-INT-4: game reset returns to idle with cleared context', async ({ page }) => {
     await gameMachineReset.check(page);
+  });
+
+  test('GAME-FREQ-1: correct midiNote with wrong cellId is accepted', async ({ page }) => {
+    await gameFreqMatch.check(page);
+  });
+
+  test('GAME-FREQ-2: wrong midiNote with matching cellId is rejected', async ({ page }) => {
+    await gameFreqReject.check(page);
+  });
+
+  test('GAME-CHORD-1: multi-note chord requires ALL notes before advancing', async ({ page }) => {
+    await gameChordAll.check(page);
+  });
+
+  test('GAME-CHORD-2: single-note groups advance immediately', async ({ page }) => {
+    await gameChordSingle.check(page);
+  });
+
+  test('GAME-CHORD-3: pressedMidiNotes clears on group advance', async ({ page }) => {
+    await gameChordClear.check(page);
   });
  });
 

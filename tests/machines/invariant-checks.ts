@@ -1976,7 +1976,7 @@ export const gameBuildNoteGroupsIntegration: StateInvariant = {
   },
 };
 
-/** D = {}. gameMachine transitions: idle → loading → playing → complete. */
+/** D = {}. gameMachine transitions: idle → loading → playing → complete with chord completion. */
 export const gameMachineTransitions: StateInvariant = {
   id: 'GAME-INT-3',
   check: async (_page: Page) => {
@@ -1997,14 +1997,17 @@ export const gameMachineTransitions: StateInvariant = {
     actor.send({ type: 'SONG_LOADED', noteGroups: mockGroups });
     states.push(actor.getSnapshot().value as string);
 
-    // Verify targetCellIds set from first group
     const targetCellIds = actor.getSnapshot().context.targetCellIds;
 
-    // playing → playing (advance to next group)
+    // First note of chord — accumulates, does NOT advance yet
     actor.send({ type: 'NOTE_PRESSED', cellId: '0_0', midiNote: 60 });
-    const afterAdvance = actor.getSnapshot().context.currentGroupIndex;
+    const afterFirstNote = actor.getSnapshot().context.currentGroupIndex;
 
-    // playing → complete (last group, correct note)
+    // Second note of chord — completes chord, advances to group 1
+    actor.send({ type: 'NOTE_PRESSED', cellId: '1_0', midiNote: 64 });
+    const afterChordComplete = actor.getSnapshot().context.currentGroupIndex;
+
+    // Single-note group → complete
     actor.send({ type: 'NOTE_PRESSED', cellId: '2_0', midiNote: 67 });
     states.push(actor.getSnapshot().value as string);
 
@@ -2012,7 +2015,8 @@ export const gameMachineTransitions: StateInvariant = {
 
     expect(states).toEqual(['idle', 'loading', 'playing', 'complete']);
     expect(targetCellIds).toContain('0_0');
-    expect(afterAdvance).toBe(1);
+    expect(afterFirstNote, 'first note should NOT advance chord').toBe(0);
+    expect(afterChordComplete, 'both notes should advance chord').toBe(1);
   },
 };
 
@@ -2037,5 +2041,184 @@ export const gameMachineReset: StateInvariant = {
     expect(afterReset.context.noteGroups.length).toBe(0);
     expect(afterReset.context.targetCellIds.length).toBe(0);
     expect(afterReset.context.currentGroupIndex).toBe(0);
+    expect(afterReset.context.pressedMidiNotes.length).toBe(0);
+  },
+};
+
+/**
+ * D = {}. Frequency-based matching: correct midiNote with mismatched cellId is accepted.
+ *
+ * On an isomorphic grid, the same pitch can appear at multiple grid coordinates.
+ * Matching by midiNote (frequency) instead of cellId ensures a C4 played at any
+ * grid position counts as correct. If matching regressed to cellId-based, this test
+ * would fail because the cellId '99_99' doesn't exist in the group's cellIds.
+ */
+export const gameFreqMatch: StateInvariant = {
+  id: 'GAME-FREQ-1',
+  check: async (_page: Page) => {
+    const actor = createActor(gameMachine);
+    actor.start();
+
+    actor.send({ type: 'FILE_DROPPED', file: new File([], 'test.mid') });
+    actor.send({
+      type: 'SONG_LOADED',
+      noteGroups: [{ cellIds: ['0_0'], midiNotes: [60], startMs: 0 }],
+    });
+
+    // midiNote 60 matches, cellId '99_99' does NOT match cellIds — should still advance
+    actor.send({ type: 'NOTE_PRESSED', cellId: '99_99', midiNote: 60 });
+    const state = actor.getSnapshot().value as string;
+
+    actor.stop();
+
+    expect(state, 'correct midiNote with wrong cellId should complete').toBe('complete');
+  },
+};
+
+/**
+ * D = {}. Frequency-based matching: wrong midiNote is rejected even if cellId looks valid.
+ *
+ * In the old coordinate-based system, a note at the "right" grid position but wrong
+ * pitch would incorrectly pass. Frequency matching ensures only the correct pitch
+ * advances the game — critical for isomorphic grids where layout geometry varies
+ * with tuning. If matching regressed to cellId-based, this test would fail because
+ * cellId '0_0' IS in the group's cellIds.
+ */
+export const gameFreqReject: StateInvariant = {
+  id: 'GAME-FREQ-2',
+  check: async (_page: Page) => {
+    const actor = createActor(gameMachine);
+    actor.start();
+
+    actor.send({ type: 'FILE_DROPPED', file: new File([], 'test.mid') });
+    actor.send({
+      type: 'SONG_LOADED',
+      noteGroups: [{ cellIds: ['0_0'], midiNotes: [60], startMs: 0 }],
+    });
+
+    // cellId '0_0' matches cellIds but midiNote 61 does NOT match midiNotes
+    actor.send({ type: 'NOTE_PRESSED', cellId: '0_0', midiNote: 61 });
+    const state = actor.getSnapshot().value as string;
+    const pressed = actor.getSnapshot().context.pressedMidiNotes;
+
+    actor.stop();
+
+    expect(state, 'wrong midiNote with matching cellId should stay in playing').toBe('playing');
+    expect(pressed.length, 'wrong note should not accumulate').toBe(0);
+  },
+};
+
+/**
+ * D = {}. Chord completion: multi-note group requires ALL notes before advancing.
+ *
+ * A chord (e.g. C major triad = [60, 64, 67]) should only advance when every
+ * constituent note has been pressed. This tests the core chord-completion gate:
+ * pressing 2 of 3 notes stays in the same group, pressing all 3 advances.
+ * Catches regressions to the old "press ANY one" behavior.
+ */
+export const gameChordAll: StateInvariant = {
+  id: 'GAME-CHORD-1',
+  check: async (_page: Page) => {
+    const actor = createActor(gameMachine);
+    actor.start();
+
+    actor.send({ type: 'FILE_DROPPED', file: new File([], 'test.mid') });
+    actor.send({
+      type: 'SONG_LOADED',
+      noteGroups: [
+        { cellIds: ['0_0', '1_0', '2_0'], midiNotes: [60, 64, 67], startMs: 0 },
+        { cellIds: ['3_0'], midiNotes: [72], startMs: 500 },
+      ],
+    });
+
+    // Press 1 of 3 — should NOT advance
+    actor.send({ type: 'NOTE_PRESSED', cellId: '0_0', midiNote: 60 });
+    expect(actor.getSnapshot().context.currentGroupIndex, 'after 1/3 notes').toBe(0);
+
+    // Press 2 of 3 — should NOT advance
+    actor.send({ type: 'NOTE_PRESSED', cellId: '1_0', midiNote: 64 });
+    expect(actor.getSnapshot().context.currentGroupIndex, 'after 2/3 notes').toBe(0);
+
+    // Press 3 of 3 — should advance to group 1
+    actor.send({ type: 'NOTE_PRESSED', cellId: '2_0', midiNote: 67 });
+    expect(actor.getSnapshot().context.currentGroupIndex, 'after 3/3 notes').toBe(1);
+
+    actor.stop();
+  },
+};
+
+/**
+ * D = {}. Single-note groups advance immediately (backward compatible).
+ *
+ * Groups with a single midiNote should advance on the first correct press,
+ * preserving the behavior users expect for melodies. This ensures chord
+ * completion logic doesn't add unnecessary delay to single-note passages.
+ * Catches bugs where the accumulation logic breaks single-note fast-path.
+ */
+export const gameChordSingle: StateInvariant = {
+  id: 'GAME-CHORD-2',
+  check: async (_page: Page) => {
+    const actor = createActor(gameMachine);
+    actor.start();
+
+    actor.send({ type: 'FILE_DROPPED', file: new File([], 'test.mid') });
+    actor.send({
+      type: 'SONG_LOADED',
+      noteGroups: [
+        { cellIds: ['0_0'], midiNotes: [60], startMs: 0 },
+        { cellIds: ['1_0'], midiNotes: [62], startMs: 200 },
+        { cellIds: ['2_0'], midiNotes: [64], startMs: 400 },
+      ],
+    });
+
+    // Each single-note group should advance immediately
+    actor.send({ type: 'NOTE_PRESSED', cellId: '0_0', midiNote: 60 });
+    expect(actor.getSnapshot().context.currentGroupIndex, 'after first note').toBe(1);
+
+    actor.send({ type: 'NOTE_PRESSED', cellId: '1_0', midiNote: 62 });
+    expect(actor.getSnapshot().context.currentGroupIndex, 'after second note').toBe(2);
+
+    actor.send({ type: 'NOTE_PRESSED', cellId: '2_0', midiNote: 64 });
+    expect(actor.getSnapshot().value as string, 'after last note').toBe('complete');
+
+    actor.stop();
+  },
+};
+
+/**
+ * D = {}. pressedMidiNotes clears on group advance.
+ *
+ * When a chord group is completed, pressedMidiNotes must reset to empty for
+ * the next group. Without this reset, notes from a previous chord would
+ * "leak" into the next group's accumulator, potentially auto-completing it.
+ * Catches regressions where advanceGroup forgets to clear the accumulator.
+ */
+export const gameChordClear: StateInvariant = {
+  id: 'GAME-CHORD-3',
+  check: async (_page: Page) => {
+    const actor = createActor(gameMachine);
+    actor.start();
+
+    actor.send({ type: 'FILE_DROPPED', file: new File([], 'test.mid') });
+    actor.send({
+      type: 'SONG_LOADED',
+      noteGroups: [
+        { cellIds: ['0_0', '1_0'], midiNotes: [60, 64], startMs: 0 },
+        { cellIds: ['2_0', '3_0'], midiNotes: [67, 72], startMs: 500 },
+      ],
+    });
+
+    // Accumulate first note
+    actor.send({ type: 'NOTE_PRESSED', cellId: '0_0', midiNote: 60 });
+    const afterAccumulate = actor.getSnapshot().context.pressedMidiNotes;
+    expect(afterAccumulate, 'should contain accumulated note').toContain(60);
+
+    // Complete first chord — should clear pressedMidiNotes
+    actor.send({ type: 'NOTE_PRESSED', cellId: '1_0', midiNote: 64 });
+    const afterAdvance = actor.getSnapshot().context.pressedMidiNotes;
+    expect(afterAdvance.length, 'pressedMidiNotes should be empty after advance').toBe(0);
+    expect(actor.getSnapshot().context.currentGroupIndex, 'should be on group 1').toBe(1);
+
+    actor.stop();
   },
 };
