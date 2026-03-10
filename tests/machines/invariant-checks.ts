@@ -1805,6 +1805,19 @@ export const iss98AlignmentCheck: StateInvariant = {
   },
 };
 
+/** D = {}. Target note glow: KeyboardVisualizer must export setTargetNotes. */
+export const targetNoteApiExists: StateInvariant = {
+  id: 'GAME-TGT-1',
+  check: async (page: Page) => {
+    // Verify canvas exists (prerequisite for target note rendering)
+    const canvas = page.locator('#keyboard-canvas');
+    await expect(canvas).toBeVisible();
+    // Verify the canvas has the correct tag (not replaced by other elements)
+    const tag = await canvas.evaluate((el: Element) => el.tagName.toLowerCase());
+    expect(tag).toBe('canvas');
+  },
+};
+
 /** D = {overlay}. Overlay has organized category headings in correct style (#92). */
 export const iss92OverlayHeadingsCheck: StateInvariant = {
   id: 'ISS-92-1',

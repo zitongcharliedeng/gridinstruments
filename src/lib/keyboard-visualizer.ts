@@ -54,6 +54,7 @@ export class KeyboardVisualizer {
   private buttons: Button[] = [];
   private activeNotes = new Set<string>();
   private sustainedNotes = new Set<string>();
+  private targetNotes = new Set<string>();
 
   // Half-vectors for parallelogram cells (computed in generateButtons)
   private hv1 = { x: 0, y: 0 }; // half-step in coordX direction
@@ -339,6 +340,10 @@ export class KeyboardVisualizer {
     this.sustainedNotes = new Set(noteIds);
   }
 
+  setTargetNotes(noteIds: string[]): void {
+    this.targetNotes = new Set(noteIds);
+  }
+
   render(): void {
     const { width, height } = this.options;
 
@@ -515,16 +520,18 @@ export class KeyboardVisualizer {
     const noteId = `${coordX}_${coordY}`;
 
     const isActive = this.activeNotes.has(noteId);
+    const isTarget = this.targetNotes.has(noteId) && !isActive;
     const isSustained = this.sustainedNotes.has(noteId) && !isActive;
 
-    const state: 'active' | 'sustained' | 'white' | 'black' = isActive ? 'active'
+    const state: 'active' | 'target' | 'sustained' | 'white' | 'black' = isActive ? 'active'
+      : isTarget ? 'target'
       : isSustained ? 'sustained'
       : isBlackKey ? 'black'
       : 'white';
     const { fill: fillColor, text: textColor } = cellColors(coordX, state);
 
     const { hv1, hv2 } = this;
-    const s = isActive ? 1.0 : CELL_INSET;
+    const s = (isActive || isTarget) ? 1.0 : CELL_INSET;
 
     // 4 corners of the parallelogram cell, scaled by s around center
     const h1x = hv1.x * s, h1y = hv1.y * s;
