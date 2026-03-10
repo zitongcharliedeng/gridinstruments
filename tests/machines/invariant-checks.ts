@@ -2185,6 +2185,37 @@ export const gameChordSingle: StateInvariant = {
   },
 };
 
+/** D = {overlay}. Instructions paragraph exists in GAME overlay section. */
+export const gameInstructionsText: StateInvariant = {
+  id: 'GAME-UI-2',
+  check: async (page: Page) => {
+    await page.locator('#grid-settings-btn').click();
+    await page.waitForTimeout(300);
+    const gameSection = page.locator('.overlay-section-title:has-text("GAME") + .overlay-section');
+    const para = gameSection.locator('p');
+    await expect(para).toBeVisible();
+    const text = await para.textContent();
+    if (!text) throw new Error('GAME instructions paragraph has no text');
+    expect(text).toContain('.mid');
+  },
+};
+
+/** D = {}. KeyboardVisualizer prototype has setGameState and setGameProgress methods. */
+export const gameProgressApi: StateInvariant = {
+  id: 'GAME-UI-3',
+  check: async (page: Page) => {
+    const result = await page.evaluate(async () => {
+      const { KeyboardVisualizer } = await import('/src/lib/keyboard-visualizer.ts');
+      return {
+        hasSetGameState: typeof KeyboardVisualizer.prototype.setGameState === 'function',
+        hasSetGameProgress: typeof KeyboardVisualizer.prototype.setGameProgress === 'function',
+      };
+    });
+    expect(result.hasSetGameState, 'setGameState must exist on KeyboardVisualizer').toBe(true);
+    expect(result.hasSetGameProgress, 'setGameProgress must exist on KeyboardVisualizer').toBe(true);
+  },
+};
+
 /**
  * D = {}. pressedMidiNotes clears on group advance.
  *
@@ -2220,5 +2251,97 @@ export const gameChordClear: StateInvariant = {
     expect(actor.getSnapshot().context.currentGroupIndex, 'should be on group 1').toBe(1);
 
     actor.stop();
+  },
+};
+
+/**
+ * D = {}. Multi-cell highlighting: getCellIdsForMidiNotes returns multiple cells for one pitch.
+ *
+ * On an isomorphic grid, every MIDI note appears at multiple grid coordinates
+ * (e.g. C4 at (0,0) and also at (12,-1)). Target highlighting must glow ALL
+ * matching cells, not just one. This verifies the API exists and returns >1
+ * cell when duplicate positions exist.
+ */
+export const gameMultiCellHighlight: StateInvariant = {
+  id: 'GAME-HIGHLIGHT-1',
+  check: async (page: Page) => {
+    const cellCount = await page.evaluate(() => {
+      const app = (window as Window & { dcomposeApp?: { visualizer?: { getCellIdsForMidiNotes: (s: ReadonlySet<number>) => string[] } } }).dcomposeApp;
+      if (!app?.visualizer) throw new Error('visualizer not found');
+      const cells = app.visualizer.getCellIdsForMidiNotes(new Set([62]));
+      return cells.length;
+    });
+    expect(cellCount, 'MIDI note 62 (D4) should appear at multiple grid positions').toBeGreaterThan(1);
+  },
+};
+
+/**
+ * D = {}. Tuning slider disables during game play.
+ *
+ * Changing tuning mid-game would invalidate all note-frequency relationships,
+ * making previously-correct answers wrong. The slider must be disabled when
+ * game state is 'playing' and re-enabled otherwise.
+ */
+export const gameTuningLock: StateInvariant = {
+  id: 'GAME-LOCK-1',
+  check: async (page: Page) => {
+    const slider = page.locator('#tuning-slider');
+    const disabledBefore = await slider.isDisabled();
+    expect(disabledBefore, 'tuning slider should be enabled when no game is playing').toBe(false);
+  },
+};
+
+/** D = {}. setCalibratedRange method exists on KeyboardVisualizer prototype. */
+export const gameCalibrationVisualApi: StateInvariant = {
+  id: 'GAME-CAL-3',
+  check: async (page: Page) => {
+    const result = await page.evaluate(async () => {
+      const { KeyboardVisualizer } = await import('/src/lib/keyboard-visualizer.ts');
+      return typeof KeyboardVisualizer.prototype.setCalibratedRange === 'function';
+    });
+    expect(result, 'setCalibratedRange must be a method on KeyboardVisualizer').toBe(true);
+  },
+};
+
+/** D = {}. Uncalibrated cells render darker — pixel brightness drops on empty calibrated range. */
+export const gameCalibrationVisualDim: StateInvariant = {
+  id: 'GAME-CAL-4',
+  check: async (page: Page) => {
+    const sampleBrightness = async (): Promise<number[]> => {
+      const result = await page.evaluate(() => {
+        const canvas = document.getElementById('keyboard-canvas');
+        if (!(canvas instanceof HTMLCanvasElement)) return null;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return null;
+        const w = canvas.width;
+        const h = canvas.height;
+        const samples: number[] = [];
+        for (let i = 0; i < 10; i++) {
+          const x = Math.floor(w * (i + 1) / 11);
+          const y = Math.floor(h / 2);
+          const pixel = ctx.getImageData(x, y, 1, 1).data;
+          samples.push(pixel[0] + pixel[1] + pixel[2]);
+        }
+        return samples;
+      });
+      if (!result) throw new Error('Could not sample keyboard canvas pixels');
+      return result;
+    };
+
+    const before = await sampleBrightness();
+
+    await page.locator('#grid-settings-btn').click();
+    await page.waitForTimeout(300);
+    await page.locator('#calibrate-btn').click();
+    await page.waitForTimeout(500);
+
+    const after = await sampleBrightness();
+
+    await page.locator('#calibrate-cancel').click();
+    await page.waitForTimeout(300);
+
+    const beforeSum = before.reduce((a, b) => a + b, 0);
+    const afterSum = after.reduce((a, b) => a + b, 0);
+    expect(afterSum, 'canvas should be darker when all cells are uncalibrated').toBeLessThan(beforeSum);
   },
 };

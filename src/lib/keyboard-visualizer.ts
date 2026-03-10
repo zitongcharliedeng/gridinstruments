@@ -55,6 +55,9 @@ export class KeyboardVisualizer {
   private activeNotes = new Set<string>();
   private sustainedNotes = new Set<string>();
   private targetNotes = new Set<string>();
+  private calibratedRange: ReadonlySet<string> | null = null;
+  private gameState: string = 'idle';
+  private gameProgress: { current: number; total: number; elapsedMs: number } = { current: 0, total: 0, elapsedMs: 0 };
 
   // Half-vectors for parallelogram cells (computed in generateButtons)
   private hv1 = { x: 0, y: 0 }; // half-step in coordX direction
@@ -344,6 +347,20 @@ export class KeyboardVisualizer {
     this.targetNotes = new Set(noteIds);
   }
 
+  setCalibratedRange(range: ReadonlySet<string> | null): void {
+    this.calibratedRange = range;
+  }
+
+  setGameState(state: string): void {
+    this.gameState = state;
+    this.render();
+  }
+
+  setGameProgress(currentIndex: number, totalGroups: number, elapsedMs: number): void {
+    this.gameProgress = { current: currentIndex, total: totalGroups, elapsedMs };
+    this.render();
+  }
+
   render(): void {
     const { width, height } = this.options;
 
@@ -355,6 +372,40 @@ export class KeyboardVisualizer {
     }
 
     this.drawPitchLines();
+
+    // ── Game UI overlay (canvas-rendered) ─────────────────────────────
+    if (this.gameState === 'idle') {
+      // "Drop a MIDI file to play" hint, dim, centered in lower portion
+      this.ctx.save();
+      this.ctx.fillStyle = 'rgba(255,255,255,0.15)';
+      this.ctx.font = 'bold 16px "JetBrains Mono", monospace';
+      this.ctx.textAlign = 'center';
+      this.ctx.textBaseline = 'middle';
+      this.ctx.fillText('Drop a MIDI file to play', width / 2, height * 0.75);
+      this.ctx.restore();
+    } else if (this.gameState === 'playing') {
+      const { current, total, elapsedMs } = this.gameProgress;
+      // Progress bar: thin white bar at very top of canvas
+      if (total > 0) {
+        const barWidth = (current / total) * width;
+        this.ctx.save();
+        this.ctx.fillStyle = '#fff';
+        this.ctx.fillRect(0, 0, barWidth, 3);
+        this.ctx.restore();
+      }
+      // Elapsed timer: top-right corner
+      const totalSec = Math.floor(elapsedMs / 1000);
+      const minutes = Math.floor(totalSec / 60);
+      const seconds = totalSec % 60;
+      const timerText = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+      this.ctx.save();
+      this.ctx.fillStyle = '#fff';
+      this.ctx.font = '14px "JetBrains Mono", monospace';
+      this.ctx.textAlign = 'right';
+      this.ctx.textBaseline = 'top';
+      this.ctx.fillText(timerText, width - 10, 6);
+      this.ctx.restore();
+    }
   }
 
   private drawPitchLines(): void {
@@ -522,10 +573,12 @@ export class KeyboardVisualizer {
     const isActive = this.activeNotes.has(noteId);
     const isTarget = this.targetNotes.has(noteId) && !isActive;
     const isSustained = this.sustainedNotes.has(noteId) && !isActive;
+    const isUncalibrated = this.calibratedRange !== null && !this.calibratedRange.has(noteId);
 
-    const state: 'active' | 'target' | 'sustained' | 'white' | 'black' = isActive ? 'active'
+    const state: 'active' | 'target' | 'sustained' | 'uncalibrated' | 'white' | 'black' = isActive ? 'active'
       : isTarget ? 'target'
       : isSustained ? 'sustained'
+      : isUncalibrated ? 'uncalibrated'
       : isBlackKey ? 'black'
       : 'white';
     const { fill: fillColor, text: textColor } = cellColors(coordX, state);

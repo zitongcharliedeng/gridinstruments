@@ -431,6 +431,9 @@ class DComposeApp {
     createIcons({ icons: { Info, Star, RotateCcw, RotateCw, Settings, X } });
     this.calibratedRange = loadCalibratedRange();
     this.setupVisualizer();
+    if (this.calibratedRange) {
+      this.visualizer?.setCalibratedRange(this.calibratedRange);
+    }
     this.setupHistoryVisualizer();
     this.setupEventListeners();
     await this.midi.init();
@@ -531,7 +534,10 @@ class DComposeApp {
     const [coordX, coordY] = midiToCoord(midiNote);
     const noteKey = `midi_${deviceId}_${channel}_${midiNote}`;
     const audioNoteId = `midi_${deviceId}_${channel}_${midiNote}_${coordX}_${coordY}`;
-    if (this.calibrating) this.calibratedCells.add(`${coordX}_${coordY}`);
+    if (this.calibrating) {
+      this.calibratedCells.add(`${coordX}_${coordY}`);
+      this.visualizer?.setCalibratedRange(new Set(this.calibratedCells));
+    }
     this.activeNotes.set(noteKey, { coordX, coordY });
     this.midiChannelVoice.set(`${deviceId}_${channel}`, audioNoteId);
     this.trackNoteOn(coordX, coordY, midiNote);
@@ -1326,16 +1332,30 @@ class DComposeApp {
     this.gameActor = createActor(gameMachine);
     this.gameActor.start();
 
-    // Subscribe to game state changes — drive target notes, ghost note, score overlay, status UI
     this.gameActor.subscribe((snapshot) => {
       const state = snapshot.value as string;
       const ctx = snapshot.context;
 
+      this.visualizer?.setGameState(state);
+      if (state === 'playing') {
+        this.visualizer?.setGameProgress(ctx.currentGroupIndex, ctx.noteGroups.length, Date.now() - ctx.startTimeMs);
+      }
+
       const statusEl = document.getElementById('game-status') as HTMLElement | null;
       const progressEl = document.getElementById('game-progress') as HTMLElement | null;
 
+      // Lock tuning slider during gameplay — changing tuning mid-game invalidates note matching
+      if (this.tuningSlider) this.tuningSlider.disabled = state === 'playing';
+
       if (state === 'playing') {
-        this.visualizer?.setTargetNotes(ctx.targetCellIds);
+        // Expand target highlights to ALL cells with the same MIDI notes (not just the original cellId)
+        const currentGroup = ctx.noteGroups[ctx.currentGroupIndex];
+        if (currentGroup && this.visualizer) {
+          const allTargetCellIds = this.visualizer.getCellIdsForMidiNotes(new Set(currentGroup.midiNotes));
+          this.visualizer.setTargetNotes(allTargetCellIds);
+        } else {
+          this.visualizer?.setTargetNotes(ctx.targetCellIds);
+        }
         // Ghost note: first cell ID → MIDI note for piano strip indicator
         const firstCellId = ctx.targetCellIds[0];
         if (firstCellId) {
@@ -1523,7 +1543,10 @@ class DComposeApp {
     const effectiveCoordY = coordY + this.octaveOffset;
     const audioNoteId = `key_${code}_${effectiveCoordX}_${effectiveCoordY}`;
     const midiNote = 62 + effectiveCoordX * 7 + effectiveCoordY * 12;
-    if (this.calibrating) this.calibratedCells.add(`${effectiveCoordX}_${effectiveCoordY}`);
+    if (this.calibrating) {
+      this.calibratedCells.add(`${effectiveCoordX}_${effectiveCoordY}`);
+      this.visualizer?.setCalibratedRange(new Set(this.calibratedCells));
+    }
     this.activeNotes.set(code, { coordX, coordY });
     this.trackNoteOn(effectiveCoordX, effectiveCoordY, midiNote);
     if (this.gameActor?.getSnapshot().matches('playing')) {
@@ -1641,7 +1664,10 @@ class DComposeApp {
     const effectiveCoordX = coordX + this.transposeOffset;
     const effectiveCoordY = coordY + this.octaveOffset;
     const audioNoteId = `ptr_${pointerId}_${effectiveCoordX}_${effectiveCoordY}`;
-    if (this.calibrating) this.calibratedCells.add(`${effectiveCoordX}_${effectiveCoordY}`);
+    if (this.calibrating) {
+      this.calibratedCells.add(`${effectiveCoordX}_${effectiveCoordY}`);
+      this.visualizer?.setCalibratedRange(new Set(this.calibratedCells));
+    }
     this.synth.playNote(audioNoteId, effectiveCoordX, coordY, this.octaveOffset);
     const midiNote = 62 + effectiveCoordX * 7 + effectiveCoordY * 12;
     this.mpe.noteOn(audioNoteId, midiNote, Math.max(0.01, pressure));
@@ -1885,12 +1911,14 @@ class DComposeApp {
   private enterCalibrationMode(): void {
     this.calibrating = true;
     this.calibratedCells = new Set();
+    this.visualizer?.setCalibratedRange(new Set<string>());
     const banner = document.getElementById('calibration-banner');
     const msg = document.getElementById('calibration-msg');
     if (banner) banner.style.display = 'flex';
     if (msg) msg.textContent = 'Play all reachable notes, then confirm';
     const btn = document.getElementById('calibrate-btn');
-    if (btn) btn.textContent = 'Calibrating…';
+    if (btn) btn.textContent = 'Calibrating\u2026';
+    this.render();
   }
 
   private exitCalibrationMode(confirm: boolean): void {
@@ -1905,11 +1933,13 @@ class DComposeApp {
         setTimeout(() => { msg.textContent = 'Play all reachable notes, then confirm'; }, 2000);
       }
     }
+    this.visualizer?.setCalibratedRange(this.calibratedRange);
     this.calibratedCells = new Set();
     const banner = document.getElementById('calibration-banner');
     if (banner) banner.style.display = 'none';
     const btn = document.getElementById('calibrate-btn');
     if (btn) btn.textContent = 'Calibrate range';
+    this.render();
   }
 }
 

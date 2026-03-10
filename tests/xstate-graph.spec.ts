@@ -105,6 +105,12 @@ import {
     gameChordAll,
     gameChordSingle,
     gameChordClear,
+    gameInstructionsText,
+    gameProgressApi,
+    gameMultiCellHighlight,
+    gameTuningLock,
+    gameCalibrationVisualApi,
+    gameCalibrationVisualDim,
   } from './machines/invariant-checks';
 import { focusReturnCheck } from './machines/modifierCompoundMachine';
 
@@ -530,6 +536,30 @@ test.describe('[Structural] state-independent invariants', () => {
 
   test('GAME-CHORD-3: pressedMidiNotes clears on group advance', async ({ page }) => {
     await gameChordClear.check(page);
+  });
+
+  test('GAME-UI-2: instructions text exists in GAME overlay section', async ({ page }) => {
+    await gameInstructionsText.check(page);
+  });
+
+  test('GAME-UI-3: setGameState and setGameProgress exist on KeyboardVisualizer', async ({ page }) => {
+    await gameProgressApi.check(page);
+  });
+
+  test('GAME-HIGHLIGHT-1: getCellIdsForMidiNotes returns multiple cells per pitch', async ({ page }) => {
+    await gameMultiCellHighlight.check(page);
+  });
+
+  test('GAME-LOCK-1: tuning slider enabled when no game is playing', async ({ page }) => {
+    await gameTuningLock.check(page);
+  });
+
+  test('GAME-CAL-3: setCalibratedRange API exists on KeyboardVisualizer', async ({ page }) => {
+    await gameCalibrationVisualApi.check(page);
+  });
+
+  test('GAME-CAL-4: uncalibrated cells render darker than normal cells', async ({ page }) => {
+    await gameCalibrationVisualDim.check(page);
   });
  });
 
