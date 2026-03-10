@@ -27,8 +27,10 @@ npm-debug.log*
 # TypeScript cache
 *.tsbuildinfo
 
-# Tool directories
-.sisyphus/
+# Tool directories — session state is ephemeral, plans/drafts are tracked
+.sisyphus/boulder.json
+.sisyphus/notepads/
+.sisyphus/notepads/**
 
 # Stale nested clone
 dcompose-web/
