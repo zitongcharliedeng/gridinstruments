@@ -47,6 +47,7 @@ import { panelMachine, clampPanelHeight } from './machines/panelMachine';
 
 import { mpeMachine } from './machines/mpeMachine';
 import { dialogMachine } from './machines/dialogMachine';
+import { gameMachine } from './machines/gameMachine';
 import { createActor } from 'xstate';
 import { OverlayScrollbars, ClickScrollPlugin } from 'overlayscrollbars';
 import 'overlayscrollbars/overlayscrollbars.css';
@@ -1295,6 +1296,43 @@ class DComposeApp {
         vibRef.send({ type: 'DEACTIVATE' });
       });
     }
+    // Game: file drop on canvas
+    const gameActor = createActor(gameMachine);
+    gameActor.start();
+
+    const keyboardCanvas = document.getElementById('keyboard-canvas');
+    if (keyboardCanvas) {
+      keyboardCanvas.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy';
+        keyboardCanvas.setAttribute('data-dropping', 'true');
+      });
+
+      keyboardCanvas.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        keyboardCanvas.removeAttribute('data-dropping');
+      });
+
+      keyboardCanvas.addEventListener('drop', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        keyboardCanvas.removeAttribute('data-dropping');
+
+        const files = e.dataTransfer?.files;
+        if (!files || files.length === 0) return;
+
+        const file = files[0];
+        if (!file) return;
+        if (!file.name.toLowerCase().endsWith('.mid') && !file.name.toLowerCase().endsWith('.midi')) {
+          // Not a MIDI file — ignore silently
+          return;
+        }
+
+        gameActor.send({ type: 'FILE_DROPPED', file });
+      });
+    }
+
     // Initialize slider progress fills
     document.querySelectorAll<HTMLInputElement>('input[type="range"]').forEach(s => { this.updateSliderFill(s); });
   }
