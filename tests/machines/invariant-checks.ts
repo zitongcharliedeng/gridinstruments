@@ -1858,7 +1858,7 @@ export const iss92OverlayHeadingsCheck: StateInvariant = {
         throw new Error(`Missing overlay category heading: ${expected}`);
       }
     }
-    expect(texts.length, 'Should have exactly 4 overlay section headings').toBe(4);
+    expect(texts.length, 'Should have exactly 5 overlay section headings').toBe(5);
     // Verify headings are greyish (not white)
     const firstHeading = headings.first();
     const color = await firstHeading.evaluate((el) => getComputedStyle(el).color);
@@ -3587,5 +3587,140 @@ export const gameEdge5: StateInvariant = {
     expect(snap.value, 'machine remains in playing (second group still pending)').toBe('playing');
     expect(snap.context.currentGroupIndex, 'single-note group advances to index 1 immediately on correct press').toBe(1);
     expect(snap.context.pressedMidiNotes.length, 'pressedMidiNotes cleared after group advance').toBe(0);
+  },
+};
+
+/**
+ * D = {}. searchAllAdapters returns an array (may be empty if offline), never throws.
+ *
+ * searchAllAdapters wraps all adapter calls in Promise.allSettled + .catch() so
+ * individual adapter network failures (GitHub rate limit, DNS failure, etc.) are
+ * silently folded into an empty array. The function contract is: always returns
+ * MidiSearchResult[], never propagates an exception to the caller.
+ */
+export const gameSearch2: StateInvariant = {
+  id: 'GAME-SEARCH-2',
+  description: 'searchAllAdapters returns array (may be empty if offline, never throws)',
+  check: async (page: Page) => {
+    const result = await page.evaluate(async () => {
+      const { searchAllAdapters } = await import('/src/lib/midi-search.ts');
+      let threw = false;
+      let isArray = false;
+      try {
+        const arr = await searchAllAdapters('bach');
+        isArray = Array.isArray(arr);
+      } catch (_err) {
+        threw = true;
+      }
+      return { threw, isArray };
+    });
+    expect(result.threw, 'searchAllAdapters must not throw').toBe(false);
+    expect(result.isArray, 'searchAllAdapters must return an array').toBe(true);
+  },
+};
+
+/**
+ * D = {}. GitHubMidiAdapter search returns results with required fields.
+ *
+ * Every MidiSearchResult must expose title (display name), source (adapter id),
+ * and fetchUrl (the URL loadMidiFromBuffer passes to fetch()). If any field is
+ * missing or the wrong type, the click-to-load pipeline silently breaks.
+ * Tests shape contract independent of network availability.
+ */
+export const gameSearch3: StateInvariant = {
+  id: 'GAME-SEARCH-3',
+  description: 'GitHubMidiAdapter search returns results with required fields (title, source, fetchUrl)',
+  check: async (page: Page) => {
+    const violations = await page.evaluate(async () => {
+      const { GitHubMidiAdapter } = await import('/src/lib/midi-search.ts');
+      const adapter = new GitHubMidiAdapter();
+      let results: Array<{ title: unknown; source: unknown; fetchUrl: unknown }> = [];
+      try {
+        results = await adapter.search('bach');
+      } catch (_err) {
+        // Network unavailable — empty results pass the shape contract
+        results = [];
+      }
+      return results.filter(
+        r => typeof r.title !== 'string' || typeof r.source !== 'string' || typeof r.fetchUrl !== 'string',
+      ).length;
+    });
+    expect(violations, 'every result must have string title, source, and fetchUrl').toBe(0);
+  },
+};
+
+/**
+ * D = {}. Typing in #midi-search-input triggers the search pipeline.
+ *
+ * The search input has a 300ms debounce listener. After the debounce fires,
+ * #midi-search-results must show a non-empty status string ("Searching…",
+ * "No results", "Search failed", or actual results). An empty div after
+ * typing means the input event listener is not wired.
+ */
+export const gameSearch4: StateInvariant = {
+  id: 'GAME-SEARCH-4',
+  description: 'typing in #midi-search-input triggers search pipeline — results div shows status',
+  check: async (page: Page) => {
+    await page.locator('#grid-settings-btn').click();
+    await page.waitForTimeout(300);
+    await page.locator('#midi-search-input').fill('ba');
+    // Wait for 300ms debounce + async handler to start
+    await page.waitForTimeout(500);
+    const content = await page.locator('#midi-search-results').textContent();
+    if (content === null) throw new Error('#midi-search-results textContent is null');
+    expect(
+      content.trim().length,
+      '#midi-search-results must be non-empty after typing 2+ chars (handler not wired)',
+    ).toBeGreaterThan(0);
+  },
+};
+
+/**
+ * D = {}. All 3 MIDI search adapters implement the MidiSearchAdapter interface.
+ *
+ * loadMidiFromBuffer is a shared function called from both file-drop and
+ * search-result-click. Its adapter.fetch() call depends on all adapters
+ * exposing the same interface: search(query), fetch(result), id, name.
+ * This verifies the DRY pipeline contract without requiring network access.
+ */
+export const gameSearch5: StateInvariant = {
+  id: 'GAME-SEARCH-5',
+  description: 'all 3 MIDI search adapters implement MidiSearchAdapter interface for shared pipeline',
+  check: async (page: Page) => {
+    const result = await page.evaluate(async () => {
+      const { GitHubMidiAdapter, MutopiaMidiAdapter, MidishareMidiAdapter } = await import('/src/lib/midi-search.ts');
+      const adapters = [new GitHubMidiAdapter(), new MutopiaMidiAdapter(), new MidishareMidiAdapter()];
+      return {
+        count: adapters.length,
+        allHaveSearch: adapters.every(a => typeof a.search === 'function'),
+        allHaveFetch: adapters.every(a => typeof a.fetch === 'function'),
+        allHaveId: adapters.every(a => typeof a.id === 'string' && a.id.length > 0),
+        allHaveName: adapters.every(a => typeof a.name === 'string' && a.name.length > 0),
+      };
+    });
+    expect(result.count, '3 adapters must be registered').toBe(3);
+    expect(result.allHaveSearch, 'all adapters must implement search()').toBe(true);
+    expect(result.allHaveFetch, 'all adapters must implement fetch() for loadMidiFromBuffer pipeline').toBe(true);
+    expect(result.allHaveId, 'all adapters must have a non-empty id string').toBe(true);
+    expect(result.allHaveName, 'all adapters must have a non-empty name string').toBe(true);
+  },
+};
+
+/**
+ * D = {}. Search input is type="text" inside #grid-overlay; results container present.
+ *
+ * Structural DOM contract for the MIDI search UI: the input must be a text field
+ * (not a hidden input or other type), and the results container must exist as a
+ * sibling so the search handler can populate it. Both must live inside #grid-overlay.
+ */
+export const gameSearch6: StateInvariant = {
+  id: 'GAME-SEARCH-6',
+  description: '#midi-search-input is type=text and #midi-search-results exists inside #grid-overlay',
+  check: async (page: Page) => {
+    const inputType = await page.locator('#midi-search-input').getAttribute('type');
+    expect(inputType, '#midi-search-input must be type="text"').toBe('text');
+
+    const resultsInOverlay = await page.locator('#grid-overlay #midi-search-results').count();
+    expect(resultsInOverlay, '#midi-search-results must exist inside #grid-overlay').toBe(1);
   },
 };

@@ -1170,7 +1170,7 @@ Max Concurrent: 5 (Waves 3, 4)
   - Files: `src/lib/midi-search.ts`
   - Pre-commit: `nix develop --command npm run build`
 
-- [ ] 13. Search UI + Integration Wiring
+- [x] 13. Search UI + Integration Wiring
 
   **What to do**:
   - **Search UI in overlay**: Add to the GAME section in `index.html`:
