@@ -702,7 +702,7 @@ Max Concurrent: 5 (Waves 3, 4)
   - Files: `src/lib/keyboard-visualizer.ts`, `src/main.ts`, `index.html`, `tests/machines/invariant-checks.ts`, `tests/xstate-graph.spec.ts`
   - Pre-commit: `nix develop --command npm run build && nix develop --command npx playwright test --project=firefox --workers=1`
 
-- [ ] 6. Game Engine Function Tests
+- [x] 6. Game Engine Function Tests
 
   **What to do**:
   - Write StateInvariant tests for ALL game engine functions in `src/lib/game-engine.ts`:
@@ -768,7 +768,7 @@ Max Concurrent: 5 (Waves 3, 4)
   - Files: `tests/machines/invariant-checks.ts`, `tests/xstate-graph.spec.ts`
   - Pre-commit: `nix develop --command npx playwright test --project=firefox --workers=1`
 
-- [ ] 7. MIDI Parser Edge Case Tests
+- [x] 7. MIDI Parser Edge Case Tests
 
   **What to do**:
   - Write StateInvariant tests for MIDI parser edge cases in `src/lib/midi-parser.ts`:
@@ -836,7 +836,7 @@ Max Concurrent: 5 (Waves 3, 4)
   - Files: `tests/machines/invariant-checks.ts`, `tests/xstate-graph.spec.ts`
   - Pre-commit: `nix develop --command npx playwright test --project=firefox --workers=1`
 
-- [ ] 8. Game Machine Comprehensive State Transition Tests
+- [x] 8. Game Machine Comprehensive State Transition Tests
 
   **What to do**:
   - Write StateInvariant tests for ALL game machine state transitions and error paths:
@@ -902,7 +902,7 @@ Max Concurrent: 5 (Waves 3, 4)
   - Files: `tests/machines/invariant-checks.ts`, `tests/xstate-graph.spec.ts`
   - Pre-commit: `nix develop --command npx playwright test --project=firefox --workers=1`
 
-- [ ] 9. Input Integration + Edge Case Tests
+- [x] 9. Input Integration + Edge Case Tests
 
   **What to do**:
   - Write StateInvariant tests for input integration and edge cases:
