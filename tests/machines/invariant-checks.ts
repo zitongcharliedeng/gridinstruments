@@ -3266,3 +3266,313 @@ export const gameMidi7: StateInvariant = {
     expect(result.count,   'all drum events filtered → 0 events').toBe(0);
   },
 };
+
+// ── GAME-INPUT: NOTE_PRESSED event shape and frequency-based matching ──────────
+
+/**
+ * D = {}. gameMachine accepts NOTE_PRESSED with midiNote field and advances group on match.
+ *
+ * The game machine uses frequency-based (midiNote) matching exclusively —
+ * the `cellId` field in the event is carried for UI highlighting only.
+ * This test sends a NOTE_PRESSED event with the correct midiNote to a
+ * two-group playing machine and verifies currentGroupIndex advances from
+ * 0 to 1. If the machine ignored the midiNote field, or if the event shape
+ * were wrong, the group would never advance and the game could never progress.
+ */
+export const gameInput1: StateInvariant = {
+  id: 'GAME-INPUT-1',
+  description: 'NOTE_PRESSED with correct midiNote field advances currentGroupIndex',
+  check: async (_page: Page) => {
+    const actor = createActor(gameMachine);
+    actor.start();
+
+    actor.send({ type: 'FILE_DROPPED', file: new File([], 'test.mid') });
+    actor.send({
+      type: 'SONG_LOADED',
+      noteGroups: [
+        { cellIds: ['0_0'], midiNotes: [60], startMs: 0 },
+        { cellIds: ['1_0'], midiNotes: [62], startMs: 200 },
+      ],
+    });
+
+    const beforeIndex = actor.getSnapshot().context.currentGroupIndex;
+
+    // Event carries both required fields: cellId (for UI highlighting) and midiNote (for matching)
+    actor.send({ type: 'NOTE_PRESSED', cellId: '0_0', midiNote: 60 });
+    const snap = actor.getSnapshot();
+
+    actor.stop();
+
+    expect(beforeIndex, 'currentGroupIndex starts at 0').toBe(0);
+    expect(snap.value, 'machine remains in playing after advancing to second group').toBe('playing');
+    expect(snap.context.currentGroupIndex, 'NOTE_PRESSED with matching midiNote advances group to 1').toBe(1);
+  },
+};
+
+/**
+ * D = {}. gameMachine rejects NOTE_PRESSED with midiNote not in current group.
+ *
+ * The guard `isCorrectNote` checks whether `event.midiNote` is in the current
+ * group's `midiNotes` array. A midiNote absent from that list must be a no-op:
+ * state remains `playing`, currentGroupIndex unchanged, and the wrong note is
+ * NOT accumulated in pressedMidiNotes. This protects against stray keystrokes
+ * or wrong MIDI input corrupting game progress.
+ */
+export const gameInput2: StateInvariant = {
+  id: 'GAME-INPUT-2',
+  description: 'NOTE_PRESSED with wrong midiNote is rejected: state, index, and accumulator unchanged',
+  check: async (_page: Page) => {
+    const actor = createActor(gameMachine);
+    actor.start();
+
+    actor.send({ type: 'FILE_DROPPED', file: new File([], 'test.mid') });
+    actor.send({
+      type: 'SONG_LOADED',
+      noteGroups: [{ cellIds: ['0_0'], midiNotes: [60], startMs: 0 }],
+    });
+
+    // midiNote 99 is NOT in the group's midiNotes [60]
+    actor.send({ type: 'NOTE_PRESSED', cellId: '0_0', midiNote: 99 });
+    const snap = actor.getSnapshot();
+
+    actor.stop();
+
+    expect(snap.value, 'wrong midiNote must not change state').toBe('playing');
+    expect(snap.context.currentGroupIndex, 'wrong midiNote must not advance group index').toBe(0);
+    expect(snap.context.pressedMidiNotes.length, 'wrong midiNote must not be accumulated').toBe(0);
+  },
+};
+
+/**
+ * D = {}. gameMachine matches NOTE_PRESSED by midiNote, not by cellId.
+ *
+ * The machine's `isCorrectNote` guard reads `event.midiNote` and checks it
+ * against `context.noteGroups[currentGroupIndex].midiNotes`. The `cellId`
+ * field on the event is used only for UI highlighting — it plays no role in
+ * correctness checking. Sending a NOTE_PRESSED with the matching midiNote (60)
+ * but a cellId NOT in the group's cellIds ('99_99') must still advance the
+ * group. This proves matching is purely frequency-based throughout the machine.
+ */
+export const gameInput3: StateInvariant = {
+  id: 'GAME-INPUT-3',
+  description: 'NOTE_PRESSED matches by midiNote only — arbitrary cellId with correct midiNote advances group',
+  check: async (_page: Page) => {
+    const actor = createActor(gameMachine);
+    actor.start();
+
+    actor.send({ type: 'FILE_DROPPED', file: new File([], 'test.mid') });
+    actor.send({
+      type: 'SONG_LOADED',
+      noteGroups: [
+        { cellIds: ['0_0'], midiNotes: [60], startMs: 0 },
+        { cellIds: ['1_0'], midiNotes: [62], startMs: 200 },
+      ],
+    });
+
+    // cellId '99_99' is NOT in the group's cellIds ['0_0'],
+    // but midiNote 60 IS in midiNotes [60] — the machine must advance
+    actor.send({ type: 'NOTE_PRESSED', cellId: '99_99', midiNote: 60 });
+    const snap = actor.getSnapshot();
+
+    actor.stop();
+
+    // Matching is frequency-based: cellId mismatch is irrelevant to correctness
+    expect(snap.value, 'machine stays in playing (second group remaining)').toBe('playing');
+    expect(snap.context.currentGroupIndex, 'group advances despite non-matching cellId — midiNote-based matching').toBe(1);
+  },
+};
+
+// ── GAME-EDGE: Edge cases in file loading, chord accumulation, and range cropping ─
+
+/**
+ * D = {}. gameMachine accepts any FILE_DROPPED regardless of file extension.
+ *
+ * File type validation (.mid / .midi extension check) happens in main.ts
+ * BEFORE the machine receives the event. The machine itself is a pure state
+ * machine that accepts FILE_DROPPED unconditionally from `idle`. This test
+ * documents that contract: dropping a .txt file transitions the machine to
+ * `loading` (where main.ts would then send LOAD_FAILED with a type error).
+ * The machine correctly handles that subsequent LOAD_FAILED and stores the
+ * error message in context for the UI to display.
+ */
+export const gameEdge1: StateInvariant = {
+  id: 'GAME-EDGE-1',
+  description: 'Non-MIDI file: machine enters loading then error (file type validation is in main.ts, not machine)',
+  check: async (_page: Page) => {
+    const actor = createActor(gameMachine);
+    actor.start();
+
+    // Machine accepts any FILE_DROPPED — extension validation is upstream in main.ts
+    actor.send({ type: 'FILE_DROPPED', file: new File([], 'test.txt') });
+    const afterDrop = actor.getSnapshot().value as string;
+
+    // main.ts detects the wrong extension and sends LOAD_FAILED
+    actor.send({ type: 'LOAD_FAILED', error: 'Not a MIDI file' });
+    const snap = actor.getSnapshot();
+
+    actor.stop();
+
+    expect(afterDrop, 'FILE_DROPPED from idle always enters loading (machine does not check extension)').toBe('loading');
+    expect(snap.value, 'LOAD_FAILED from loading enters error state').toBe('error');
+    expect(snap.context.error, 'error message stored in context for UI display').toBe('Not a MIDI file');
+  },
+};
+
+/**
+ * D = {}. Drum-only MIDI events produce zero NoteGroups; machine handles LOAD_FAILED gracefully.
+ *
+ * A MIDI file that contains only channel-9 (percussion) events has no pitched
+ * notes and cannot form any NoteGroups. `buildNoteGroups` must return an empty
+ * array for this input — verified at the game-engine layer here. Main.ts then
+ * detects the empty noteGroups array and sends LOAD_FAILED with "No playable
+ * notes". The machine must enter the error state and store that message.
+ */
+export const gameEdge2: StateInvariant = {
+  id: 'GAME-EDGE-2',
+  description: 'Drum-only events → buildNoteGroups returns empty; machine enters error on LOAD_FAILED',
+  check: async (page: Page) => {
+    // Step 1: verify the game engine produces zero groups from drum-only events
+    const engineResult = await page.evaluate(async () => {
+      const { buildNoteGroups } = await import('/src/lib/game-engine.ts');
+      // Two channel-9 percussion events: kick (note 36) and snare (note 38)
+      const drumEvents = [
+        { midiNote: 36, startMs: 0,   durationMs: 100, velocity: 64, channel: 9, track: 0 },
+        { midiNote: 38, startMs: 100, durationMs: 100, velocity: 64, channel: 9, track: 0 },
+      ];
+      const groups = buildNoteGroups(drumEvents);
+      return { groupCount: groups.length, isArray: Array.isArray(groups) };
+    });
+    expect(engineResult.isArray, 'buildNoteGroups must return an array').toBe(true);
+    expect(engineResult.groupCount, 'all channel-9 events filtered → zero note groups').toBe(0);
+
+    // Step 2: machine handles LOAD_FAILED as main.ts would send for an empty noteGroups result
+    const actor = createActor(gameMachine);
+    actor.start();
+    actor.send({ type: 'FILE_DROPPED', file: new File([], 'drums.mid') });
+    actor.send({ type: 'LOAD_FAILED', error: 'No playable notes' });
+    const snap = actor.getSnapshot();
+    actor.stop();
+
+    expect(snap.value, 'LOAD_FAILED enters error state').toBe('error');
+    expect(snap.context.error, '"No playable notes" error stored in context').toBe('No playable notes');
+  },
+};
+
+/**
+ * D = {}. Pressing the same correct note twice in a chord accumulates it only once.
+ *
+ * The `accumulateNote` action guards against duplicate entries using
+ * `pressedMidiNotes.includes(event.midiNote)`. For a two-note chord [60, 64],
+ * pressing 60 twice must leave `pressedMidiNotes` with exactly one entry (60),
+ * and the chord must NOT advance because 64 has never been pressed.
+ * Without this dedup, rapid or bouncing key events could falsely satisfy chord
+ * completion — making the game unplayable for fast typists or bouncy MIDI controllers.
+ */
+export const gameEdge3: StateInvariant = {
+  id: 'GAME-EDGE-3',
+  description: 'Pressing same correct note twice: deduped to 1 entry, two-note chord does not advance',
+  check: async (_page: Page) => {
+    const actor = createActor(gameMachine);
+    actor.start();
+
+    // Two-note chord: both midiNote 60 AND 64 must be pressed to advance
+    actor.send({ type: 'FILE_DROPPED', file: new File([], 'song.mid') });
+    actor.send({
+      type: 'SONG_LOADED',
+      noteGroups: [{ cellIds: ['0_0', '1_0'], midiNotes: [60, 64], startMs: 0 }],
+    });
+
+    // Press note 60 twice — second press must be silently deduplicated
+    actor.send({ type: 'NOTE_PRESSED', cellId: '0_0', midiNote: 60 });
+    actor.send({ type: 'NOTE_PRESSED', cellId: '0_0', midiNote: 60 });
+    const snap = actor.getSnapshot();
+
+    actor.stop();
+
+    expect(snap.value, 'chord incomplete (64 not pressed) — machine must remain in playing').toBe('playing');
+    expect(snap.context.pressedMidiNotes.length, 'duplicate note 60 deduped — exactly 1 entry in pressedMidiNotes').toBe(1);
+    expect(snap.context.currentGroupIndex, 'chord not complete — group index unchanged at 0').toBe(0);
+  },
+};
+
+/**
+ * D = {}. cropToRange with an empty range Set removes all groups; LOAD_FAILED handled correctly.
+ *
+ * When `cropToRange` is called with an empty available-range Set (no calibrated
+ * cells), every group is stripped and the result is an empty array. This models
+ * the case where calibration data is absent or corrupted. Main.ts detects the
+ * empty post-crop array and sends LOAD_FAILED. The machine must enter the error
+ * state and store the error message for the user to see.
+ */
+export const gameEdge4: StateInvariant = {
+  id: 'GAME-EDGE-4',
+  description: 'cropToRange with empty Set removes all groups; machine enters error on LOAD_FAILED',
+  check: async (page: Page) => {
+    // Step 1: verify cropToRange produces empty output for an empty range Set
+    const engineResult = await page.evaluate(async () => {
+      const { midiToCellId, cropToRange } = await import('/src/lib/game-engine.ts');
+      const groups = [
+        { cellIds: [midiToCellId(60)], midiNotes: [60], startMs: 0 },
+        { cellIds: [midiToCellId(62)], midiNotes: [62], startMs: 200 },
+      ];
+      // Empty range: no cells available → all groups must be removed
+      const cropped = cropToRange(groups, new Set());
+      return { croppedCount: cropped.length, isArray: Array.isArray(cropped) };
+    });
+    expect(engineResult.isArray, 'cropToRange must return an array').toBe(true);
+    expect(engineResult.croppedCount, 'empty range Set → all groups removed → 0 groups').toBe(0);
+
+    // Step 2: machine handles LOAD_FAILED as main.ts sends when no groups survive crop
+    const actor = createActor(gameMachine);
+    actor.start();
+    actor.send({ type: 'FILE_DROPPED', file: new File([], 'song.mid') });
+    actor.send({ type: 'LOAD_FAILED', error: 'No notes in calibrated range' });
+    const snap = actor.getSnapshot();
+    actor.stop();
+
+    expect(snap.value, 'machine enters error state when no groups survive range crop').toBe('error');
+    expect(snap.context.error, 'range-crop error message stored for UI display').toBe('No notes in calibrated range');
+  },
+};
+
+/**
+ * D = {}. A single-note group advances immediately on the correct press — no accumulation phase.
+ *
+ * Chord accumulation only matters for multi-note groups. For a group with exactly
+ * one note, `isChordComplete` is immediately true the moment that note is pressed:
+ * withNew = {60}, [60].every(n => {60}.has(n)) → true. The group must advance
+ * to the next in the same event, without any intermediate half-pressed state.
+ * This is the simplest game interaction; if it breaks, no single-note melody
+ * can ever be played through.
+ */
+export const gameEdge5: StateInvariant = {
+  id: 'GAME-EDGE-5',
+  description: 'Single-note group advances immediately on correct press (no chord accumulation phase)',
+  check: async (_page: Page) => {
+    const actor = createActor(gameMachine);
+    actor.start();
+
+    // Two-group song where the first group has exactly ONE note
+    actor.send({ type: 'FILE_DROPPED', file: new File([], 'song.mid') });
+    actor.send({
+      type: 'SONG_LOADED',
+      noteGroups: [
+        { cellIds: ['0_0'], midiNotes: [60], startMs: 0 },
+        { cellIds: ['1_0'], midiNotes: [62], startMs: 200 },
+      ],
+    });
+
+    const beforeIndex = actor.getSnapshot().context.currentGroupIndex;
+
+    // Single correct press must advance the group immediately (isChordComplete fires at once)
+    actor.send({ type: 'NOTE_PRESSED', cellId: '0_0', midiNote: 60 });
+    const snap = actor.getSnapshot();
+
+    actor.stop();
+
+    expect(beforeIndex, 'group index starts at 0').toBe(0);
+    expect(snap.value, 'machine remains in playing (second group still pending)').toBe('playing');
+    expect(snap.context.currentGroupIndex, 'single-note group advances to index 1 immediately on correct press').toBe(1);
+    expect(snap.context.pressedMidiNotes.length, 'pressedMidiNotes cleared after group advance').toBe(0);
+  },
+};

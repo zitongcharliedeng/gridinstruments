@@ -136,6 +136,14 @@ import {
     gameSm9PlayingReset,
     gameSm10WrongNoteNoop,
     gameSm11TuningWarnAck,
+    gameInput1,
+    gameInput2,
+    gameInput3,
+    gameEdge1,
+    gameEdge2,
+    gameEdge3,
+    gameEdge4,
+    gameEdge5,
   } from './machines/invariant-checks';
 import { focusReturnCheck } from './machines/modifierCompoundMachine';
 
@@ -685,6 +693,38 @@ test.describe('[Structural] state-independent invariants', () => {
 
   test('GAME-SM-11: TUNING_WARN_ACK sets tuningWarnAcknowledged flag in context', async ({ page }) => {
     await gameSm11TuningWarnAck.check(page);
+  });
+
+  test('GAME-INPUT-1: NOTE_PRESSED with correct midiNote field advances currentGroupIndex', async ({ page }) => {
+    await gameInput1.check(page);
+  });
+
+  test('GAME-INPUT-2: NOTE_PRESSED with wrong midiNote is rejected: state, index, and accumulator unchanged', async ({ page }) => {
+    await gameInput2.check(page);
+  });
+
+  test('GAME-INPUT-3: NOTE_PRESSED matches by midiNote only — arbitrary cellId with correct midiNote advances group', async ({ page }) => {
+    await gameInput3.check(page);
+  });
+
+  test('GAME-EDGE-1: Non-MIDI file: machine enters loading then error (file type validation is in main.ts, not machine)', async ({ page }) => {
+    await gameEdge1.check(page);
+  });
+
+  test('GAME-EDGE-2: Drum-only events → buildNoteGroups returns empty; machine enters error on LOAD_FAILED', async ({ page }) => {
+    await gameEdge2.check(page);
+  });
+
+  test('GAME-EDGE-3: Pressing same correct note twice: deduped to 1 entry, two-note chord does not advance', async ({ page }) => {
+    await gameEdge3.check(page);
+  });
+
+  test('GAME-EDGE-4: cropToRange with empty Set removes all groups; machine enters error on LOAD_FAILED', async ({ page }) => {
+    await gameEdge4.check(page);
+  });
+
+  test('GAME-EDGE-5: Single-note group advances immediately on correct press (no chord accumulation phase)', async ({ page }) => {
+    await gameEdge5.check(page);
   });
  });
 
