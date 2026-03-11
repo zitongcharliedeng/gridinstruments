@@ -111,6 +111,13 @@ import {
     gameTuningLock,
     gameCalibrationVisualApi,
     gameCalibrationVisualDim,
+    gameEngBuildNoteGroups1,
+    gameEngBuildNoteGroups2,
+    gameEngTransposeSong,
+    gameEngCropToRange,
+    gameEngFindOptimalTransposition,
+    gameEngComputeMedianMidiNote,
+    gameEngBuildNoteGroupsEmpty,
   } from './machines/invariant-checks';
 import { focusReturnCheck } from './machines/modifierCompoundMachine';
 
@@ -560,6 +567,34 @@ test.describe('[Structural] state-independent invariants', () => {
 
   test('GAME-CAL-4: uncalibrated cells render darker than normal cells', async ({ page }) => {
     await gameCalibrationVisualDim.check(page);
+  });
+
+  test('GAME-ENG-1: buildNoteGroups groups notes within 20ms window into one chord group', async ({ page }) => {
+    await gameEngBuildNoteGroups1.check(page);
+  });
+
+  test('GAME-ENG-2: buildNoteGroups deduplicates cellIds within a single chord group', async ({ page }) => {
+    await gameEngBuildNoteGroups2.check(page);
+  });
+
+  test('GAME-ENG-3: transposeSong shifts all midiNotes by N semitones and recalculates cellIds', async ({ page }) => {
+    await gameEngTransposeSong.check(page);
+  });
+
+  test('GAME-ENG-4: cropToRange removes notes not in range and drops empty groups', async ({ page }) => {
+    await gameEngCropToRange.check(page);
+  });
+
+  test('GAME-ENG-5: findOptimalTransposition returns the semitone offset that maximises in-range notes', async ({ page }) => {
+    await gameEngFindOptimalTransposition.check(page);
+  });
+
+  test('GAME-ENG-6: computeMedianMidiNote returns median pitch or 62 for empty input', async ({ page }) => {
+    await gameEngComputeMedianMidiNote.check(page);
+  });
+
+  test('GAME-ENG-7: buildNoteGroups returns empty array for empty NoteEvent input', async ({ page }) => {
+    await gameEngBuildNoteGroupsEmpty.check(page);
   });
  });
 

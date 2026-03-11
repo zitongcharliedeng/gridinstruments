@@ -2343,3 +2343,264 @@ export const gameCalibrationVisualDim: StateInvariant = {
     expect(afterSum, 'canvas should be darker when all cells are uncalibrated').toBeLessThan(beforeSum);
   },
 };
+
+// ── GAME-ENG-* : pure game-engine function coverage ──────────────────────────
+// These tests exercise buildNoteGroups, transposeSong, cropToRange,
+// findOptimalTransposition, and computeMedianMidiNote directly via browser
+// import, matching the GAME-INT-2 page.evaluate pattern. No fixture fetch is
+// needed — all inputs are constructed inline.
+
+/**
+ * D = {}. buildNoteGroups correctly groups simultaneous notes within CHORD_THRESHOLD_MS (20ms).
+ *
+ * Three note events: two at 0 ms and 10 ms (delta = 10 ms ≤ 20 ms → one chord group),
+ * plus one at 500 ms (delta = 500 ms > 20 ms → separate group).
+ * Verifies that the grouping boundary is correctly placed and startMs is preserved.
+ * Catches off-by-one errors in the threshold comparison and off-order sorting.
+ */
+export const gameEngBuildNoteGroups1: StateInvariant = {
+  id: 'GAME-ENG-1',
+  description: 'buildNoteGroups groups notes within 20 ms window into one chord group',
+  check: async (page: Page) => {
+    const result = await page.evaluate(async () => {
+      const { buildNoteGroups } = await import('/src/lib/game-engine.ts');
+      const events = [
+        { midiNote: 60, startMs: 0,   durationMs: 100, velocity: 80, channel: 0, track: 0 },
+        { midiNote: 64, startMs: 10,  durationMs: 100, velocity: 80, channel: 0, track: 0 },
+        { midiNote: 67, startMs: 500, durationMs: 100, velocity: 80, channel: 0, track: 0 },
+      ];
+      const groups = buildNoteGroups(events);
+      return {
+        groupCount:          groups.length,
+        firstGroupCellCount: groups[0]?.cellIds.length ?? -1,
+        secondGroupCellCount: groups[1]?.cellIds.length ?? -1,
+        firstGroupStartMs:   groups[0]?.startMs ?? -1,
+        secondGroupStartMs:  groups[1]?.startMs ?? -1,
+        firstHasNote60:      groups[0]?.midiNotes.includes(60) ?? false,
+        firstHasNote64:      groups[0]?.midiNotes.includes(64) ?? false,
+        secondNote:          groups[1]?.midiNotes[0] ?? -1,
+      };
+    });
+    expect(result.groupCount, 'two distinct time windows → 2 groups').toBe(2);
+    expect(result.firstGroupCellCount, 'first group contains both near-simultaneous notes').toBe(2);
+    expect(result.secondGroupCellCount, 'second group contains the distant note').toBe(1);
+    expect(result.firstGroupStartMs, 'first group startMs anchored to earliest event').toBe(0);
+    expect(result.secondGroupStartMs, 'second group startMs matches its event').toBe(500);
+    expect(result.firstHasNote60, 'MIDI 60 in first group').toBe(true);
+    expect(result.firstHasNote64, 'MIDI 64 in first group').toBe(true);
+    expect(result.secondNote, 'MIDI 67 is the lone second-group note').toBe(67);
+  },
+};
+
+/**
+ * D = {}. buildNoteGroups deduplicates cellIds when two events map to the same grid cell.
+ *
+ * On an isomorphic grid, two NoteEvents with the same midiNote produce the same
+ * cellId via midiToCellId(). When both fall within the 20 ms chord window, the
+ * second must be silently discarded so the group contains only one copy of that
+ * cell. Without deduplication, a song with repeated same-pitch rapid events
+ * would produce duplicate target cellIds, breaking chord-completion counting.
+ */
+export const gameEngBuildNoteGroups2: StateInvariant = {
+  id: 'GAME-ENG-2',
+  description: 'buildNoteGroups deduplicates cellIds within a single chord group',
+  check: async (page: Page) => {
+    const result = await page.evaluate(async () => {
+      const { buildNoteGroups } = await import('/src/lib/game-engine.ts');
+      // Two events with identical midiNote (same cellId) 5 ms apart (within 20 ms threshold)
+      const events = [
+        { midiNote: 60, startMs: 0, durationMs: 100, velocity: 80, channel: 0, track: 0 },
+        { midiNote: 60, startMs: 5, durationMs: 100, velocity: 80, channel: 0, track: 0 },
+      ];
+      const groups = buildNoteGroups(events);
+      return {
+        groupCount:  groups.length,
+        cellCount:   groups[0]?.cellIds.length ?? -1,
+        midiCount:   groups[0]?.midiNotes.length ?? -1,
+        midiNote:    groups[0]?.midiNotes[0] ?? -1,
+      };
+    });
+    expect(result.groupCount, 'two events in same window → exactly 1 group').toBe(1);
+    expect(result.cellCount, 'duplicate cellId is discarded → 1 unique cellId').toBe(1);
+    expect(result.midiCount, 'only one midiNote kept after deduplication').toBe(1);
+    expect(result.midiNote, 'the retained midiNote is the original').toBe(60);
+  },
+};
+
+/**
+ * D = {}. transposeSong shifts every midiNote by the given semitone offset.
+ *
+ * A two-group song (C4=60, E4=64) transposed by +2 semitones should yield
+ * (D4=62, F#4=66). The cellIds must be recalculated from the transposed MIDI
+ * values (not carried over from the originals), and startMs must be preserved
+ * unchanged. Catches bugs where transposition updates midiNotes but forgets to
+ * recompute cellIds, or where startMs is accidentally zeroed.
+ */
+export const gameEngTransposeSong: StateInvariant = {
+  id: 'GAME-ENG-3',
+  description: 'transposeSong shifts all midiNotes by N semitones and recalculates cellIds',
+  check: async (page: Page) => {
+    const result = await page.evaluate(async () => {
+      const { midiToCellId, transposeSong } = await import('/src/lib/game-engine.ts');
+      const groups = [
+        { cellIds: [midiToCellId(60)], midiNotes: [60], startMs: 0   },
+        { cellIds: [midiToCellId(64)], midiNotes: [64], startMs: 200 },
+      ];
+      const transposed = transposeSong(groups, 2);
+      return {
+        groupCount:       transposed.length,
+        firstMidiNote:    transposed[0]?.midiNotes[0] ?? -1,
+        secondMidiNote:   transposed[1]?.midiNotes[0] ?? -1,
+        firstCellId:      transposed[0]?.cellIds[0] ?? '',
+        firstStartMs:     transposed[0]?.startMs ?? -1,
+        secondStartMs:    transposed[1]?.startMs ?? -1,
+        expectedCellId62: midiToCellId(62),   // what MIDI 62 produces
+        expectedCellId66: midiToCellId(66),   // what MIDI 66 produces
+      };
+    });
+    expect(result.groupCount, 'group count unchanged after transposition').toBe(2);
+    expect(result.firstMidiNote, 'C4 (60) + 2 semitones = D4 (62)').toBe(62);
+    expect(result.secondMidiNote, 'E4 (64) + 2 semitones = F#4 (66)').toBe(66);
+    expect(result.firstCellId, 'cellId recalculated for transposed MIDI 62').toBe(result.expectedCellId62);
+    expect(result.firstStartMs, 'startMs of first group preserved').toBe(0);
+    expect(result.secondStartMs, 'startMs of second group preserved').toBe(200);
+  },
+};
+
+/**
+ * D = {}. cropToRange keeps only cellIds present in the available range set.
+ *
+ * Three input groups:
+ *   - C4-only group (cellId NOT in range) → removed entirely
+ *   - D4-only group (cellId IN range) → kept intact
+ *   - Mixed group with C4 + D4 (only D4 in range) → C4 removed, D4 kept
+ *
+ * Verifies that both whole-group removal and partial-note removal work correctly,
+ * and that the output preserves midiNotes in sync with their cellIds.
+ * Catches bugs where the filter removes whole groups but leaves partial ones
+ * intact, or where midiNotes fall out of sync with cellIds after filtering.
+ */
+export const gameEngCropToRange: StateInvariant = {
+  id: 'GAME-ENG-4',
+  description: 'cropToRange removes notes not in range and drops empty groups',
+  check: async (page: Page) => {
+    const result = await page.evaluate(async () => {
+      const { midiToCellId, cropToRange } = await import('/src/lib/game-engine.ts');
+      const cellId60 = midiToCellId(60);  // C4 — will be out of range
+      const cellId62 = midiToCellId(62);  // D4 — will be in range
+      const groups = [
+        { cellIds: [cellId60],           midiNotes: [60],     startMs: 0    },
+        { cellIds: [cellId62],           midiNotes: [62],     startMs: 500  },
+        { cellIds: [cellId60, cellId62], midiNotes: [60, 62], startMs: 1000 },
+      ];
+      const range = new Set([cellId62]);  // only D4 is in range
+      const cropped = cropToRange(groups, range);
+      return {
+        croppedCount:          cropped.length,
+        firstNote:             cropped[0]?.midiNotes[0] ?? -1,
+        firstCellId:           cropped[0]?.cellIds[0] ?? '',
+        firstStartMs:          cropped[0]?.startMs ?? -1,
+        secondGroupNoteCount:  cropped[1]?.cellIds.length ?? -1,
+        secondGroupMidiNote:   cropped[1]?.midiNotes[0] ?? -1,
+        cellId62,
+      };
+    });
+    // Group 0 (C4 only) → fully removed; groups 1 and 2 survive (possibly trimmed)
+    expect(result.croppedCount, 'C4-only group removed; D4-only and mixed groups kept').toBe(2);
+    expect(result.firstNote, 'first surviving group contains D4').toBe(62);
+    expect(result.firstCellId, 'first surviving group cellId matches D4').toBe(result.cellId62);
+    expect(result.firstStartMs, 'first surviving group startMs preserved').toBe(500);
+    expect(result.secondGroupNoteCount, 'mixed group retains exactly 1 note (D4)').toBe(1);
+    expect(result.secondGroupMidiNote, 'only D4 remains in mixed group after cropping').toBe(62);
+  },
+};
+
+/**
+ * D = {}. findOptimalTransposition returns the semitone offset maximising notes in range.
+ *
+ * A one-note song (C4 = MIDI 60) against a range containing only D4 (MIDI 62).
+ * The search space is [-24, +24]. At semitones = +2, MIDI 60 → 62 lands in range
+ * (count = 1). At semitones = 0, MIDI 60 is not in range (count = 0).
+ * The function must return +2 as the global optimum.
+ * Also verifies tie-breaking: among equal-count transpositions, the one closest
+ * to 0 is preferred (not tested here — but a known property guarded elsewhere).
+ */
+export const gameEngFindOptimalTransposition: StateInvariant = {
+  id: 'GAME-ENG-5',
+  description: 'findOptimalTransposition returns the semitone offset that maximises in-range notes',
+  check: async (page: Page) => {
+    const result = await page.evaluate(async () => {
+      const { midiToCellId, findOptimalTransposition } = await import('/src/lib/game-engine.ts');
+      const cellId62 = midiToCellId(62);  // D4 — the only in-range cell
+      // Song: one note at C4 (MIDI 60).  Transposing by +2 → D4 → in range.
+      const groups = [
+        { cellIds: [midiToCellId(60)], midiNotes: [60], startMs: 0 },
+      ];
+      const range = new Set([cellId62]);
+      const optimal = findOptimalTransposition(groups, range);
+      return { optimal };
+    });
+    expect(result.optimal, 'transposing C4 by +2 semitones maps it to D4 which is in range').toBe(2);
+  },
+};
+
+/**
+ * D = {}. computeMedianMidiNote returns the median pitch of the input, defaulting to 62 (D) for empty.
+ *
+ * Empty input → 62: the D-reference default ensures a sensible auto-center
+ * when no song has been loaded yet.
+ * Odd-count input [60, 62, 64] → sorted median at index 1 = 62.
+ * Even-count input [60, 64] → floor(2/2) = index 1 → 64.
+ * Catches regressions where the default changes from D or the sort order is
+ * broken (e.g. lexicographic instead of numeric).
+ */
+export const gameEngComputeMedianMidiNote: StateInvariant = {
+  id: 'GAME-ENG-6',
+  description: 'computeMedianMidiNote returns median pitch or 62 for empty input',
+  check: async (page: Page) => {
+    const result = await page.evaluate(async () => {
+      const { computeMedianMidiNote } = await import('/src/lib/game-engine.ts');
+      const emptyResult = computeMedianMidiNote([]);
+      // Odd-length: [64, 60, 62] → sorted [60, 62, 64] → floor(3/2)=1 → 62
+      const oddResult = computeMedianMidiNote([
+        { midiNote: 64, startMs: 0,   durationMs: 100, velocity: 80, channel: 0, track: 0 },
+        { midiNote: 60, startMs: 100, durationMs: 100, velocity: 80, channel: 0, track: 0 },
+        { midiNote: 62, startMs: 200, durationMs: 100, velocity: 80, channel: 0, track: 0 },
+      ]);
+      // Even-length: [60, 64] → sorted [60, 64] → floor(2/2)=1 → 64
+      const evenResult = computeMedianMidiNote([
+        { midiNote: 60, startMs: 0,   durationMs: 100, velocity: 80, channel: 0, track: 0 },
+        { midiNote: 64, startMs: 100, durationMs: 100, velocity: 80, channel: 0, track: 0 },
+      ]);
+      return { emptyResult, oddResult, evenResult };
+    });
+    expect(result.emptyResult, 'empty input returns D-reference 62').toBe(62);
+    expect(result.oddResult, 'odd-count [60,62,64]: median at index 1 = 62').toBe(62);
+    expect(result.evenResult, 'even-count [60,64]: floor(2/2)=index 1 = 64').toBe(64);
+  },
+};
+
+/**
+ * D = {}. buildNoteGroups returns an empty array when given an empty events array.
+ *
+ * The empty-input case is a boundary condition that must not throw or return
+ * null/undefined. Game loading logic calls buildNoteGroups on the full parsed
+ * MIDI event list; if the MIDI file is silent (no note events), the result must
+ * be a valid empty array so downstream code (noteGroups.length, etc.) is safe.
+ */
+export const gameEngBuildNoteGroupsEmpty: StateInvariant = {
+  id: 'GAME-ENG-7',
+  description: 'buildNoteGroups returns empty array for empty NoteEvent input',
+  check: async (page: Page) => {
+    const result = await page.evaluate(async () => {
+      const { buildNoteGroups } = await import('/src/lib/game-engine.ts');
+      const groups = buildNoteGroups([]);
+      return {
+        groupCount: groups.length,
+        isArray:    Array.isArray(groups),
+      };
+    });
+    expect(result.isArray, 'result must be an array').toBe(true);
+    expect(result.groupCount, 'empty input produces empty output').toBe(0);
+  },
+};
