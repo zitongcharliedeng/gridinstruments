@@ -145,6 +145,11 @@ import {
     gameEdge4,
     gameEdge5,
     gameSearch1,
+    gameSearch2,
+    gameSearch3,
+    gameSearch4,
+    gameSearch5,
+    gameSearch6,
   } from './machines/invariant-checks';
 import { focusReturnCheck } from './machines/modifierCompoundMachine';
 
@@ -730,6 +735,26 @@ test.describe('[Structural] state-independent invariants', () => {
 
   test('GAME-SEARCH-1: #midi-search-input exists in DOM inside #grid-overlay', async ({ page }) => {
     await gameSearch1.check(page);
+  });
+
+  test('GAME-SEARCH-2: searchAllAdapters returns array, never throws', async ({ page }) => {
+    await gameSearch2.check(page);
+  });
+
+  test('GAME-SEARCH-3: GitHubMidiAdapter results have required fields (title, source, fetchUrl)', async ({ page }) => {
+    await gameSearch3.check(page);
+  });
+
+  test('GAME-SEARCH-4: typing in #midi-search-input triggers search pipeline', async ({ page }) => {
+    await gameSearch4.check(page);
+  });
+
+  test('GAME-SEARCH-5: all 3 MIDI adapters implement MidiSearchAdapter interface', async ({ page }) => {
+    await gameSearch5.check(page);
+  });
+
+  test('GAME-SEARCH-6: #midi-search-input is type=text and #midi-search-results exists', async ({ page }) => {
+    await gameSearch6.check(page);
   });
  });
 

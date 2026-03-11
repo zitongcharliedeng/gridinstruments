@@ -1853,7 +1853,7 @@ export const iss92OverlayHeadingsCheck: StateInvariant = {
     await page.waitForTimeout(300);
     const headings = page.locator('#grid-overlay .overlay-section-title');
     const texts = await headings.allTextContents();
-    for (const expected of ['SOUND', 'VISUAL', 'INPUT', 'GAME']) {
+    for (const expected of ['SOUND', 'VISUAL', 'INPUT', 'GAME', 'DIFFICULTY']) {
       if (!texts.some(t => t.trim() === expected)) {
         throw new Error(`Missing overlay category heading: ${expected}`);
       }
