@@ -1259,7 +1259,7 @@ Max Concurrent: 5 (Waves 3, 4)
   - Files: `index.html`, `src/main.ts`, `tests/machines/invariant-checks.ts`, `tests/xstate-graph.spec.ts`
   - Pre-commit: `nix develop --command npm run build && nix develop --command npx playwright test --project=firefox --workers=1`
 
-- [ ] 14. Tempo/Time-Signature Extraction + Quantize Function
+- [x] 14. Tempo/Time-Signature Extraction + Quantize Function
 
   **What to do**:
   - **Extend parseMidi output**: Currently returns `NoteEvent[]`. Change to return `{ events: NoteEvent[], tempoMap: TempoEvent[], timeSigMap: TimeSigEvent[] }` where:
@@ -1373,7 +1373,7 @@ Max Concurrent: 5 (Waves 3, 4)
   - Files: `src/lib/midi-parser.ts`, `src/lib/game-engine.ts`, `src/main.ts`
   - Pre-commit: `nix develop --command npm run build && nix develop --command npx playwright test --project=firefox --workers=1`
 
-- [ ] 15. Search Feature Tests
+- [x] 15. Search Feature Tests
 
   **What to do**:
   - Write StateInvariant tests for the MIDI search feature:
@@ -1426,7 +1426,7 @@ Max Concurrent: 5 (Waves 3, 4)
   - Files: `tests/machines/invariant-checks.ts`, `tests/xstate-graph.spec.ts`
   - Pre-commit: `nix develop --command npx playwright test --project=firefox --workers=1`
 
-- [ ] 16. Quantization Difficulty UI + Wiring
+- [x] 16. Quantization Difficulty UI + Wiring
 
   **What to do**:
   - **Add quantization selector to GAME section** in `index.html`:
@@ -1506,7 +1506,7 @@ Max Concurrent: 5 (Waves 3, 4)
   - Files: `index.html`, `src/main.ts`
   - Pre-commit: `nix develop --command npm run build && nix develop --command npx playwright test --project=firefox --workers=1`
 
-- [ ] 17. Quantization Tests
+- [x] 17. Quantization Tests
 
   **What to do**:
   - Write comprehensive StateInvariant tests for quantization:
