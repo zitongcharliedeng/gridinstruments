@@ -125,6 +125,17 @@ import {
     gameMidi5,
     gameMidi6,
     gameMidi7,
+    gameSm1IdleToLoading,
+    gameSm2LoadingToPlaying,
+    gameSm3LoadingToError,
+    gameSm4ErrorReset,
+    gameSm5ErrorRetry,
+    gameSm6CompleteNewGame,
+    gameSm7CompleteReset,
+    gameSm8PlayingNewSong,
+    gameSm9PlayingReset,
+    gameSm10WrongNoteNoop,
+    gameSm11TuningWarnAck,
   } from './machines/invariant-checks';
 import { focusReturnCheck } from './machines/modifierCompoundMachine';
 
@@ -630,6 +641,50 @@ test.describe('[Structural] state-independent invariants', () => {
 
   test('GAME-MIDI-7: MIDI with only drum channel (ch9) events returns empty array after filtering', async ({ page }) => {
     await gameMidi7.check(page);
+  });
+
+  test('GAME-SM-1: idle → FILE_DROPPED → loading', async ({ page }) => {
+    await gameSm1IdleToLoading.check(page);
+  });
+
+  test('GAME-SM-2: loading → SONG_LOADED → playing (context initialised: currentGroupIndex=0, startTimeMs set)', async ({ page }) => {
+    await gameSm2LoadingToPlaying.check(page);
+  });
+
+  test('GAME-SM-3: loading → LOAD_FAILED → error (errorMessage stored in context)', async ({ page }) => {
+    await gameSm3LoadingToError.check(page);
+  });
+
+  test('GAME-SM-4: error → GAME_RESET → idle (context fully cleared)', async ({ page }) => {
+    await gameSm4ErrorReset.check(page);
+  });
+
+  test('GAME-SM-5: error → FILE_DROPPED → loading (retry without explicit reset)', async ({ page }) => {
+    await gameSm5ErrorRetry.check(page);
+  });
+
+  test('GAME-SM-6: complete → FILE_DROPPED → loading (new game from complete state)', async ({ page }) => {
+    await gameSm6CompleteNewGame.check(page);
+  });
+
+  test('GAME-SM-7: complete → GAME_RESET → idle', async ({ page }) => {
+    await gameSm7CompleteReset.check(page);
+  });
+
+  test('GAME-SM-8: playing → FILE_DROPPED → loading (new song mid-game, context reset)', async ({ page }) => {
+    await gameSm8PlayingNewSong.check(page);
+  });
+
+  test('GAME-SM-9: playing → GAME_RESET → idle (pressedMidiNotes cleared)', async ({ page }) => {
+    await gameSm9PlayingReset.check(page);
+  });
+
+  test('GAME-SM-10: playing → wrong NOTE_PRESSED → stays in playing (no-op, no accumulation)', async ({ page }) => {
+    await gameSm10WrongNoteNoop.check(page);
+  });
+
+  test('GAME-SM-11: TUNING_WARN_ACK sets tuningWarnAcknowledged flag in context', async ({ page }) => {
+    await gameSm11TuningWarnAck.check(page);
   });
  });
 

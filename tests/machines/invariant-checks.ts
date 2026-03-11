@@ -2075,6 +2075,360 @@ export const gameFreqMatch: StateInvariant = {
   },
 };
 
+// ─── Game State Machine Transition Tests (GAME-SM) ───────────────────────────
+
+/**
+ * D = {}. gameMachine: idle → FILE_DROPPED → loading
+ *
+ * The fundamental entry point of the game flow. When the user drops a MIDI file,
+ * the machine must leave idle and enter loading immediately. If this transition
+ * is broken, no game can ever start — every feature downstream depends on it.
+ */
+export const gameSm1IdleToLoading: StateInvariant = {
+  id: 'GAME-SM-1',
+  description: 'idle → FILE_DROPPED → loading',
+  check: async (_page: Page) => {
+    const actor = createActor(gameMachine);
+    actor.start();
+
+    const initialState = actor.getSnapshot().value as string;
+    actor.send({ type: 'FILE_DROPPED', file: new File([], 'test.mid') });
+    const afterDrop = actor.getSnapshot().value as string;
+
+    actor.stop();
+
+    expect(initialState, 'machine must start in idle').toBe('idle');
+    expect(afterDrop, 'FILE_DROPPED from idle must enter loading').toBe('loading');
+  },
+};
+
+/**
+ * D = {}. gameMachine: loading → SONG_LOADED → playing (context initialised correctly)
+ *
+ * After successful MIDI parsing the machine transitions to playing and initialises
+ * game context: currentGroupIndex resets to 0, startTimeMs is stamped with the
+ * current wall clock so duration tracking is accurate from the first note. If
+ * either value is wrong the scoring/progress system silently breaks.
+ */
+export const gameSm2LoadingToPlaying: StateInvariant = {
+  id: 'GAME-SM-2',
+  description: 'loading → SONG_LOADED → playing (context initialised correctly)',
+  check: async (_page: Page) => {
+    const noteGroups: NoteGroup[] = [
+      { cellIds: ['0_0'], midiNotes: [60], startMs: 0 },
+      { cellIds: ['1_0'], midiNotes: [62], startMs: 200 },
+    ];
+
+    const actor = createActor(gameMachine);
+    actor.start();
+
+    actor.send({ type: 'FILE_DROPPED', file: new File([], 'test.mid') });
+    const before = Date.now();
+    actor.send({ type: 'SONG_LOADED', noteGroups });
+    const after = Date.now();
+
+    const snap = actor.getSnapshot();
+    actor.stop();
+
+    expect(snap.value, 'SONG_LOADED must transition to playing').toBe('playing');
+    expect(snap.context.currentGroupIndex, 'group index must reset to 0').toBe(0);
+    expect(snap.context.startTimeMs, 'startTimeMs must be > 0').toBeGreaterThan(0);
+    expect(snap.context.startTimeMs, 'startTimeMs must be a recent wall-clock value').toBeGreaterThanOrEqual(before);
+    expect(snap.context.startTimeMs, 'startTimeMs must not be in the future').toBeLessThanOrEqual(after + 10);
+    expect(snap.context.noteGroups.length, 'noteGroups must be stored').toBe(2);
+  },
+};
+
+/**
+ * D = {}. gameMachine: loading → LOAD_FAILED → error (errorMessage stored in context)
+ *
+ * When MIDI parsing fails (corrupt file, unsupported format) the machine enters
+ * an explicit `error` state and stores the error message in context. The error
+ * message is surfaced to the user in the UI — if it isn't stored, the error
+ * panel shows nothing and the user has no idea what went wrong.
+ */
+export const gameSm3LoadingToError: StateInvariant = {
+  id: 'GAME-SM-3',
+  description: 'loading → LOAD_FAILED → error (errorMessage stored in context)',
+  check: async (_page: Page) => {
+    const actor = createActor(gameMachine);
+    actor.start();
+
+    actor.send({ type: 'FILE_DROPPED', file: new File([], 'bad.mid') });
+    actor.send({ type: 'LOAD_FAILED', error: 'Invalid MThd magic bytes' });
+
+    const snap = actor.getSnapshot();
+    actor.stop();
+
+    expect(snap.value, 'LOAD_FAILED must transition to error state').toBe('error');
+    expect(snap.context.error, 'error message must be stored in context').toBe('Invalid MThd magic bytes');
+  },
+};
+
+/**
+ * D = {}. gameMachine: error → GAME_RESET → idle (context fully cleared)
+ *
+ * From the error state the user can click reset to return to idle. This is the
+ * primary recovery flow. The reset action must clear ALL context fields back to
+ * their initial values — stale error messages or leftover noteGroups leaking into
+ * the next game session would cause subtle UI or logic bugs.
+ */
+export const gameSm4ErrorReset: StateInvariant = {
+  id: 'GAME-SM-4',
+  description: 'error → GAME_RESET → idle (context cleared)',
+  check: async (_page: Page) => {
+    const actor = createActor(gameMachine);
+    actor.start();
+
+    actor.send({ type: 'FILE_DROPPED', file: new File([], 'bad.mid') });
+    actor.send({ type: 'LOAD_FAILED', error: 'parse failure' });
+    actor.send({ type: 'GAME_RESET' });
+
+    const snap = actor.getSnapshot();
+    actor.stop();
+
+    expect(snap.value, 'GAME_RESET from error must return to idle').toBe('idle');
+    expect(snap.context.error, 'error must be cleared after reset').toBeNull();
+    expect(snap.context.noteGroups.length, 'noteGroups must be empty after reset').toBe(0);
+    expect(snap.context.currentGroupIndex, 'currentGroupIndex must be 0 after reset').toBe(0);
+    expect(snap.context.tuningWarnAcknowledged, 'tuningWarnAcknowledged must reset to false').toBe(false);
+  },
+};
+
+/**
+ * D = {}. gameMachine: error → FILE_DROPPED → loading (retry without explicit reset)
+ *
+ * The user should be able to drop a new MIDI file directly from the error state —
+ * a common UX pattern for "try again with a different file". This avoids requiring
+ * an explicit reset before each retry and is critical for a low-friction experience.
+ */
+export const gameSm5ErrorRetry: StateInvariant = {
+  id: 'GAME-SM-5',
+  description: 'error → FILE_DROPPED → loading (retry without explicit reset)',
+  check: async (_page: Page) => {
+    const actor = createActor(gameMachine);
+    actor.start();
+
+    actor.send({ type: 'FILE_DROPPED', file: new File([], 'bad.mid') });
+    actor.send({ type: 'LOAD_FAILED', error: 'bad file' });
+
+    const errorState = actor.getSnapshot().value as string;
+
+    actor.send({ type: 'FILE_DROPPED', file: new File([], 'good.mid') });
+    const afterRetry = actor.getSnapshot().value as string;
+
+    actor.stop();
+
+    expect(errorState, 'machine must be in error before retry').toBe('error');
+    expect(afterRetry, 'FILE_DROPPED from error must enter loading').toBe('loading');
+  },
+};
+
+/**
+ * D = {}. gameMachine: complete → FILE_DROPPED → loading (new game from complete state)
+ *
+ * After successfully completing a song, the user should be able to drop a new MIDI
+ * file to start a new game without resetting first. This mirrors the error→loading
+ * shortcut and ensures the complete state doesn't become a dead end.
+ */
+export const gameSm6CompleteNewGame: StateInvariant = {
+  id: 'GAME-SM-6',
+  description: 'complete → FILE_DROPPED → loading (new game from complete state)',
+  check: async (_page: Page) => {
+    const actor = createActor(gameMachine);
+    actor.start();
+
+    // Reach complete via a single-note song
+    actor.send({ type: 'FILE_DROPPED', file: new File([], 'song.mid') });
+    actor.send({ type: 'SONG_LOADED', noteGroups: [{ cellIds: ['0_0'], midiNotes: [60], startMs: 0 }] });
+    actor.send({ type: 'NOTE_PRESSED', cellId: '0_0', midiNote: 60 });
+
+    const completeState = actor.getSnapshot().value as string;
+
+    actor.send({ type: 'FILE_DROPPED', file: new File([], 'new-song.mid') });
+    const afterDrop = actor.getSnapshot().value as string;
+
+    actor.stop();
+
+    expect(completeState, 'machine must be in complete before new drop').toBe('complete');
+    expect(afterDrop, 'FILE_DROPPED from complete must enter loading').toBe('loading');
+  },
+};
+
+/**
+ * D = {}. gameMachine: complete → GAME_RESET → idle
+ *
+ * From the complete state the user can also reset explicitly to return to idle.
+ * Both recovery paths (FILE_DROPPED and GAME_RESET) must work from complete — the
+ * reset clears all timing and group context so the next game starts with a clean slate.
+ */
+export const gameSm7CompleteReset: StateInvariant = {
+  id: 'GAME-SM-7',
+  description: 'complete → GAME_RESET → idle',
+  check: async (_page: Page) => {
+    const actor = createActor(gameMachine);
+    actor.start();
+
+    // Reach complete via a single-note song
+    actor.send({ type: 'FILE_DROPPED', file: new File([], 'song.mid') });
+    actor.send({ type: 'SONG_LOADED', noteGroups: [{ cellIds: ['0_0'], midiNotes: [60], startMs: 0 }] });
+    actor.send({ type: 'NOTE_PRESSED', cellId: '0_0', midiNote: 60 });
+
+    const completeState = actor.getSnapshot().value as string;
+
+    actor.send({ type: 'GAME_RESET' });
+    const snap = actor.getSnapshot();
+
+    actor.stop();
+
+    expect(completeState, 'machine must be in complete before reset').toBe('complete');
+    expect(snap.value, 'GAME_RESET from complete must return to idle').toBe('idle');
+    expect(snap.context.noteGroups.length, 'noteGroups must be cleared').toBe(0);
+    expect(snap.context.startTimeMs, 'startTimeMs must be reset to 0').toBe(0);
+    expect(snap.context.finishTimeMs, 'finishTimeMs must be reset to 0').toBe(0);
+  },
+};
+
+/**
+ * D = {}. gameMachine: playing → FILE_DROPPED → loading (new song mid-game, context reset)
+ *
+ * Added in T3: the playing state now accepts FILE_DROPPED so the user can load a
+ * new song without explicitly resetting first. The transition also fires the
+ * resetGame action so no stale game state (noteGroups, startTimeMs, etc.) leaks
+ * into the new load cycle.
+ */
+export const gameSm8PlayingNewSong: StateInvariant = {
+  id: 'GAME-SM-8',
+  description: 'playing → FILE_DROPPED → loading (new song mid-game, context reset)',
+  check: async (_page: Page) => {
+    const actor = createActor(gameMachine);
+    actor.start();
+
+    actor.send({ type: 'FILE_DROPPED', file: new File([], 'song1.mid') });
+    actor.send({ type: 'SONG_LOADED', noteGroups: [{ cellIds: ['0_0'], midiNotes: [60], startMs: 0 }] });
+
+    const playingState = actor.getSnapshot().value as string;
+
+    actor.send({ type: 'FILE_DROPPED', file: new File([], 'song2.mid') });
+    const snap = actor.getSnapshot();
+
+    actor.stop();
+
+    expect(playingState, 'machine must be in playing before new drop').toBe('playing');
+    expect(snap.value, 'FILE_DROPPED from playing must enter loading').toBe('loading');
+    expect(snap.context.noteGroups.length, 'noteGroups must be cleared by resetGame action').toBe(0);
+    expect(snap.context.startTimeMs, 'startTimeMs must be reset to 0').toBe(0);
+  },
+};
+
+/**
+ * D = {}. gameMachine: playing → GAME_RESET → idle (pressedMidiNotes cleared)
+ *
+ * Resetting mid-game must clear `pressedMidiNotes` so partial chord state from the
+ * abandoned game cannot influence the next session. This is tested with a note
+ * already accumulated in a two-note chord to confirm the action clears non-empty
+ * arrays correctly — the most critical form of the reset invariant.
+ */
+export const gameSm9PlayingReset: StateInvariant = {
+  id: 'GAME-SM-9',
+  description: 'playing → GAME_RESET → idle (pressedMidiNotes cleared)',
+  check: async (_page: Page) => {
+    const actor = createActor(gameMachine);
+    actor.start();
+
+    actor.send({ type: 'FILE_DROPPED', file: new File([], 'song.mid') });
+    actor.send({
+      type: 'SONG_LOADED',
+      noteGroups: [{ cellIds: ['0_0', '1_0'], midiNotes: [60, 64], startMs: 0 }],
+    });
+
+    // Press first note of a two-note chord so pressedMidiNotes is non-empty
+    actor.send({ type: 'NOTE_PRESSED', cellId: '0_0', midiNote: 60 });
+    const pressedBefore = actor.getSnapshot().context.pressedMidiNotes;
+
+    actor.send({ type: 'GAME_RESET' });
+    const snap = actor.getSnapshot();
+
+    actor.stop();
+
+    expect(pressedBefore.length, 'one note must be accumulated before reset').toBe(1);
+    expect(snap.value, 'GAME_RESET from playing must return to idle').toBe('idle');
+    expect(snap.context.pressedMidiNotes.length, 'pressedMidiNotes must be empty after reset').toBe(0);
+    expect(snap.context.noteGroups.length, 'noteGroups must be empty after reset').toBe(0);
+  },
+};
+
+/**
+ * D = {}. gameMachine: playing → wrong NOTE_PRESSED → stays in playing (no-op)
+ *
+ * A wrong note (midiNote not in the current group's midiNotes) must be silently
+ * ignored: the machine stays in `playing`, the group index does not advance, and
+ * the wrong note is NOT accumulated in pressedMidiNotes. This is essential UX —
+ * stray keystrokes or accidental MIDI input must never corrupt game state.
+ */
+export const gameSm10WrongNoteNoop: StateInvariant = {
+  id: 'GAME-SM-10',
+  description: 'playing → wrong NOTE_PRESSED → stays in playing, no state change',
+  check: async (_page: Page) => {
+    const actor = createActor(gameMachine);
+    actor.start();
+
+    actor.send({ type: 'FILE_DROPPED', file: new File([], 'song.mid') });
+    actor.send({
+      type: 'SONG_LOADED',
+      noteGroups: [
+        { cellIds: ['0_0'], midiNotes: [60], startMs: 0 },
+        { cellIds: ['1_0'], midiNotes: [62], startMs: 200 },
+      ],
+    });
+
+    // Send a wrong note (61 is NOT in midiNotes [60])
+    actor.send({ type: 'NOTE_PRESSED', cellId: '0_0', midiNote: 61 });
+    const snap = actor.getSnapshot();
+
+    actor.stop();
+
+    expect(snap.value, 'wrong note must not change state').toBe('playing');
+    expect(snap.context.currentGroupIndex, 'wrong note must not advance the group index').toBe(0);
+    expect(snap.context.pressedMidiNotes.length, 'wrong note must not be accumulated').toBe(0);
+  },
+};
+
+/**
+ * D = {}. gameMachine: TUNING_WARN_ACK sets tuningWarnAcknowledged flag in context
+ *
+ * When the user plays with a non-standard tuning the UI shows a warning overlay.
+ * TUNING_WARN_ACK records that the user dismissed the warning so it is not shown
+ * again for the rest of the session. If the flag is not written correctly, the
+ * warning re-appears every time the user presses a note, breaking the UX.
+ * The machine must stay in `playing` — this is a context mutation, not a transition.
+ */
+export const gameSm11TuningWarnAck: StateInvariant = {
+  id: 'GAME-SM-11',
+  description: 'playing → TUNING_WARN_ACK → tuningWarnAcknowledged becomes true',
+  check: async (_page: Page) => {
+    const actor = createActor(gameMachine);
+    actor.start();
+
+    actor.send({ type: 'FILE_DROPPED', file: new File([], 'song.mid') });
+    actor.send({
+      type: 'SONG_LOADED',
+      noteGroups: [{ cellIds: ['0_0'], midiNotes: [60], startMs: 0 }],
+    });
+
+    const beforeAck = actor.getSnapshot().context.tuningWarnAcknowledged;
+
+    actor.send({ type: 'TUNING_WARN_ACK' });
+    const snap = actor.getSnapshot();
+
+    actor.stop();
+
+    expect(beforeAck, 'tuningWarnAcknowledged must start false').toBe(false);
+    expect(snap.value, 'state must remain playing after TUNING_WARN_ACK').toBe('playing');
+    expect(snap.context.tuningWarnAcknowledged, 'TUNING_WARN_ACK must set flag to true').toBe(true);
+  },
+};
+
 /**
  * D = {}. Frequency-based matching: wrong midiNote is rejected even if cellId looks valid.
  *
