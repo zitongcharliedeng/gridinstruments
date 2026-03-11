@@ -961,7 +961,7 @@ Max Concurrent: 5 (Waves 3, 4)
   - Files: `tests/machines/invariant-checks.ts`, `tests/xstate-graph.spec.ts`
   - Pre-commit: `nix develop --command npx playwright test --project=firefox --workers=1`
 
-- [ ] 10. Update Golden Screenshots
+- [x] 10. Update Golden Screenshots
 
   **What to do**:
   - After all visual changes (T3 target highlights, T4 calibration grey-out, T5 progress bar/timer), golden screenshot baselines will be stale
@@ -1014,7 +1014,7 @@ Max Concurrent: 5 (Waves 3, 4)
   - Files: `tests/xstate-graph.spec.ts-snapshots/*`
   - Pre-commit: `nix develop --command npx playwright test --project=firefox --workers=1`
 
-- [ ] 11. MIDI Search: Adapter Interface + GitHub Adapter
+- [x] 11. MIDI Search: Adapter Interface + GitHub Adapter
 
   **What to do**:
   - Create `src/lib/midi-search.ts` with:
@@ -1106,7 +1106,7 @@ Max Concurrent: 5 (Waves 3, 4)
   - Files: `src/lib/midi-search.ts`
   - Pre-commit: `nix develop --command npm run build`
 
-- [ ] 12. MIDI Search: midishare.dev Adapter
+- [x] 12. MIDI Search: midishare.dev Adapter
 
   **What to do**:
   - Add `MidishareMidiAdapter` class to `src/lib/midi-search.ts` implementing `MidiSearchAdapter`
