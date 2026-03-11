@@ -2604,3 +2604,311 @@ export const gameEngBuildNoteGroupsEmpty: StateInvariant = {
     expect(result.groupCount, 'empty input produces empty output').toBe(0);
   },
 };
+
+// ── GAME-MIDI: MIDI parser edge cases ─────────────────────────────────────────
+
+/**
+ * D = {}. Type 1 (multi-track) MIDI is merged into a single NoteEvent stream.
+ *
+ * MIDI Type 1 stores each instrument on its own track. The parser must merge
+ * all tracks' note events into one time-ordered array. If track merging is
+ * broken, only track-0 events would appear — or the result might be empty.
+ * The `type1-two-tracks.mid` fixture contains two non-drum tracks, so a
+ * correct parse must yield more than zero events, all with valid structure.
+ */
+export const gameMidi1: StateInvariant = {
+  id: 'GAME-MIDI-1',
+  description: 'Type 1 multi-track MIDI parsed into merged NoteEvent array',
+  check: async (page: Page) => {
+    const result = await page.evaluate(async () => {
+      const { parseMidi } = await import('/src/lib/midi-parser.ts');
+      const resp = await fetch('/tests/fixtures/type1-two-tracks.mid');
+      const buffer = await resp.arrayBuffer();
+      const events = parseMidi(buffer);
+      return {
+        count:          events.length,
+        isArray:        Array.isArray(events),
+        allHaveStartMs: events.every(e => typeof e.startMs === 'number'),
+        allValidNote:   events.every(e => e.midiNote >= 0 && e.midiNote <= 127),
+        noDrums:        events.every(e => e.channel !== 9),
+      };
+    });
+    expect(result.isArray,        'result must be an array').toBe(true);
+    expect(result.count,          'Type 1 fixture should yield note events').toBeGreaterThan(0);
+    expect(result.allHaveStartMs, 'all events have numeric startMs').toBe(true);
+    expect(result.allValidNote,   'all midiNote values in 0-127 range').toBe(true);
+    expect(result.noDrums,        'channel 9 filtered out').toBe(true);
+  },
+};
+
+/**
+ * D = {}. Running status: consecutive channel-voice events that share a status
+ * byte are decoded correctly when the status byte is omitted.
+ *
+ * The MIDI running-status rule lets a transmitter omit the status byte for
+ * consecutive events on the same channel. If the parser fails to carry
+ * `runningStatus` across boundaries, the second and subsequent events in a run
+ * would be mis-parsed — reading data bytes as status bytes, producing wrong
+ * pitches or crashing. The `running-status.mid` fixture encodes NoteOn events
+ * with running status; a correct parse must yield at least one valid note event
+ * with all structural fields populated.
+ */
+export const gameMidi2: StateInvariant = {
+  id: 'GAME-MIDI-2',
+  description: 'Running status: consecutive NoteOn events without repeated status byte are decoded',
+  check: async (page: Page) => {
+    const result = await page.evaluate(async () => {
+      const { parseMidi } = await import('/src/lib/midi-parser.ts');
+      // Type 0 MIDI: note60 (full status 0x90), then note64 via running status (no status byte).
+      // Track bytes: 4 + 3 + 3 + 3 + 4 = 17 = 0x11.
+      const bytes = [
+        0x4D, 0x54, 0x68, 0x64,
+        0x00, 0x00, 0x00, 0x06,
+        0x00, 0x00, 0x00, 0x01, 0x00, 0x60,
+        0x4D, 0x54, 0x72, 0x6B,
+        0x00, 0x00, 0x00, 0x11,
+        0x00, 0x90, 0x3C, 0x40,
+        0x60, 0x3C, 0x00,
+        0x00, 0x40, 0x40,
+        0x60, 0x40, 0x00,
+        0x00, 0xFF, 0x2F, 0x00,
+      ];
+      const buffer = new Uint8Array(bytes).buffer;
+      const events = parseMidi(buffer);
+      const sortedByStart = events.every(
+        (e, i) => i === 0 || events[i - 1].startMs <= e.startMs
+      );
+      return {
+        count:        events.length,
+        notes:        events.map((e: { midiNote: number }) => e.midiNote).sort((a: number, b: number) => a - b),
+        allHaveDur:   events.every((e: { durationMs: number }) => typeof e.durationMs === 'number' && e.durationMs >= 0),
+        sortedByStart,
+      };
+    });
+    expect(result.count,         'two notes decoded via running status').toBe(2);
+    expect(result.notes,         'note60 and note64 both decoded').toEqual([60, 64]);
+    expect(result.allHaveDur,    'all events have non-negative durationMs').toBe(true);
+    expect(result.sortedByStart, 'events sorted by startMs').toBe(true);
+  },
+};
+
+/**
+ * D = {}. NoteOn with velocity=0 is treated as NoteOff per the MIDI spec.
+ *
+ * The MIDI 1.0 specification (section 2.2) states that a NoteOn message with
+ * velocity=0 is equivalent to NoteOff. This allows devices that only emit
+ * NoteOn messages to express note release using running status. The parser
+ * must:
+ *   1. Treat vel=0 as a note-close signal (adds the pending note to output).
+ *   2. Not add a separate zero-velocity event to the result.
+ * Test: NoteOn note60 vel=64, then NoteOn note60 vel=0 (running status).
+ * Expected: exactly 1 NoteEvent with velocity=64, no zero-velocity events.
+ */
+export const gameMidi3: StateInvariant = {
+  id: 'GAME-MIDI-3',
+  description: 'Velocity-0 NoteOn treated as NoteOff: closes pending note, not emitted as note-on',
+  check: async (page: Page) => {
+    const result = await page.evaluate(async () => {
+      const { parseMidi } = await import('/src/lib/midi-parser.ts');
+      // Type 0 MIDI: NoteOn note60 vel=64, then NoteOn note60 vel=0 (running status = NoteOff).
+      // Track length = 4 (NoteOn) + 3 (running status NoteOff) + 4 (EndOfTrack) = 11 = 0x0B bytes.
+      const bytes = [
+        // MThd
+        0x4D, 0x54, 0x68, 0x64,
+        0x00, 0x00, 0x00, 0x06, // header length = 6
+        0x00, 0x00,             // format 0
+        0x00, 0x01,             // 1 track
+        0x00, 0x60,             // 96 ticks/quarter
+        // MTrk
+        0x4D, 0x54, 0x72, 0x6B,
+        0x00, 0x00, 0x00, 0x0B, // track length = 11 bytes
+        // delta=0, NoteOn ch0 note60 (C4) vel=64
+        0x00, 0x90, 0x3C, 0x40,
+        // delta=96 (0x60), running status, note60 vel=0 — acts as NoteOff
+        0x60, 0x3C, 0x00,
+        // End of track
+        0x00, 0xFF, 0x2F, 0x00,
+      ];
+      const buffer = new Uint8Array(bytes).buffer;
+      const events = parseMidi(buffer);
+      return {
+        count:              events.length,
+        firstNote:          events[0] !== undefined ? events[0].midiNote    : -1,
+        firstVelocity:      events[0] !== undefined ? events[0].velocity    : -1,
+        anyZeroVelEvents:   events.some(e => e.velocity === 0),
+      };
+    });
+    expect(result.count,           'exactly 1 note event: vel=0 closes, does not emit').toBe(1);
+    expect(result.firstNote,       'note is MIDI 60 (C4)').toBe(60);
+    expect(result.firstVelocity,   'velocity preserved from original NoteOn (64)').toBe(64);
+    expect(result.anyZeroVelEvents,'no zero-velocity events in output').toBe(false);
+  },
+};
+
+/**
+ * D = {}. Channel 9 (General MIDI drums) events are filtered from parser output.
+ *
+ * Channel 9 (0-indexed) is the percussion channel in General MIDI. GridInstruments
+ * plays pitched notes only — drum hits have no meaningful pitch and must be
+ * excluded. A lone NoteOn on channel 9 with no explicit NoteOff is auto-closed
+ * by the parser's end-of-track pending-note cleanup, producing one TickNote
+ * with channel=9. parseMidi must filter it out, yielding an empty result.
+ */
+export const gameMidi4: StateInvariant = {
+  id: 'GAME-MIDI-4',
+  description: 'Channel 9 (drums) is filtered: single open drum note yields empty array',
+  check: async (page: Page) => {
+    const result = await page.evaluate(async () => {
+      const { parseMidi } = await import('/src/lib/midi-parser.ts');
+      // Type 0 MIDI: one NoteOn ch9 note36 (kick), no NoteOff — auto-closed at end-of-track.
+      // Track length = 4 (NoteOn) + 4 (EndOfTrack) = 8 = 0x08 bytes.
+      const bytes = [
+        // MThd
+        0x4D, 0x54, 0x68, 0x64,
+        0x00, 0x00, 0x00, 0x06,
+        0x00, 0x00, // format 0
+        0x00, 0x01, // 1 track
+        0x00, 0x60, // 96 ticks/quarter
+        // MTrk
+        0x4D, 0x54, 0x72, 0x6B,
+        0x00, 0x00, 0x00, 0x08, // track length = 8 bytes
+        // delta=0, NoteOn ch9 note36 (kick) vel=64
+        0x00, 0x99, 0x24, 0x40,
+        // End of track — no NoteOff, parser auto-closes with end tick
+        0x00, 0xFF, 0x2F, 0x00,
+      ];
+      const buffer = new Uint8Array(bytes).buffer;
+      const events = parseMidi(buffer);
+      return { count: events.length };
+    });
+    expect(result.count, 'channel 9 note filtered → 0 events').toBe(0);
+  },
+};
+
+/**
+ * D = {}. A structurally valid MIDI file with no note events returns an empty array.
+ *
+ * A file can have a correct MThd/MTrk header and valid ppq but contain only
+ * metadata (tempo, time signature) or just the mandatory End-of-Track meta
+ * event. parseMidi must handle this cleanly, returning [] rather than null,
+ * undefined, or throwing. This boundary arises when loading a MIDI template or
+ * a file whose notes were stripped — downstream code (noteGroups.length, etc.)
+ * must not crash.
+ */
+export const gameMidi5: StateInvariant = {
+  id: 'GAME-MIDI-5',
+  description: 'Valid MIDI with no notes returns empty array without throwing',
+  check: async (page: Page) => {
+    const result = await page.evaluate(async () => {
+      const { parseMidi } = await import('/src/lib/midi-parser.ts');
+      // Type 0 MIDI: valid header, one track containing only End-of-Track.
+      // Track length = 4 (EndOfTrack) = 0x04 bytes.
+      const bytes = [
+        // MThd
+        0x4D, 0x54, 0x68, 0x64,
+        0x00, 0x00, 0x00, 0x06,
+        0x00, 0x00, // format 0
+        0x00, 0x01, // 1 track
+        0x00, 0x60, // 96 ticks/quarter
+        // MTrk
+        0x4D, 0x54, 0x72, 0x6B,
+        0x00, 0x00, 0x00, 0x04, // track length = 4 bytes
+        // End of track only
+        0x00, 0xFF, 0x2F, 0x00,
+      ];
+      const buffer = new Uint8Array(bytes).buffer;
+      const events = parseMidi(buffer);
+      return {
+        count:   events.length,
+        isArray: Array.isArray(events),
+      };
+    });
+    expect(result.isArray, 'result must be an array').toBe(true);
+    expect(result.count,   'no notes → empty array').toBe(0);
+  },
+};
+
+/**
+ * D = {}. A buffer with invalid magic bytes throws with a descriptive error.
+ *
+ * Browsers receive arbitrary bytes when users drag and drop files. The parser
+ * must reject non-MIDI data early and clearly rather than silently producing
+ * garbage or crashing with an unrelated RangeError. The thrown error must
+ * mention 'MThd' so callers can surface a meaningful diagnostic to the user
+ * (e.g. "Not a MIDI file — check your upload").
+ */
+export const gameMidi6: StateInvariant = {
+  id: 'GAME-MIDI-6',
+  description: 'Corrupt buffer (bad magic bytes) throws with descriptive MThd error',
+  check: async (page: Page) => {
+    const result = await page.evaluate(async () => {
+      const { parseMidi } = await import('/src/lib/midi-parser.ts');
+      // 14 bytes of garbage — wrong magic, not 'MThd'.
+      const bytes = [
+        0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+        0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D,
+      ];
+      const buffer = new Uint8Array(bytes).buffer;
+      try {
+        parseMidi(buffer);
+        return { threw: false, message: '' };
+      } catch (e) {
+        return { threw: true, message: e instanceof Error ? e.message : String(e) };
+      }
+    });
+    expect(result.threw,   'parseMidi must throw on corrupt data').toBe(true);
+    expect(result.message, 'error message mentions MThd').toContain('MThd');
+  },
+};
+
+/**
+ * D = {}. A MIDI file containing only drum-channel events returns an empty array.
+ *
+ * A percussion-only MIDI (all events on channel 9) is structurally valid but
+ * produces no pitched output. Multiple complete drum patterns — kick (note36)
+ * and snare (note38), each with explicit NoteOff via running status vel=0 —
+ * must all be filtered out by parseMidi. This guards against a user dropping a
+ * drum loop and receiving a broken/empty game state rather than a clear signal
+ * (count=0) they can handle gracefully.
+ */
+export const gameMidi7: StateInvariant = {
+  id: 'GAME-MIDI-7',
+  description: 'MIDI with only drum channel (ch9) events returns empty array after filtering',
+  check: async (page: Page) => {
+    const result = await page.evaluate(async () => {
+      const { parseMidi } = await import('/src/lib/midi-parser.ts');
+      // Type 0 MIDI: kick (note36) + snare (note38), both ch9.
+      // All 4 note events share running status 0x99 (NoteOn ch9).
+      // Track length: 4 + 3 + 3 + 3 + 4 = 17 = 0x11 bytes.
+      const bytes = [
+        // MThd
+        0x4D, 0x54, 0x68, 0x64,
+        0x00, 0x00, 0x00, 0x06,
+        0x00, 0x00, // format 0
+        0x00, 0x01, // 1 track
+        0x00, 0x60, // 96 ticks/quarter
+        // MTrk
+        0x4D, 0x54, 0x72, 0x6B,
+        0x00, 0x00, 0x00, 0x11, // track length = 17 bytes
+        // delta=0, NoteOn ch9 note36 (kick) vel=64
+        0x00, 0x99, 0x24, 0x40,
+        // delta=96 (0x60), running status note36 vel=0 (NoteOff kick)
+        0x60, 0x24, 0x00,
+        // delta=0, running status note38 (snare) vel=80
+        0x00, 0x26, 0x50,
+        // delta=96 (0x60), running status note38 vel=0 (NoteOff snare)
+        0x60, 0x26, 0x00,
+        // End of track
+        0x00, 0xFF, 0x2F, 0x00,
+      ];
+      const buffer = new Uint8Array(bytes).buffer;
+      const events = parseMidi(buffer);
+      return {
+        count:   events.length,
+        isArray: Array.isArray(events),
+      };
+    });
+    expect(result.isArray, 'result must be an array').toBe(true);
+    expect(result.count,   'all drum events filtered → 0 events').toBe(0);
+  },
+};

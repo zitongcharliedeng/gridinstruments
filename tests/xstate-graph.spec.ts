@@ -118,6 +118,13 @@ import {
     gameEngFindOptimalTransposition,
     gameEngComputeMedianMidiNote,
     gameEngBuildNoteGroupsEmpty,
+    gameMidi1,
+    gameMidi2,
+    gameMidi3,
+    gameMidi4,
+    gameMidi5,
+    gameMidi6,
+    gameMidi7,
   } from './machines/invariant-checks';
 import { focusReturnCheck } from './machines/modifierCompoundMachine';
 
@@ -595,6 +602,34 @@ test.describe('[Structural] state-independent invariants', () => {
 
   test('GAME-ENG-7: buildNoteGroups returns empty array for empty NoteEvent input', async ({ page }) => {
     await gameEngBuildNoteGroupsEmpty.check(page);
+  });
+
+  test('GAME-MIDI-1: Type 1 multi-track MIDI parsed into merged NoteEvent array', async ({ page }) => {
+    await gameMidi1.check(page);
+  });
+
+  test('GAME-MIDI-2: Running status: consecutive NoteOn events without repeated status byte are decoded', async ({ page }) => {
+    await gameMidi2.check(page);
+  });
+
+  test('GAME-MIDI-3: Velocity-0 NoteOn treated as NoteOff: closes pending note, not emitted as note-on', async ({ page }) => {
+    await gameMidi3.check(page);
+  });
+
+  test('GAME-MIDI-4: Channel 9 (drums) is filtered: single open drum note yields empty array', async ({ page }) => {
+    await gameMidi4.check(page);
+  });
+
+  test('GAME-MIDI-5: Valid MIDI with no notes returns empty array without throwing', async ({ page }) => {
+    await gameMidi5.check(page);
+  });
+
+  test('GAME-MIDI-6: Corrupt buffer (bad magic bytes) throws with descriptive MThd error', async ({ page }) => {
+    await gameMidi6.check(page);
+  });
+
+  test('GAME-MIDI-7: MIDI with only drum channel (ch9) events returns empty array after filtering', async ({ page }) => {
+    await gameMidi7.check(page);
   });
  });
 
