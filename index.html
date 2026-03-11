@@ -313,8 +313,8 @@
        gap: 6px;
      }
      .overlay-section-title:hover {
-       color: var(--fg);
-     }
+        color: var(--fg);
+      }
     .overlay-btn {
       font-family: var(--font);
       font-size: 11px;
@@ -920,7 +920,20 @@
 
            <div class="overlay-section-title">GAME</div>
            <div class="overlay-section">
-             <p style="color: var(--dim); font-size: 0.75rem; margin: 0 0 0.5rem 0;">Drop a .mid file onto the keyboard to play. Match the highlighted notes.</p>
+              <p style="color: var(--dim); font-size: 0.75rem; margin: 0 0 0.5rem 0;">Drop a .mid file onto the keyboard to play. Match the highlighted notes.</p>
+              <!-- Quantization: difficulty setting that controls how many note groups are generated.
+                   Coarser grids (1/4) merge fast passages into simple chords — Piano Tiles principle:
+                   constant tap pace = original tempo. Finer grids (1/16) preserve full rhythmic detail. -->
+              <span class="overlay-section-title">DIFFICULTY</span>
+              <label class="overlay-label">
+                Quantization
+                <select id="quantization-level">
+                  <option value="none">None (raw)</option>
+                  <option value="1/4">Beginner (1/4)</option>
+                  <option value="1/8">Intermediate (1/8)</option>
+                  <option value="1/16">Advanced (1/16)</option>
+                </select>
+              </label>
              <input id="midi-search-input" type="text" placeholder="Search songs..." title="Search for MIDI songs across online libraries" style="width:100%;box-sizing:border-box;margin-bottom:6px;">
              <div id="midi-search-results" style="overflow-y:auto;max-height:200px;"></div>
              <button id="calibrate-btn" class="overlay-btn" title="Enter calibration mode: play all notes reachable on your input devices">Calibrate range</button>
@@ -932,10 +945,13 @@
                </div>
               </div>
               <div id="game-status" style="display:none;flex-direction:column;gap:6px;margin-top:8px;">
-                <div id="game-song-title" style="font-family:var(--font);font-size:11px;color:var(--fg);text-transform:uppercase;letter-spacing:0.06em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px;"></div>
-                <div id="game-progress" style="font-family:var(--font);font-size:11px;color:var(--dim);"></div>
-                <button id="game-reset-btn" class="overlay-btn" title="Reset game and drop a new MIDI file">Reset</button>
-              </div>
+                 <div id="game-song-title" style="font-family:var(--font);font-size:11px;color:var(--fg);text-transform:uppercase;letter-spacing:0.06em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px;"></div>
+                 <div style="display:flex;gap:8px;align-items:center;">
+                   <div id="game-progress" style="font-family:var(--font);font-size:11px;color:var(--dim);"></div>
+                   <div id="game-quantization-badge" style="font-family:var(--font);font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:0.06em;"></div>
+                 </div>
+                 <button id="game-reset-btn" class="overlay-btn" title="Reset game and drop a new MIDI file">Reset</button>
+               </div>
             </div>
 
          </div>

@@ -49,7 +49,8 @@ import { mpeMachine } from './machines/mpeMachine';
 import { dialogMachine } from './machines/dialogMachine';
 import { gameMachine } from './machines/gameMachine';
 import { parseMidi } from './lib/midi-parser';
-import { buildNoteGroups, computeMedianMidiNote, findOptimalTransposition, transposeSong, cropToRange } from './lib/game-engine';
+import { buildNoteGroups, computeMedianMidiNote, findOptimalTransposition, transposeSong, cropToRange, quantizeNotes } from './lib/game-engine';
+import type { QuantizationLevel } from './lib/game-engine';
 import { loadCalibratedRange, saveCalibratedRange } from './lib/calibration';
 import { searchAllAdapters, type MidiSearchResult } from './lib/midi-search';
 import { createActor } from 'xstate';
@@ -1754,13 +1755,20 @@ class DComposeApp {
       titleEl.textContent = songTitle;
     }
 
+    const badgeEl = document.getElementById('game-quantization-badge') as HTMLElement | null;
+    const levelSelect = document.getElementById('quantization-level') as HTMLSelectElement | null;
+    const level = (levelSelect?.value ?? 'none') as QuantizationLevel;
+    if (badgeEl) {
+      badgeEl.textContent = level === 'none' ? '' : `Q:${level}`;
+    }
+
     actor.send({ type: 'FILE_DROPPED', file: new File([], `${songTitle}.mid`) });
 
     try {
-      const { events } = parseMidi(buffer);
+      const { events, tempoMap, timeSigMap } = parseMidi(buffer);
+      const quantizedEvents = quantizeNotes(events, tempoMap, timeSigMap, level);
 
-      // D-ref auto-centering: set slider to median note Hz
-      const medianMidi = computeMedianMidiNote(events);
+      const medianMidi = computeMedianMidiNote(quantizedEvents);
       const medianHz = 440 * Math.pow(2, (medianMidi - 69) / 12);
       const dRefSlider = document.getElementById('d-ref-slider') as HTMLInputElement | null;
       if (dRefSlider) {
@@ -1770,7 +1778,7 @@ class DComposeApp {
         dRefSlider.dispatchEvent(new Event('input'));
       }
 
-      let groups = buildNoteGroups(events);
+      let groups = buildNoteGroups(quantizedEvents);
 
       // Apply calibrated range: auto-transpose + crop
       const range = this.calibratedRange;
