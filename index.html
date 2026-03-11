@@ -331,6 +331,38 @@
     .overlay-btn:hover { border-color: var(--fg); }
     .overlay-btn:active { background: var(--subtle); }
 
+    .search-result {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 4px 6px;
+      cursor: pointer;
+      font-family: var(--font);
+      font-size: 11px;
+      color: var(--fg);
+      border-bottom: 1px solid var(--border);
+    }
+    .search-result:hover { background: var(--subtle); }
+    .search-result .result-title {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex: 1;
+      min-width: 0;
+    }
+    .search-result .result-source {
+      color: var(--dim);
+      font-size: 10px;
+      margin-left: 8px;
+      flex-shrink: 0;
+    }
+    #midi-search-results .search-status {
+      font-family: var(--font);
+      font-size: 11px;
+      color: var(--dim);
+      padding: 4px 0;
+    }
+
     /* ── Pedals panel ────────────────────────────────────────── */
     #pedals-panel {
       flex-shrink: 0;
@@ -889,6 +921,8 @@
            <div class="overlay-section-title">GAME</div>
            <div class="overlay-section">
              <p style="color: var(--dim); font-size: 0.75rem; margin: 0 0 0.5rem 0;">Drop a .mid file onto the keyboard to play. Match the highlighted notes.</p>
+             <input id="midi-search-input" type="text" placeholder="Search songs..." title="Search for MIDI songs across online libraries" style="width:100%;box-sizing:border-box;margin-bottom:6px;">
+             <div id="midi-search-results" style="overflow-y:auto;max-height:200px;"></div>
              <button id="calibrate-btn" class="overlay-btn" title="Enter calibration mode: play all notes reachable on your input devices">Calibrate range</button>
              <div id="calibration-banner" style="display:none;flex-direction:column;gap:8px;margin-top:8px;">
                <span id="calibration-msg" style="font-family:var(--font);font-size:11px;color:var(--fg);text-transform:uppercase;letter-spacing:0.06em;">Play all reachable notes, then confirm</span>

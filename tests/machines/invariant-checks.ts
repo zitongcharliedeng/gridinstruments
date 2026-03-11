@@ -3545,6 +3545,19 @@ export const gameEdge4: StateInvariant = {
  * This is the simplest game interaction; if it breaks, no single-note melody
  * can ever be played through.
  */
+export const gameSearch1: StateInvariant = {
+  id: 'GAME-SEARCH-1',
+  description: '#midi-search-input exists in DOM inside #grid-overlay',
+  check: async (page: Page) => {
+    const input = page.locator('#midi-search-input');
+    const count = await input.count();
+    if (count === 0) throw new Error('#midi-search-input not found in DOM');
+    const overlay = page.locator('#grid-overlay #midi-search-input');
+    const overlayCount = await overlay.count();
+    if (overlayCount === 0) throw new Error('#midi-search-input is not inside #grid-overlay');
+  }
+};
+
 export const gameEdge5: StateInvariant = {
   id: 'GAME-EDGE-5',
   description: 'Single-note group advances immediately on correct press (no chord accumulation phase)',

@@ -51,6 +51,7 @@ import { gameMachine } from './machines/gameMachine';
 import { parseMidi } from './lib/midi-parser';
 import { buildNoteGroups, computeMedianMidiNote, findOptimalTransposition, transposeSong, cropToRange } from './lib/game-engine';
 import { loadCalibratedRange, saveCalibratedRange } from './lib/calibration';
+import { searchAllAdapters, type MidiSearchResult } from './lib/midi-search';
 import { createActor } from 'xstate';
 import { OverlayScrollbars, ClickScrollPlugin } from 'overlayscrollbars';
 import 'overlayscrollbars/overlayscrollbars.css';
@@ -1417,71 +1418,64 @@ class DComposeApp {
         const file = files[0];
         if (!file) return;
         if (!file.name.toLowerCase().endsWith('.mid') && !file.name.toLowerCase().endsWith('.midi')) {
-          // Not a MIDI file — ignore silently
           return;
         }
 
-        const actor = this.gameActor;
-        if (!actor) return;
-        actor.send({ type: 'FILE_DROPPED', file });
-
-        const titleEl = document.getElementById('game-song-title') as HTMLElement | null;
-        if (titleEl) {
-          const name = file.name.replace(/\.(mid|midi)$/i, '');
-          titleEl.textContent = name;
-        }
-
-        // Full pipeline: read → parse → D-ref center → calibration range → build groups → send to game actor
+        const songTitle = file.name.replace(/\.(mid|midi)$/i, '');
         file.arrayBuffer().then((buffer) => {
-          try {
-            const events = parseMidi(buffer);
-
-            // D-ref auto-centering: set slider to median note Hz
-            const medianMidi = computeMedianMidiNote(events);
-            const medianHz = 440 * Math.pow(2, (medianMidi - 69) / 12);
-            const dRefSlider = document.getElementById('d-ref-slider') as HTMLInputElement | null;
-            if (dRefSlider) {
-              const dMin = parseFloat(dRefSlider.min);
-              const dMax = parseFloat(dRefSlider.max);
-              dRefSlider.value = Math.max(dMin, Math.min(dMax, medianHz)).toFixed(2);
-              dRefSlider.dispatchEvent(new Event('input'));
-            }
-
-            let groups = buildNoteGroups(events);
-
-            // Apply calibrated range: auto-transpose + crop
-            const range = this.calibratedRange;
-            if (range && range.size > 0) {
-              const semitones = findOptimalTransposition(groups, range);
-              groups = transposeSong(groups, semitones);
-              groups = cropToRange(groups, range);
-            }
-
-            if (groups.length === 0) {
-              actor.send({ type: 'LOAD_FAILED', error: 'No playable notes found in MIDI file' });
-              return;
-            }
-            // Check tuning before auto-setting (for warning)
-            const currentTuning = parseFloat(this.tuningSlider?.value ?? '700');
-            const needsTuningWarning = Math.abs(currentTuning - 700) > 0.5;
-            // Auto-set tuning to 12-TET (700¢)
-            if (this.tuningSlider) {
-              this.tuningSlider.value = '700';
-              this.tuningSlider.dispatchEvent(new Event('input'));
-            }
-            actor.send({ type: 'SONG_LOADED', noteGroups: groups });
-            // Show tuning warning if tuning was different
-            if (needsTuningWarning) {
-              this.showTuningWarning();
-            }
-          } catch (err) {
-            const msg = err instanceof Error ? err.message : 'Failed to parse MIDI file';
-            actor.send({ type: 'LOAD_FAILED', error: msg });
-          }
+          this.loadMidiFromBuffer(buffer, songTitle);
         }).catch((err: unknown) => {
           const msg = err instanceof Error ? err.message : 'Failed to read file';
-          actor.send({ type: 'LOAD_FAILED', error: msg });
+          const actor = this.gameActor;
+          if (actor) actor.send({ type: 'LOAD_FAILED', error: msg });
         });
+      });
+    }
+
+    // ── MIDI search wiring ──
+    const searchInput = document.getElementById('midi-search-input') as HTMLInputElement | null;
+    const resultsDiv = document.getElementById('midi-search-results');
+    if (searchInput && resultsDiv) {
+      let searchDebounce: ReturnType<typeof setTimeout> | null = null;
+      searchInput.addEventListener('input', () => {
+        if (searchDebounce !== null) clearTimeout(searchDebounce);
+        searchDebounce = setTimeout(async () => {
+          const query = searchInput.value.trim();
+          if (query.length < 2) { resultsDiv.innerHTML = ''; return; }
+          resultsDiv.innerHTML = '<div class="search-status">Searching\u2026</div>';
+          try {
+            const results = await searchAllAdapters(query);
+            if (results.length === 0) {
+              resultsDiv.innerHTML = '<div class="search-status">No results</div>';
+              return;
+            }
+            resultsDiv.innerHTML = '';
+            for (const r of results) {
+              const row = document.createElement('div');
+              row.className = 'search-result';
+              row.dataset.fetchUrl = r.fetchUrl;
+
+              const titleSpan = document.createElement('span');
+              titleSpan.className = 'result-title';
+              titleSpan.textContent = r.title;
+
+              const sourceSpan = document.createElement('span');
+              sourceSpan.className = 'result-source';
+              sourceSpan.textContent = r.source;
+
+              row.appendChild(titleSpan);
+              row.appendChild(sourceSpan);
+
+              row.addEventListener('click', () => {
+                this.handleSearchResultClick(r);
+              });
+
+              resultsDiv.appendChild(row);
+            }
+          } catch {
+            resultsDiv.innerHTML = '<div class="search-status">Search failed</div>';
+          }
+        }, 300);
       });
     }
 
@@ -1724,6 +1718,90 @@ class DComposeApp {
     this.pointerDown.clear();
     this.midiChannelVoice.clear();
     this.render();
+  }
+
+  private async handleSearchResultClick(result: MidiSearchResult): Promise<void> {
+    const resultsDiv = document.getElementById('midi-search-results');
+    if (resultsDiv) resultsDiv.innerHTML = '<div class="search-status">Loading\u2026</div>';
+    try {
+      const response = await fetch(result.fetchUrl);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const buffer = await response.arrayBuffer();
+      this.loadMidiFromBuffer(buffer, result.title);
+      if (resultsDiv) resultsDiv.innerHTML = '';
+    } catch (err) {
+      if (resultsDiv) resultsDiv.innerHTML = '<div class="search-status">Load failed</div>';
+      const actor = this.gameActor;
+      if (actor) {
+        const msg = err instanceof Error ? err.message : 'Failed to fetch MIDI';
+        actor.send({ type: 'LOAD_FAILED', error: msg });
+      }
+    }
+  }
+
+  // ─── MIDI loading pipeline (shared by file drop + search) ────────────────
+
+  /**
+   * Shared pipeline: ArrayBuffer → parseMidi → D-ref center → calibration
+   * range → buildNoteGroups → SONG_LOADED. Used by both file drop and search.
+   */
+  private loadMidiFromBuffer(buffer: ArrayBuffer, songTitle: string): void {
+    const actor = this.gameActor;
+    if (!actor) return;
+
+    const titleEl = document.getElementById('game-song-title') as HTMLElement | null;
+    if (titleEl) {
+      titleEl.textContent = songTitle;
+    }
+
+    actor.send({ type: 'FILE_DROPPED', file: new File([], `${songTitle}.mid`) });
+
+    try {
+      const events = parseMidi(buffer);
+
+      // D-ref auto-centering: set slider to median note Hz
+      const medianMidi = computeMedianMidiNote(events);
+      const medianHz = 440 * Math.pow(2, (medianMidi - 69) / 12);
+      const dRefSlider = document.getElementById('d-ref-slider') as HTMLInputElement | null;
+      if (dRefSlider) {
+        const dMin = parseFloat(dRefSlider.min);
+        const dMax = parseFloat(dRefSlider.max);
+        dRefSlider.value = Math.max(dMin, Math.min(dMax, medianHz)).toFixed(2);
+        dRefSlider.dispatchEvent(new Event('input'));
+      }
+
+      let groups = buildNoteGroups(events);
+
+      // Apply calibrated range: auto-transpose + crop
+      const range = this.calibratedRange;
+      if (range && range.size > 0) {
+        const semitones = findOptimalTransposition(groups, range);
+        groups = transposeSong(groups, semitones);
+        groups = cropToRange(groups, range);
+      }
+
+      if (groups.length === 0) {
+        actor.send({ type: 'LOAD_FAILED', error: 'No playable notes found in MIDI file' });
+        return;
+      }
+
+      // Check tuning before auto-setting (for warning)
+      const currentTuning = parseFloat(this.tuningSlider?.value ?? '700');
+      const needsTuningWarning = Math.abs(currentTuning - 700) > 0.5;
+      // Auto-set tuning to 12-TET (700¢)
+      if (this.tuningSlider) {
+        this.tuningSlider.value = '700';
+        this.tuningSlider.dispatchEvent(new Event('input'));
+      }
+      actor.send({ type: 'SONG_LOADED', noteGroups: groups });
+      // Show tuning warning if tuning was different
+      if (needsTuningWarning) {
+        this.showTuningWarning();
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to parse MIDI file';
+      actor.send({ type: 'LOAD_FAILED', error: msg });
+    }
   }
 
   // ─── Game overlays ───────────────────────────────────────────────────────

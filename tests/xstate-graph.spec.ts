@@ -144,6 +144,7 @@ import {
     gameEdge3,
     gameEdge4,
     gameEdge5,
+    gameSearch1,
   } from './machines/invariant-checks';
 import { focusReturnCheck } from './machines/modifierCompoundMachine';
 
@@ -725,6 +726,10 @@ test.describe('[Structural] state-independent invariants', () => {
 
   test('GAME-EDGE-5: Single-note group advances immediately on correct press (no chord accumulation phase)', async ({ page }) => {
     await gameEdge5.check(page);
+  });
+
+  test('GAME-SEARCH-1: #midi-search-input exists in DOM inside #grid-overlay', async ({ page }) => {
+    await gameSearch1.check(page);
   });
  });
 
