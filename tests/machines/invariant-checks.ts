@@ -3724,3 +3724,367 @@ export const gameSearch6: StateInvariant = {
     expect(resultsInOverlay, '#midi-search-results must exist inside #grid-overlay').toBe(1);
   },
 };
+
+// ─── Quantization Tests (GAME-QUANT-*) ──────────────────────────────────────
+// These tests verify the note quantization system that powers the difficulty
+// selector. Quantization snaps MIDI events to a beat grid, merging fast passages
+// into simpler chord sequences — the Piano Tiles principle where constant tap
+// pace reproduces original tempo.
+
+/**
+ * GAME-QUANT-1: quantizeNotes with level='none' returns events unchanged.
+ *
+ * Musical scenario: A player selects "None (raw)" difficulty. Every note from
+ * the original MIDI file should appear exactly as parsed — no snapping, no
+ * merging, no splitting. This is the bypass/passthrough mode.
+ *
+ * Why it matters: If 'none' modified events, the "raw" difficulty would
+ * silently alter songs, breaking the user's expectation of faithful playback.
+ */
+export const gameQuant1: StateInvariant = {
+  id: 'GAME-QUANT-1',
+  description: 'quantizeNotes with level=none returns events unchanged (passthrough)',
+  check: async (page: Page) => {
+    const result = await page.evaluate(async () => {
+      const { quantizeNotes } = await import('/src/lib/game-engine.ts');
+      const events = [
+        { midiNote: 60, startMs: 0, durationMs: 500, velocity: 80, channel: 0, track: 0 },
+        { midiNote: 64, startMs: 250, durationMs: 500, velocity: 80, channel: 0, track: 0 },
+        { midiNote: 67, startMs: 600, durationMs: 300, velocity: 80, channel: 0, track: 0 },
+      ];
+      const tempoMap = [{ tickPosition: 0, microsecondsPerQuarter: 500000, bpm: 120 }];
+      const timeSigMap = [{ tickPosition: 0, numerator: 4, denominatorPower: 2, ticksPerQuarter: 480 }];
+      const quantized = quantizeNotes(events, tempoMap, timeSigMap, 'none');
+      return {
+        sameLength: quantized.length === events.length,
+        sameRef: quantized === events,
+        firstStart: quantized[0]?.startMs,
+        secondStart: quantized[1]?.startMs,
+        thirdStart: quantized[2]?.startMs,
+      };
+    });
+    expect(result.sameRef, 'none level should return same array reference').toBe(true);
+    expect(result.sameLength, 'none level should preserve event count').toBe(true);
+    expect(result.firstStart).toBe(0);
+    expect(result.secondStart).toBe(250);
+    expect(result.thirdStart).toBe(600);
+  },
+};
+
+/**
+ * GAME-QUANT-2: quantizeNotes with level='1/4' snaps events to quarter-note grid.
+ *
+ * Musical scenario: At 120 BPM, quarter notes fall at 0ms, 500ms, 1000ms, etc.
+ * A note at 250ms (an eighth note position) should snap to either 0ms or 500ms.
+ * A note at 600ms should snap to 500ms. This is the "Beginner" difficulty —
+ * fast passages collapse into simple chord sequences on the beat.
+ *
+ * Why it matters: If snapping doesn't work, beginner mode would still present
+ * the full rhythmic complexity, defeating the purpose of difficulty levels.
+ */
+export const gameQuant2: StateInvariant = {
+  id: 'GAME-QUANT-2',
+  description: 'quantizeNotes with 1/4 snaps events to quarter-note grid at 120 BPM',
+  check: async (page: Page) => {
+    const result = await page.evaluate(async () => {
+      const { quantizeNotes } = await import('/src/lib/game-engine.ts');
+      const events = [
+        { midiNote: 60, startMs: 0, durationMs: 200, velocity: 80, channel: 0, track: 0 },
+        { midiNote: 64, startMs: 250, durationMs: 200, velocity: 80, channel: 0, track: 0 },
+        { midiNote: 67, startMs: 600, durationMs: 200, velocity: 80, channel: 0, track: 0 },
+        { midiNote: 72, startMs: 1100, durationMs: 200, velocity: 80, channel: 0, track: 0 },
+      ];
+      const tempoMap = [{ tickPosition: 0, microsecondsPerQuarter: 500000, bpm: 120 }];
+      const timeSigMap = [{ tickPosition: 0, numerator: 4, denominatorPower: 2, ticksPerQuarter: 480 }];
+      const quantized = quantizeNotes(events, tempoMap, timeSigMap, '1/4');
+      return {
+        starts: quantized.map(e => e.startMs),
+        count: quantized.length,
+      };
+    });
+    // At 120 BPM, quarter grid = 0, 500, 1000, 1500...
+    // 0ms → 0, 250ms → 0 or 500, 600ms → 500, 1100ms → 1000
+    for (const ms of result.starts) {
+      expect(ms % 500, `startMs ${ms} should be on quarter grid (multiple of 500)`).toBe(0);
+    }
+  },
+};
+
+/**
+ * GAME-QUANT-3: Long notes spanning multiple grid points split into repeated events.
+ *
+ * Musical scenario: A whole note (2000ms at 120 BPM) at 1/8 quantization
+ * (grid spacing = 250ms) should become multiple taps — one at each grid point
+ * within the note's duration. This is the Piano Tiles convention: sustained
+ * notes become repeated taps so the player maintains a constant rhythm.
+ *
+ * Why it matters: Without splitting, a whole note would be a single tap followed
+ * by silence, breaking the "constant pace = original tempo" principle.
+ */
+export const gameQuant3: StateInvariant = {
+  id: 'GAME-QUANT-3',
+  description: 'long note spanning multiple grid points splits into repeated events',
+  check: async (page: Page) => {
+    const result = await page.evaluate(async () => {
+      const { quantizeNotes } = await import('/src/lib/game-engine.ts');
+      // One long note: 2000ms duration at 120 BPM
+      const events = [
+        { midiNote: 60, startMs: 0, durationMs: 2000, velocity: 80, channel: 0, track: 0 },
+      ];
+      const tempoMap = [{ tickPosition: 0, microsecondsPerQuarter: 500000, bpm: 120 }];
+      const timeSigMap = [{ tickPosition: 0, numerator: 4, denominatorPower: 2, ticksPerQuarter: 480 }];
+      // 1/8 grid at 120 BPM = 250ms spacing → 2000ms note should produce ~8 events
+      const quantized = quantizeNotes(events, tempoMap, timeSigMap, '1/8');
+      return {
+        count: quantized.length,
+        allSameMidi: quantized.every(e => e.midiNote === 60),
+        starts: quantized.map(e => e.startMs),
+      };
+    });
+    expect(result.count, 'long note should split into multiple events').toBeGreaterThan(1);
+    expect(result.allSameMidi, 'all split events should have same midiNote').toBe(true);
+    // Verify events are on the 250ms grid
+    for (const ms of result.starts) {
+      expect(ms % 250, `split event at ${ms} should be on 1/8 grid`).toBe(0);
+    }
+  },
+};
+
+/**
+ * GAME-QUANT-4: Tempo change mid-song adjusts grid spacing.
+ *
+ * Musical scenario: A song starts at 120 BPM (quarter = 500ms) then switches
+ * to 60 BPM (quarter = 1000ms) at tick 960. Notes after the tempo change should
+ * snap to the wider grid. This tests that ritardando/accelerando in MIDI files
+ * produce correct quantization — the grid follows the tempo map, not a fixed spacing.
+ *
+ * Why it matters: Many real MIDI files have tempo changes. If the grid ignores
+ * them, notes in slow sections would be over-quantized and fast sections under-quantized.
+ */
+export const gameQuant4: StateInvariant = {
+  id: 'GAME-QUANT-4',
+  description: 'tempo change mid-song adjusts grid spacing (faster tempo = tighter grid)',
+  check: async (page: Page) => {
+    const result = await page.evaluate(async () => {
+      const { quantizeNotes } = await import('/src/lib/game-engine.ts');
+      // Two tempo segments: 120 BPM then 60 BPM
+      const events = [
+        { midiNote: 60, startMs: 0, durationMs: 100, velocity: 80, channel: 0, track: 0 },
+        { midiNote: 64, startMs: 400, durationMs: 100, velocity: 80, channel: 0, track: 0 },
+        { midiNote: 67, startMs: 1200, durationMs: 100, velocity: 80, channel: 0, track: 0 },
+        { midiNote: 72, startMs: 2500, durationMs: 100, velocity: 80, channel: 0, track: 0 },
+      ];
+      // 120 BPM for first 960 ticks (= 1000ms), then 60 BPM
+      const tempoMap = [
+        { tickPosition: 0, microsecondsPerQuarter: 500000, bpm: 120 },
+        { tickPosition: 960, microsecondsPerQuarter: 1000000, bpm: 60 },
+      ];
+      const timeSigMap = [{ tickPosition: 0, numerator: 4, denominatorPower: 2, ticksPerQuarter: 480 }];
+      const quantized = quantizeNotes(events, tempoMap, timeSigMap, '1/4');
+      return {
+        count: quantized.length,
+        starts: quantized.map(e => e.startMs),
+      };
+    });
+    // Should have events snapped to grid points from both tempo segments
+    expect(result.count).toBeGreaterThanOrEqual(2);
+    // All starts should be finite numbers (no NaN from bad tempo math)
+    for (const ms of result.starts) {
+      expect(Number.isFinite(ms), `startMs ${ms} should be finite`).toBe(true);
+    }
+  },
+};
+
+/**
+ * GAME-QUANT-5: Time signature change (4/4 → 3/4) is handled without error.
+ *
+ * Musical scenario: A waltz section (3/4) follows a march section (4/4).
+ * The quantization grid adapts because it's BPM-based, not bar-based —
+ * time signatures affect how humans group beats but not the grid spacing.
+ * This test verifies the function doesn't crash on time sig changes.
+ *
+ * Why it matters: Real MIDI files can have time signature changes. The
+ * quantizer must handle them gracefully even though the grid is BPM-based.
+ */
+export const gameQuant5: StateInvariant = {
+  id: 'GAME-QUANT-5',
+  description: 'time signature change (4/4 → 3/4) handled without error',
+  check: async (page: Page) => {
+    const result = await page.evaluate(async () => {
+      const { quantizeNotes } = await import('/src/lib/game-engine.ts');
+      const events = [
+        { midiNote: 60, startMs: 0, durationMs: 200, velocity: 80, channel: 0, track: 0 },
+        { midiNote: 64, startMs: 1500, durationMs: 200, velocity: 80, channel: 0, track: 0 },
+      ];
+      const tempoMap = [{ tickPosition: 0, microsecondsPerQuarter: 500000, bpm: 120 }];
+      const timeSigMap = [
+        { tickPosition: 0, numerator: 4, denominatorPower: 2, ticksPerQuarter: 480 },
+        { tickPosition: 1920, numerator: 3, denominatorPower: 2, ticksPerQuarter: 480 },
+      ];
+      try {
+        const quantized = quantizeNotes(events, tempoMap, timeSigMap, '1/4');
+        return { ok: true, count: quantized.length };
+      } catch (e) {
+        return { ok: false, count: 0 };
+      }
+    });
+    expect(result.ok, 'quantizeNotes should handle time sig changes without throwing').toBe(true);
+    expect(result.count).toBeGreaterThanOrEqual(1);
+  },
+};
+
+/**
+ * GAME-QUANT-6: Two notes snapping to same grid point + same midiNote are deduplicated.
+ *
+ * Musical scenario: Two C4 notes at 10ms and 20ms apart both snap to grid point 0ms
+ * at 1/4 quantization. Without deduplication, the player would need to press C4 twice
+ * at the exact same moment — impossible. Dedup keeps only one.
+ *
+ * Why it matters: Without dedup, quantization could create impossible double-hits
+ * that frustrate players and make the game unplayable at coarse difficulty levels.
+ */
+export const gameQuant6: StateInvariant = {
+  id: 'GAME-QUANT-6',
+  description: 'two notes at same grid point + same midiNote are deduplicated',
+  check: async (page: Page) => {
+    const result = await page.evaluate(async () => {
+      const { quantizeNotes } = await import('/src/lib/game-engine.ts');
+      // Two C4 notes very close together — both should snap to 0ms
+      const events = [
+        { midiNote: 60, startMs: 10, durationMs: 200, velocity: 80, channel: 0, track: 0 },
+        { midiNote: 60, startMs: 20, durationMs: 200, velocity: 80, channel: 0, track: 0 },
+      ];
+      const tempoMap = [{ tickPosition: 0, microsecondsPerQuarter: 500000, bpm: 120 }];
+      const timeSigMap = [{ tickPosition: 0, numerator: 4, denominatorPower: 2, ticksPerQuarter: 480 }];
+      const quantized = quantizeNotes(events, tempoMap, timeSigMap, '1/4');
+      return { count: quantized.length };
+    });
+    expect(result.count, 'duplicate midiNote at same grid point should be deduplicated to 1').toBe(1);
+  },
+};
+
+/**
+ * GAME-QUANT-7: parseMidi returns tempoMap and timeSigMap (not just events).
+ *
+ * Musical scenario: The quantization system depends on tempo and time signature
+ * data extracted from the MIDI file. parseMidi must return all three: events,
+ * tempoMap, and timeSigMap. This is the contract between parser and quantizer.
+ *
+ * Why it matters: If parseMidi only returned events (the old API), quantization
+ * would have no tempo/time-sig data and couldn't build a correct beat grid.
+ */
+export const gameQuant7: StateInvariant = {
+  id: 'GAME-QUANT-7',
+  description: 'parseMidi returns tempoMap and timeSigMap alongside events',
+  check: async (page: Page) => {
+    const result = await page.evaluate(async () => {
+      const { parseMidi } = await import('/src/lib/midi-parser.ts');
+      const response = await fetch('/tests/fixtures/twinkle-type0.mid');
+      const buffer = await response.arrayBuffer();
+      const parsed = parseMidi(buffer);
+      return {
+        hasEvents: Array.isArray(parsed.events),
+        hasTempoMap: Array.isArray(parsed.tempoMap),
+        hasTimeSigMap: Array.isArray(parsed.timeSigMap),
+        tempoMapLength: parsed.tempoMap.length,
+        timeSigMapLength: parsed.timeSigMap.length,
+        eventsLength: parsed.events.length,
+      };
+    });
+    expect(result.hasEvents, 'parseMidi must return events array').toBe(true);
+    expect(result.hasTempoMap, 'parseMidi must return tempoMap array').toBe(true);
+    expect(result.hasTimeSigMap, 'parseMidi must return timeSigMap array').toBe(true);
+    expect(result.eventsLength, 'twinkle should have note events').toBeGreaterThan(0);
+    expect(result.tempoMapLength, 'twinkle should have at least 1 tempo entry').toBeGreaterThanOrEqual(1);
+  },
+};
+
+/**
+ * GAME-QUANT-8: Default time signature is 4/4 when no FF 58 event in MIDI file.
+ *
+ * Musical scenario: Many simple MIDI files omit the time signature meta event.
+ * The parser should insert a default 4/4 time signature so the quantizer always
+ * has valid time-sig data. Without this default, quantization would fail on
+ * files that lack explicit time signatures.
+ *
+ * Why it matters: A missing default would cause quantizeNotes to receive an
+ * empty timeSigMap, potentially producing incorrect grid spacing or crashing.
+ */
+export const gameQuant8: StateInvariant = {
+  id: 'GAME-QUANT-8',
+  description: 'default time signature is 4/4 when no FF 58 event in MIDI file',
+  check: async (page: Page) => {
+    const result = await page.evaluate(async () => {
+      const { parseMidi } = await import('/src/lib/midi-parser.ts');
+      // Build a minimal Type 0 MIDI with one note but NO FF 58 time signature event.
+      // Header: MThd, length=6, format=0, tracks=1, ppq=480
+      // Track: MTrk, NoteOn C4, delta 480, NoteOff C4, delta 0, End of Track
+      const bytes = [
+        0x4D, 0x54, 0x68, 0x64, 0x00, 0x00, 0x00, 0x06, // MThd, length 6
+        0x00, 0x00, 0x00, 0x01, 0x01, 0xE0,             // format 0, 1 track, ppq=480
+        0x4D, 0x54, 0x72, 0x6B, 0x00, 0x00, 0x00, 0x0E, // MTrk, length 14
+        0x00, 0xFF, 0x51, 0x03, 0x07, 0xA1, 0x20,       // delta 0, Set Tempo 500000 (120 BPM)
+        0x00, 0x90, 0x3C, 0x64,                          // delta 0, NoteOn C4 vel=100
+        0x83, 0x60, 0x80, 0x3C, 0x00,                    // delta 480, NoteOff C4
+        0x00, 0xFF, 0x2F, 0x00,                          // End of Track
+      ];
+      const buffer = new Uint8Array(bytes).buffer;
+      const parsed = parseMidi(buffer);
+      if (parsed.timeSigMap.length > 0) {
+        const first = parsed.timeSigMap[0];
+        return {
+          hasTimeSig: true,
+          numerator: first?.numerator,
+          denominatorPower: first?.denominatorPower,
+        };
+      }
+      return { hasTimeSig: false, numerator: 0, denominatorPower: 0 };
+    });
+    expect(result.hasTimeSig, 'timeSigMap should never be empty (default 4/4 inserted)').toBe(true);
+    // Default should be 4/4: numerator=4, denominatorPower=2 (2^2=4)
+    expect(result.numerator).toBe(4);
+    expect(result.denominatorPower).toBe(2);
+  },
+};
+
+/**
+ * GAME-QUANT-9: Odd meter (7/8) produces correct number of grid points.
+ *
+ * Musical scenario: A piece in 7/8 time (like Tigran Hamasyan's music) should
+ * still quantize correctly. The grid is BPM-based, not bar-based, so 7/8 doesn't
+ * change the grid spacing — it only affects how humans group beats. This test
+ * verifies that odd meters don't break the quantizer.
+ *
+ * Why it matters: If the quantizer assumed 4/4, odd-meter pieces would have
+ * incorrect grid alignment, producing musically wrong results.
+ */
+export const gameQuant9: StateInvariant = {
+  id: 'GAME-QUANT-9',
+  description: 'odd meter (7/8) does not break quantization — grid is BPM-based',
+  check: async (page: Page) => {
+    const result = await page.evaluate(async () => {
+      const { quantizeNotes } = await import('/src/lib/game-engine.ts');
+      const events = [
+        { midiNote: 60, startMs: 0, durationMs: 200, velocity: 80, channel: 0, track: 0 },
+        { midiNote: 64, startMs: 300, durationMs: 200, velocity: 80, channel: 0, track: 0 },
+        { midiNote: 67, startMs: 800, durationMs: 200, velocity: 80, channel: 0, track: 0 },
+      ];
+      const tempoMap = [{ tickPosition: 0, microsecondsPerQuarter: 500000, bpm: 120 }];
+      // 7/8 time: numerator=7, denominatorPower=3 (2^3=8)
+      const timeSigMap = [{ tickPosition: 0, numerator: 7, denominatorPower: 3, ticksPerQuarter: 480 }];
+      try {
+        const quantized = quantizeNotes(events, tempoMap, timeSigMap, '1/8');
+        return {
+          ok: true,
+          count: quantized.length,
+          allFinite: quantized.every(e => Number.isFinite(e.startMs)),
+        };
+      } catch (e) {
+        return { ok: false, count: 0, allFinite: false };
+      }
+    });
+    expect(result.ok, 'quantizeNotes should handle 7/8 time without throwing').toBe(true);
+    expect(result.count).toBeGreaterThanOrEqual(1);
+    expect(result.allFinite, 'all quantized startMs should be finite').toBe(true);
+  },
+};

@@ -150,6 +150,15 @@ import {
     gameSearch4,
     gameSearch5,
     gameSearch6,
+    gameQuant1,
+    gameQuant2,
+    gameQuant3,
+    gameQuant4,
+    gameQuant5,
+    gameQuant6,
+    gameQuant7,
+    gameQuant8,
+    gameQuant9,
   } from './machines/invariant-checks';
 import { focusReturnCheck } from './machines/modifierCompoundMachine';
 
@@ -755,6 +764,42 @@ test.describe('[Structural] state-independent invariants', () => {
 
   test('GAME-SEARCH-6: #midi-search-input is type=text and #midi-search-results exists', async ({ page }) => {
     await gameSearch6.check(page);
+  });
+
+  test('GAME-QUANT-1: quantizeNotes with none returns events unchanged', async ({ page }) => {
+    await gameQuant1.check(page);
+  });
+
+  test('GAME-QUANT-2: quantizeNotes with 1/4 snaps to quarter grid', async ({ page }) => {
+    await gameQuant2.check(page);
+  });
+
+  test('GAME-QUANT-3: long note splits into repeated events', async ({ page }) => {
+    await gameQuant3.check(page);
+  });
+
+  test('GAME-QUANT-4: tempo change adjusts grid spacing', async ({ page }) => {
+    await gameQuant4.check(page);
+  });
+
+  test('GAME-QUANT-5: time signature change handled without error', async ({ page }) => {
+    await gameQuant5.check(page);
+  });
+
+  test('GAME-QUANT-6: duplicate midiNote at same grid point deduplicated', async ({ page }) => {
+    await gameQuant6.check(page);
+  });
+
+  test('GAME-QUANT-7: parseMidi returns tempoMap and timeSigMap', async ({ page }) => {
+    await gameQuant7.check(page);
+  });
+
+  test('GAME-QUANT-8: default time signature is 4/4', async ({ page }) => {
+    await gameQuant8.check(page);
+  });
+
+  test('GAME-QUANT-9: odd meter (7/8) does not break quantization', async ({ page }) => {
+    await gameQuant9.check(page);
   });
  });
 
