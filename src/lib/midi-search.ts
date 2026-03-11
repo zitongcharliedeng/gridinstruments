@@ -209,6 +209,88 @@ export class MutopiaMidiAdapter implements MidiSearchAdapter {
   }
 }
 
+/**
+ * Adapter for midishare.dev — a public domain MIDI library.
+ *
+ * Data source: https://midishare.dev
+ * Created by the sightread team after MuseScore shut down their API.
+ * Redistributes public domain classical music content.
+ *
+ * API endpoints:
+ * - List: GET https://midishare.dev/api/midis — returns JSON array of MIDI metadata
+ * - Fetch: GET https://midishare.dev/api/midi?id=<id> — returns raw MIDI bytes
+ *
+ * CORS: midishare.dev returns Access-Control-Allow-Origin: * — safe to call from browser.
+ *
+ * Stability: API marked "unstable" — may return non-200 status or be temporarily unavailable.
+ * This adapter handles errors gracefully: returns empty results on API failure, never throws.
+ *
+ * Caching: The MIDI list is cached in module memory for the duration of the browser session.
+ *
+ * Metadata shape: Objects with `id`, `title`, and/or `name` fields. The adapter handles both.
+ */
+export class MidishareMidiAdapter implements MidiSearchAdapter {
+  readonly id = 'midishare';
+  readonly name = 'Midishare';
+  private _cache: { midis: Array<{ id: string; title?: string; name?: string }> | null } = {
+    midis: null,
+  };
+
+  async search(query: string): Promise<MidiSearchResult[]> {
+    if (this._cache.midis === null) {
+      try {
+        const response = await fetch('https://midishare.dev/api/midis');
+        if (!response.ok) {
+          console.warn(
+            `[midi-search] midishare.dev API error: ${response.status} ${response.statusText}`,
+          );
+          return [];
+        }
+        this._cache.midis = await response.json() as Array<{
+          id: string;
+          title?: string;
+          name?: string;
+        }>;
+      } catch (err) {
+        console.warn('[midi-search] midishare.dev fetch failed:', err);
+        return [];
+      }
+    }
+
+    const q = query.toLowerCase();
+    const results: MidiSearchResult[] = [];
+
+    for (const midi of this._cache.midis) {
+      const displayName = midi.title || midi.name || midi.id;
+      if (!displayName.toLowerCase().includes(q)) continue;
+
+      results.push({
+        title: displayName,
+        source: this.id,
+        sourceId: midi.id,
+        fetchUrl: `https://midishare.dev/api/midi?id=${encodeURIComponent(midi.id)}`,
+      });
+    }
+
+    return results;
+  }
+
+  async fetch(result: MidiSearchResult): Promise<ArrayBuffer> {
+    try {
+      const response = await fetch(result.fetchUrl);
+      if (!response.ok) {
+        throw new Error(
+          `[midi-search] midishare.dev fetch failed: ${response.status} ${response.statusText}`,
+        );
+      }
+      return response.arrayBuffer();
+    } catch (err) {
+      console.warn('[midi-search] midishare.dev fetch error:', err);
+      throw err;
+    }
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Composite search
 // ---------------------------------------------------------------------------
@@ -217,6 +299,7 @@ export class MutopiaMidiAdapter implements MidiSearchAdapter {
 const adapters: MidiSearchAdapter[] = [
   new GitHubMidiAdapter(),
   new MutopiaMidiAdapter(),
+  new MidishareMidiAdapter(),
 ];
 
 /**
