@@ -1757,7 +1757,7 @@ class DComposeApp {
     actor.send({ type: 'FILE_DROPPED', file: new File([], `${songTitle}.mid`) });
 
     try {
-      const events = parseMidi(buffer);
+      const { events } = parseMidi(buffer);
 
       // D-ref auto-centering: set slider to median note Hz
       const medianMidi = computeMedianMidiNote(events);

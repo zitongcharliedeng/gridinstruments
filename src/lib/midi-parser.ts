@@ -9,9 +9,45 @@ export interface NoteEvent {
   track: number;       // 0-indexed track number
 }
 
+/** Set Tempo meta event (FF 51): defines microseconds per quarter note at a tick position. */
+export interface TempoEvent {
+  tickPosition: number;
+  microsecondsPerQuarter: number;
+  bpm: number;         // 60_000_000 / microsecondsPerQuarter
+}
+
+/**
+ * Time Signature meta event (FF 58): defines meter at a tick position.
+ *
+ * MIDI binary format: FF 58 04 nn dd cc bb
+ *   nn = numerator (e.g. 4 for 4/4)
+ *   dd = denominator as a power of 2 (e.g. 2 → 2^2 = 4, so 4/4; 3 → 2^3 = 8, so 7/8)
+ *   cc = MIDI clocks per metronome click (typically 24)
+ *   bb = 32nd notes per quarter note (typically 8)
+ */
+export interface TimeSigEvent {
+  tickPosition: number;
+  numerator: number;
+  denominatorPower: number;
+  ticksPerQuarter: number;  // ppq from header — included for grid spacing convenience
+}
+
+/** Parsed output of a MIDI file: note events plus extracted tempo and time signature maps. */
+export interface ParsedMidi {
+  events: NoteEvent[];
+  tempoMap: TempoEvent[];
+  timeSigMap: TimeSigEvent[];
+}
+
 interface TempoEntry {
   tick: number;
   tempoUs: number;
+}
+
+interface TimeSigEntry {
+  tick: number;
+  numerator: number;
+  denominatorPower: number;
 }
 
 interface TickNote {
@@ -85,6 +121,7 @@ function parseTrack(
   trackLength: number,
   trackIndex: number,
   tempoMap: TempoEntry[],
+  timeSigEntries: TimeSigEntry[],
   collectTempo: boolean,
 ): TickNote[] {
   const notes: TickNote[] = [];
@@ -120,6 +157,15 @@ function parseTrack(
       // 0x51 = tempo (3 bytes: microseconds per quarter note)
       if (metaType === 0x51 && len.value === 3 && collectTempo) {
         tempoMap.push({ tick, tempoUs: readUint24(view, offset) });
+      }
+
+      // 0x58 = time signature (4 bytes: nn dd cc bb)
+      if (metaType === 0x58 && len.value === 4 && collectTempo) {
+        timeSigEntries.push({
+          tick,
+          numerator: view.getUint8(offset),
+          denominatorPower: view.getUint8(offset + 1),
+        });
       }
 
       // 0x2F = end of track
@@ -204,9 +250,10 @@ function parseTrack(
 
 /**
  * Parse a Standard MIDI File (Type 0 or Type 1) from an ArrayBuffer.
- * Returns NoteEvent[] sorted by startMs. Channel 9 (drums) is filtered out.
+ * Returns ParsedMidi with events sorted by startMs, plus tempo and time signature maps.
+ * Channel 9 (drums) is filtered from events.
  */
-export function parseMidi(buffer: ArrayBuffer): NoteEvent[] {
+export function parseMidi(buffer: ArrayBuffer): ParsedMidi {
   const view = new DataView(buffer);
 
   const headerTag =
@@ -230,6 +277,7 @@ export function parseMidi(buffer: ArrayBuffer): NoteEvent[] {
 
   const ppq = division;
   const tempoMap: TempoEntry[] = [];
+  const timeSigEntries: TimeSigEntry[] = [];
   const allTickNotes: TickNote[] = [];
   let offset = 8 + headerLength;
 
@@ -247,19 +295,25 @@ export function parseMidi(buffer: ArrayBuffer): NoteEvent[] {
 
     // Type 0: single track collects tempo. Type 1: only track 0 is authoritative for tempo.
     const collectTempo = format === 0 || t === 0;
-    allTickNotes.push(...parseTrack(view, trackDataStart, trackLength, t, tempoMap, collectTempo));
+    allTickNotes.push(...parseTrack(view, trackDataStart, trackLength, t, tempoMap, timeSigEntries, collectTempo));
     offset = trackDataStart + trackLength;
   }
 
   tempoMap.sort((a, b) => a.tick - b.tick);
+  timeSigEntries.sort((a, b) => a.tick - b.tick);
 
-  const result: NoteEvent[] = [];
+  // Default 4/4 if no FF 58 event found
+  if (timeSigEntries.length === 0) {
+    timeSigEntries.push({ tick: 0, numerator: 4, denominatorPower: 2 });
+  }
+
+  const events: NoteEvent[] = [];
   for (const tn of allTickNotes) {
     if (tn.channel === 9) continue; // Filter channel 9 (drums)
 
     const startMs = tickToMs(tn.startTick, tempoMap, ppq);
     const endMs = tickToMs(tn.endTick, tempoMap, ppq);
-    result.push({
+    events.push({
       midiNote: tn.midiNote,
       startMs,
       durationMs: Math.max(0, endMs - startMs),
@@ -269,6 +323,26 @@ export function parseMidi(buffer: ArrayBuffer): NoteEvent[] {
     });
   }
 
-  result.sort((a, b) => a.startMs - b.startMs);
-  return result;
+  events.sort((a, b) => a.startMs - b.startMs);
+
+  // Build exported tempo map with BPM calculated
+  const exportedTempoMap: TempoEvent[] = tempoMap.map(e => ({
+    tickPosition: e.tick,
+    microsecondsPerQuarter: e.tempoUs,
+    bpm: 60_000_000 / e.tempoUs,
+  }));
+
+  // Default 120 BPM if no tempo events found
+  if (exportedTempoMap.length === 0) {
+    exportedTempoMap.push({ tickPosition: 0, microsecondsPerQuarter: 500000, bpm: 120 });
+  }
+
+  const exportedTimeSigMap: TimeSigEvent[] = timeSigEntries.map(e => ({
+    tickPosition: e.tick,
+    numerator: e.numerator,
+    denominatorPower: e.denominatorPower,
+    ticksPerQuarter: ppq,
+  }));
+
+  return { events, tempoMap: exportedTempoMap, timeSigMap: exportedTimeSigMap };
 }

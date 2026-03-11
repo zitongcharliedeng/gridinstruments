@@ -1936,7 +1936,7 @@ export const gameMidiParserIntegration: StateInvariant = {
       const { parseMidi } = await import('/src/lib/midi-parser.ts');
       const resp = await fetch('/tests/fixtures/twinkle-type0.mid');
       const buffer = await resp.arrayBuffer();
-      const events = parseMidi(buffer);
+      const { events } = parseMidi(buffer);
       return {
         count: events.length,
         allHaveStartMs: events.every(e => typeof e.startMs === 'number'),
@@ -1960,7 +1960,7 @@ export const gameBuildNoteGroupsIntegration: StateInvariant = {
       const { buildNoteGroups } = await import('/src/lib/game-engine.ts');
       const resp = await fetch('/tests/fixtures/twinkle-type0.mid');
       const buffer = await resp.arrayBuffer();
-      const events = parseMidi(buffer);
+      const { events } = parseMidi(buffer);
       const groups = buildNoteGroups(events);
       return {
         count: groups.length,
@@ -2978,7 +2978,7 @@ export const gameMidi1: StateInvariant = {
       const { parseMidi } = await import('/src/lib/midi-parser.ts');
       const resp = await fetch('/tests/fixtures/type1-two-tracks.mid');
       const buffer = await resp.arrayBuffer();
-      const events = parseMidi(buffer);
+      const { events } = parseMidi(buffer);
       return {
         count:          events.length,
         isArray:        Array.isArray(events),
@@ -3028,7 +3028,7 @@ export const gameMidi2: StateInvariant = {
         0x00, 0xFF, 0x2F, 0x00,
       ];
       const buffer = new Uint8Array(bytes).buffer;
-      const events = parseMidi(buffer);
+      const { events } = parseMidi(buffer);
       const sortedByStart = events.every(
         (e, i) => i === 0 || events[i - 1].startMs <= e.startMs
       );
@@ -3084,7 +3084,7 @@ export const gameMidi3: StateInvariant = {
         0x00, 0xFF, 0x2F, 0x00,
       ];
       const buffer = new Uint8Array(bytes).buffer;
-      const events = parseMidi(buffer);
+      const { events } = parseMidi(buffer);
       return {
         count:              events.length,
         firstNote:          events[0] !== undefined ? events[0].midiNote    : -1,
@@ -3132,7 +3132,7 @@ export const gameMidi4: StateInvariant = {
         0x00, 0xFF, 0x2F, 0x00,
       ];
       const buffer = new Uint8Array(bytes).buffer;
-      const events = parseMidi(buffer);
+      const { events } = parseMidi(buffer);
       return { count: events.length };
     });
     expect(result.count, 'channel 9 note filtered → 0 events').toBe(0);
@@ -3171,7 +3171,7 @@ export const gameMidi5: StateInvariant = {
         0x00, 0xFF, 0x2F, 0x00,
       ];
       const buffer = new Uint8Array(bytes).buffer;
-      const events = parseMidi(buffer);
+      const { events } = parseMidi(buffer);
       return {
         count:   events.length,
         isArray: Array.isArray(events),
@@ -3256,7 +3256,7 @@ export const gameMidi7: StateInvariant = {
         0x00, 0xFF, 0x2F, 0x00,
       ];
       const buffer = new Uint8Array(bytes).buffer;
-      const events = parseMidi(buffer);
+      const { events } = parseMidi(buffer);
       return {
         count:   events.length,
         isArray: Array.isArray(events),
