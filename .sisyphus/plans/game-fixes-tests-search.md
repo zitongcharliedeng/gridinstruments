@@ -235,7 +235,7 @@ Max Concurrent: 5 (Waves 3, 4)
 
 ## TODOs
 
-- [ ] 1. NoteGroup Type Prerequisite + Mock Updates
+- [x] 1. NoteGroup Type Prerequisite + Mock Updates
 
   **What to do**:
   - Add `midiNotes: number[]` to the base `NoteGroup` interface in `src/machines/gameMachine.ts:31-36`
@@ -315,7 +315,7 @@ Max Concurrent: 5 (Waves 3, 4)
   - Files: `src/machines/gameMachine.ts`, `src/lib/game-engine.ts`, `tests/machines/invariant-checks.ts`
   - Pre-commit: `nix develop --command npm run build && nix develop --command npx playwright test --project=firefox --workers=1`
 
-- [ ] 2. Frequency-Based Matching + Chord Completion
+- [x] 2. Frequency-Based Matching + Chord Completion
 
   **What to do**:
   - **Frequency-based matching**: Modify `isCorrectNote` guard in `src/machines/gameMachine.ts:108-110` to check `context.noteGroups[context.currentGroupIndex]?.midiNotes.includes(event.midiNote)` instead of `cellIds.includes(event.cellId)`
@@ -416,7 +416,7 @@ Max Concurrent: 5 (Waves 3, 4)
   - Files: `src/machines/gameMachine.ts`, `tests/machines/invariant-checks.ts`, `tests/xstate-graph.spec.ts`
   - Pre-commit: `nix develop --command npm run build && nix develop --command npx playwright test --project=firefox --workers=1`
 
-- [ ] 3. Target Highlight Expansion + FILE_DROPPED from Playing + Controls Lock
+- [x] 3. Target Highlight Expansion + FILE_DROPPED from Playing + Controls Lock
 
   **What to do**:
   - **Expand target highlights**: In `src/main.ts` gameActor subscription (~line 1338), replace `this.visualizer?.setTargetNotes(ctx.targetCellIds)` with: get `midiNotes` from current group → call `this.visualizer.getCellIdsForMidiNotes(new Set(midiNotes))` → pass ALL returned cellIds to `setTargetNotes()`. This makes every cell on the grid that produces the target frequency glow white.
@@ -507,7 +507,7 @@ Max Concurrent: 5 (Waves 3, 4)
   - Files: `src/main.ts`, `src/machines/gameMachine.ts`, `tests/machines/invariant-checks.ts`, `tests/xstate-graph.spec.ts`
   - Pre-commit: `nix develop --command npm run build && nix develop --command npx playwright test --project=firefox --workers=1`
 
-- [ ] 4. Calibration Visual Feedback on Grid
+- [x] 4. Calibration Visual Feedback on Grid
 
   **What to do**:
   - **Pass calibrated range to visualizer**: In `src/main.ts`, after loading `calibratedRange` from localStorage or after exiting calibration mode, call a new method `visualizer.setCalibratedRange(range: Set<string> | null)` on the `KeyboardVisualizer`
@@ -603,7 +603,7 @@ Max Concurrent: 5 (Waves 3, 4)
   - Files: `src/lib/keyboard-visualizer.ts`, `src/main.ts`, `tests/machines/invariant-checks.ts`, `tests/xstate-graph.spec.ts`
   - Pre-commit: `nix develop --command npm run build && nix develop --command npx playwright test --project=firefox --workers=1`
 
-- [ ] 5. Game UI Overhaul: Drop Zone, Instructions, Progress Bar, Timer
+- [x] 5. Game UI Overhaul: Drop Zone, Instructions, Progress Bar, Timer
 
   **What to do**:
   - **Drop zone affordance on canvas**: When no game is active (idle state), render a subtle text overlay on the canvas: "Drop a MIDI file to play" in dim white (`rgba(255,255,255,0.15)`). This should be drawn by `KeyboardVisualizer` as part of `render()` — not a DOM element over the canvas. Add `setGameState(state: string)` method to visualizer so it knows when to show/hide the prompt.
