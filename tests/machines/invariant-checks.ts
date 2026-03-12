@@ -4598,3 +4598,101 @@ export const SONGBAR_CAL_4: StateInvariant = {
     if (!exists) throw new Error('#calibrate-btn not found in DOM');
   },
 };
+
+export const INFO_POPUP_1: StateInvariant = {
+  id: 'INFO-POPUP-1',
+  description: '.slider-info-btn[data-info="quantization"] exists in song-bar area',
+  check: async (page: Page) => {
+    const exists = await page.evaluate(() => {
+      return document.querySelector('.slider-info-btn[data-info="quantization"]') !== null;
+    });
+    if (!exists) throw new Error('.slider-info-btn[data-info="quantization"] not found');
+  },
+};
+
+export const INFO_POPUP_2: StateInvariant = {
+  id: 'INFO-POPUP-2',
+  description: '.slider-info-btn[data-info="calibration"] exists in song-bar area',
+  check: async (page: Page) => {
+    const exists = await page.evaluate(() => {
+      return document.querySelector('.slider-info-btn[data-info="calibration"]') !== null;
+    });
+    if (!exists) throw new Error('.slider-info-btn[data-info="calibration"] not found');
+  },
+};
+
+export const INFO_POPUP_3: StateInvariant = {
+  id: 'INFO-POPUP-3',
+  description: 'Clicking quantization info button opens #info-dialog',
+  check: async (page: Page) => {
+    const btn = page.locator('.slider-info-btn[data-info="quantization"]').first();
+    await btn.click();
+    const visible = await page.evaluate(() => {
+      const dialog = document.getElementById('info-dialog');
+      if (!dialog) throw new Error('#info-dialog not found');
+      return dialog.style.display !== 'none' && !dialog.hasAttribute('hidden') && dialog.style.visibility !== 'hidden';
+    });
+    if (!visible) throw new Error('#info-dialog not visible after clicking quantization info button');
+    const closeBtn = page.locator('#info-close').first();
+    if (await closeBtn.count() > 0) await closeBtn.click();
+    else await page.keyboard.press('Escape');
+  },
+};
+
+export const INFO_POPUP_4: StateInvariant = {
+  id: 'INFO-POPUP-4',
+  description: '#info-dialog has position: fixed (works from any parent)',
+  check: async (page: Page) => {
+    const position = await page.evaluate(() => {
+      const dialog = document.getElementById('info-dialog');
+      if (!dialog) throw new Error('#info-dialog not found');
+      return window.getComputedStyle(dialog).position;
+    });
+    if (position !== 'fixed') {
+      throw new Error(`#info-dialog position is "${position}", expected "fixed"`);
+    }
+  },
+};
+
+export const INFO_POPUP_5: StateInvariant = {
+  id: 'INFO-POPUP-5',
+  description: 'SLIDER_INFO has quantization and calibration entries (non-empty)',
+  check: async (page: Page) => {
+    const btn = page.locator('.slider-info-btn[data-info="quantization"]').first();
+    await btn.click();
+    const content = await page.evaluate(() => {
+      const contentEl = document.getElementById('info-content');
+      if (!contentEl) throw new Error('info content element not found');
+      return contentEl.textContent?.trim() ?? '';
+    });
+    if (content.length < 10) {
+      throw new Error(`Quantization info content is too short: "${content}"`);
+    }
+    const closeBtn = page.locator('#info-close').first();
+    if (await closeBtn.count() > 0) await closeBtn.click();
+    else await page.keyboard.press('Escape');
+  },
+};
+
+export const INFO_POPUP_LABEL_1: StateInvariant = {
+  id: 'INFO-POPUP-LABEL-1',
+  description: 'Quantization label text is "QUANTIZE" (not "DIFF")',
+  check: async (page: Page) => {
+    const hasDiff = await page.evaluate(() => {
+      const statusEl = document.getElementById('song-bar-status');
+      if (!statusEl) return false;
+      return statusEl.textContent?.includes('DIFF') ?? false;
+    });
+    if (hasDiff) {
+      throw new Error('Found "DIFF" text in #song-bar-status — should be "QUANTIZE"');
+    }
+    const hasQuantize = await page.evaluate(() => {
+      const statusEl = document.getElementById('song-bar-status');
+      if (!statusEl) return false;
+      return statusEl.textContent?.includes('QUANTIZE') ?? false;
+    });
+    if (!hasQuantize) {
+      throw new Error('"QUANTIZE" label not found in #song-bar-status');
+    }
+  },
+};

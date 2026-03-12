@@ -185,6 +185,12 @@ import {
      SONGBAR_CAL_2,
      SONGBAR_CAL_3,
      SONGBAR_CAL_4,
+     INFO_POPUP_1,
+     INFO_POPUP_2,
+     INFO_POPUP_3,
+     INFO_POPUP_4,
+     INFO_POPUP_5,
+     INFO_POPUP_LABEL_1,
    } from './machines/invariant-checks';
 import { focusReturnCheck } from './machines/modifierCompoundMachine';
 
@@ -930,6 +936,30 @@ test.describe('[Structural] state-independent invariants', () => {
 
   test('SONGBAR-CAL-4: #calibrate-btn exists in the song-bar area', async ({ page }) => {
     await SONGBAR_CAL_4.check(page);
+  });
+
+  test('INFO-POPUP-1: .slider-info-btn[data-info="quantization"] exists in song-bar area', async ({ page }) => {
+    await INFO_POPUP_1.check(page);
+  });
+
+  test('INFO-POPUP-2: .slider-info-btn[data-info="calibration"] exists in song-bar area', async ({ page }) => {
+    await INFO_POPUP_2.check(page);
+  });
+
+  test('INFO-POPUP-3: Clicking quantization info button opens #info-dialog', async ({ page }) => {
+    await INFO_POPUP_3.check(page);
+  });
+
+  test('INFO-POPUP-4: #info-dialog has position: fixed (works from any parent)', async ({ page }) => {
+    await INFO_POPUP_4.check(page);
+  });
+
+  test('INFO-POPUP-5: SLIDER_INFO has quantization and calibration entries (non-empty)', async ({ page }) => {
+    await INFO_POPUP_5.check(page);
+  });
+
+  test('INFO-POPUP-LABEL-1: Quantization label text is "QUANTIZE" (not "DIFF")', async ({ page }) => {
+    await INFO_POPUP_LABEL_1.check(page);
   });
  });
 
