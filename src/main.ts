@@ -1353,6 +1353,7 @@ class DComposeApp {
 
       const statusEl = document.getElementById('game-status') as HTMLElement | null;
       const progressEl = document.getElementById('game-progress') as HTMLElement | null;
+      const songBarHint = document.getElementById('song-bar-hint');
 
       // Lock tuning slider during gameplay — changing tuning mid-game invalidates note matching
       if (this.tuningSlider) this.tuningSlider.disabled = state === 'playing';
@@ -1394,9 +1395,11 @@ class DComposeApp {
         }
         this.render();
         if (statusEl) statusEl.style.display = 'flex';
+        if (songBarHint) songBarHint.style.display = 'none';
         if (progressEl) progressEl.textContent = `${ctx.currentGroupIndex + 1} / ${ctx.noteGroups.length}`;
       } else if (state === 'loading') {
         if (statusEl) statusEl.style.display = 'flex';
+        if (songBarHint) songBarHint.style.display = 'none';
         if (progressEl) progressEl.textContent = 'Loading\u2026';
       } else if (state === 'complete') {
         this.visualizer?.setTargetNotes([]);
@@ -1408,6 +1411,7 @@ class DComposeApp {
         const elapsedSec = (elapsedMs / 1000).toFixed(1);
         this.showGameScore(elapsedSec);
         if (statusEl) statusEl.style.display = 'flex';
+        if (songBarHint) songBarHint.style.display = 'none';
         if (progressEl) progressEl.textContent = `${ctx.noteGroups.length} / ${ctx.noteGroups.length} \u2713`;
       } else {
         // idle or error — clear everything and hide status
@@ -1416,6 +1420,7 @@ class DComposeApp {
         this.historyVisualizer?.setGhostNote(null);
         this.render();
         if (statusEl) statusEl.style.display = 'none';
+        if (songBarHint) songBarHint.style.display = '';
       }
     });
 

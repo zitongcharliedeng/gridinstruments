@@ -1853,12 +1853,12 @@ export const iss92OverlayHeadingsCheck: StateInvariant = {
     await page.waitForTimeout(300);
     const headings = page.locator('#grid-overlay .overlay-section-title');
     const texts = await headings.allTextContents();
-    for (const expected of ['SOUND', 'VISUAL', 'INPUT', 'EXPRESSION', 'GAME', 'DIFFICULTY']) {
+    for (const expected of ['SOUND', 'VISUAL', 'INPUT', 'EXPRESSION', 'GAME']) {
       if (!texts.some(t => t.trim() === expected)) {
         throw new Error(`Missing overlay category heading: ${expected}`);
       }
     }
-    expect(texts.length, 'Should have exactly 6 overlay section headings').toBe(6);
+    expect(texts.length, 'Should have exactly 5 overlay section headings').toBe(5);
     // Verify headings are greyish (not white)
     const firstHeading = headings.first();
     const color = await firstHeading.evaluate((el) => getComputedStyle(el).color);
@@ -1898,9 +1898,10 @@ export const gameCalibrateBtnExists: StateInvariant = {
 export const gameOverlayUiExists: StateInvariant = {
   id: 'GAME-UI-1',
   check: async (page: Page) => {
-    await expect(page.locator('#game-reset-btn')).toBeAttached();
-    await expect(page.locator('#game-progress')).toBeAttached();
-    await expect(page.locator('#game-song-title')).toBeAttached();
+    await expect(page.locator('#song-bar #game-reset-btn')).toBeAttached();
+    await expect(page.locator('#song-bar #game-progress')).toBeAttached();
+    await expect(page.locator('#song-bar #game-song-title')).toBeAttached();
+    await expect(page.locator('#song-bar #quantization-level')).toBeAttached();
   },
 };
 
@@ -2539,17 +2540,14 @@ export const gameChordSingle: StateInvariant = {
   },
 };
 
-/** D = {overlay}. Instructions paragraph exists in GAME overlay section. */
+/** D = {}. Song-bar hint text exists as game instruction placeholder. */
 export const gameInstructionsText: StateInvariant = {
   id: 'GAME-UI-2',
   check: async (page: Page) => {
-    await page.locator('#grid-settings-btn').click();
-    await page.waitForTimeout(300);
-    const gameSection = page.locator('.overlay-section-title:has-text("GAME") + .overlay-section');
-    const para = gameSection.locator('p');
-    await expect(para).toBeVisible();
-    const text = await para.textContent();
-    if (!text) throw new Error('GAME instructions paragraph has no text');
+    const hint = page.locator('#song-bar-hint');
+    await expect(hint).toBeAttached();
+    const text = await hint.textContent();
+    if (!text) throw new Error('#song-bar-hint has no text');
     expect(text).toContain('.mid');
   },
 };
