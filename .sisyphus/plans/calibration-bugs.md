@@ -576,7 +576,7 @@ Max Concurrent: 4 (Wave 2)
   - Files: `src/lib/note-colors.ts`, `src/lib/keyboard-visualizer.ts`, `src/main.ts`, `tests/machines/invariant-checks.ts`
   - Pre-commit: `nix develop --command npm run build && nix develop --command npx playwright test --project=firefox --workers=1 -g "Structural"`
 
-- [ ] 5. Replace Reset with Restart — Back to Start of Same Song (#119)
+- [x] 5. Replace Reset with Restart — Back to Start of Same Song (#119)
 
   **What to do**:
   - **Add `GAME_RESTART` event** to `src/machines/gameMachine.ts`:
