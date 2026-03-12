@@ -194,10 +194,12 @@ import {
       EXPR_JOINT_1,
       EXPR_JOINT_2,
       EXPR_JOINT_3,
-      EXPR_JOINT_4,
-      PB_STYLE_1,
-      PB_STYLE_2,
-    } from './machines/invariant-checks';
+       EXPR_JOINT_4,
+       PB_STYLE_1,
+       PB_STYLE_2,
+       IDLE_FADE_1,
+       IDLE_FADE_2,
+     } from './machines/invariant-checks';
 import { focusReturnCheck } from './machines/modifierCompoundMachine';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -990,6 +992,14 @@ test.describe('[Structural] state-independent invariants', () => {
 
   test('PB-STYLE-2: Pitch bend range input has no border-radius and uses JetBrains Mono', async ({ page }) => {
     await PB_STYLE_2.check(page);
+  });
+
+  test('IDLE-FADE-1: #song-bar-hint has opacity transition CSS', async ({ page }) => {
+    await IDLE_FADE_1.check(page);
+  });
+
+  test('IDLE-FADE-2: #song-bar-hint is visible (opacity > 0) on page load when idle', async ({ page }) => {
+    await IDLE_FADE_2.check(page);
   });
  });
 

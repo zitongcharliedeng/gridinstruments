@@ -4787,3 +4787,33 @@ export const PB_STYLE_2: StateInvariant = {
     }
   },
 };
+
+export const IDLE_FADE_1: StateInvariant = {
+  id: 'IDLE-FADE-1',
+  description: '#song-bar-hint has opacity transition CSS',
+  check: async (page) => {
+    const transition = await page.evaluate(() => {
+      const hint = document.getElementById('song-bar-hint');
+      if (!hint) throw new Error('#song-bar-hint not found');
+      return window.getComputedStyle(hint).transition;
+    });
+    if (!transition.includes('opacity')) {
+      throw new Error(`#song-bar-hint has no opacity transition: "${transition}"`);
+    }
+  },
+};
+
+export const IDLE_FADE_2: StateInvariant = {
+  id: 'IDLE-FADE-2',
+  description: '#song-bar-hint is visible (opacity > 0) on page load when idle',
+  check: async (page) => {
+    const opacity = await page.evaluate(() => {
+      const hint = document.getElementById('song-bar-hint');
+      if (!hint) throw new Error('#song-bar-hint not found');
+      return parseFloat(window.getComputedStyle(hint).opacity);
+    });
+    if (opacity <= 0) {
+      throw new Error(`#song-bar-hint opacity is ${opacity} on load — should be > 0 when idle`);
+    }
+  },
+};
