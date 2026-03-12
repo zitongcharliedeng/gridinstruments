@@ -31,6 +31,10 @@ npm-debug.log*
 .sisyphus/boulder.json
 .sisyphus/notepads/
 .sisyphus/notepads/**
+.sisyphus/evidence/
+.sisyphus/evidence/**
+.sisyphus/*.cjs
+.sisyphus/*.js
 
 # Stale nested clone
 dcompose-web/

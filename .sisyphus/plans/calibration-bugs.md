@@ -200,7 +200,7 @@ Max Concurrent: 4 (Wave 2)
 
 ## TODOs
 
-- [ ] 1. Fix D-ref Not Adjusting After Calibration Transpose (#109)
+- [x] 1. Fix D-ref Not Adjusting After Calibration Transpose (#109)
 
   **What to do**:
   - In `src/main.ts` `loadMidiFromBuffer()` method (line ~1783-1788):
@@ -272,7 +272,7 @@ Max Concurrent: 4 (Wave 2)
   - Files: `src/main.ts`
   - Pre-commit: `nix develop --command npm run build && nix develop --command npx playwright test --project=firefox --workers=1 -g "Structural"`
 
-- [ ] 2. Greyscale Uncalibrated Cells — Not Dimmed (#110)
+- [x] 2. Greyscale Uncalibrated Cells — Not Dimmed (#110)
 
   **What to do**:
   - **Split `uncalibrated` into two states**: `uncalibrated-white` and `uncalibrated-black` in the `cellColors` function signature and implementation in `src/lib/note-colors.ts`
