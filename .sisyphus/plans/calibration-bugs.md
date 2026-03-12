@@ -758,7 +758,7 @@ Max Concurrent: 4 (Wave 2)
   - Files: `index.html`
   - Pre-commit: `nix develop --command npm run build && nix develop --command npx playwright test --project=firefox --workers=1 -g "Structural"`
 
-- [ ] 7. Keyboard Ghosting/Rollover Warning (#122) — LOW PRIORITY
+- [x] 7. Keyboard Ghosting/Rollover Warning (#122) — LOW PRIORITY
 
   **What to do**:
   - **Track key rollover high-water mark** in `src/main.ts`:
