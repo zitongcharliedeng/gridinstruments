@@ -158,9 +158,10 @@ import {
     gameQuant6,
     gameQuant7,
     gameQuant8,
-    gameQuant9,
-    gameChordProgress1,
-  } from './machines/invariant-checks';
+     gameQuant9,
+     gameChordProgress1,
+     gameRestart1,
+   } from './machines/invariant-checks';
 import { focusReturnCheck } from './machines/modifierCompoundMachine';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -613,6 +614,10 @@ test.describe('[Structural] state-independent invariants', () => {
 
   test('GAME-CHORD-PROGRESS-1: setPressedTargetNotes method exists and target-pressed is dimmer than target', async ({ page }) => {
     await gameChordProgress1.check(page);
+  });
+
+  test('GAME-RESTART-1: GAME_RESTART event exists in playing and complete states', async ({ page }) => {
+    await gameRestart1.check(page);
   });
 
   test('GAME-ENG-1: buildNoteGroups groups notes within 20ms window into one chord group', async ({ page }) => {

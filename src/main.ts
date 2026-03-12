@@ -1325,9 +1325,7 @@ class DComposeApp {
 
     const gameResetBtn = document.getElementById('game-reset-btn');
     gameResetBtn?.addEventListener('click', () => {
-      this.gameActor?.send({ type: 'GAME_RESET' });
-      const statusEl = document.getElementById('game-status') as HTMLElement | null;
-      if (statusEl) statusEl.style.display = 'none';
+      this.gameActor?.send({ type: 'GAME_RESTART' });
     });
 
     // Game: file drop on canvas

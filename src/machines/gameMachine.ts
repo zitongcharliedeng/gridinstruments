@@ -65,6 +65,7 @@ export type GameEvent =
   | { type: 'LOAD_FAILED'; error: string }
   | { type: 'NOTE_PRESSED'; cellId: string; midiNote: number }
   | { type: 'GAME_RESET' }
+  | { type: 'GAME_RESTART' }
   | { type: 'TUNING_WARN_ACK' };
 
 // ─── Machine ──────────────────────────────────────────────────────────────────
@@ -116,6 +117,13 @@ export const gameMachine = setup({
       finishTimeMs: 0,
       error: null as string | null,
       tuningWarnAcknowledged: false,
+    })),
+    restartGame: assign(({ context }) => ({
+      currentGroupIndex: 0,
+      targetCellIds: context.noteGroups[0]?.cellIds ?? [],
+      pressedMidiNotes: [] as number[],
+      startTimeMs: Date.now(),
+      finishTimeMs: 0,
     })),
     ackTuningWarn: assign(() => ({ tuningWarnAcknowledged: true })),
   },
@@ -178,6 +186,7 @@ export const gameMachine = setup({
           },
         ],
         GAME_RESET: { target: 'idle', actions: 'resetGame' },
+        GAME_RESTART: { target: 'playing', actions: 'restartGame' },
         TUNING_WARN_ACK: { actions: 'ackTuningWarn' },
         FILE_DROPPED: { target: 'loading', actions: 'resetGame' },
       },
@@ -185,6 +194,7 @@ export const gameMachine = setup({
     complete: {
       on: {
         GAME_RESET: { target: 'idle', actions: 'resetGame' },
+        GAME_RESTART: { target: 'playing', actions: 'restartGame' },
         FILE_DROPPED: 'loading',
       },
     },

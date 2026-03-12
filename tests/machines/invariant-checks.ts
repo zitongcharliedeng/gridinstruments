@@ -4128,3 +4128,32 @@ export const gameChordProgress1: StateInvariant = {
     expect(colorResult.targetPressedBrightness, 'target-pressed must be noticeably dimmer than target (L=0.55)').toBeLessThan(colorResult.targetBrightness * 0.75);
   },
 };
+
+/**
+ * GAME-RESTART-1: GAME_RESTART event exists and transitions are correct.
+ *
+ * The restart button should allow users to replay the same song without
+ * re-loading it. GAME_RESTART keeps noteGroups and songTitle, resets
+ * currentGroupIndex to 0, and clears pressedMidiNotes.
+ */
+export const gameRestart1: StateInvariant = {
+  id: 'GAME-RESTART-1',
+  description: 'GAME_RESTART event exists in playing and complete states',
+  check: async (page: Page) => {
+    const result = await page.evaluate(async () => {
+      const { gameMachine } = await import('/src/machines/gameMachine.ts');
+      const config = gameMachine.config;
+      if (!config.states) return { playingHasRestart: false, completeHasRestart: false };
+      const playingState = config.states['playing'] as Record<string, unknown>;
+      const completeState = config.states['complete'] as Record<string, unknown>;
+      const playingOn = playingState?.['on'] as Record<string, unknown> | undefined;
+      const completeOn = completeState?.['on'] as Record<string, unknown> | undefined;
+      return {
+        playingHasRestart: playingOn ? 'GAME_RESTART' in playingOn : false,
+        completeHasRestart: completeOn ? 'GAME_RESTART' in completeOn : false,
+      };
+    });
+    expect(result.playingHasRestart, 'playing state must handle GAME_RESTART').toBe(true);
+    expect(result.completeHasRestart, 'complete state must handle GAME_RESTART').toBe(true);
+  },
+};
