@@ -564,7 +564,7 @@ Max Concurrent: 4 (Wave 2)
 
 ---
 
-- [ ] 7. Remove GAME section from overlay + cleanup
+- [x] 7. Remove GAME section from overlay + cleanup
 
   **What to do**:
   - **HTML**: Remove the entire GAME section from `#grid-overlay` (index.html lines 933-960):
@@ -622,7 +622,7 @@ Max Concurrent: 4 (Wave 2)
   - Message: `refactor(ui): remove GAME section from overlay + cleanup (#120)`
   - Files: `index.html`, `tests/machines/invariant-checks.ts`, `tests/xstate-graph.spec.ts`
 
-- [ ] 8. Inactivity fade for graffiti + canvas text (#113)
+- [x] 8. Inactivity fade for graffiti + canvas text (#113)
 
   **What to do**:
   - **Concept**: When no notes are active and note history is empty (idle state), the yellow chord graffiti SVG and "Play some notes" canvas text should fade IN after a timeout. When notes play, they fade OUT immediately.
@@ -685,7 +685,7 @@ Max Concurrent: 4 (Wave 2)
   - Message: `feat(ui): #113 — inactivity fade for hints and graffiti`
   - Files: `src/lib/note-history-visualizer.ts`, `src/main.ts`, `index.html`
 
-- [ ] 9. Song-bar responsive for mobile breakpoints
+- [x] 9. Song-bar responsive for mobile breakpoints
 
   **What to do**:
   - Add media queries for `#song-bar` at the same breakpoints as `#top-bar`:
@@ -741,7 +741,7 @@ Max Concurrent: 4 (Wave 2)
   - Message: `fix(ui): song-bar responsive for mobile breakpoints`
   - Files: `index.html`
 
-- [ ] 10. Full test suite pass + golden screenshots
+- [x] 10. Full test suite pass + golden screenshots
 
   **What to do**:
   - Run full test suite: `nix develop --command npx playwright test --project=firefox --workers=1`
@@ -785,19 +785,19 @@ Max Concurrent: 4 (Wave 2)
 
 > 4 review agents run in PARALLEL. ALL must APPROVE. Rejection → fix → re-run.
 
-- [ ] F1. **Plan Compliance Audit** — `oracle`
+- [x] F1. **Plan Compliance Audit** — `oracle`
   Read the plan end-to-end. For each "Must Have": verify implementation exists. For each "Must NOT Have": search codebase for forbidden patterns. Check evidence files exist.
   Output: `Must Have [N/N] | Must NOT Have [N/N] | Tasks [N/N] | VERDICT: APPROVE/REJECT`
 
-- [ ] F2. **Code Quality Review** — `unspecified-high`
+- [x] F2. **Code Quality Review** — `unspecified-high`
   Run `npm run build` + `nix develop --command npx playwright test --project=firefox --workers=1`. Review all changed files for: `as any`/`@ts-ignore`, empty catches, console.log in prod, unused imports.
   Output: `Build [PASS/FAIL] | Tests [N pass/N fail] | VERDICT`
 
-- [ ] F3. **Real QA** — `unspecified-high` + `playwright` skill
+- [x] F3. **Real QA** — `unspecified-high` + `playwright` skill
   Start from clean state. Execute EVERY QA scenario from EVERY task. Test cross-task integration (song search → load song → calibrate → play). Save to `.sisyphus/evidence/final-qa/`.
   Output: `Scenarios [N/N pass] | Integration [N/N] | VERDICT`
 
-- [ ] F4. **Scope Fidelity Check** — `deep`
+- [x] F4. **Scope Fidelity Check** — `deep`
   For each task: read "What to do", read actual diff. Verify everything in spec was built, nothing beyond spec was built. Check "Must NOT do" compliance.
   Output: `Tasks [N/N compliant] | Unaccounted [CLEAN/N files] | VERDICT`
 
