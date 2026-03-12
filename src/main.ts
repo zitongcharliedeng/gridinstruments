@@ -384,6 +384,7 @@ class DComposeApp {
   private updateGraffiti: (() => void) | null = null;
   private gameActor: ReturnType<typeof createActor<typeof gameMachine>> | null = null;
   private idleGraffitiTimer: ReturnType<typeof setTimeout> | null = null;
+  private gameElapsedInterval: ReturnType<typeof setInterval> | null = null;
 
   private calibrating = false;
   private calibratedCells = new Set<string>();
@@ -1353,7 +1354,8 @@ class DComposeApp {
       }
 
       const statusEl = document.getElementById('game-status') as HTMLElement | null;
-      const progressEl = document.getElementById('game-progress') as HTMLElement | null;
+      const progressFill = document.getElementById('game-progress-fill') as HTMLElement | null;
+      const elapsedTimer = document.getElementById('game-elapsed-timer') as HTMLElement | null;
       const songBarHint = document.getElementById('song-bar-hint');
 
       // Lock tuning slider during gameplay — changing tuning mid-game invalidates note matching
@@ -1405,12 +1407,39 @@ class DComposeApp {
         this.render();
         if (statusEl) statusEl.style.display = 'flex';
         if (songBarHint) songBarHint.style.display = 'none';
-        if (progressEl) progressEl.textContent = `${ctx.currentGroupIndex + 1} / ${ctx.noteGroups.length}`;
+
+        // Update progress bar fill
+        if (progressFill && ctx.noteGroups.length > 0) {
+          const pct = (ctx.currentGroupIndex / ctx.noteGroups.length) * 100;
+          progressFill.style.width = `${pct}%`;
+        }
+
+        // Start elapsed timer interval (only if not already running)
+        if (!this.gameElapsedInterval && ctx.startTimeMs > 0) {
+          const startMs = ctx.startTimeMs;
+          const updateTimer = () => {
+            const el = document.getElementById('game-elapsed-timer');
+            if (el) {
+              const totalSec = Math.floor((Date.now() - startMs) / 1000);
+              const minutes = Math.floor(totalSec / 60);
+              const seconds = totalSec % 60;
+              el.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            }
+          };
+          updateTimer();
+          this.gameElapsedInterval = setInterval(updateTimer, 1000);
+        }
       } else if (state === 'loading') {
         if (statusEl) statusEl.style.display = 'flex';
         if (songBarHint) songBarHint.style.display = 'none';
-        if (progressEl) progressEl.textContent = 'Loading\u2026';
+        if (progressFill) progressFill.style.width = '0%';
+        if (elapsedTimer) elapsedTimer.textContent = '';
       } else if (state === 'complete') {
+        // Stop elapsed timer
+        if (this.gameElapsedInterval !== null) {
+          clearInterval(this.gameElapsedInterval);
+          this.gameElapsedInterval = null;
+        }
         this.visualizer?.setTargetNotes([]);
         this.visualizer?.setPressedTargetNotes([]);
         this.historyVisualizer?.setGhostNote(null);
@@ -1421,15 +1450,28 @@ class DComposeApp {
         this.showGameScore(elapsedSec);
         if (statusEl) statusEl.style.display = 'flex';
         if (songBarHint) songBarHint.style.display = 'none';
-        if (progressEl) progressEl.textContent = `${ctx.noteGroups.length} / ${ctx.noteGroups.length} \u2713`;
+        if (progressFill) progressFill.style.width = '100%';
+        // Show final elapsed time
+        if (elapsedTimer) {
+          const totalSec = Math.floor(parseFloat(elapsedSec));
+          const minutes = Math.floor(totalSec / 60);
+          const seconds = totalSec % 60;
+          elapsedTimer.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        }
       } else {
         // idle or error — clear everything and hide status
+        if (this.gameElapsedInterval !== null) {
+          clearInterval(this.gameElapsedInterval);
+          this.gameElapsedInterval = null;
+        }
         this.visualizer?.setTargetNotes([]);
         this.visualizer?.setPressedTargetNotes([]);
         this.historyVisualizer?.setGhostNote(null);
         this.render();
         if (statusEl) statusEl.style.display = 'none';
         if (songBarHint) songBarHint.style.display = '';
+        if (progressFill) progressFill.style.width = '0%';
+        if (elapsedTimer) elapsedTimer.textContent = '';
       }
     });
 
