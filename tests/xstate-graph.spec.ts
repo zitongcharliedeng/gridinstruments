@@ -172,6 +172,11 @@ import {
      CANVAS_CLEAN_3,
      CANVAS_CLEAN_4,
      CANVAS_CLEAN_5,
+     SONGBAR_HINT_1,
+     SONGBAR_HINT_2,
+     SONGBAR_HINT_3,
+     SONGBAR_HINT_4,
+     SONGBAR_SEARCH_LABEL_1,
    } from './machines/invariant-checks';
 import { focusReturnCheck } from './machines/modifierCompoundMachine';
 
@@ -865,6 +870,26 @@ test.describe('[Structural] state-independent invariants', () => {
 
   test('CANVAS-CLEAN-5: KeyboardVisualizer.setGameProgress method still exists', async ({ page }) => {
     await CANVAS_CLEAN_5.check(page);
+  });
+
+  test('SONGBAR-HINT-1: #song-bar-hint has margin-left: auto (right-aligned)', async ({ page }) => {
+    await SONGBAR_HINT_1.check(page);
+  });
+
+  test('SONGBAR-HINT-2: #song-bar-hint right edge is near #song-bar right edge', async ({ page }) => {
+    await SONGBAR_HINT_2.check(page);
+  });
+
+  test('SONGBAR-HINT-3: Focusing #midi-search-input hides #song-bar-hint', async ({ page }) => {
+    await SONGBAR_HINT_3.check(page);
+  });
+
+  test('SONGBAR-HINT-4: Typing in #midi-search-input hides #song-bar-hint', async ({ page }) => {
+    await SONGBAR_HINT_4.check(page);
+  });
+
+  test('SONGBAR-SEARCH-LABEL-1: A visible "SEARCH" label exists adjacent to #midi-search-input', async ({ page }) => {
+    await SONGBAR_SEARCH_LABEL_1.check(page);
   });
  });
 

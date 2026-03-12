@@ -4377,3 +4377,101 @@ export const CANVAS_CLEAN_5: StateInvariant = {
     if (!exists) throw new Error('setGameProgress method missing from KeyboardVisualizer');
   },
 };
+
+export const SONGBAR_HINT_1: StateInvariant = {
+  id: 'SONGBAR-HINT-1',
+  description: '#song-bar-hint has margin-left: auto (right-aligned)',
+  check: async (page: Page) => {
+    const result = await page.evaluate(() => {
+      const hint = document.getElementById('song-bar-hint');
+      if (!hint) throw new Error('#song-bar-hint not found');
+      // Check the stylesheet-applied style by looking at computed style on a wide viewport
+      // margin-left: auto on a flex item pushes it to the right; computed value is a positive px
+      const computedML = window.getComputedStyle(hint).marginLeft;
+      return { computed: computedML };
+    });
+    const computedPx = parseFloat(result.computed);
+    if (computedPx <= 0) {
+      throw new Error(`#song-bar-hint computed margin-left is ${result.computed} — expected auto (positive value on wide viewport)`);
+    }
+  },
+};
+
+export const SONGBAR_HINT_2: StateInvariant = {
+  id: 'SONGBAR-HINT-2',
+  description: '#song-bar-hint right edge is near #song-bar right edge (right-aligned)',
+  check: async (page: Page) => {
+    await page.setViewportSize({ width: 1920, height: 1080 });
+    const result = await page.evaluate(() => {
+      const hint = document.getElementById('song-bar-hint');
+      const songBar = document.getElementById('song-bar');
+      if (!hint) throw new Error('#song-bar-hint not found');
+      if (!songBar) throw new Error('#song-bar not found');
+      const hintBox = hint.getBoundingClientRect();
+      const barBox = songBar.getBoundingClientRect();
+      return { hintRight: hintBox.right, barRight: barBox.right };
+    });
+    const diff = Math.abs(result.barRight - result.hintRight);
+    if (diff > 40) {
+      throw new Error(`#song-bar-hint right edge (${result.hintRight}) is ${diff}px from #song-bar right edge (${result.barRight}) — expected within 40px`);
+    }
+  },
+};
+
+export const SONGBAR_HINT_3: StateInvariant = {
+  id: 'SONGBAR-HINT-3',
+  description: 'Focusing #midi-search-input hides #song-bar-hint',
+  check: async (page: Page) => {
+    const input = page.locator('#midi-search-input');
+    await input.click();
+    const isHidden = await page.evaluate(() => {
+      const hint = document.getElementById('song-bar-hint');
+      if (!hint) throw new Error('#song-bar-hint not found');
+      const style = window.getComputedStyle(hint);
+      return style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0';
+    });
+    if (!isHidden) {
+      throw new Error('#song-bar-hint is still visible after focusing #midi-search-input');
+    }
+    await page.keyboard.press('Escape');
+  },
+};
+
+export const SONGBAR_HINT_4: StateInvariant = {
+  id: 'SONGBAR-HINT-4',
+  description: 'Typing in #midi-search-input hides #song-bar-hint',
+  check: async (page: Page) => {
+    const input = page.locator('#midi-search-input');
+    await input.fill('test');
+    const isHidden = await page.evaluate(() => {
+      const hint = document.getElementById('song-bar-hint');
+      if (!hint) throw new Error('#song-bar-hint not found');
+      const style = window.getComputedStyle(hint);
+      return style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0';
+    });
+    if (!isHidden) {
+      throw new Error('#song-bar-hint is still visible after typing in #midi-search-input');
+    }
+    await input.fill('');
+    await page.keyboard.press('Escape');
+  },
+};
+
+export const SONGBAR_SEARCH_LABEL_1: StateInvariant = {
+  id: 'SONGBAR-SEARCH-LABEL-1',
+  description: 'A visible "SEARCH" label exists adjacent to #midi-search-input',
+  check: async (page: Page) => {
+    const labelText = await page.evaluate(() => {
+      const searchContainer = document.getElementById('song-bar-search');
+      if (!searchContainer) throw new Error('#song-bar-search not found');
+      const allElements = searchContainer.querySelectorAll('*');
+      for (const el of allElements) {
+        if (el.textContent?.trim() === 'SEARCH') return 'found';
+      }
+      return 'not found';
+    });
+    if (labelText !== 'found') {
+      throw new Error('No "SEARCH" label found inside #song-bar-search');
+    }
+  },
+};
