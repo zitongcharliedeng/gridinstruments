@@ -181,6 +181,14 @@ ${tuningTableRows}
 
   calibration: `Marks which notes are reachable on your input device. Play through your range, press Confirm, and the grid highlights only your playable area.`,
 
+  bend: `Controls pitch bend range — how far a MIDI pitch bend wheel or MPE finger slide changes the pitch in semitones.`,
+
+  velocity: `Note-on velocity controls how hard each note strikes, affecting initial volume and timbre brightness.`,
+
+  pressure: `Aftertouch (pressure) is continuous force applied after the initial strike, used for expressive swells and filter sweeps.`,
+
+  timbre: `Timbre CC selects which MIDI continuous controller carries brightness/timbre data from MPE devices.`,
+
   shear: `
 <h2>Wicked Shear</h2>
 <p>A pure <a href="https://en.wikipedia.org/wiki/Shear_mapping" target="_blank" rel="noopener">shear mapping</a> that flattens the lattice rows toward horizontal:</p>
@@ -401,6 +409,7 @@ class DComposeApp {
     volume: 'gi_volume', waveform: 'gi_waveform', dref: 'gi_dref', layout: 'gi_layout',
     midiPbRange: 'gi_midi_pb_range',
     exprBend: 'gi_expr_bend', exprVelocity: 'gi_expr_velocity', exprPressure: 'gi_expr_pressure',
+    timbreCcMode: 'gi_timbre_cc_mode',
   } as const;
 
   private loadSetting(key: keyof typeof DComposeApp.STORAGE_KEYS, fallback: string): string {
@@ -411,6 +420,17 @@ class DComposeApp {
   private saveSetting(key: keyof typeof DComposeApp.STORAGE_KEYS, value: string): void {
     try { localStorage.setItem(DComposeApp.STORAGE_KEYS[key], value); }
     catch { /* storage full or private mode */ }
+  }
+
+  private applyTimbreCcMode(mode: string): void {
+    const numericCc = parseInt(mode, 10);
+    if (!isNaN(numericCc)) {
+      this.mpe.updateSettings({ timbreCC: numericCc });
+    }
+    // 'poly-at' and 'channel-at' are pressure modes, not timbre CC numbers —
+    // the timbre CC stays at whatever numeric value was last set.
+    // These alternative modes would need deeper MPE service changes,
+    // so for now only numeric CC values (74, 1) are applied.
   }
 
   constructor() {
@@ -1099,6 +1119,18 @@ class DComposeApp {
       exprPressCb.addEventListener('change', () => {
         this.expressionPressure = exprPressCb.checked;
         this.saveSetting('exprPressure', exprPressCb.checked.toString());
+      });
+    }
+
+    const timbreCcSelect = getElementOrNull('timbre-cc-mode', HTMLSelectElement);
+    if (timbreCcSelect) {
+      const savedTimbreMode = this.loadSetting('timbreCcMode', '74');
+      timbreCcSelect.value = savedTimbreMode;
+      this.applyTimbreCcMode(savedTimbreMode);
+      timbreCcSelect.addEventListener('change', () => {
+        const mode = timbreCcSelect.value;
+        this.applyTimbreCcMode(mode);
+        this.saveSetting('timbreCcMode', mode);
       });
     }
 
