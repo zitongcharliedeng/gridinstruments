@@ -1358,8 +1358,10 @@ class DComposeApp {
       const elapsedTimer = document.getElementById('game-elapsed-timer') as HTMLElement | null;
       const songBarHint = document.getElementById('song-bar-hint');
 
-      // Lock tuning slider during gameplay — changing tuning mid-game invalidates note matching
       if (this.tuningSlider) this.tuningSlider.disabled = state === 'playing';
+
+      const calibrateBtn = document.getElementById('calibrate-btn') as HTMLButtonElement | null;
+      if (calibrateBtn) calibrateBtn.disabled = state === 'playing' || state === 'loading';
 
       if (state === 'playing') {
         const graffitiEl = document.querySelector<SVGElement>('.graffiti-overlay');
@@ -2139,8 +2141,12 @@ class DComposeApp {
     this.visualizer?.setCalibratedRange(new Set<string>());
     const banner = document.getElementById('calibration-banner');
     const msg = document.getElementById('calibration-msg');
+    const warning = document.getElementById('calibration-warning');
     if (banner) banner.style.display = 'flex';
-    if (msg) msg.textContent = 'Play all reachable notes, then confirm';
+    if (msg) msg.textContent = 'Play all reachable notes to set your playable area, then confirm';
+    const gameState = this.gameActor?.getSnapshot().value as string | undefined;
+    const songActive = gameState === 'playing' || gameState === 'loading' || gameState === 'complete';
+    if (warning) warning.style.display = songActive ? '' : 'none';
     const btn = document.getElementById('calibrate-btn');
     if (btn) btn.style.display = 'none';
     this.render();
@@ -2155,7 +2161,7 @@ class DComposeApp {
       const msg = document.getElementById('calibration-msg');
       if (msg) {
         msg.textContent = `Range saved (${count} keys)`;
-        setTimeout(() => { msg.textContent = 'Play all reachable notes, then confirm'; }, 2000);
+        setTimeout(() => { msg.textContent = 'Play all reachable notes to set your playable area, then confirm'; }, 2000);
       }
     }
     this.visualizer?.setCalibratedRange(this.calibratedRange);
@@ -2164,7 +2170,7 @@ class DComposeApp {
     if (banner) banner.style.display = 'none';
     const btn = document.getElementById('calibrate-btn');
     if (btn) {
-      btn.textContent = 'Calibrate range';
+      btn.textContent = 'Calibrate playable area';
       btn.style.display = '';
     }
     this.render();
