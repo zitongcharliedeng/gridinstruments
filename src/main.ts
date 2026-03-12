@@ -1520,6 +1520,32 @@ class DComposeApp {
       });
     }
 
+    // ── Search focus/blur: hide hint while search is active ──
+    const songBarHintEl = document.getElementById('song-bar-hint') as HTMLElement | null;
+    if (searchInput && songBarHintEl) {
+      searchInput.addEventListener('focus', () => {
+        songBarHintEl.style.display = 'none';
+      });
+      searchInput.addEventListener('blur', () => {
+        if (searchInput.value.trim() === '') {
+          const gameState = this.gameActor?.getSnapshot().value as string | undefined;
+          if (!gameState || gameState === 'idle' || gameState === 'error') {
+            songBarHintEl.style.display = '';
+          }
+        }
+      });
+      searchInput.addEventListener('input', () => {
+        if (searchInput.value.trim() !== '') {
+          songBarHintEl.style.display = 'none';
+        } else if (document.activeElement !== searchInput) {
+          const gameState = this.gameActor?.getSnapshot().value as string | undefined;
+          if (!gameState || gameState === 'idle' || gameState === 'error') {
+            songBarHintEl.style.display = '';
+          }
+        }
+      });
+    }
+
     // Initialize slider progress fills
     document.querySelectorAll<HTMLInputElement>('input[type="range"]').forEach(s => { this.updateSliderFill(s); });
   }

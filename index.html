@@ -178,6 +178,9 @@
       outline: 2px solid rgba(255, 255, 255, 0.7);
       outline-offset: -2px;
     }
+    #song-bar-hint {
+      margin-left: auto;
+    }
 
     /* ── Graffiti inactivity fade ──────────────────────────── */
     .graffiti-overlay {
@@ -850,6 +853,7 @@
           </div>
         </div>
       <div id="song-bar-search" style="position:relative;">
+          <span style="color:var(--dim);font-size:10px;font-family:var(--font);white-space:nowrap;">SEARCH</span>
           <input id="midi-search-input" type="text" placeholder="Search songs..." title="Search for MIDI songs across online libraries" style="width:180px;box-sizing:border-box;font-family:var(--font);font-size:10px;background:var(--bg);color:var(--fg);border:1px solid var(--border);padding:2px 6px;">
           <div id="midi-search-results" style="position:absolute;top:100%;left:0;min-width:280px;max-height:300px;overflow-y:auto;background:var(--bg);border:1px solid var(--border);z-index:25;display:none;"></div>
         </div>
