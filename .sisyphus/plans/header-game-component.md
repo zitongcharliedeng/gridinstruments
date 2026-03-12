@@ -443,7 +443,7 @@ Max Concurrent: 4 (Wave 2)
   - Message: `refactor(ui): move song search from overlay to song-bar (#112)`
   - Files: `index.html`, `tests/machines/invariant-checks.ts`
 
-- [ ] 5. Move game status + difficulty + restart to song-bar
+- [x] 5. Move game status + difficulty + restart to song-bar
 
   **What to do**:
   - **HTML**: Move the following from GAME overlay section INTO `#song-bar-status` container:
@@ -503,7 +503,7 @@ Max Concurrent: 4 (Wave 2)
   - Message: `refactor(ui): move game status + difficulty from overlay to song-bar (#112, #120)`
   - Files: `index.html`, `tests/machines/invariant-checks.ts`
 
-- [ ] 6. Move MIDI file drop to document.body (#117)
+- [x] 6. Move MIDI file drop to document.body (#117)
 
   **What to do**:
   - **JS**: In main.ts, find the file drop handler on `#keyboard-canvas` (around line 1424-1458). Change the event target from `this.canvas` to `document.body`.
