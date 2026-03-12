@@ -177,6 +177,10 @@ import {
      SONGBAR_HINT_3,
      SONGBAR_HINT_4,
      SONGBAR_SEARCH_LABEL_1,
+     SONGBAR_PROGRESS_1,
+     SONGBAR_PROGRESS_2,
+     SONGBAR_PROGRESS_3,
+     SONGBAR_PROGRESS_4,
    } from './machines/invariant-checks';
 import { focusReturnCheck } from './machines/modifierCompoundMachine';
 
@@ -890,6 +894,22 @@ test.describe('[Structural] state-independent invariants', () => {
 
   test('SONGBAR-SEARCH-LABEL-1: A visible "SEARCH" label exists adjacent to #midi-search-input', async ({ page }) => {
     await SONGBAR_SEARCH_LABEL_1.check(page);
+  });
+
+  test('SONGBAR-PROGRESS-1: #game-elapsed-timer element exists inside #game-status', async ({ page }) => {
+    await SONGBAR_PROGRESS_1.check(page);
+  });
+
+  test('SONGBAR-PROGRESS-2: #game-progress element exists inside #game-status', async ({ page }) => {
+    await SONGBAR_PROGRESS_2.check(page);
+  });
+
+  test('SONGBAR-PROGRESS-3: #game-song-title element exists inside #game-status', async ({ page }) => {
+    await SONGBAR_PROGRESS_3.check(page);
+  });
+
+  test('SONGBAR-PROGRESS-4: #game-reset-btn text is "⟲ Restart"', async ({ page }) => {
+    await SONGBAR_PROGRESS_4.check(page);
   });
  });
 

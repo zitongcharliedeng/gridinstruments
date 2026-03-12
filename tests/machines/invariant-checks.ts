@@ -4475,3 +4475,63 @@ export const SONGBAR_SEARCH_LABEL_1: StateInvariant = {
     }
   },
 };
+
+export const SONGBAR_PROGRESS_1: StateInvariant = {
+  id: 'SONGBAR-PROGRESS-1',
+  description: '#game-elapsed-timer element exists inside #game-status',
+  check: async (page: Page) => {
+    const exists = await page.evaluate(() => {
+      const timer = document.getElementById('game-elapsed-timer');
+      if (!timer) return false;
+      const status = document.getElementById('game-status');
+      if (!status) return false;
+      return status.contains(timer);
+    });
+    if (!exists) throw new Error('#game-elapsed-timer not found inside #game-status');
+  },
+};
+
+export const SONGBAR_PROGRESS_2: StateInvariant = {
+  id: 'SONGBAR-PROGRESS-2',
+  description: '#game-progress element exists inside #game-status',
+  check: async (page: Page) => {
+    const exists = await page.evaluate(() => {
+      const progress = document.getElementById('game-progress');
+      if (!progress) return false;
+      const status = document.getElementById('game-status');
+      if (!status) return false;
+      return status.contains(progress);
+    });
+    if (!exists) throw new Error('#game-progress not found inside #game-status');
+  },
+};
+
+export const SONGBAR_PROGRESS_3: StateInvariant = {
+  id: 'SONGBAR-PROGRESS-3',
+  description: '#game-song-title element exists inside #game-status',
+  check: async (page: Page) => {
+    const exists = await page.evaluate(() => {
+      const title = document.getElementById('game-song-title');
+      if (!title) return false;
+      const status = document.getElementById('game-status');
+      if (!status) return false;
+      return status.contains(title);
+    });
+    if (!exists) throw new Error('#game-song-title not found inside #game-status');
+  },
+};
+
+export const SONGBAR_PROGRESS_4: StateInvariant = {
+  id: 'SONGBAR-PROGRESS-4',
+  description: '#game-reset-btn text is "⟲ Restart"',
+  check: async (page: Page) => {
+    const text = await page.evaluate(() => {
+      const btn = document.getElementById('game-reset-btn');
+      if (!btn) throw new Error('#game-reset-btn not found');
+      return btn.textContent?.trim() ?? '';
+    });
+    if (text !== '⟲ Restart') {
+      throw new Error(`#game-reset-btn text is "${text}", expected "⟲ Restart"`);
+    }
+  },
+};
