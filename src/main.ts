@@ -353,6 +353,10 @@ class DComposeApp {
 
   private pointerDown = new Map<number, { coordX: number; coordY: number } | null>();
 
+  // Keyboard rollover tracking
+  private maxSimultaneousKeys = 0;
+  private ghostingWarningShown = false;
+
   // MPE vibrato state (Space key sends sinusoidal pitch bend to all active MPE notes)
   private vibratoRAF: number | null = null;
   private vibratoPhase = 0;
@@ -1323,12 +1327,18 @@ class DComposeApp {
     calibrateConfirm?.addEventListener('click', () => { this.exitCalibrationMode(true); });
     calibrateCancel?.addEventListener('click', () => { this.exitCalibrationMode(false); });
 
-    const gameResetBtn = document.getElementById('game-reset-btn');
-    gameResetBtn?.addEventListener('click', () => {
-      this.gameActor?.send({ type: 'GAME_RESTART' });
-    });
+     const gameResetBtn = document.getElementById('game-reset-btn');
+     gameResetBtn?.addEventListener('click', () => {
+       this.gameActor?.send({ type: 'GAME_RESTART' });
+     });
 
-    // Game: file drop on canvas
+     const toastDismiss = document.getElementById('ghosting-toast-dismiss');
+     toastDismiss?.addEventListener('click', () => {
+       const toast = document.getElementById('ghosting-toast');
+       if (toast) toast.style.display = 'none';
+     });
+
+     // Game: file drop on canvas
     this.gameActor = createActor(gameMachine);
     this.gameActor.start();
 
@@ -1361,6 +1371,11 @@ class DComposeApp {
             this.visualizer.setPressedTargetNotes(pressedCellIds);
           } else {
             this.visualizer.setPressedTargetNotes([]);
+          }
+          // Show one-time ghosting warning when large chord target vs limited rollover
+          if (!this.ghostingWarningShown && currentGroup.midiNotes.length >= 4 && this.maxSimultaneousKeys < 4) {
+            this.ghostingWarningShown = true;
+            this.showGhostingToast();
           }
         } else {
           this.visualizer?.setTargetNotes(ctx.targetCellIds);
@@ -1553,6 +1568,7 @@ class DComposeApp {
       this.visualizer?.setCalibratedRange(new Set(this.calibratedCells));
     }
     this.activeNotes.set(code, { coordX, coordY });
+    this.maxSimultaneousKeys = Math.max(this.maxSimultaneousKeys, this.activeNotes.size);
     this.trackNoteOn(effectiveCoordX, effectiveCoordY, midiNote);
     if (this.gameActor?.getSnapshot().matches('playing')) {
       this.gameActor.send({ type: 'NOTE_PRESSED', cellId: `${effectiveCoordX}_${effectiveCoordY}`, midiNote });
@@ -1867,14 +1883,23 @@ class DComposeApp {
     banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:50;background:#000;color:#fff;font-family:"JetBrains Mono",monospace;font-size:12px;padding:8px 16px;text-align:center;border-bottom:1px solid #333;cursor:pointer;';
     banner.textContent = 'Tuning set to 12-TET for game mode';
 
-    const dismiss = (): void => { banner.remove(); };
-    banner.addEventListener('click', dismiss);
-    setTimeout(dismiss, 3000);
+     const dismiss = (): void => { banner.remove(); };
+     banner.addEventListener('click', dismiss);
+     setTimeout(dismiss, 3000);
 
-    document.body.appendChild(banner);
-  }
+     document.body.appendChild(banner);
+   }
 
-  // ─── MPE vibrato ─────────────────────────────────────────────────────────
+   private showGhostingToast(): void {
+     const toast = document.getElementById('ghosting-toast');
+     if (!toast) return;
+     toast.style.display = 'flex';
+     setTimeout(() => {
+       toast.style.display = 'none';
+     }, 10000);
+   }
+
+   // ─── MPE vibrato ─────────────────────────────────────────────────────────
 
   /** Reconstruct MPE noteIds from the activeNotes map. */
   private getMpeNoteIds(): string[] {
