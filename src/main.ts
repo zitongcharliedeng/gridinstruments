@@ -175,6 +175,10 @@ ${tuningTableRows}
 <li><a href="https://en.wikipedia.org/wiki/Wicki-Hayden_note_layout" target="_blank" rel="noopener">Wicki-Hayden note layout</a> — Wikipedia</li>
 </ul>`,
 
+  quantization: `Snaps note timings to the nearest beat division so fast passages are easier to read. Use None to play freely with no snapping.`,
+
+  calibration: `Marks which notes are reachable on your input device. Play through your range, press Confirm, and the grid highlights only your playable area.`,
+
   shear: `
 <h2>Wicked Shear</h2>
 <p>A pure <a href="https://en.wikipedia.org/wiki/Shear_mapping" target="_blank" rel="noopener">shear mapping</a> that flattens the lattice rows toward horizontal:</p>

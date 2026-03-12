@@ -679,6 +679,7 @@
       font-family: var(--font);
     }
     dialog::backdrop { background: rgba(0,0,0,0.7); }
+    #info-dialog { position: fixed; }
      dialog button {
        position: absolute; top: 8px; right: 12px;
        color: var(--dim);
@@ -844,6 +845,7 @@
     <div id="song-bar">
       <div id="song-bar-calibrate">
           <button id="calibrate-btn" class="overlay-btn" title="Enter calibration mode: play all notes reachable on your input devices">Calibrate playable area</button>
+          <button class="slider-info-btn icon-btn icon-lg" data-info="calibration" title="About calibration"><i data-lucide="info"></i></button>
           <div id="calibration-banner" style="display:none;flex-direction:column;gap:8px;">
             <span id="calibration-warning" style="display:none;font-family:var(--font);font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:0.06em;">This will reset your current song progress.</span>
             <span id="calibration-msg" style="font-family:var(--font);font-size:11px;color:var(--fg);text-transform:uppercase;letter-spacing:0.06em;">Play all reachable notes to set your playable area, then confirm</span>
@@ -860,7 +862,7 @@
         </div>
       <div id="song-bar-status" style="display:inline-flex;align-items:center;gap:8px;">
           <label style="display:inline-flex;align-items:center;gap:4px;font-size:10px;color:var(--dim);">
-            DIFF
+            QUANTIZE
             <select id="quantization-level" style="font-family:var(--font);font-size:10px;background:var(--bg);color:var(--fg);border:1px solid var(--border);padding:2px 4px;">
               <option value="none">None</option>
               <option value="1/4">1/4</option>
@@ -868,6 +870,7 @@
               <option value="1/16">1/16</option>
             </select>
           </label>
+          <button class="slider-info-btn icon-btn icon-lg" data-info="quantization" title="About quantization"><i data-lucide="info"></i></button>
           <div id="game-status" style="display:none;align-items:center;gap:8px;">
             <div id="game-song-title" style="font-family:var(--font);font-size:10px;color:var(--fg);text-transform:uppercase;letter-spacing:0.06em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:160px;"></div>
             <div style="display:flex;gap:6px;align-items:center;">
