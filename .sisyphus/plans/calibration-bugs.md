@@ -861,15 +861,15 @@ Max Concurrent: 4 (Wave 2)
 
 > 4 review agents run in PARALLEL. ALL must APPROVE. Rejection → fix → re-run.
 
-- [ ] F1. **Plan Compliance Audit** — `oracle`
+- [x] F1. **Plan Compliance Audit** — `oracle`
   Read the plan end-to-end. For each "Must Have": verify implementation exists (read file, check code). For each "Must NOT Have": search codebase for forbidden patterns — reject with file:line if found. Check evidence files exist in .sisyphus/evidence/. Compare deliverables against plan.
   Output: `Must Have [N/N] | Must NOT Have [N/N] | Tasks [7/7] | VERDICT: APPROVE/REJECT`
 
-- [ ] F2. **Code Quality + Build + Tests** — `unspecified-high`
+- [x] F2. **Code Quality + Build + Tests** — `unspecified-high`
   Run `nix develop --command npm run build` (exit 0). Run `nix develop --command npx playwright test --project=firefox --workers=1 -g "Structural"` (all 124+ pass). Review all changed files for: `as any`, `@ts-ignore`, empty catches, console.log in prod, commented-out code, unused imports. Check no `!` non-null assertions added.
   Output: `Build [PASS/FAIL] | Tests [N pass/N fail] | Code Quality [N clean/N issues] | VERDICT`
 
-- [ ] F3. **Visual QA** — `unspecified-high` (+ `playwright` skill)
+- [x] F3. **Visual QA** — `unspecified-high` (+ `playwright` skill)
   Start from clean state. Execute EVERY QA scenario from EVERY task:
   1. Calibration: overlay closes, floating panel visible, grid visible with greyscale cells
   2. Greyscale: sample uncalibrated pixel R≈G≈B (±3), white/black distinction preserved
@@ -882,7 +882,7 @@ Max Concurrent: 4 (Wave 2)
   Save evidence to `.sisyphus/evidence/calibration-bugs-qa/`.
   Output: `Scenarios [N/N pass] | Screenshots [N captured] | VERDICT`
 
-- [ ] F4. **Scope Fidelity Check** — `deep`
+- [x] F4. **Scope Fidelity Check** — `deep`
   For each task: read "What to do", read actual diff. Verify 1:1 — everything in spec was built, nothing beyond spec. Check "Must NOT do" compliance per task. Detect cross-task contamination. Flag unaccounted changes.
   Output: `Tasks [7/7 compliant] | Contamination [CLEAN/N issues] | VERDICT`
 
