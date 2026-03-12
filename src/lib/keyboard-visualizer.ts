@@ -55,6 +55,7 @@ export class KeyboardVisualizer {
   private activeNotes = new Set<string>();
   private sustainedNotes = new Set<string>();
   private targetNotes = new Set<string>();
+  private pressedTargetNotes = new Set<string>();
   private calibratedRange: ReadonlySet<string> | null = null;
   private gameState: string = 'idle';
   private gameProgress: { current: number; total: number; elapsedMs: number } = { current: 0, total: 0, elapsedMs: 0 };
@@ -347,6 +348,10 @@ export class KeyboardVisualizer {
     this.targetNotes = new Set(noteIds);
   }
 
+  setPressedTargetNotes(noteIds: string[]): void {
+    this.pressedTargetNotes = new Set(noteIds);
+  }
+
   setCalibratedRange(range: ReadonlySet<string> | null): void {
     this.calibratedRange = range;
   }
@@ -572,11 +577,14 @@ export class KeyboardVisualizer {
 
     const isActive = this.activeNotes.has(noteId);
     const isTarget = this.targetNotes.has(noteId) && !isActive;
+    const isTargetPressed = isTarget && this.pressedTargetNotes.has(noteId);
+    const isTargetUnpressed = isTarget && !this.pressedTargetNotes.has(noteId);
     const isSustained = this.sustainedNotes.has(noteId) && !isActive;
     const isUncalibrated = this.calibratedRange !== null && !this.calibratedRange.has(noteId);
 
-    const state: 'active' | 'target' | 'sustained' | 'uncalibrated-white' | 'uncalibrated-black' | 'white' | 'black' = isActive ? 'active'
-      : isTarget ? 'target'
+    const state: 'active' | 'target' | 'target-pressed' | 'sustained' | 'uncalibrated-white' | 'uncalibrated-black' | 'white' | 'black' = isActive ? 'active'
+      : isTargetPressed ? 'target-pressed'
+      : isTargetUnpressed ? 'target'
       : isSustained ? 'sustained'
       : isUncalibrated ? (isBlackKey ? 'uncalibrated-black' : 'uncalibrated-white')
       : isBlackKey ? 'black'
@@ -584,7 +592,7 @@ export class KeyboardVisualizer {
     const { fill: fillColor, text: textColor } = cellColors(coordX, state);
 
     const { hv1, hv2 } = this;
-    const s = (isActive || isTarget) ? 1.0 : CELL_INSET;
+    const s = (isActive || isTargetPressed || isTargetUnpressed) ? 1.0 : CELL_INSET;
 
     // 4 corners of the parallelogram cell, scaled by s around center
     const h1x = hv1.x * s, h1y = hv1.y * s;

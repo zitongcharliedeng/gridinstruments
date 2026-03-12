@@ -159,6 +159,7 @@ import {
     gameQuant7,
     gameQuant8,
     gameQuant9,
+    gameChordProgress1,
   } from './machines/invariant-checks';
 import { focusReturnCheck } from './machines/modifierCompoundMachine';
 
@@ -608,6 +609,10 @@ test.describe('[Structural] state-independent invariants', () => {
 
   test('GAME-CAL-4: uncalibrated cells render darker than normal cells', async ({ page }) => {
     await gameCalibrationVisualDim.check(page);
+  });
+
+  test('GAME-CHORD-PROGRESS-1: setPressedTargetNotes method exists and target-pressed is dimmer than target', async ({ page }) => {
+    await gameChordProgress1.check(page);
   });
 
   test('GAME-ENG-1: buildNoteGroups groups notes within 20ms window into one chord group', async ({ page }) => {

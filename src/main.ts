@@ -1355,8 +1355,18 @@ class DComposeApp {
         if (currentGroup && this.visualizer) {
           const allTargetCellIds = this.visualizer.getCellIdsForMidiNotes(new Set(currentGroup.midiNotes));
           this.visualizer.setTargetNotes(allTargetCellIds);
+          const pressedMidis = new Set(ctx.pressedMidiNotes);
+          if (pressedMidis.size > 0) {
+            const pressedCellIds = currentGroup.cellIds.filter((_cellId, i) =>
+              pressedMidis.has(currentGroup.midiNotes[i] ?? -1)
+            );
+            this.visualizer.setPressedTargetNotes(pressedCellIds);
+          } else {
+            this.visualizer.setPressedTargetNotes([]);
+          }
         } else {
           this.visualizer?.setTargetNotes(ctx.targetCellIds);
+          this.visualizer?.setPressedTargetNotes([]);
         }
         // Ghost note: first cell ID → MIDI note for piano strip indicator
         const firstCellId = ctx.targetCellIds[0];
@@ -1377,6 +1387,7 @@ class DComposeApp {
         if (progressEl) progressEl.textContent = 'Loading\u2026';
       } else if (state === 'complete') {
         this.visualizer?.setTargetNotes([]);
+        this.visualizer?.setPressedTargetNotes([]);
         this.historyVisualizer?.setGhostNote(null);
         this.render();
         // Show score overlay
@@ -1388,6 +1399,7 @@ class DComposeApp {
       } else {
         // idle or error — clear everything and hide status
         this.visualizer?.setTargetNotes([]);
+        this.visualizer?.setPressedTargetNotes([]);
         this.historyVisualizer?.setGhostNote(null);
         this.render();
         if (statusEl) statusEl.style.display = 'none';

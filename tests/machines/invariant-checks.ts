@@ -4094,3 +4094,37 @@ export const gameQuant9: StateInvariant = {
     expect(result.allFinite, 'all quantized startMs should be finite').toBe(true);
   },
 };
+
+export const gameChordProgress1: StateInvariant = {
+  id: 'GAME-CHORD-PROGRESS-1',
+  check: async (page: Page) => {
+    const result = await page.evaluate(async () => {
+      const { KeyboardVisualizer } = await import('/src/lib/keyboard-visualizer.ts');
+      return {
+        hasSetPressedTargetNotes: typeof KeyboardVisualizer.prototype.setPressedTargetNotes === 'function',
+      };
+    });
+    expect(result.hasSetPressedTargetNotes, 'setPressedTargetNotes must exist on KeyboardVisualizer').toBe(true);
+
+    const colorResult = await page.evaluate(async () => {
+      const { cellColors } = await import('/src/lib/note-colors.ts');
+      const targetFill = cellColors(0, 'target').fill;
+      const targetPressedFill = cellColors(0, 'target-pressed').fill;
+      const hexBrightness = (hex: string): number => {
+        const r = parseInt(hex.slice(1, 3), 16);
+        const g = parseInt(hex.slice(3, 5), 16);
+        const b = parseInt(hex.slice(5, 7), 16);
+        return (r + g + b) / 3;
+      };
+      return {
+        targetFill,
+        targetPressedFill,
+        targetBrightness: hexBrightness(targetFill),
+        targetPressedBrightness: hexBrightness(targetPressedFill),
+      };
+    });
+    expect(colorResult.targetFill, 'target fill must differ from target-pressed fill').not.toBe(colorResult.targetPressedFill);
+    expect(colorResult.targetBrightness, 'target must be bright (L=0.96, near-white)').toBeGreaterThan(200);
+    expect(colorResult.targetPressedBrightness, 'target-pressed must be noticeably dimmer than target (L=0.55)').toBeLessThan(colorResult.targetBrightness * 0.75);
+  },
+};

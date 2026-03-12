@@ -126,7 +126,7 @@ export function colorFromCoordX(coordX: number): string {
  */
 export function cellColors(
   coordX: number,
-  state: 'active' | 'target' | 'sustained' | 'uncalibrated-white' | 'uncalibrated-black' | 'white' | 'black'
+  state: 'active' | 'target' | 'target-pressed' | 'sustained' | 'uncalibrated-white' | 'uncalibrated-black' | 'white' | 'black'
 ): { fill: string; text: string } {
   const h = chromaticHue(coordX);
   switch (state) {
@@ -134,6 +134,8 @@ export function cellColors(
       return { fill: oklch(0.72, 0.19, h), text: '#ffffff' };
     case 'target':
       return { fill: oklch(0.96, 0.03, h), text: '#000000' };
+    case 'target-pressed':
+      return { fill: oklch(0.55, 0.01, h), text: oklch(0.80, 0.01, h) };
     case 'sustained':
       return { fill: oklch(0.38, 0.11, h), text: oklch(0.82, 0.16, h) };
     case 'uncalibrated-white':
