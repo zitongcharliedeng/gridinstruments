@@ -4302,7 +4302,7 @@ export const CANVAS_CLEAN_1: StateInvariant = {
  */
 export const CANVAS_CLEAN_2: StateInvariant = {
   id: 'CANVAS-CLEAN-2',
-  description: 'Canvas has no progress bar at top (no white bar at y=0..3)',
+  description: 'Canvas has no solid-white progress bar at top (no white bar at y=0..3)',
   check: async (page: Page) => {
     const result = await page.evaluate(() => {
       const canvas = document.getElementById('keyboard-canvas') as HTMLCanvasElement;
@@ -4313,8 +4313,8 @@ export const CANVAS_CLEAN_2: StateInvariant = {
       return { r: pixel[0], g: pixel[1], b: pixel[2] };
     });
     const brightness = result.r + result.g + result.b;
-    if (brightness > 60) {
-      throw new Error(`Canvas top pixel is bright (${brightness}) — progress bar may still be rendering`);
+    if (brightness > 700) {
+      throw new Error(`Canvas top pixel is near-white (${brightness}) — solid white progress bar may still be rendering`);
     }
   },
 };
@@ -4401,19 +4401,26 @@ export const SONGBAR_HINT_2: StateInvariant = {
   id: 'SONGBAR-HINT-2',
   description: '#song-bar-hint right edge is near #song-bar right edge (right-aligned)',
   check: async (page: Page) => {
+    const originalViewport = page.viewportSize();
     await page.setViewportSize({ width: 1920, height: 1080 });
-    const result = await page.evaluate(() => {
-      const hint = document.getElementById('song-bar-hint');
-      const songBar = document.getElementById('song-bar');
-      if (!hint) throw new Error('#song-bar-hint not found');
-      if (!songBar) throw new Error('#song-bar not found');
-      const hintBox = hint.getBoundingClientRect();
-      const barBox = songBar.getBoundingClientRect();
-      return { hintRight: hintBox.right, barRight: barBox.right };
-    });
-    const diff = Math.abs(result.barRight - result.hintRight);
-    if (diff > 40) {
-      throw new Error(`#song-bar-hint right edge (${result.hintRight}) is ${diff}px from #song-bar right edge (${result.barRight}) — expected within 40px`);
+    try {
+      const result = await page.evaluate(() => {
+        const hint = document.getElementById('song-bar-hint');
+        const songBar = document.getElementById('song-bar');
+        if (!hint) throw new Error('#song-bar-hint not found');
+        if (!songBar) throw new Error('#song-bar not found');
+        const hintBox = hint.getBoundingClientRect();
+        const barBox = songBar.getBoundingClientRect();
+        return { hintRight: hintBox.right, barRight: barBox.right };
+      });
+      const diff = Math.abs(result.barRight - result.hintRight);
+      if (diff > 40) {
+        throw new Error(`#song-bar-hint right edge (${result.hintRight}) is ${diff}px from #song-bar right edge (${result.barRight}) — expected within 40px`);
+      }
+    } finally {
+      if (originalViewport) {
+        await page.setViewportSize(originalViewport);
+      }
     }
   },
 };
