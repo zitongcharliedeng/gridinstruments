@@ -845,7 +845,7 @@
     <div id="song-bar">
       <div id="song-bar-calibrate">
           <button id="calibrate-btn" class="overlay-btn" title="Enter calibration mode: play all notes reachable on your input devices">Calibrate playable area</button>
-          <button class="slider-info-btn icon-btn icon-lg" data-info="calibration" title="About calibration"><i data-lucide="info"></i></button>
+          <button class="slider-info-btn icon-btn icon-lg" data-info="calibration" title="About calibration" style="position:static;transform:none;"><i data-lucide="info"></i></button>
           <div id="calibration-banner" style="display:none;flex-direction:column;gap:8px;">
             <span id="calibration-warning" style="display:none;font-family:var(--font);font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:0.06em;">This will reset your current song progress.</span>
             <span id="calibration-msg" style="font-family:var(--font);font-size:11px;color:var(--fg);text-transform:uppercase;letter-spacing:0.06em;">Play all reachable notes to set your playable area, then confirm</span>
@@ -856,6 +856,7 @@
           </div>
         </div>
       <div id="song-bar-search" style="position:relative;">
+          <button class="slider-info-btn icon-btn icon-lg" data-info="search" title="About song search" style="position:static;transform:none;"><i data-lucide="info"></i></button>
           <span style="color:var(--dim);font-size:10px;font-family:var(--font);white-space:nowrap;">SEARCH</span>
           <input id="midi-search-input" type="text" placeholder="Search songs..." title="Search for MIDI songs across online libraries" style="width:180px;box-sizing:border-box;font-family:var(--font);font-size:10px;background:var(--bg);color:var(--fg);border:1px solid var(--border);padding:2px 6px;">
           <div id="midi-search-results" style="position:absolute;top:100%;left:0;min-width:280px;max-height:300px;overflow-y:auto;background:var(--bg);border:1px solid var(--border);z-index:25;display:none;"></div>
@@ -870,7 +871,7 @@
               <option value="1/16">1/16</option>
             </select>
           </label>
-          <button class="slider-info-btn icon-btn icon-lg" data-info="quantization" title="About quantization"><i data-lucide="info"></i></button>
+          <button class="slider-info-btn icon-btn icon-lg" data-info="quantization" title="About quantization" style="position:static;transform:none;"><i data-lucide="info"></i></button>
           <div id="game-status" style="display:none;align-items:center;gap:8px;">
             <div id="game-song-title" style="font-family:var(--font);font-size:10px;color:var(--fg);text-transform:uppercase;letter-spacing:0.06em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:160px;"></div>
             <div style="display:flex;gap:6px;align-items:center;">
