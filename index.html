@@ -733,6 +733,14 @@
         font-size: 8px;
         padding: 1px 4px;
       }
+      #song-bar {
+        padding: 2px 4px;
+        gap: 6px;
+        font-size: 10px;
+      }
+      #song-bar #midi-search-input {
+        width: 150px;
+      }
     }
 
     @media (max-width: 480px) {
@@ -777,6 +785,15 @@
       #history-canvas {
         max-width: 100%;
       }
+      #song-bar {
+        padding: 2px 4px;
+        gap: 4px;
+        font-size: 10px;
+        flex-wrap: wrap;
+      }
+      #song-bar #midi-search-input {
+        width: 120px;
+      }
     }
 
     @media (max-width: 375px) {
@@ -785,6 +802,15 @@
       }
       #reset-layout {
         display: none;
+      }
+      #song-bar {
+        padding: 1px 4px;
+        gap: 4px;
+        font-size: 9px;
+        min-height: 24px;
+      }
+      #song-bar #midi-search-input {
+        width: 100px;
       }
     }
   </style>
