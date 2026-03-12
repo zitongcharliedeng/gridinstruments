@@ -575,10 +575,10 @@ export class KeyboardVisualizer {
     const isSustained = this.sustainedNotes.has(noteId) && !isActive;
     const isUncalibrated = this.calibratedRange !== null && !this.calibratedRange.has(noteId);
 
-    const state: 'active' | 'target' | 'sustained' | 'uncalibrated' | 'white' | 'black' = isActive ? 'active'
+    const state: 'active' | 'target' | 'sustained' | 'uncalibrated-white' | 'uncalibrated-black' | 'white' | 'black' = isActive ? 'active'
       : isTarget ? 'target'
       : isSustained ? 'sustained'
-      : isUncalibrated ? 'uncalibrated'
+      : isUncalibrated ? (isBlackKey ? 'uncalibrated-black' : 'uncalibrated-white')
       : isBlackKey ? 'black'
       : 'white';
     const { fill: fillColor, text: textColor } = cellColors(coordX, state);

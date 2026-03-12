@@ -1769,23 +1769,27 @@ class DComposeApp {
       const quantizedEvents = quantizeNotes(events, tempoMap, timeSigMap, level);
 
       const medianMidi = computeMedianMidiNote(quantizedEvents);
-      const medianHz = 440 * Math.pow(2, (medianMidi - 69) / 12);
-      const dRefSlider = document.getElementById('d-ref-slider') as HTMLInputElement | null;
-      if (dRefSlider) {
-        const dMin = parseFloat(dRefSlider.min);
-        const dMax = parseFloat(dRefSlider.max);
-        dRefSlider.value = Math.max(dMin, Math.min(dMax, medianHz)).toFixed(2);
-        dRefSlider.dispatchEvent(new Event('input'));
-      }
 
       let groups = buildNoteGroups(quantizedEvents);
 
       // Apply calibrated range: auto-transpose + crop
       const range = this.calibratedRange;
+      let semitones = 0;
       if (range && range.size > 0) {
-        const semitones = findOptimalTransposition(groups, range);
+        semitones = findOptimalTransposition(groups, range);
         groups = transposeSong(groups, semitones);
         groups = cropToRange(groups, range);
+      }
+
+      // Set D-ref AFTER transposition so it aligns with the transposed song center
+      const adjustedMedianMidi = medianMidi + semitones;
+      const adjustedMedianHz = 440 * Math.pow(2, (adjustedMedianMidi - 69) / 12);
+      const dRefSlider = document.getElementById('d-ref-slider') as HTMLInputElement | null;
+      if (dRefSlider) {
+        const dMin = parseFloat(dRefSlider.min);
+        const dMax = parseFloat(dRefSlider.max);
+        dRefSlider.value = Math.max(dMin, Math.min(dMax, adjustedMedianHz)).toFixed(2);
+        dRefSlider.dispatchEvent(new Event('input'));
       }
 
       if (groups.length === 0) {

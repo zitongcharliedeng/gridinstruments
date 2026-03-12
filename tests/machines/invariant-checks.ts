@@ -2655,11 +2655,11 @@ export const gameCalibrationVisualApi: StateInvariant = {
   },
 };
 
-/** D = {}. Uncalibrated cells render darker — pixel brightness drops on empty calibrated range. */
+/** D = {}. Uncalibrated cells render greyscale (R≈G≈B) — zero chroma, brightness reserved for MPE pressure. */
 export const gameCalibrationVisualDim: StateInvariant = {
   id: 'GAME-CAL-4',
   check: async (page: Page) => {
-    const sampleBrightness = async (): Promise<number[]> => {
+    const sampleGreyscale = async (): Promise<Array<{ r: number; g: number; b: number }>> => {
       const result = await page.evaluate(() => {
         const canvas = document.getElementById('keyboard-canvas');
         if (!(canvas instanceof HTMLCanvasElement)) return null;
@@ -2667,12 +2667,12 @@ export const gameCalibrationVisualDim: StateInvariant = {
         if (!ctx) return null;
         const w = canvas.width;
         const h = canvas.height;
-        const samples: number[] = [];
+        const samples: Array<{ r: number; g: number; b: number }> = [];
         for (let i = 0; i < 10; i++) {
           const x = Math.floor(w * (i + 1) / 11);
           const y = Math.floor(h / 2);
           const pixel = ctx.getImageData(x, y, 1, 1).data;
-          samples.push(pixel[0] + pixel[1] + pixel[2]);
+          samples.push({ r: pixel[0], g: pixel[1], b: pixel[2] });
         }
         return samples;
       });
@@ -2680,21 +2680,27 @@ export const gameCalibrationVisualDim: StateInvariant = {
       return result;
     };
 
-    const before = await sampleBrightness();
+    const before = await sampleGreyscale();
 
     await page.locator('#grid-settings-btn').click();
     await page.waitForTimeout(300);
     await page.locator('#calibrate-btn').click();
     await page.waitForTimeout(500);
 
-    const after = await sampleBrightness();
+    const after = await sampleGreyscale();
 
     await page.locator('#calibrate-cancel').click();
     await page.waitForTimeout(300);
 
-    const beforeSum = before.reduce((a, b) => a + b, 0);
-    const afterSum = after.reduce((a, b) => a + b, 0);
-    expect(afterSum, 'canvas should be darker when all cells are uncalibrated').toBeLessThan(beforeSum);
+    // Uncalibrated cells must be greyscale: R≈G≈B within ±3 tolerance
+    for (const sample of after) {
+      const maxDiff = Math.max(
+        Math.abs(sample.r - sample.g),
+        Math.abs(sample.g - sample.b),
+        Math.abs(sample.b - sample.r)
+      );
+      expect(maxDiff, 'uncalibrated cells must be greyscale (R≈G≈B within ±3)').toBeLessThanOrEqual(3);
+    }
   },
 };
 
