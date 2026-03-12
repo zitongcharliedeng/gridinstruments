@@ -1,0 +1,3 @@
+#calibrate-btn exists: true
+Calibrate button by text search: true
+Result: PASS
