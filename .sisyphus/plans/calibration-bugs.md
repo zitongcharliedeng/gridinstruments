@@ -458,7 +458,7 @@ Max Concurrent: 4 (Wave 2)
   - Files: `index.html`, `src/main.ts`
   - Pre-commit: `nix develop --command npm run build && nix develop --command npx playwright test --project=firefox --workers=1 -g "Structural"`
 
-- [ ] 4. Chord Progress Visuals — Pressed Target Notes Dim (#121)
+- [x] 4. Chord Progress Visuals — Pressed Target Notes Dim (#121)
 
   **What to do**:
   - **Add `target-pressed` color state** to `src/lib/note-colors.ts`:
