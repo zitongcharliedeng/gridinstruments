@@ -360,7 +360,7 @@ Max Concurrent: 4 (Wave 2)
   - Files: `src/lib/note-colors.ts`, `src/lib/keyboard-visualizer.ts`, `tests/machines/invariant-checks.ts`
   - Pre-commit: `nix develop --command npm run build && nix develop --command npx playwright test --project=firefox --workers=1 -g "Structural"`
 
-- [ ] 3. Extract Calibration UI from Overlay into Standalone Floating Panel (#111, step 0 of #112)
+- [x] 3. Extract Calibration UI from Overlay into Standalone Floating Panel (#111, step 0 of #112)
 
   > **Architectural context**: Calibration is conceptually GLOBAL — it affects which keys are playable across ALL future grids (#112 comment: "maybe calibration should be there instead and not the grid, and instead ALL THE GRID components go grey and you select playable keys in all"). The overlay is for PER-GRID settings (#56). Extracting calibration into a standalone panel is the correct first step — it works now AND becomes the global calibration component when the header/multi-grid architecture (#56) lands.
 
