@@ -151,6 +151,28 @@
     }
     #reset-layout:hover { color: var(--fg); border-color: var(--accent); }
 
+    /* ── Song bar ─────────────────────────────────────────────── */
+    #song-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 2px 8px;
+      flex-shrink: 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 11px;
+      min-height: 28px;
+      z-index: 2;
+      position: relative;
+      flex-wrap: wrap;
+    }
+    #song-bar-calibrate,
+    #song-bar-search,
+    #song-bar-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
     /* ── Visualiser panel ────────────────────────────────────── */
     #visualiser-panel {
       flex-shrink: 0;
@@ -781,6 +803,14 @@
         <button id="reset-layout" title="Reset Page Layout (does not reset existing grid presets)"><span class="icon"><i data-lucide="rotate-ccw"></i></span> Reset</button>
       </div>
     </header>
+
+    <!-- Song bar — game/song controls header -->
+    <div id="song-bar">
+      <div id="song-bar-calibrate"></div>
+      <div id="song-bar-search"></div>
+      <div id="song-bar-status"></div>
+      <span id="song-bar-hint" style="color:var(--dim);font-size:10px;font-family:var(--font);">Drop a .mid file or search for a song to learn</span>
+    </div>
 
     <!-- Visualiser panel -->
     <div id="visualiser-panel">
