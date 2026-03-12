@@ -4542,3 +4542,59 @@ export const SONGBAR_PROGRESS_4: StateInvariant = {
     }
   },
 };
+
+export const SONGBAR_CAL_1: StateInvariant = {
+  id: 'SONGBAR-CAL-1',
+  description: '#calibrate-btn text is "Calibrate playable area"',
+  check: async (page: Page) => {
+    const text = await page.evaluate(() => {
+      const btn = document.getElementById('calibrate-btn');
+      if (!btn) throw new Error('#calibrate-btn not found');
+      return btn.textContent?.trim() ?? '';
+    });
+    if (text !== 'Calibrate playable area') {
+      throw new Error(`#calibrate-btn text is "${text}", expected "Calibrate playable area"`);
+    }
+  },
+};
+
+export const SONGBAR_CAL_2: StateInvariant = {
+  id: 'SONGBAR-CAL-2',
+  description: '#calibrate-btn is not disabled when game is idle (default state)',
+  check: async (page: Page) => {
+    const disabled = await page.evaluate(() => {
+      const btn = document.getElementById('calibrate-btn') as HTMLButtonElement | null;
+      if (!btn) throw new Error('#calibrate-btn not found');
+      return btn.disabled;
+    });
+    if (disabled) {
+      throw new Error('#calibrate-btn is disabled when game is idle — should be enabled');
+    }
+  },
+};
+
+export const SONGBAR_CAL_3: StateInvariant = {
+  id: 'SONGBAR-CAL-3',
+  description: 'Calibration message text mentions "playable area"',
+  check: async (page: Page) => {
+    const text = await page.evaluate(() => {
+      const banner = document.getElementById('calibration-banner');
+      if (!banner) throw new Error('#calibration-banner not found');
+      return banner.textContent ?? '';
+    });
+    if (!text.toLowerCase().includes('playable area')) {
+      throw new Error(`Calibration banner text does not mention "playable area": "${text.substring(0, 100)}"`);
+    }
+  },
+};
+
+export const SONGBAR_CAL_4: StateInvariant = {
+  id: 'SONGBAR-CAL-4',
+  description: '#calibrate-btn exists in the song-bar area',
+  check: async (page: Page) => {
+    const exists = await page.evaluate(() => {
+      return document.getElementById('calibrate-btn') !== null;
+    });
+    if (!exists) throw new Error('#calibrate-btn not found in DOM');
+  },
+};

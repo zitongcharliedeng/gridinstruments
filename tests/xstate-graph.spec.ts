@@ -181,6 +181,10 @@ import {
      SONGBAR_PROGRESS_2,
      SONGBAR_PROGRESS_3,
      SONGBAR_PROGRESS_4,
+     SONGBAR_CAL_1,
+     SONGBAR_CAL_2,
+     SONGBAR_CAL_3,
+     SONGBAR_CAL_4,
    } from './machines/invariant-checks';
 import { focusReturnCheck } from './machines/modifierCompoundMachine';
 
@@ -910,6 +914,22 @@ test.describe('[Structural] state-independent invariants', () => {
 
   test('SONGBAR-PROGRESS-4: #game-reset-btn text is "⟲ Restart"', async ({ page }) => {
     await SONGBAR_PROGRESS_4.check(page);
+  });
+
+  test('SONGBAR-CAL-1: #calibrate-btn text is "Calibrate playable area"', async ({ page }) => {
+    await SONGBAR_CAL_1.check(page);
+  });
+
+  test('SONGBAR-CAL-2: #calibrate-btn is not disabled when game is idle', async ({ page }) => {
+    await SONGBAR_CAL_2.check(page);
+  });
+
+  test('SONGBAR-CAL-3: Calibration message text mentions "playable area"', async ({ page }) => {
+    await SONGBAR_CAL_3.check(page);
+  });
+
+  test('SONGBAR-CAL-4: #calibrate-btn exists in the song-bar area', async ({ page }) => {
+    await SONGBAR_CAL_4.check(page);
   });
  });
 
