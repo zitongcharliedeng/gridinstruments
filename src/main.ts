@@ -2037,8 +2037,6 @@ class DComposeApp {
     this.calibrating = true;
     this.calibratedCells = new Set();
     this.visualizer?.setCalibratedRange(new Set<string>());
-    const overlay = document.getElementById('grid-overlay');
-    if (overlay) overlay.classList.add('hidden');
     const banner = document.getElementById('calibration-banner');
     const msg = document.getElementById('calibration-msg');
     if (banner) banner.style.display = 'flex';

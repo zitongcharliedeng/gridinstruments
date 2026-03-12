@@ -172,6 +172,8 @@
       align-items: center;
       gap: 6px;
     }
+    #song-bar #calibrate-btn { font-size: 10px; padding: 2px 8px; }
+    #song-bar #calibration-banner { flex-direction: column; gap: 4px; }
 
     /* ── Visualiser panel ────────────────────────────────────── */
     #visualiser-panel {
@@ -806,7 +808,16 @@
 
     <!-- Song bar — game/song controls header -->
     <div id="song-bar">
-      <div id="song-bar-calibrate"></div>
+      <div id="song-bar-calibrate">
+          <button id="calibrate-btn" class="overlay-btn" title="Enter calibration mode: play all notes reachable on your input devices">Calibrate range</button>
+          <div id="calibration-banner" style="display:none;flex-direction:column;gap:8px;">
+            <span id="calibration-msg" style="font-family:var(--font);font-size:11px;color:var(--fg);text-transform:uppercase;letter-spacing:0.06em;">Play all reachable notes, then confirm</span>
+            <div style="display:flex;gap:6px;">
+              <button id="calibrate-confirm" class="overlay-btn" style="flex:1;" title="Save calibrated range">Confirm</button>
+              <button id="calibrate-cancel" class="overlay-btn" style="flex:1;color:var(--dim);" title="Cancel calibration">Cancel</button>
+            </div>
+          </div>
+        </div>
       <div id="song-bar-search"></div>
       <div id="song-bar-status"></div>
       <span id="song-bar-hint" style="color:var(--dim);font-size:10px;font-family:var(--font);">Drop a .mid file or search for a song to learn</span>
@@ -825,18 +836,6 @@
       <div id="keyboard-container">
         <canvas id="keyboard-canvas"></canvas>
          <button id="grid-settings-btn" class="grid-cog icon-btn icon-md" title="Open settings overlay"><i data-lucide="settings"></i></button>
-
-        <!-- Calibration floating panel -->
-        <div id="calibration-panel" style="position:absolute;top:8px;left:50%;transform:translateX(-50%);z-index:20;background:rgba(0,0,0,0.85);border:1px solid var(--dim);padding:10px 14px;font-family:var(--font);font-size:11px;color:var(--fg);display:flex;flex-direction:column;gap:8px;min-width:220px;">
-          <button id="calibrate-btn" class="overlay-btn" title="Enter calibration mode: play all notes reachable on your input devices">Calibrate range</button>
-          <div id="calibration-banner" style="display:none;flex-direction:column;gap:8px;">
-            <span id="calibration-msg" style="font-family:var(--font);font-size:11px;color:var(--fg);text-transform:uppercase;letter-spacing:0.06em;">Play all reachable notes, then confirm</span>
-            <div style="display:flex;gap:6px;">
-              <button id="calibrate-confirm" class="overlay-btn" style="flex:1;" title="Save calibrated range">Confirm</button>
-              <button id="calibrate-cancel" class="overlay-btn" style="flex:1;color:var(--dim);" title="Cancel calibration">Cancel</button>
-            </div>
-          </div>
-        </div>
 
         <!-- Grid settings overlay (was sidebar) -->
         <div id="grid-overlay" class="hidden">

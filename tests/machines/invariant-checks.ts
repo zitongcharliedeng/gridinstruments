@@ -2682,8 +2682,6 @@ export const gameCalibrationVisualDim: StateInvariant = {
 
     const before = await sampleGreyscale();
 
-    await page.locator('#grid-settings-btn').click();
-    await page.waitForTimeout(300);
     await page.locator('#calibrate-btn').click();
     await page.waitForTimeout(500);
 
