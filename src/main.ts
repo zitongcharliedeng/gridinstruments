@@ -2002,12 +2002,14 @@ class DComposeApp {
     this.calibrating = true;
     this.calibratedCells = new Set();
     this.visualizer?.setCalibratedRange(new Set<string>());
+    const overlay = document.getElementById('grid-overlay');
+    if (overlay) overlay.classList.add('hidden');
     const banner = document.getElementById('calibration-banner');
     const msg = document.getElementById('calibration-msg');
     if (banner) banner.style.display = 'flex';
     if (msg) msg.textContent = 'Play all reachable notes, then confirm';
     const btn = document.getElementById('calibrate-btn');
-    if (btn) btn.textContent = 'Calibrating\u2026';
+    if (btn) btn.style.display = 'none';
     this.render();
   }
 
@@ -2028,7 +2030,10 @@ class DComposeApp {
     const banner = document.getElementById('calibration-banner');
     if (banner) banner.style.display = 'none';
     const btn = document.getElementById('calibrate-btn');
-    if (btn) btn.textContent = 'Calibrate range';
+    if (btn) {
+      btn.textContent = 'Calibrate range';
+      btn.style.display = '';
+    }
     this.render();
   }
 }

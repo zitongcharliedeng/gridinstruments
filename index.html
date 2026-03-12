@@ -796,6 +796,18 @@
         <canvas id="keyboard-canvas"></canvas>
          <button id="grid-settings-btn" class="grid-cog icon-btn icon-md" title="Open settings overlay"><i data-lucide="settings"></i></button>
 
+        <!-- Calibration floating panel -->
+        <div id="calibration-panel" style="position:absolute;top:8px;left:50%;transform:translateX(-50%);z-index:20;background:rgba(0,0,0,0.85);border:1px solid var(--dim);padding:10px 14px;font-family:var(--font);font-size:11px;color:var(--fg);display:flex;flex-direction:column;gap:8px;min-width:220px;">
+          <button id="calibrate-btn" class="overlay-btn" title="Enter calibration mode: play all notes reachable on your input devices">Calibrate range</button>
+          <div id="calibration-banner" style="display:none;flex-direction:column;gap:8px;">
+            <span id="calibration-msg" style="font-family:var(--font);font-size:11px;color:var(--fg);text-transform:uppercase;letter-spacing:0.06em;">Play all reachable notes, then confirm</span>
+            <div style="display:flex;gap:6px;">
+              <button id="calibrate-confirm" class="overlay-btn" style="flex:1;" title="Save calibrated range">Confirm</button>
+              <button id="calibrate-cancel" class="overlay-btn" style="flex:1;color:var(--dim);" title="Cancel calibration">Cancel</button>
+            </div>
+          </div>
+        </div>
+
         <!-- Grid settings overlay (was sidebar) -->
         <div id="grid-overlay" class="hidden">
 
@@ -934,17 +946,9 @@
                   <option value="1/16">Advanced (1/16)</option>
                 </select>
               </label>
-             <input id="midi-search-input" type="text" placeholder="Search songs..." title="Search for MIDI songs across online libraries" style="width:100%;box-sizing:border-box;margin-bottom:6px;">
-             <div id="midi-search-results" style="overflow-y:auto;max-height:200px;"></div>
-             <button id="calibrate-btn" class="overlay-btn" title="Enter calibration mode: play all notes reachable on your input devices">Calibrate range</button>
-             <div id="calibration-banner" style="display:none;flex-direction:column;gap:8px;margin-top:8px;">
-               <span id="calibration-msg" style="font-family:var(--font);font-size:11px;color:var(--fg);text-transform:uppercase;letter-spacing:0.06em;">Play all reachable notes, then confirm</span>
-               <div style="display:flex;gap:8px;">
-                 <button id="calibrate-confirm" class="overlay-btn" style="flex:1;" title="Save calibrated range">Confirm</button>
-                 <button id="calibrate-cancel" class="overlay-btn" style="flex:1;color:var(--dim);" title="Cancel calibration">Cancel</button>
-               </div>
-              </div>
-              <div id="game-status" style="display:none;flex-direction:column;gap:6px;margin-top:8px;">
+              <input id="midi-search-input" type="text" placeholder="Search songs..." title="Search for MIDI songs across online libraries" style="width:100%;box-sizing:border-box;margin-bottom:6px;">
+              <div id="midi-search-results" style="overflow-y:auto;max-height:200px;"></div>
+               <div id="game-status" style="display:none;flex-direction:column;gap:6px;margin-top:8px;">
                  <div id="game-song-title" style="font-family:var(--font);font-size:11px;color:var(--fg);text-transform:uppercase;letter-spacing:0.06em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px;"></div>
                  <div style="display:flex;gap:8px;align-items:center;">
                    <div id="game-progress" style="font-family:var(--font);font-size:11px;color:var(--dim);"></div>
