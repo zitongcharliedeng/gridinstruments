@@ -1095,6 +1095,38 @@ class DComposeApp {
           pbRangeInput.value = this.midiPitchBendRange.toString();
         }
       });
+      pbRangeInput.addEventListener('blur', () => {
+        const val = parseInt(pbRangeInput.value, 10);
+        const clamped = Math.max(0, Math.min(96, val));
+        pbRangeInput.value = clamped.toString();
+        if (clamped >= 2 && clamped <= 48) {
+          this.midiPitchBendRange = clamped;
+          this.saveSetting('midiPbRange', clamped.toString());
+        }
+      });
+    }
+
+    const pbRangeExprInput = getElementOrNull('midi-pb-range-expr', HTMLInputElement);
+    if (pbRangeExprInput) {
+      pbRangeExprInput.value = this.midiPitchBendRange.toString();
+      pbRangeExprInput.addEventListener('change', () => {
+        const val = parseInt(pbRangeExprInput.value, 10);
+        if (val >= 2 && val <= 48) {
+          this.midiPitchBendRange = val;
+          this.saveSetting('midiPbRange', val.toString());
+        } else {
+          pbRangeExprInput.value = this.midiPitchBendRange.toString();
+        }
+      });
+      pbRangeExprInput.addEventListener('blur', () => {
+        const val = parseInt(pbRangeExprInput.value, 10);
+        const clamped = Math.max(0, Math.min(96, val));
+        pbRangeExprInput.value = clamped.toString();
+        if (clamped >= 2 && clamped <= 48) {
+          this.midiPitchBendRange = clamped;
+          this.saveSetting('midiPbRange', clamped.toString());
+        }
+      });
     }
 
     const exprBendCb = getElementOrNull('expr-bend', HTMLInputElement);

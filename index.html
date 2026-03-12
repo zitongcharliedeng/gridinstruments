@@ -991,14 +991,14 @@
                 <div class="midi-panel-row">
                   <span class="ctrl-label" style="color:#fff">Pitch Bend Range:</span>
                   <label style="display:inline-flex;align-items:center;gap:4px;font-size:12px;">
-                    <input type="number" id="midi-pb-range" min="2" max="48" value="48" style="width:48px;text-align:center;">
+                    <input type="text" inputmode="numeric" pattern="[0-9]*" id="midi-pb-range" value="48" style="width:4ch;text-align:center;font-family:var(--font);font-size:10px;background:var(--bg);color:var(--fg);border:1px solid var(--border);padding:2px 4px;">
                     <span style="color:var(--dim)">semitones</span>
                    </label>
                  </div>
                  <span class="overlay-section-title">EXPRESSION</span>
                  <div class="midi-panel-row" id="expr-bend-row" style="gap:6px">
                    <button class="slider-info-btn icon-btn icon-lg" data-info="bend" title="About pitch bend" style="position:static;transform:none;"><i data-lucide="info"></i></button>
-                   <input type="number" id="midi-pb-range-expr" min="2" max="48" value="48" style="width:48px;text-align:center;font-family:var(--font);font-size:10px;background:var(--bg);color:var(--fg);border:1px solid var(--border);padding:2px 4px;">
+                    <input type="text" inputmode="numeric" pattern="[0-9]*" id="midi-pb-range-expr" value="48" style="width:4ch;text-align:center;font-family:var(--font);font-size:10px;background:var(--bg);color:var(--fg);border:1px solid var(--border);padding:2px 4px;">
                    <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;">
                      <span class="gi-checkbox"><input type="checkbox" id="expr-bend" checked><span class="gi-check"></span></span>
                      <span style="color:#fff">Bend</span>
