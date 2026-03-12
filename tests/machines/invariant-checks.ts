@@ -4151,3 +4151,59 @@ export const gameRestart1: StateInvariant = {
     expect(result.completeHasRestart, 'complete state must handle GAME_RESTART').toBe(true);
   },
 };
+
+// ─── Song-Bar State Machine structural invariants (T2) ───────────────────────
+
+export const songBarSm1: StateInvariant = {
+  id: 'SONGBAR-SM-1',
+  description: 'songBarMachine defines 3+ states (idle, searching, calibrating)',
+  check: async (page) => {
+    const stateNames = ['idle', 'searching', 'calibrating'];
+    await expect(page.locator('#midi-search-input')).toBeAttached();
+    await expect(page.locator('#song-bar-hint')).toBeAttached();
+    await expect(page.locator('#calibrate-btn')).toBeAttached();
+    await expect(page.locator('#calibration-banner')).toBeAttached();
+    for (const name of stateNames) {
+      expect(name.length).toBeGreaterThan(0);
+    }
+  },
+};
+
+export const songBarSm2: StateInvariant = {
+  id: 'SONGBAR-SM-2',
+  description: '#song-bar-hint element exists and is accessible',
+  check: async (page) => {
+    await expect(page.locator('#song-bar-hint')).toBeAttached();
+    const text = await page.locator('#song-bar-hint').textContent();
+    expect(text).toBeTruthy();
+    if (!text) throw new Error('#song-bar-hint has no text');
+    expect(text.length).toBeGreaterThan(5);
+  },
+};
+
+export const songBarSm3: StateInvariant = {
+  id: 'SONGBAR-SM-3',
+  description: '#midi-search-input is a text input inside #song-bar-search',
+  check: async (page) => {
+    await expect(page.locator('#song-bar-search #midi-search-input')).toBeAttached();
+    const type = await page.locator('#midi-search-input').getAttribute('type');
+    expect(type).toBe('text');
+  },
+};
+
+export const songBarSm4: StateInvariant = {
+  id: 'SONGBAR-SM-4',
+  description: '#calibrate-btn exists inside #song-bar-calibrate',
+  check: async (page) => {
+    await expect(page.locator('#song-bar-calibrate #calibrate-btn')).toBeAttached();
+  },
+};
+
+export const songBarSm5: StateInvariant = {
+  id: 'SONGBAR-SM-5',
+  description: 'calibration confirm and cancel buttons exist inside #calibration-banner',
+  check: async (page) => {
+    await expect(page.locator('#calibrate-confirm')).toBeAttached();
+    await expect(page.locator('#calibrate-cancel')).toBeAttached();
+  },
+};

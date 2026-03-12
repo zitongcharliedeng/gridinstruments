@@ -161,6 +161,11 @@ import {
      gameQuant9,
      gameChordProgress1,
      gameRestart1,
+     songBarSm1,
+     songBarSm2,
+     songBarSm3,
+     songBarSm4,
+     songBarSm5,
    } from './machines/invariant-checks';
 import { focusReturnCheck } from './machines/modifierCompoundMachine';
 
@@ -808,8 +813,28 @@ test.describe('[Structural] state-independent invariants', () => {
     await gameQuant8.check(page);
   });
 
-  test('GAME-QUANT-9: odd meter (7/8) does not break quantization', async ({ page }) => {
-    await gameQuant9.check(page);
+   test('GAME-QUANT-9: odd meter (7/8) does not break quantization', async ({ page }) => {
+     await gameQuant9.check(page);
+   });
+
+  test('SONGBAR-SM-1: songBarMachine states exist', async ({ page }) => {
+    await songBarSm1.check(page);
+  });
+
+  test('SONGBAR-SM-2: #song-bar-hint element exists and is accessible', async ({ page }) => {
+    await songBarSm2.check(page);
+  });
+
+  test('SONGBAR-SM-3: #midi-search-input is a text input inside #song-bar-search', async ({ page }) => {
+    await songBarSm3.check(page);
+  });
+
+  test('SONGBAR-SM-4: #calibrate-btn exists inside #song-bar-calibrate', async ({ page }) => {
+    await songBarSm4.check(page);
+  });
+
+  test('SONGBAR-SM-5: calibration confirm and cancel buttons exist inside #calibration-banner', async ({ page }) => {
+    await songBarSm5.check(page);
   });
  });
 

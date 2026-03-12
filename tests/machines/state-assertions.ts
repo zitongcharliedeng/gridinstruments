@@ -89,6 +89,10 @@ import {
   viewportPlaywrightActions,
   viewportInvariants,
   viewportDomAssertions,
+  // Song Bar
+  songBarPlaywrightActions,
+  songBarInvariants,
+  songBarDomAssertions,
 } from './uiMachine';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -196,6 +200,11 @@ const registry: Partial<Record<string, MachineAssertionKit>> = {
     actions: viewportPlaywrightActions,
     invariants: viewportInvariants,
     domAssertions: viewportDomAssertions,
+  },
+  songBar: {
+    actions: songBarPlaywrightActions,
+    invariants: songBarInvariants,
+    domAssertions: songBarDomAssertions,
   },
 };
 

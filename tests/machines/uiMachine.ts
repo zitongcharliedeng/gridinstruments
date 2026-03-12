@@ -837,6 +837,10 @@ import {
   viewportMachine, viewportPlaywrightActions, viewportDomAssertions, viewportInvariants,
 } from './viewportMachine';
 
+import {
+  songBarMachine, songBarPlaywrightActions, songBarDomAssertions, songBarInvariants,
+} from './songBarMachine';
+
 export {
   tuningSliderMachine, tuningSliderPlaywrightActions, tuningSliderDomAssertions, tuningSliderInvariants,
   skewSliderMachine, skewSliderPlaywrightActions, skewSliderDomAssertions, skewSliderInvariants,
@@ -847,6 +851,7 @@ export {
   modifierCompoundMachine, modifierCompoundPlaywrightActions, modifierCompoundDomAssertions, modifierCompoundInvariants,
   layoutPersistenceMachine, layoutPersistencePlaywrightActions, layoutPersistenceDomAssertions, layoutPersistenceInvariants,
   viewportMachine, viewportPlaywrightActions, viewportDomAssertions, viewportInvariants,
+  songBarMachine, songBarPlaywrightActions, songBarDomAssertions, songBarInvariants,
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -872,4 +877,5 @@ export const allMachines = [
   { name: 'modifierCompound', machine: modifierCompoundMachine },
   { name: 'layoutPersistence', machine: layoutPersistenceMachine },
   { name: 'viewport', machine: viewportMachine },
+  { name: 'songBar', machine: songBarMachine },
 ] as const;

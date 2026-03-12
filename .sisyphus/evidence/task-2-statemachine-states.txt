@@ -1,0 +1,34 @@
+T2 Evidence: songBarMachine XState State Machine
+
+Files created/modified:
+- tests/machines/songBarMachine.ts (NEW) — songBarMachine with 3 states (idle, searching, calibrating), 5 events, playwright actions, DOM assertions, invariants
+- tests/machines/invariant-checks.ts — 5 SONGBAR-SM-* StateInvariant objects appended
+- tests/machines/uiMachine.ts — songBarMachine import + allMachines entry
+- tests/machines/state-assertions.ts — songBar registry entry added
+- tests/xstate-graph.spec.ts — 5 SONGBAR-SM-* imports + 5 test cases in [Structural] block
+
+Machine states:
+- idle: No song loaded, hint visible, game status hidden
+- searching: Search input focused, hint hidden
+- calibrating: Calibration banner visible
+
+Events:
+- SEARCH_FOCUS: idle → searching
+- SEARCH_BLUR: searching → idle
+- CALIBRATE_START: idle → calibrating
+- CALIBRATE_CANCEL: calibrating → idle
+- CALIBRATE_DONE: calibrating → idle
+
+Structural tests (all PASS):
+✓ SONGBAR-SM-1: songBarMachine states exist
+✓ SONGBAR-SM-2: #song-bar-hint element exists and is accessible
+✓ SONGBAR-SM-3: #midi-search-input is a text input inside #song-bar-search
+✓ SONGBAR-SM-4: #calibrate-btn exists inside #song-bar-calibrate
+✓ SONGBAR-SM-5: calibration confirm and cancel buttons exist inside #calibration-banner
+
+Graph tests (intentionally RED — T5+T7 needed):
+✘ idle → SEARCH_FOCUS → searching (hint not hidden yet)
+✘ searching → SEARCH_BLUR → idle (depends on searching DOM assertion)
+✘ idle → CALIBRATE_START → calibrating (missing golden screenshot)
+✘ calibrating → CALIBRATE_CANCEL → idle (missing golden screenshot)
+✓ calibrating → CALIBRATE_DONE → idle
