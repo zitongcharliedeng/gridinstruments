@@ -680,7 +680,7 @@ Max Concurrent: 4 (Wave 2)
   - Files: `src/machines/gameMachine.ts`, `src/main.ts`, `index.html`, `tests/machines/invariant-checks.ts`
   - Pre-commit: `nix develop --command npm run build && nix develop --command npx playwright test --project=firefox --workers=1 -g "Structural"`
 
-- [ ] 6. Add SONG SEARCH Label (#118)
+- [x] 6. Add SONG SEARCH Label (#118)
 
   **What to do**:
   - **Add persistent search label** in `index.html`:
