@@ -77,6 +77,11 @@ export class NoteHistoryVisualizer {
 
   private animFrame: number | null = null;
 
+  private idleAlpha = 0;
+  private lastNoteOffTime = 0;
+  private readonly IDLE_FADE_DELAY_MS = 3000;
+  private readonly IDLE_FADE_DURATION_MS = 2000;
+
   // Game mode: the next expected MIDI note (ghost note indicator).
   private ghostNote: number | null = null;
 
@@ -85,6 +90,7 @@ export class NoteHistoryVisualizer {
     const ctx = canvas.getContext('2d');
     if (!ctx) throw new Error('No canvas context');
     this.ctx = ctx;
+    this.lastNoteOffTime = performance.now();
     this.resize(canvas.offsetWidth > 0 ? canvas.offsetWidth : 900, canvas.offsetHeight > 0 ? canvas.offsetHeight : 220);
   }
 
@@ -99,6 +105,8 @@ export class NoteHistoryVisualizer {
 
   /** Call when a note starts (from keyboard or MIDI) */
   noteOn(coordX: number, coordY: number, midiNote: number): void {
+    this.idleAlpha = 0;
+    this.lastNoteOffTime = 0;
     const key = `${coordX}_${coordY}`;
     this.activeNotes.set(key, { coordX, coordY, midiNote, startTime: performance.now() });
   }
@@ -110,6 +118,9 @@ export class NoteHistoryVisualizer {
     if (note) {
       this.history.push({ ...note, endTime: performance.now() });
       this.activeNotes.delete(key);
+      if (this.activeNotes.size === 0) {
+        this.lastNoteOffTime = performance.now();
+      }
     }
   }
 
@@ -125,6 +136,14 @@ export class NoteHistoryVisualizer {
       this.history.push({ ...note, endTime: now });
     }
     this.activeNotes.clear();
+    this.idleAlpha = 0;
+    this.lastNoteOffTime = performance.now();
+  }
+
+  /** Reset idle alpha — call when game starts playing to suppress hints */
+  resetIdleAlpha(): void {
+    this.idleAlpha = 0;
+    this.lastNoteOffTime = 0;
   }
 
   /** Set the ghost note — the next expected note in game mode. Shown as faint glow on piano strip. */
@@ -171,9 +190,16 @@ export class NoteHistoryVisualizer {
 
     // Empty state — single centered message across full canvas
     if (this.history.length === 0 && this.activeNotes.size === 0) {
+      if (this.lastNoteOffTime > 0) {
+        const elapsed = now - this.lastNoteOffTime;
+        if (elapsed > this.IDLE_FADE_DELAY_MS) {
+          this.idleAlpha = Math.min(1, (elapsed - this.IDLE_FADE_DELAY_MS) / this.IDLE_FADE_DURATION_MS);
+        }
+      }
       const ctx = this.ctx;
       const titleSize = Math.min(48, width * 0.06);
       const subSize = Math.min(11, width * 0.018);
+      ctx.globalAlpha = this.idleAlpha;
       ctx.fillStyle = '#555';
       ctx.font = `${titleSize}px 'JetBrains Mono', monospace`;
       ctx.textAlign = 'center';
@@ -181,7 +207,7 @@ export class NoteHistoryVisualizer {
       ctx.fillText('Play some notes', width / 2, height / 2 - 16);
       ctx.font = `${subSize}px 'JetBrains Mono', monospace`;
       ctx.fillStyle = '#b8960a';
-      ctx.globalAlpha = 0.85;
+      ctx.globalAlpha = this.idleAlpha * 0.85;
       const maxTextWidth = width * 0.85;
       const lines = wrapText(ctx, 'tl;dr: notes that are mathematically more harmonious are closer together spatially \u2014 make it hard to suck!', maxTextWidth);
       const lineHeight = subSize * 1.4;

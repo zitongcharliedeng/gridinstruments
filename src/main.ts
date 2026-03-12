@@ -383,6 +383,7 @@ class DComposeApp {
   private defaultZoom = 1.0;
   private updateGraffiti: (() => void) | null = null;
   private gameActor: ReturnType<typeof createActor<typeof gameMachine>> | null = null;
+  private idleGraffitiTimer: ReturnType<typeof setTimeout> | null = null;
 
   private calibrating = false;
   private calibratedCells = new Set<string>();
@@ -1359,6 +1360,14 @@ class DComposeApp {
       if (this.tuningSlider) this.tuningSlider.disabled = state === 'playing';
 
       if (state === 'playing') {
+        const graffitiEl = document.querySelector<SVGElement>('.graffiti-overlay');
+        if (graffitiEl) graffitiEl.style.opacity = '0';
+        if (this.idleGraffitiTimer !== null) {
+          clearTimeout(this.idleGraffitiTimer);
+          this.idleGraffitiTimer = null;
+        }
+        this.historyVisualizer?.resetIdleAlpha();
+
         // Expand target highlights to ALL cells with the same MIDI notes (not just the original cellId)
         const currentGroup = ctx.noteGroups[ctx.currentGroupIndex];
         if (currentGroup && this.visualizer) {
@@ -1725,6 +1734,12 @@ class DComposeApp {
       this.historyVisualizer?.noteOn(coordX, coordY, midiNote);
     }
     this.noteHoldCounts.set(key, count + 1);
+    const graffitiEl = document.querySelector<SVGElement>('.graffiti-overlay');
+    if (graffitiEl) graffitiEl.style.opacity = '0';
+    if (this.idleGraffitiTimer !== null) {
+      clearTimeout(this.idleGraffitiTimer);
+      this.idleGraffitiTimer = null;
+    }
   }
 
   private trackNoteOff(coordX: number, coordY: number): void {
@@ -1733,6 +1748,17 @@ class DComposeApp {
     if (count <= 1) {
       this.noteHoldCounts.delete(key);
       this.historyVisualizer?.noteOff(coordX, coordY);
+      if (this.noteHoldCounts.size === 0) {
+        if (this.idleGraffitiTimer !== null) clearTimeout(this.idleGraffitiTimer);
+        this.idleGraffitiTimer = setTimeout(() => {
+          const gameState = this.gameActor?.getSnapshot().value as string | undefined;
+          if (gameState !== 'playing') {
+            const graffitiEl = document.querySelector<SVGElement>('.graffiti-overlay');
+            if (graffitiEl) graffitiEl.style.opacity = '1';
+          }
+          this.idleGraffitiTimer = null;
+        }, 5000);
+      }
     } else {
       this.noteHoldCounts.set(key, count - 1);
     }
