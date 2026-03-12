@@ -4747,3 +4747,43 @@ export const EXPR_JOINT_4: StateInvariant = {
     if (!hasSelect) throw new Error('No <select> found near timbre info button');
   },
 };
+
+export const PB_STYLE_1: StateInvariant = {
+  id: 'PB-STYLE-1',
+  description: 'Pitch bend range input has type="text" (no native spinner arrows)',
+  check: async (page) => {
+    const type = await page.evaluate(() => {
+      // Find any pitch-bend range input — could be #midi-pb-range or similar
+      const input = document.getElementById('midi-pb-range') as HTMLInputElement | null
+        ?? document.getElementById('midi-pb-range-expr') as HTMLInputElement | null;
+      if (!input) throw new Error('pitch bend range input not found');
+      return input.getAttribute('type');
+    });
+    if (type === 'number') {
+      throw new Error(`Pitch bend range input has type="${type}" — should be "text" to avoid native arrows`);
+    }
+  },
+};
+
+export const PB_STYLE_2: StateInvariant = {
+  id: 'PB-STYLE-2',
+  description: 'Pitch bend range input has no border-radius and uses JetBrains Mono',
+  check: async (page) => {
+    const result = await page.evaluate(() => {
+      const input = document.getElementById('midi-pb-range') as HTMLInputElement | null
+        ?? document.getElementById('midi-pb-range-expr') as HTMLInputElement | null;
+      if (!input) throw new Error('pitch bend range input not found');
+      const style = window.getComputedStyle(input);
+      return {
+        borderRadius: style.borderRadius,
+        fontFamily: style.fontFamily,
+      };
+    });
+    if (result.borderRadius !== '0px') {
+      throw new Error(`Pitch bend range input border-radius is "${result.borderRadius}", expected "0px"`);
+    }
+    if (!result.fontFamily.toLowerCase().includes('jetbrains')) {
+      throw new Error(`Pitch bend range input font is "${result.fontFamily}", expected JetBrains Mono`);
+    }
+  },
+};

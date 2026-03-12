@@ -191,11 +191,13 @@ import {
      INFO_POPUP_4,
      INFO_POPUP_5,
      INFO_POPUP_LABEL_1,
-     EXPR_JOINT_1,
-     EXPR_JOINT_2,
-     EXPR_JOINT_3,
-     EXPR_JOINT_4,
-   } from './machines/invariant-checks';
+      EXPR_JOINT_1,
+      EXPR_JOINT_2,
+      EXPR_JOINT_3,
+      EXPR_JOINT_4,
+      PB_STYLE_1,
+      PB_STYLE_2,
+    } from './machines/invariant-checks';
 import { focusReturnCheck } from './machines/modifierCompoundMachine';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -980,6 +982,14 @@ test.describe('[Structural] state-independent invariants', () => {
 
   test('EXPR-JOINT-4: .slider-info-btn[data-info="timbre"] exists and timbre has CC mode select', async ({ page }) => {
     await EXPR_JOINT_4.check(page);
+  });
+
+  test('PB-STYLE-1: Pitch bend range input has type="text" (no native spinner arrows)', async ({ page }) => {
+    await PB_STYLE_1.check(page);
+  });
+
+  test('PB-STYLE-2: Pitch bend range input has no border-radius and uses JetBrains Mono', async ({ page }) => {
+    await PB_STYLE_2.check(page);
   });
  });
 
