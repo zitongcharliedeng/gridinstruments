@@ -4696,3 +4696,54 @@ export const INFO_POPUP_LABEL_1: StateInvariant = {
     }
   },
 };
+
+export const EXPR_JOINT_1: StateInvariant = {
+  id: 'EXPR-JOINT-1',
+  description: '.slider-info-btn[data-info="bend"] exists in EXPRESSION section',
+  check: async (page: Page) => {
+    const exists = await page.evaluate(() =>
+      document.querySelector('.slider-info-btn[data-info="bend"]') !== null
+    );
+    if (!exists) throw new Error('.slider-info-btn[data-info="bend"] not found');
+  },
+};
+
+export const EXPR_JOINT_2: StateInvariant = {
+  id: 'EXPR-JOINT-2',
+  description: '.slider-info-btn[data-info="velocity"] exists in EXPRESSION section',
+  check: async (page: Page) => {
+    const exists = await page.evaluate(() =>
+      document.querySelector('.slider-info-btn[data-info="velocity"]') !== null
+    );
+    if (!exists) throw new Error('.slider-info-btn[data-info="velocity"] not found');
+  },
+};
+
+export const EXPR_JOINT_3: StateInvariant = {
+  id: 'EXPR-JOINT-3',
+  description: '.slider-info-btn[data-info="pressure"] exists in EXPRESSION section',
+  check: async (page: Page) => {
+    const exists = await page.evaluate(() =>
+      document.querySelector('.slider-info-btn[data-info="pressure"]') !== null
+    );
+    if (!exists) throw new Error('.slider-info-btn[data-info="pressure"] not found');
+  },
+};
+
+export const EXPR_JOINT_4: StateInvariant = {
+  id: 'EXPR-JOINT-4',
+  description: '.slider-info-btn[data-info="timbre"] exists and timbre has CC mode select',
+  check: async (page: Page) => {
+    const exists = await page.evaluate(() =>
+      document.querySelector('.slider-info-btn[data-info="timbre"]') !== null
+    );
+    if (!exists) throw new Error('.slider-info-btn[data-info="timbre"] not found');
+    const hasSelect = await page.evaluate(() => {
+      const btn = document.querySelector('.slider-info-btn[data-info="timbre"]');
+      if (!btn) return false;
+      const parent = btn.closest('[id]') ?? btn.parentElement;
+      return parent ? parent.querySelector('select') !== null : false;
+    });
+    if (!hasSelect) throw new Error('No <select> found near timbre info button');
+  },
+};

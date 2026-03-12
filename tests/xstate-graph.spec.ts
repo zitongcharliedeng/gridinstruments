@@ -191,6 +191,10 @@ import {
      INFO_POPUP_4,
      INFO_POPUP_5,
      INFO_POPUP_LABEL_1,
+     EXPR_JOINT_1,
+     EXPR_JOINT_2,
+     EXPR_JOINT_3,
+     EXPR_JOINT_4,
    } from './machines/invariant-checks';
 import { focusReturnCheck } from './machines/modifierCompoundMachine';
 
@@ -960,6 +964,22 @@ test.describe('[Structural] state-independent invariants', () => {
 
   test('INFO-POPUP-LABEL-1: Quantization label text is "QUANTIZE" (not "DIFF")', async ({ page }) => {
     await INFO_POPUP_LABEL_1.check(page);
+  });
+
+  test('EXPR-JOINT-1: .slider-info-btn[data-info="bend"] exists in EXPRESSION section', async ({ page }) => {
+    await EXPR_JOINT_1.check(page);
+  });
+
+  test('EXPR-JOINT-2: .slider-info-btn[data-info="velocity"] exists in EXPRESSION section', async ({ page }) => {
+    await EXPR_JOINT_2.check(page);
+  });
+
+  test('EXPR-JOINT-3: .slider-info-btn[data-info="pressure"] exists in EXPRESSION section', async ({ page }) => {
+    await EXPR_JOINT_3.check(page);
+  });
+
+  test('EXPR-JOINT-4: .slider-info-btn[data-info="timbre"] exists and timbre has CC mode select', async ({ page }) => {
+    await EXPR_JOINT_4.check(page);
   });
  });
 
