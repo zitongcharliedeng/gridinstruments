@@ -1853,12 +1853,12 @@ export const iss92OverlayHeadingsCheck: StateInvariant = {
     await page.waitForTimeout(300);
     const headings = page.locator('#grid-overlay .overlay-section-title');
     const texts = await headings.allTextContents();
-    for (const expected of ['SOUND', 'VISUAL', 'INPUT', 'GAME', 'DIFFICULTY', 'SONG SEARCH']) {
+    for (const expected of ['SOUND', 'VISUAL', 'INPUT', 'GAME', 'DIFFICULTY']) {
       if (!texts.some(t => t.trim() === expected)) {
         throw new Error(`Missing overlay category heading: ${expected}`);
       }
     }
-    expect(texts.length, 'Should have exactly 6 overlay section headings').toBe(6);
+    expect(texts.length, 'Should have exactly 5 overlay section headings').toBe(5);
     // Verify headings are greyish (not white)
     const firstHeading = headings.first();
     const color = await firstHeading.evaluate((el) => getComputedStyle(el).color);
@@ -3551,14 +3551,14 @@ export const gameEdge4: StateInvariant = {
  */
 export const gameSearch1: StateInvariant = {
   id: 'GAME-SEARCH-1',
-  description: '#midi-search-input exists in DOM inside #grid-overlay',
+  description: '#midi-search-input exists in DOM inside #song-bar',
   check: async (page: Page) => {
     const input = page.locator('#midi-search-input');
     const count = await input.count();
     if (count === 0) throw new Error('#midi-search-input not found in DOM');
-    const overlay = page.locator('#grid-overlay #midi-search-input');
-    const overlayCount = await overlay.count();
-    if (overlayCount === 0) throw new Error('#midi-search-input is not inside #grid-overlay');
+    const songBar = page.locator('#song-bar #midi-search-input');
+    const songBarCount = await songBar.count();
+    if (songBarCount === 0) throw new Error('#midi-search-input is not inside #song-bar');
   }
 };
 
@@ -3665,8 +3665,6 @@ export const gameSearch4: StateInvariant = {
   id: 'GAME-SEARCH-4',
   description: 'typing in #midi-search-input triggers search pipeline — results div shows status',
   check: async (page: Page) => {
-    await page.locator('#grid-settings-btn').click();
-    await page.waitForTimeout(300);
     await page.locator('#midi-search-input').fill('ba');
     // Wait for 300ms debounce + async handler to start
     await page.waitForTimeout(500);
@@ -3711,21 +3709,21 @@ export const gameSearch5: StateInvariant = {
 };
 
 /**
- * D = {}. Search input is type="text" inside #grid-overlay; results container present.
+ * D = {}. Search input is type="text" inside #song-bar; results container present.
  *
  * Structural DOM contract for the MIDI search UI: the input must be a text field
  * (not a hidden input or other type), and the results container must exist as a
- * sibling so the search handler can populate it. Both must live inside #grid-overlay.
+ * sibling so the search handler can populate it. Both must live inside #song-bar.
  */
 export const gameSearch6: StateInvariant = {
   id: 'GAME-SEARCH-6',
-  description: '#midi-search-input is type=text and #midi-search-results exists inside #grid-overlay',
+  description: '#midi-search-input is type=text and #midi-search-results exists inside #song-bar',
   check: async (page: Page) => {
     const inputType = await page.locator('#midi-search-input').getAttribute('type');
     expect(inputType, '#midi-search-input must be type="text"').toBe('text');
 
-    const resultsInOverlay = await page.locator('#grid-overlay #midi-search-results').count();
-    expect(resultsInOverlay, '#midi-search-results must exist inside #grid-overlay').toBe(1);
+    const resultsInSongBar = await page.locator('#song-bar #midi-search-results').count();
+    expect(resultsInSongBar, '#midi-search-results must exist inside #song-bar').toBe(1);
   },
 };
 

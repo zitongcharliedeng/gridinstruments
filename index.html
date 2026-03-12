@@ -818,7 +818,10 @@
             </div>
           </div>
         </div>
-      <div id="song-bar-search"></div>
+      <div id="song-bar-search" style="position:relative;">
+          <input id="midi-search-input" type="text" placeholder="Search songs..." title="Search for MIDI songs across online libraries" style="width:180px;box-sizing:border-box;font-family:var(--font);font-size:10px;background:var(--bg);color:var(--fg);border:1px solid var(--border);padding:2px 6px;">
+          <div id="midi-search-results" style="position:absolute;top:100%;left:0;min-width:280px;max-height:300px;overflow-y:auto;background:var(--bg);border:1px solid var(--border);z-index:25;display:none;"></div>
+        </div>
       <div id="song-bar-status"></div>
       <span id="song-bar-hint" style="color:var(--dim);font-size:10px;font-family:var(--font);">Drop a .mid file or search for a song to learn</span>
     </div>
@@ -976,9 +979,6 @@
                   <option value="1/16">Advanced (1/16)</option>
                 </select>
                </label>
-               <div class="overlay-section-title">SONG SEARCH</div>
-               <input id="midi-search-input" type="text" placeholder="Search songs..." title="Search for MIDI songs across online libraries" style="width:100%;box-sizing:border-box;margin-bottom:6px;">
-              <div id="midi-search-results" style="overflow-y:auto;max-height:200px;"></div>
                <div id="game-status" style="display:none;flex-direction:column;gap:6px;margin-top:8px;">
                  <div id="game-song-title" style="font-family:var(--font);font-size:11px;color:var(--fg);text-transform:uppercase;letter-spacing:0.06em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px;"></div>
                  <div style="display:flex;gap:8px;align-items:center;">
