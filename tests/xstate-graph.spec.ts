@@ -167,6 +167,11 @@ import {
      songBarSm4,
      songBarSm5,
      mirrorHighlight1,
+     CANVAS_CLEAN_1,
+     CANVAS_CLEAN_2,
+     CANVAS_CLEAN_3,
+     CANVAS_CLEAN_4,
+     CANVAS_CLEAN_5,
    } from './machines/invariant-checks';
 import { focusReturnCheck } from './machines/modifierCompoundMachine';
 
@@ -840,6 +845,26 @@ test.describe('[Structural] state-independent invariants', () => {
 
    test('MIRROR-HIGHLIGHT-1: getCellIdsForMidiNotes returns >1 cell for MIDI 62 at multiple isomorphic positions', async ({ page }) => {
     await mirrorHighlight1.check(page);
+  });
+
+  test('CANVAS-CLEAN-1: canvas has no hint text at center-bottom when idle', async ({ page }) => {
+    await CANVAS_CLEAN_1.check(page);
+  });
+
+  test('CANVAS-CLEAN-2: canvas has no progress bar at top', async ({ page }) => {
+    await CANVAS_CLEAN_2.check(page);
+  });
+
+  test('CANVAS-CLEAN-3: canvas has no elapsed timer text at top-right', async ({ page }) => {
+    await CANVAS_CLEAN_3.check(page);
+  });
+
+  test('CANVAS-CLEAN-4: KeyboardVisualizer.setGameState method still exists', async ({ page }) => {
+    await CANVAS_CLEAN_4.check(page);
+  });
+
+  test('CANVAS-CLEAN-5: KeyboardVisualizer.setGameProgress method still exists', async ({ page }) => {
+    await CANVAS_CLEAN_5.check(page);
   });
  });
 

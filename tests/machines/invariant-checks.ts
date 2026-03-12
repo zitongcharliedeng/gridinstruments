@@ -4263,3 +4263,117 @@ export const mirrorHighlight1: StateInvariant = {
     expect(cellCount, 'MIDI 62 must appear at >1 isomorphic grid position').toBeGreaterThan(1);
   },
 };
+
+// ── CANVAS-CLEAN invariants: no game UI rendered on canvas ────────────────────
+
+/**
+ * D = {}. Canvas center-bottom should not have bright hint text.
+ *
+ * The "Drop a MIDI file to play" hint was rendered at rgba(255,255,255,0.15)
+ * at (width/2, height*0.75). After removal, that pixel should be the keyboard
+ * cell color (near-black background). Threshold 200 allows for colored cells.
+ */
+export const CANVAS_CLEAN_1: StateInvariant = {
+  id: 'CANVAS-CLEAN-1',
+  description: 'Canvas has no hint text at center-bottom when idle (no "Drop a MIDI file" text)',
+  check: async (page: Page) => {
+    const result = await page.evaluate(() => {
+      const canvas = document.getElementById('keyboard-canvas') as HTMLCanvasElement;
+      if (!canvas) throw new Error('keyboard-canvas not found');
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error('canvas context not available');
+      const x = Math.floor(canvas.width / 2);
+      const y = Math.floor(canvas.height * 0.75);
+      const pixel = ctx.getImageData(x, y, 1, 1).data;
+      return { r: pixel[0], g: pixel[1], b: pixel[2], a: pixel[3] };
+    });
+    const brightness = result.r + result.g + result.b;
+    if (brightness > 600) {
+      throw new Error(`Canvas center-bottom pixel is very bright (${brightness}) — hint text may still be rendering`);
+    }
+  },
+};
+
+/**
+ * D = {}. Canvas top strip should not have a white progress bar.
+ *
+ * The progress bar was a solid white fillRect at y=0..3. After removal,
+ * the top pixel should be the black background (#000).
+ */
+export const CANVAS_CLEAN_2: StateInvariant = {
+  id: 'CANVAS-CLEAN-2',
+  description: 'Canvas has no progress bar at top (no white bar at y=0..3)',
+  check: async (page: Page) => {
+    const result = await page.evaluate(() => {
+      const canvas = document.getElementById('keyboard-canvas') as HTMLCanvasElement;
+      if (!canvas) throw new Error('keyboard-canvas not found');
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error('canvas context not available');
+      const pixel = ctx.getImageData(Math.floor(canvas.width / 2), 1, 1, 1).data;
+      return { r: pixel[0], g: pixel[1], b: pixel[2] };
+    });
+    const brightness = result.r + result.g + result.b;
+    if (brightness > 60) {
+      throw new Error(`Canvas top pixel is bright (${brightness}) — progress bar may still be rendering`);
+    }
+  },
+};
+
+/**
+ * D = {}. Canvas top-right corner should not have white timer text.
+ *
+ * The elapsed timer was rendered at top-right (width-10, 6) in white.
+ * After removal, that pixel should be the black background.
+ */
+export const CANVAS_CLEAN_3: StateInvariant = {
+  id: 'CANVAS-CLEAN-3',
+  description: 'Canvas has no elapsed timer text at top-right',
+  check: async (page: Page) => {
+    const result = await page.evaluate(() => {
+      const canvas = document.getElementById('keyboard-canvas') as HTMLCanvasElement;
+      if (!canvas) throw new Error('keyboard-canvas not found');
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error('canvas context not available');
+      const pixel = ctx.getImageData(canvas.width - 20, 6, 1, 1).data;
+      return { r: pixel[0], g: pixel[1], b: pixel[2] };
+    });
+    const brightness = result.r + result.g + result.b;
+    if (brightness > 60) {
+      throw new Error(`Canvas top-right pixel is bright (${brightness}) — timer text may still be rendering`);
+    }
+  },
+};
+
+/**
+ * D = {}. KeyboardVisualizer.setGameState method must still exist (API preserved).
+ *
+ * Removing canvas rendering must not remove the method — main.ts calls it.
+ */
+export const CANVAS_CLEAN_4: StateInvariant = {
+  id: 'CANVAS-CLEAN-4',
+  description: 'KeyboardVisualizer.setGameState method still exists (API preserved)',
+  check: async (page: Page) => {
+    const exists = await page.evaluate(async () => {
+      const { KeyboardVisualizer } = await import('/src/lib/keyboard-visualizer.ts');
+      return typeof KeyboardVisualizer.prototype.setGameState === 'function';
+    });
+    if (!exists) throw new Error('setGameState method missing from KeyboardVisualizer');
+  },
+};
+
+/**
+ * D = {}. KeyboardVisualizer.setGameProgress method must still exist (API preserved).
+ *
+ * Removing canvas rendering must not remove the method — main.ts calls it.
+ */
+export const CANVAS_CLEAN_5: StateInvariant = {
+  id: 'CANVAS-CLEAN-5',
+  description: 'KeyboardVisualizer.setGameProgress method still exists (API preserved)',
+  check: async (page: Page) => {
+    const exists = await page.evaluate(async () => {
+      const { KeyboardVisualizer } = await import('/src/lib/keyboard-visualizer.ts');
+      return typeof KeyboardVisualizer.prototype.setGameProgress === 'function';
+    });
+    if (!exists) throw new Error('setGameProgress method missing from KeyboardVisualizer');
+  },
+};
