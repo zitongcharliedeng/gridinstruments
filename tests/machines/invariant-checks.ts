@@ -1853,12 +1853,12 @@ export const iss92OverlayHeadingsCheck: StateInvariant = {
     await page.waitForTimeout(300);
     const headings = page.locator('#grid-overlay .overlay-section-title');
     const texts = await headings.allTextContents();
-    for (const expected of ['SOUND', 'VISUAL', 'INPUT', 'GAME', 'DIFFICULTY']) {
+    for (const expected of ['SOUND', 'VISUAL', 'INPUT', 'EXPRESSION', 'GAME', 'DIFFICULTY']) {
       if (!texts.some(t => t.trim() === expected)) {
         throw new Error(`Missing overlay category heading: ${expected}`);
       }
     }
-    expect(texts.length, 'Should have exactly 5 overlay section headings').toBe(5);
+    expect(texts.length, 'Should have exactly 6 overlay section headings').toBe(6);
     // Verify headings are greyish (not white)
     const firstHeading = headings.first();
     const color = await firstHeading.evaluate((el) => getComputedStyle(el).color);
