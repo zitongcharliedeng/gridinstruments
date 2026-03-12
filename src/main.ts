@@ -1424,44 +1424,45 @@ class DComposeApp {
       }
     });
 
-    const keyboardCanvas = document.getElementById('keyboard-canvas');
-    if (keyboardCanvas) {
-      keyboardCanvas.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy';
-        keyboardCanvas.setAttribute('data-dropping', 'true');
+    const songBar = document.getElementById('song-bar');
+    document.body.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy';
+      if (songBar) songBar.classList.add('dropping');
+    });
+
+    document.body.addEventListener('dragleave', (e) => {
+      e.preventDefault();
+      // Only remove if leaving the document entirely (relatedTarget is null or outside document)
+      if (!e.relatedTarget || !(document.documentElement.contains(e.relatedTarget as Node))) {
+        if (songBar) songBar.classList.remove('dropping');
+      }
+    });
+
+    document.body.addEventListener('drop', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (songBar) songBar.classList.remove('dropping');
+
+      const files = e.dataTransfer?.files;
+      if (!files || files.length === 0) return;
+
+      const file = files[0];
+      if (!file) return;
+      if (!file.name.toLowerCase().endsWith('.mid') && !file.name.toLowerCase().endsWith('.midi')) {
+        return;
+      }
+
+      const songTitle = file.name.replace(/\.(mid|midi)$/i, '');
+      file.arrayBuffer().then((buffer) => {
+        this.loadMidiFromBuffer(buffer, songTitle);
+      }).catch((err: unknown) => {
+        const msg = err instanceof Error ? err.message : 'Failed to read file';
+        const actor = this.gameActor;
+        if (actor) actor.send({ type: 'LOAD_FAILED', error: msg });
       });
-
-      keyboardCanvas.addEventListener('dragleave', (e) => {
-        e.preventDefault();
-        keyboardCanvas.removeAttribute('data-dropping');
-      });
-
-      keyboardCanvas.addEventListener('drop', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        keyboardCanvas.removeAttribute('data-dropping');
-
-        const files = e.dataTransfer?.files;
-        if (!files || files.length === 0) return;
-
-        const file = files[0];
-        if (!file) return;
-        if (!file.name.toLowerCase().endsWith('.mid') && !file.name.toLowerCase().endsWith('.midi')) {
-          return;
-        }
-
-        const songTitle = file.name.replace(/\.(mid|midi)$/i, '');
-        file.arrayBuffer().then((buffer) => {
-          this.loadMidiFromBuffer(buffer, songTitle);
-        }).catch((err: unknown) => {
-          const msg = err instanceof Error ? err.message : 'Failed to read file';
-          const actor = this.gameActor;
-          if (actor) actor.send({ type: 'LOAD_FAILED', error: msg });
-        });
-      });
-    }
+    });
 
     // ── MIDI search wiring ──
     const searchInput = document.getElementById('midi-search-input') as HTMLInputElement | null;

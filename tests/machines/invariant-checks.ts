@@ -1831,16 +1831,16 @@ export const ghostNoteApiExists: StateInvariant = {
   },
 };
 
-/** D = {}. File drop: keyboard canvas must exist and accept dragover events. */
+/** D = {}. File drop: song-bar exists and is the visual drop target (drop handled on document.body). */
 export const canvasDropZone: StateInvariant = {
   id: 'GAME-DROP-1',
   check: async (page: Page) => {
+    const songBar = page.locator('#song-bar');
+    await expect(songBar).toBeVisible();
+    const hasDropping = await songBar.evaluate((el: Element) => el.classList.contains('dropping'));
+    expect(hasDropping).toBe(false);
     const canvas = page.locator('#keyboard-canvas');
     await expect(canvas).toBeVisible();
-    const pointerEvents = await canvas.evaluate(
-      (el: Element) => window.getComputedStyle(el).pointerEvents
-    );
-    expect(pointerEvents).not.toBe('none');
   },
 };
 
