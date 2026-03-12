@@ -166,6 +166,7 @@ import {
      songBarSm3,
      songBarSm4,
      songBarSm5,
+     mirrorHighlight1,
    } from './machines/invariant-checks';
 import { focusReturnCheck } from './machines/modifierCompoundMachine';
 
@@ -833,8 +834,12 @@ test.describe('[Structural] state-independent invariants', () => {
     await songBarSm4.check(page);
   });
 
-  test('SONGBAR-SM-5: calibration confirm and cancel buttons exist inside #calibration-banner', async ({ page }) => {
+   test('SONGBAR-SM-5: calibration confirm and cancel buttons exist inside #calibration-banner', async ({ page }) => {
     await songBarSm5.check(page);
+  });
+
+   test('MIRROR-HIGHLIGHT-1: getCellIdsForMidiNotes returns >1 cell for MIDI 62 at multiple isomorphic positions', async ({ page }) => {
+    await mirrorHighlight1.check(page);
   });
  });
 

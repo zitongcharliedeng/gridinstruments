@@ -2617,11 +2617,30 @@ export const gameChordClear: StateInvariant = {
 export const gameMultiCellHighlight: StateInvariant = {
   id: 'GAME-HIGHLIGHT-1',
   check: async (page: Page) => {
-    const hasMethod = await page.evaluate(async () => {
+    const result = await page.evaluate(async () => {
       const { KeyboardVisualizer } = await import('/src/lib/keyboard-visualizer.ts');
-      return typeof KeyboardVisualizer.prototype.getCellIdsForMidiNotes === 'function';
+      if (typeof KeyboardVisualizer.prototype.getCellIdsForMidiNotes !== 'function') {
+        return { exists: false, length: -1 };
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = 800;
+      canvas.height = 800;
+      document.body.appendChild(canvas);
+      try {
+        const viz = new KeyboardVisualizer(canvas, {
+          width: 800, height: 800,
+          generator: [700, 1200] as [number, number],
+          d4Hz: 293.66, scaleX: 1.0, scaleY: 1.0,
+          buttonSpacing: 0, skewFactor: 0, bFact: 0,
+        });
+        const arr = viz.getCellIdsForMidiNotes(new Set([62]));
+        return { exists: true, length: Array.isArray(arr) ? arr.length : -1 };
+      } finally {
+        document.body.removeChild(canvas);
+      }
     });
-    expect(hasMethod, 'getCellIdsForMidiNotes must exist on KeyboardVisualizer').toBe(true);
+    expect(result.exists, 'getCellIdsForMidiNotes must exist on KeyboardVisualizer').toBe(true);
+    expect(result.length, 'getCellIdsForMidiNotes must return an array (not null/undefined)').toBeGreaterThanOrEqual(0);
   },
 };
 
@@ -4205,5 +4224,42 @@ export const songBarSm5: StateInvariant = {
   check: async (page) => {
     await expect(page.locator('#calibrate-confirm')).toBeAttached();
     await expect(page.locator('#calibrate-cancel')).toBeAttached();
+  },
+};
+
+/**
+ * D = {}. Mirror note highlighting: MIDI 62 appears at multiple isomorphic grid positions.
+ *
+ * The formula midiNote = 62 + coordX*7 + coordY*12 yields MIDI 62 for any (coordX, coordY)
+ * satisfying 7*coordX + 12*coordY = 0, i.e. coordX = 12k, coordY = -7k. Within the default
+ * grid range (iRange=20, jRange=12), three positions exist: (0,0), (12,-7), (-12,7).
+ * getCellIdsForMidiNotes must return all of them.
+ */
+export const mirrorHighlight1: StateInvariant = {
+  id: 'MIRROR-HIGHLIGHT-1',
+  description: 'getCellIdsForMidiNotes returns >1 cell ID for MIDI 62 (multiple isomorphic positions)',
+  check: async (page: Page) => {
+    const cellCount = await page.evaluate(async () => {
+      const { KeyboardVisualizer } = await import('/src/lib/keyboard-visualizer.ts');
+      const canvas = document.createElement('canvas');
+      canvas.width = 4000;
+      canvas.height = 4000;
+      document.body.appendChild(canvas);
+      try {
+        const viz = new KeyboardVisualizer(canvas, {
+          width: 4000, height: 4000,
+          generator: [700, 1200] as [number, number],
+          d4Hz: 293.66, scaleX: 1.0, scaleY: 1.0,
+          buttonSpacing: 0, skewFactor: 0, bFact: 0,
+        });
+        const cells = viz.getCellIdsForMidiNotes(new Set([62]));
+        if (!Array.isArray(cells)) return -1;
+        return cells.length;
+      } finally {
+        document.body.removeChild(canvas);
+      }
+    });
+    expect(cellCount, 'getCellIdsForMidiNotes must return an array').toBeGreaterThan(0);
+    expect(cellCount, 'MIDI 62 must appear at >1 isomorphic grid position').toBeGreaterThan(1);
   },
 };
