@@ -1876,6 +1876,8 @@ class DComposeApp {
     this.noteHoldCounts.set(key, count + 1);
     const graffitiEl = document.querySelector<SVGElement>('.graffiti-overlay');
     if (graffitiEl) graffitiEl.style.opacity = '0';
+    const songBarHint = document.getElementById('song-bar-hint');
+    if (songBarHint) songBarHint.style.opacity = '0';
     if (this.idleGraffitiTimer !== null) {
       clearTimeout(this.idleGraffitiTimer);
       this.idleGraffitiTimer = null;
@@ -1895,6 +1897,8 @@ class DComposeApp {
           if (gameState !== 'playing') {
             const graffitiEl = document.querySelector<SVGElement>('.graffiti-overlay');
             if (graffitiEl) graffitiEl.style.opacity = '1';
+            const songBarHint = document.getElementById('song-bar-hint');
+            if (songBarHint) songBarHint.style.opacity = '1';
           }
           this.idleGraffitiTimer = null;
         }, 5000);
