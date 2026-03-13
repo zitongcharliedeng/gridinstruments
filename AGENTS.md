@@ -125,7 +125,7 @@ All new tests must be `StateInvariant` objects in the invariant-checks file, wir
 - **Shift** = vibrato (hold), **Space** = sustain (hold), **R** is a note key
 - **Ctrl** passes through to browser (no synth shortcuts)
 - Modifiers are hold-on, off-by-default (not toggle)
-- **No new npm dependencies** beyond `xstate`
+- **No new npm dependencies** beyond `xstate` and `effect` (Effect-TS, for `src/services/` only — see Literate Programming section below)
 - **No scroll on the site** — overflow must be hidden at page level
 - **Drag handles** live on the inner border of panels — never touch the grid-area element or keyboard-canvas
 - **Never close GitHub issues** — only label "ready for review"
@@ -147,6 +147,37 @@ All new tests must be `StateInvariant` objects in the invariant-checks file, wir
 2. Build — must exit 0
 3. Run structural tests — all must pass
 4. Run full suite to confirm nothing regressed
+
+### Literate Programming
+
+The codebase uses [Entangled](https://entangled.github.io/) for literate programming:
+
+- **Source of truth**: `literate/*.lit.md` files (Markdown with embedded TypeScript code blocks)
+- **Generated output**: `src/*.ts` files — these are BUILD ARTIFACTS (like `node_modules/` or `dist/`)
+- **Generated files are**:
+  - Gitignored — not in git, cannot be committed
+  - chmod 444 — read-only, OS blocks edits (Claude Code `Edit`/`Write` → EACCES error)
+  - Deleted + regenerated on every `npm run build` and `npm test`
+
+**CRITICAL: To make code changes, edit `.lit.md` files — NEVER edit `.ts` files directly.**
+
+**Entangled commands** (always via `nix develop --command`):
+- `entangled tangle` — generate all `.ts` from `.lit.md` source
+- `entangled tangle --force` — force overwrite
+- `entangled stitch` — sync `.ts` edits back to `.lit.md` (bidirectional)
+- `entangled watch` — continuous daemon for live sync during development
+
+**Development workflow**:
+1. Edit `literate/<module>.lit.md`
+2. `nix develop --command entangled tangle` — generate `.ts`
+3. `nix develop --command npm run build` — build (auto-tangles via prebuild hook)
+4. `nix develop --command npx playwright test` — test (auto-tangles via pretest hook)
+
+**Effect-TS** (`effect` npm package):
+- Allowed ONLY in `src/services/` directory
+- Banned from: synth hot path, render loop, pure math, state machines
+- Purpose: typed browser API DI (AudioContext, MIDI, Canvas)
+- Python tool: `entangled-cli==2.4.2` (installed via Python venv in Nix devshell, see `requirements.txt`)
 
 ### Atomic Checkpoint Protocol (MANDATORY for orchestrators)
 
