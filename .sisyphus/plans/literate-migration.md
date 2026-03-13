@@ -561,7 +561,7 @@ Max Concurrent: 11 (Wave 9)
   **Evidence**: `.sisyphus/evidence/task-33-effect-services.txt`
   **Commit**: YES — `feat(services): wrap browser APIs in Effect-TS services`
 
-- [ ] 34. Fix #130 — Key brightness uniform
+- [x] 34. Fix #130 — Key brightness uniform
 
   **Recommended Agent Profile**: `unspecified-high` | **Skills**: []
   **Parallelization**: Wave 9 (parallel with T35-T44) | **Blocked By**: T33
@@ -569,7 +569,7 @@ Max Concurrent: 11 (Wave 9)
   **Evidence**: `.sisyphus/evidence/task-34-issue-130.txt`
   **Commit**: YES — `fix(#130): key brightness uniform`
 
-- [ ] 35. Fix #128 — Song bar decoupled from grid
+- [x] 35. Fix #128 — Song bar decoupled from grid
 
   **Recommended Agent Profile**: `deep` | **Skills**: []
   **Parallelization**: Wave 9 (parallel) | **Blocked By**: T33
@@ -577,7 +577,7 @@ Max Concurrent: 11 (Wave 9)
   **Evidence**: `.sisyphus/evidence/task-35-issue-128.txt`
   **Commit**: YES — `fix(#128): decouple song bar from grid`
 
-- [ ] 36. Fix #100 — Hardcoded zoom vs DPI
+- [x] 36. Fix #100 — Hardcoded zoom vs DPI
 
   **Recommended Agent Profile**: `unspecified-high` | **Skills**: []
   **Parallelization**: Wave 9 (parallel) | **Blocked By**: T33
@@ -585,7 +585,7 @@ Max Concurrent: 11 (Wave 9)
   **Evidence**: `.sisyphus/evidence/task-36-issue-100.txt`
   **Commit**: YES — `fix(#100): use devicePixelRatio instead of hardcoded zoom`
 
-- [ ] 37. Fix #142 — Keys stuck on alt-tab
+- [x] 37. Fix #142 — Keys stuck on alt-tab
 
   **Recommended Agent Profile**: `unspecified-high` | **Skills**: []
   **Parallelization**: Wave 9 (parallel) | **Blocked By**: T33
@@ -593,7 +593,7 @@ Max Concurrent: 11 (Wave 9)
   **Evidence**: `.sisyphus/evidence/task-37-issue-142.txt`
   **Commit**: YES — `fix(#142): release stuck keys on alt-tab/focus loss`
 
-- [ ] 38. Fix #121 — Chord progress visuals
+- [x] 38. Fix #121 — Chord progress visuals
 
   **Recommended Agent Profile**: `unspecified-high` | **Skills**: []
   **Parallelization**: Wave 9 (parallel) | **Blocked By**: T33
@@ -601,7 +601,7 @@ Max Concurrent: 11 (Wave 9)
   **Evidence**: `.sisyphus/evidence/task-38-issue-121.txt`
   **Commit**: YES — `fix(#121): chord progress visuals`
 
-- [ ] 39. Fix #103 — Equivalent note colors non-12TET
+- [x] 39. Fix #103 — Equivalent note colors non-12TET
 
   **Recommended Agent Profile**: `unspecified-high` | **Skills**: []
   **Parallelization**: Wave 9 (parallel) | **Blocked By**: T33
@@ -609,7 +609,7 @@ Max Concurrent: 11 (Wave 9)
   **Evidence**: `.sisyphus/evidence/task-39-issue-103.txt`
   **Commit**: YES — `fix(#103): equivalent note colors in non-12TET tunings`
 
-- [ ] 40. Fix #67 — MPE duplicate notes
+- [x] 40. Fix #67 — MPE duplicate notes
 
   **Recommended Agent Profile**: `deep` | **Skills**: []
   **Parallelization**: Wave 9 (parallel) | **Blocked By**: T33
@@ -617,7 +617,7 @@ Max Concurrent: 11 (Wave 9)
   **Evidence**: `.sisyphus/evidence/task-40-issue-67.txt`
   **Commit**: YES — `fix(#67): prevent MPE duplicate notes`
 
-- [ ] 41. Fix #140 — Song search broken
+- [x] 41. Fix #140 — Song search broken
 
   **Recommended Agent Profile**: `unspecified-high` | **Skills**: []
   **Parallelization**: Wave 9 (parallel) | **Blocked By**: T33
@@ -625,7 +625,7 @@ Max Concurrent: 11 (Wave 9)
   **Evidence**: `.sisyphus/evidence/task-41-issue-140.txt`
   **Commit**: YES — `fix(#140): restore song search functionality`
 
-- [ ] 42. Fix #93 — Notation D-relative
+- [x] 42. Fix #93 — Notation D-relative
 
   **Recommended Agent Profile**: `unspecified-high` | **Skills**: []
   **Parallelization**: Wave 9 (parallel) | **Blocked By**: T33
@@ -633,7 +633,7 @@ Max Concurrent: 11 (Wave 9)
   **Evidence**: `.sisyphus/evidence/task-42-issue-93.txt`
   **Commit**: YES — `fix(#93): D-relative notation display`
 
-- [ ] 43. Fix #88 — QWERTY overlay
+ - [x] 43. Fix #88 — QWERTY overlay
 
   **Recommended Agent Profile**: `unspecified-high` | **Skills**: []
   **Parallelization**: Wave 9 (parallel) | **Blocked By**: T33
@@ -641,7 +641,7 @@ Max Concurrent: 11 (Wave 9)
   **Evidence**: `.sisyphus/evidence/task-43-issue-88.txt`
   **Commit**: YES — `fix(#88): QWERTY key overlay on grid`
 
-- [ ] 44. Fix #80 — MPE visualizers
+ - [x] 44. Fix #80 — MPE visualizers
 
   **Recommended Agent Profile**: `unspecified-high` | **Skills**: []
   **Parallelization**: Wave 9 (parallel) | **Blocked By**: T33
