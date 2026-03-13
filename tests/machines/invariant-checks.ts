@@ -4732,19 +4732,18 @@ export const EXPR_JOINT_3: StateInvariant = {
 
 export const EXPR_JOINT_4: StateInvariant = {
   id: 'EXPR-JOINT-4',
-  description: '.slider-info-btn[data-info="timbre"] exists and timbre has CC mode select',
+  description: '.slider-info-btn[data-info="timbre"] exists and timbre has CC mode cycling button',
   check: async (page: Page) => {
     const exists = await page.evaluate(() =>
       document.querySelector('.slider-info-btn[data-info="timbre"]') !== null
     );
     if (!exists) throw new Error('.slider-info-btn[data-info="timbre"] not found');
-    const hasSelect = await page.evaluate(() => {
-      const btn = document.querySelector('.slider-info-btn[data-info="timbre"]');
+    const hasCycleBtn = await page.evaluate(() => {
+      const btn = document.getElementById('timbre-cc-mode');
       if (!btn) return false;
-      const parent = btn.closest('[id]') ?? btn.parentElement;
-      return parent ? parent.querySelector('select') !== null : false;
+      return btn.tagName === 'BUTTON' && (btn.value === '74' || btn.value === '1');
     });
-    if (!hasSelect) throw new Error('No <select> found near timbre info button');
+    if (!hasCycleBtn) throw new Error('No cycling <button id="timbre-cc-mode"> found');
   },
 };
 
