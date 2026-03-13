@@ -1,3 +1,8 @@
+# Slider Configs
+
+Per-slider component configurations for NumericSlider — default values, badge formatters, and input parsers for tuning, skew, volume, zoom, and D-reference frequency sliders.
+
+``` {.typescript file=src/machines/sliderConfigs.ts}
 /**
  * Per-slider component configs for NumericSlider.
  *
@@ -91,3 +96,4 @@ export const DREF_SLIDER_CONFIG: SliderComponentConfig = {
     return isFinite(hz) && hz >= 20 && hz <= 20000 ? hz : null;
   },
 };
+```
