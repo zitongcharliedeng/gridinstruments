@@ -928,21 +928,40 @@ export class DComposeApp {
 
      // Zoom slider — DOM mutations driven by appActor subscriber
      //
-     // At zoom=1.0, keyboard-visualizer renders each cell at PIANO_KEY_MM = 23.5mm
-     // in W3C CSS-spec units (1 CSS px = 1/96 inch). Browsers don't expose physical
-     // screen DPI, so CSS-spec mm is our best metric-unit anchor.
+     // DPI-aware default zoom: target physical key width ≈ 15mm (QWERTY key cap width).
      //
-     // Target: computer keyboard key pitch = 15mm cap + 4mm gap = 19mm.
-     // Our grid has zero inter-key padding, so each cell IS the full pitch.
-     // Desktop default = 19.0 / 23.5 ≈ 0.81 → each cell ≈ 19mm (keyboard pitch).
-     // Touch default = 22.0 / 23.5 ≈ 0.94 → slightly larger for finger targets.
-     const PIANO_KEY_MM = 23.5;
-     const KEYBOARD_PITCH_MM = 19.0;
-     const TOUCH_TARGET_MM = 22.0;
+     // At zoom=1.0, keyboard-visualizer renders each visible key at PIANO_KEY_MM = 23.5mm
+     // in W3C CSS-spec units (1 CSS px = 1/96 inch, cssPxPerInch = 96 is a spec constant).
+     //
+     // DPI estimation: window.screen.width gives physical pixels; window.outerWidth gives
+     // CSS pixels. Their ratio × 96 estimates the physical DPI of the display.
+     //
+     // Formula:
+     //   dpi            = screen.width / outerWidth * 96   (CSS reference pixel = 96 dpi)
+     //   mmPerCssPx     = 25.4 / dpi
+     //   baseKeyWidthCssPx = PIANO_KEY_MM / 25.4 * 96      (key width at zoom=1.0 in CSS px)
+     //   zoom           = targetMm / (mmPerCssPx * baseKeyWidthCssPx)
+     //                  = targetMm * dpi / (PIANO_KEY_MM * 96)
+     //
+     // Fallback to 0.75 if DPI is unavailable (screen.width or outerWidth is zero/missing).
+     // Touch devices: Math.min(1.2, innerWidth / 480) — scales to viewport width.
+     const PIANO_KEY_MM = 23.5;   // visible key width at zoom=1.0 (W3C CSS px units)
+     const TARGET_KEY_MM = 15;    // target physical key width ≈ QWERTY key cap
+     const FALLBACK_ZOOM = 0.75;
      const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-     this.defaultZoom = isTouchDevice
-       ? TOUCH_TARGET_MM / PIANO_KEY_MM
-       : KEYBOARD_PITCH_MM / PIANO_KEY_MM;
+     if (isTouchDevice) {
+       this.defaultZoom = Math.min(1.2, window.innerWidth / 480);
+     } else {
+       const screenW = window.screen.width;
+       const outerW = window.outerWidth;
+       if (screenW > 0 && outerW > 0) {
+         const dpi = screenW / outerW * 96;
+         const zoom = TARGET_KEY_MM * dpi / (PIANO_KEY_MM * 96);
+         this.defaultZoom = Math.max(0.3, Math.min(2.0, zoom));
+       } else {
+         this.defaultZoom = FALLBACK_ZOOM;
+       }
+     }
      const savedZoom = this.loadSetting('zoom', this.defaultZoom.toString());
      if (this.zoomSlider) {
        this.zoomSlider.value = savedZoom;
