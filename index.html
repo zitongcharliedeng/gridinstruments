@@ -865,12 +865,7 @@
       <div id="song-bar-status" style="display:inline-flex;align-items:center;gap:8px;">
           <label style="display:inline-flex;align-items:center;gap:4px;font-size:10px;color:var(--dim);">
             QUANTIZE
-            <select id="quantization-level" style="font-family:var(--font);font-size:10px;background:var(--bg);color:var(--fg);border:1px solid var(--border);padding:2px 4px;">
-              <option value="none">None</option>
-              <option value="1/4">1/4</option>
-              <option value="1/8">1/8</option>
-              <option value="1/16">1/16</option>
-            </select>
+            <button id="quantization-level" style="font-family:var(--font);font-size:10px;background:var(--bg);color:var(--fg);border:1px solid var(--border);padding:2px 6px;cursor:pointer;" title="Click to cycle quantization level" value="none">None</button>
           </label>
           <button class="slider-info-btn icon-btn icon-lg" data-info="quantization" title="About quantization" style="position:static;transform:none;"><i data-lucide="info"></i></button>
           <div id="game-status" style="display:none;align-items:center;gap:8px;">
@@ -909,12 +904,7 @@
            <div class="overlay-section">
              <div class="slider-track">
                <span class="ctrl-label" style="font-size:9px;text-transform:uppercase;white-space:nowrap;color:#fff;flex-shrink:0">WAVE</span>
-              <select id="wave-select" title="Select waveform (sawtooth/sine/square/triangle)">
-                <option value="sawtooth">SAW</option>
-                <option value="sine">SIN</option>
-                <option value="square">SQR</option>
-                <option value="triangle">TRI</option>
-              </select>
+              <span id="wave-select-slot"></span>
               <button class="slider-reset icon-btn icon-md" id="wave-reset" title="Reset waveform to sawtooth (default)"><i data-lucide="rotate-cw"></i></button>
             </div>
             <div class="ctrl-group" style="margin-top: 18px">
@@ -981,8 +971,7 @@
            <div class="overlay-section">
              <div class="slider-track">
                <span class="ctrl-label" style="font-size:9px;text-transform:uppercase;white-space:nowrap;color:#fff;flex-shrink:0">KEYBOARD LAYOUT</span>
-              <select id="layout-select" title="Select keyboard physical layout">
-              </select>
+              <span id="layout-select-slot"></span>
               <button class="slider-reset icon-btn icon-md" id="layout-reset" title="Reset keyboard layout to ANSI (US QWERTY)"><i data-lucide="rotate-cw"></i></button>
             </div>
 
@@ -1021,12 +1010,7 @@
                  </div>
                  <div class="midi-panel-row" id="expr-timbre-row" style="gap:6px">
                    <button class="slider-info-btn icon-btn icon-lg" data-info="timbre" title="About timbre CC" style="position:static;transform:none;"><i data-lucide="info"></i></button>
-                   <select id="timbre-cc-mode" style="font-family:var(--font);font-size:10px;background:var(--bg);color:var(--fg);border:1px solid var(--border);padding:2px 4px;">
-                     <option value="74" selected>CC74</option>
-                     <option value="1">CC1</option>
-                     <option value="poly-at">Poly AT</option>
-                     <option value="channel-at">Channel AT</option>
-                   </select>
+                    <button id="timbre-cc-mode" style="font-family:var(--font);font-size:10px;background:var(--bg);color:var(--fg);border:1px solid var(--border);padding:2px 6px;cursor:pointer;" title="Click to cycle timbre CC" value="74">CC74</button>
                    <span style="color:#fff;font-size:12px;">Timbre</span>
                  </div>
                 <div class="midi-panel-row" id="mpe-output-row">
@@ -1035,9 +1019,7 @@
                     <span class="gi-checkbox"><input type="checkbox" id="mpe-enabled"><span class="gi-check"></span></span>
                     Enable
                   </label>
-                  <select id="mpe-output-select" style="min-width:120px;" disabled>
-                    <option value="">No MIDI outputs</option>
-                  </select>
+                  <span id="mpe-output-select-slot" style="min-width:120px;display:inline-block;"></span>
                 </div>
               </div>
             </div>

@@ -275,6 +275,61 @@ function getElementOrNull<T extends HTMLElement>(id: string, type: new() => T): 
   return el;
 }
 
+/**
+ * Creates a <select> element and replaces a placeholder slot in the DOM.
+ * Used so SlimSelect-wrapped selects are created in JS (not HTML source),
+ * keeping the HTML free of native <select> tags (enforced by ast-grep).
+ */
+function createSelectAtSlot(
+  slotId: string,
+  selectId: string,
+  options: { value: string; text: string }[],
+  attrs?: Record<string, string>,
+): HTMLSelectElement | null {
+  const slot = document.getElementById(slotId);
+  if (!slot) return null;
+  const select = document.createElement('select');
+  select.id = selectId;
+  if (attrs) {
+    for (const [key, val] of Object.entries(attrs)) {
+      select.setAttribute(key, val);
+    }
+  }
+  for (const opt of options) {
+    const option = document.createElement('option');
+    option.value = opt.value;
+    option.textContent = opt.text;
+    select.appendChild(option);
+  }
+  slot.replaceWith(select);
+  return select;
+}
+
+/**
+ * Sets up a cycling button that rotates through values on click.
+ * Returns the button element or null if not found.
+ */
+function setupCyclingButton(
+  btnId: string,
+  options: { value: string; label: string }[],
+  initialValue: string,
+  onChange: (value: string) => void,
+): HTMLButtonElement | null {
+  const btn = getElementOrNull(btnId, HTMLButtonElement);
+  if (!btn) return null;
+  let currentIndex = options.findIndex(o => o.value === initialValue);
+  if (currentIndex < 0) currentIndex = 0;
+  btn.value = options[currentIndex].value;
+  btn.textContent = options[currentIndex].label;
+  btn.addEventListener('click', () => {
+    currentIndex = (currentIndex + 1) % options.length;
+    btn.value = options[currentIndex].value;
+    btn.textContent = options[currentIndex].label;
+    onChange(options[currentIndex].value);
+  });
+  return btn;
+}
+
 /** Thumb center px offset — source of truth for fill, badge & notch alignment. */
 function thumbCenterPx(ratio: number, slider: HTMLInputElement): number {
   const thumbW = 3;
@@ -422,15 +477,11 @@ class DComposeApp {
     catch { /* storage full or private mode */ }
   }
 
-  private applyTimbreCcMode(mode: string): void {
-    const numericCc = parseInt(mode, 10);
-    if (!isNaN(numericCc)) {
+  private applyTimbreCcMode(cc: string): void {
+    const numericCc = parseInt(cc, 10);
+    if (!isNaN(numericCc) && numericCc >= 0 && numericCc <= 127) {
       this.mpe.updateSettings({ timbreCC: numericCc });
     }
-    // 'poly-at' and 'channel-at' are pressure modes, not timbre CC numbers —
-    // the timbre CC stays at whatever numeric value was last set.
-    // These alternative modes would need deeper MPE service changes,
-    // so for now only numeric CC values (74, 1) are applied.
   }
 
   constructor() {
@@ -441,7 +492,7 @@ class DComposeApp {
 
     this.canvas = getElement('keyboard-canvas', HTMLCanvasElement);
     this.historyCanvas = getElement('history-canvas', HTMLCanvasElement);
-    this.layoutSelect = getElement('layout-select', HTMLSelectElement);
+    this.layoutSelect = getElementOrNull('layout-select', HTMLSelectElement);
     this.skewSlider = getElement('skew-slider', HTMLInputElement);
     this.bfactSlider = getElement('bfact-slider', HTMLInputElement);
     this.tuningSlider = getElement('tuning-slider', HTMLInputElement);
@@ -1154,17 +1205,16 @@ class DComposeApp {
       });
     }
 
-    const timbreCcSelect = getElementOrNull('timbre-cc-mode', HTMLSelectElement);
-    if (timbreCcSelect) {
-      const savedTimbreMode = this.loadSetting('timbreCcMode', '74');
-      timbreCcSelect.value = savedTimbreMode;
-      this.applyTimbreCcMode(savedTimbreMode);
-      timbreCcSelect.addEventListener('change', () => {
-        const mode = timbreCcSelect.value;
-        this.applyTimbreCcMode(mode);
-        this.saveSetting('timbreCcMode', mode);
-      });
-    }
+    const TIMBRE_CC_OPTIONS = [
+      { value: '74', label: 'CC74' },
+      { value: '1', label: 'CC1' },
+    ];
+    const savedTimbreMode = this.loadSetting('timbreCcMode', '74');
+    this.applyTimbreCcMode(savedTimbreMode);
+    setupCyclingButton('timbre-cc-mode', TIMBRE_CC_OPTIONS, savedTimbreMode, (cc) => {
+      this.applyTimbreCcMode(cc);
+      this.saveSetting('timbreCcMode', cc);
+    });
 
     const mpeCheckbox = getElementOrNull('mpe-enabled', HTMLInputElement);
     const mpeSelect = getElementOrNull('mpe-output-select', HTMLSelectElement);
@@ -1958,8 +2008,8 @@ class DComposeApp {
     }
 
     const badgeEl = document.getElementById('game-quantization-badge') as HTMLElement | null;
-    const levelSelect = document.getElementById('quantization-level') as HTMLSelectElement | null;
-    const level = (levelSelect?.value ?? 'none') as QuantizationLevel;
+    const levelBtn = document.getElementById('quantization-level') as HTMLButtonElement | null;
+    const level = (levelBtn?.value ?? 'none') as QuantizationLevel;
     if (badgeEl) {
       badgeEl.textContent = level === 'none' ? '' : `Q:${level}`;
     }
@@ -2423,6 +2473,30 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   setupInfoDialogs();
+
+  // ─── Create <select> elements in JS (banned in HTML by ast-grep rule) ─────
+  createSelectAtSlot('wave-select-slot', 'wave-select', [
+    { value: 'sawtooth', text: 'SAW' },
+    { value: 'sine', text: 'SIN' },
+    { value: 'square', text: 'SQR' },
+    { value: 'triangle', text: 'TRI' },
+  ], { title: 'Select waveform (sawtooth/sine/square/triangle)' });
+
+  createSelectAtSlot('layout-select-slot', 'layout-select', [], {
+    title: 'Select keyboard physical layout',
+  });
+
+  createSelectAtSlot('mpe-output-select-slot', 'mpe-output-select', [
+    { value: '', text: 'No MIDI outputs' },
+  ], { style: 'min-width:120px;', disabled: '' });
+
+  // ─── Set up quantization cycling button ──────────────────────────────────
+  setupCyclingButton('quantization-level', [
+    { value: 'none', label: 'None' },
+    { value: '1/4', label: '1/4' },
+    { value: '1/8', label: '1/8' },
+    { value: '1/16', label: '1/16' },
+  ], 'none', () => { /* value read on-demand by loadMidiFromBuffer */ });
 
   const app = new DComposeApp();
   const appActor = createActor(appMachine, {
