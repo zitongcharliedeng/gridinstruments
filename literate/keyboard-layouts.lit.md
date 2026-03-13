@@ -290,6 +290,39 @@ export function isKeyMapped(code: string): boolean {
   return code in KEYBOARD_VARIANTS[0].keyMap;
 }
 
+/**
+ * Convert a W3C key code to a short display label for the QWERTY overlay.
+ * Returns '' for keys that should not be shown (modifiers, function keys, etc.).
+ */
+export function codeToLabel(code: string): string {
+  // Letter keys: KeyA → A, KeyB → B, ...
+  if (/^Key[A-Z]$/.test(code)) return code.slice(3);
+  // Digit keys: Digit0 → 0, Digit1 → 1, ...
+  if (/^Digit[0-9]$/.test(code)) return code.slice(5);
+  // Numpad keys
+  if (/^Numpad[0-9]$/.test(code)) return 'N' + code.slice(6);
+  switch (code) {
+    case 'Backquote':       return '`';
+    case 'Minus':           return '-';
+    case 'Equal':           return '=';
+    case 'BracketLeft':     return '[';
+    case 'BracketRight':    return ']';
+    case 'Backslash':       return '\\';
+    case 'IntlBackslash':   return '\\';
+    case 'Semicolon':       return ';';
+    case 'Quote':           return "'";
+    case 'Comma':           return ',';
+    case 'Period':          return '.';
+    case 'Slash':           return '/';
+    case 'NumpadAdd':       return 'N+';
+    case 'NumpadSubtract':  return 'N-';
+    case 'NumpadMultiply':  return 'N*';
+    case 'NumpadDivide':    return 'N/';
+    case 'NumpadDecimal':   return 'N.';
+    default:                return '';
+  }
+}
+
 // Legacy export for code that imports 'standardLayout' by name
 export const standardLayout: KeyboardLayout = KEYBOARD_VARIANTS[0];
 ```

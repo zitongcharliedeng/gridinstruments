@@ -8,7 +8,7 @@ DComposeApp — the main application class managing synth, visualizer, MIDI, key
  * Manages synth, visualizer, MIDI, keyboard/pointer input, and all UI wiring.
  */
 
-import { getLayout, KEYBOARD_VARIANTS, KeyboardLayout } from './lib/keyboard-layouts';
+import { getLayout, KEYBOARD_VARIANTS, KeyboardLayout, codeToLabel } from './lib/keyboard-layouts';
 import { Synth, WaveformType, FIFTH_MIN, FIFTH_MAX, FIFTH_DEFAULT, findNearestMarker, TUNING_MARKERS } from './lib/synth';
 import { KeyboardVisualizer } from './lib/keyboard-visualizer';
 import { NoteHistoryVisualizer } from './lib/note-history-visualizer';
@@ -392,6 +392,11 @@ export class DComposeApp {
             if (val) {
               this.currentLayout = getLayout(val);
               this.saveSetting('layout', val);
+              const qToggle = document.getElementById('qwerty-overlay-toggle') as HTMLInputElement | null;
+              if (qToggle?.checked) {
+                this.visualizer?.setQwertyLabels(this.buildQwertyLabels());
+                this.visualizer?.render();
+              }
             }
             document.querySelector<HTMLElement>('.ss-main')?.blur();
           },
@@ -983,6 +988,20 @@ export class DComposeApp {
          this.zoomSlider.dispatchEvent(new Event('input'));
        }
      });
+
+    // QWERTY overlay toggle
+    const qwertyToggle = document.getElementById('qwerty-overlay-toggle') as HTMLInputElement | null;
+    if (qwertyToggle) {
+      qwertyToggle.addEventListener('change', () => {
+        if (qwertyToggle.checked) {
+          this.visualizer?.setQwertyLabels(this.buildQwertyLabels());
+        } else {
+          this.visualizer?.setQwertyLabels(new Map());
+        }
+        this.visualizer?.render();
+      });
+    }
+
     window.addEventListener('blur', () => { this.stopAllNotes(); });
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'hidden') this.stopAllNotes();
@@ -1959,6 +1978,17 @@ export class DComposeApp {
       btn.style.display = '';
     }
     this.render();
+  }
+
+  private buildQwertyLabels(): Map<string, string> {
+    const map = new Map<string, string>();
+    for (const [code, coord] of Object.entries(this.currentLayout.keyMap)) {
+      const label = codeToLabel(code);
+      if (label) {
+        map.set(`${coord[0]}_${coord[1]}`, label);
+      }
+    }
+    return map;
   }
 }
 ```

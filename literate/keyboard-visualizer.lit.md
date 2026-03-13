@@ -71,6 +71,7 @@ export class KeyboardVisualizer {
   private targetNotes = new Set<string>();
   private pressedTargetNotes = new Set<string>();
   private calibratedRange: ReadonlySet<string> | null = null;
+  private qwertyLabels: Map<string, string> = new Map();
 
 
   // Half-vectors for parallelogram cells (computed in generateButtons)
@@ -384,6 +385,10 @@ export class KeyboardVisualizer {
     this.calibratedRange = range;
   }
 
+  setQwertyLabels(labels: Map<string, string>): void {
+    this.qwertyLabels = labels;
+  }
+
   setGameState(_state: string): void {
     this.render();
   }
@@ -649,6 +654,19 @@ export class KeyboardVisualizer {
       this.ctx.fillText(noteName, x, y);
     }
     this.ctx.globalAlpha = 1;
+
+    // QWERTY overlay label (bottom-right corner of cell)
+    const qLabel = this.qwertyLabels.get(noteId);
+    if (qLabel) {
+      const qSize = Math.max(6, fontSize * 0.55);
+      this.ctx.font = `${qSize}px "JetBrains Mono", monospace`;
+      this.ctx.fillStyle = textColor;
+      this.ctx.globalAlpha = 0.5;
+      this.ctx.textAlign = 'right';
+      this.ctx.textBaseline = 'bottom';
+      this.ctx.fillText(qLabel, x + Math.abs(hv1.x) + Math.abs(hv2.x) - 2, y + Math.abs(hv1.y) + Math.abs(hv2.y) - 2);
+      this.ctx.globalAlpha = 1;
+    }
   }
 
 ```
