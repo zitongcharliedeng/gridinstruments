@@ -97,3 +97,4 @@ src/app-slider.ts
 src/app-panels.ts
 src/app-actor-wiring.ts
 src/app-core.ts
+src/services/index.ts

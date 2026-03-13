@@ -39,6 +39,7 @@
   },
   "dependencies": {
     "@tonejs/midi": "^2.0.28",
+    "effect": "^3.19.19",
     "isomorphic-qwerty": "^0.0.4",
     "lucide": "^0.577.0",
     "overlayscrollbars": "^2.14.0",
