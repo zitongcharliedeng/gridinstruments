@@ -205,5 +205,43 @@ ${srcLink('mpe-service.lit.md', 'Source: mpe-service.lit.md — timbre CC routin
 <li><a href="https://www.toverlamp.org/static/wickisynth/wickisynth_lowlatency.html" target="_blank" rel="noopener">WickiSynth</a> by Piers Titus van der Torren</li>
 </ul>
 ${srcLink('note-colors.lit.md', 'Source: note-colors.lit.md — coordinate system and shear math')}`,
+
+  volume: `
+<h2>Volume</h2>
+<p>Master output volume in <a href="https://en.wikipedia.org/wiki/Decibel" target="_blank" rel="noopener">decibels</a> (dB). Controls the gain of the synthesizer output.</p>
+<p>Range: 0 (silent) to 1 (maximum). Default: 0.3 (~-10.5 dB).</p>
+${srcLink('synth.lit.md', 'Source: synth.lit.md — audio synthesis and volume')}`,
+
+  dref: `
+<h2>D Reference Pitch</h2>
+<p>Sets the frequency of <strong>D4</strong> in Hz — the anchor pitch. All other notes are tuned relative to it via the circle of fifths.</p>
+<p>Default: <strong>293.66 Hz</strong> (standard D4 in A440 tuning). Type a note name (e.g., "A4") to set by name.</p>
+${srcLink('synth.lit.md', 'Source: synth.lit.md — reference pitch handling')}`,
+
+  zoom: `
+<h2>Zoom</h2>
+<p>Scales grid cell size. The default is DPI-calibrated to approximate standard keyboard key width (~15mm). Reset returns to this default.</p>
+${srcLink('keyboard-visualizer.lit.md', 'Source: keyboard-visualizer.lit.md — grid rendering')}`,
+
+  wave: `
+<h2>Waveform</h2>
+<table>
+<tr><td><strong>Sawtooth</strong></td><td>Rich, bright — all harmonics (default)</td></tr>
+<tr><td><strong>Square</strong></td><td>Hollow, clarinet-like — odd harmonics only</td></tr>
+<tr><td><strong>Triangle</strong></td><td>Soft, flute-like — weak odd harmonics</td></tr>
+<tr><td><strong>Sine</strong></td><td>Pure tone — fundamental only</td></tr>
+</table>
+${srcLink('synth.lit.md', 'Source: synth.lit.md — oscillator waveforms')}`,
+
+  layout: `
+<h2>Keyboard Layout</h2>
+<table>
+<tr><td><strong>ANSI</strong></td><td>US QWERTY (default)</td></tr>
+<tr><td><strong>ISO</strong></td><td>European (extra key left of Z)</td></tr>
+<tr><td><strong>ISO-DE</strong></td><td>German QWERTZ</td></tr>
+<tr><td><strong>JIS</strong></td><td>Japanese</td></tr>
+</table>
+<p>Auto-detected via Keyboard API on Chrome/Edge. Falls back to ANSI.</p>
+${srcLink('keyboard-layouts.lit.md', 'Source: keyboard-layouts.lit.md — layout definitions')}`,
 };
 ```
