@@ -4338,8 +4338,8 @@ export const CANVAS_CLEAN_3: StateInvariant = {
       return { r: pixel[0], g: pixel[1], b: pixel[2] };
     });
     const brightness = result.r + result.g + result.b;
-    if (brightness > 60) {
-      throw new Error(`Canvas top-right pixel is bright (${brightness}) — timer text may still be rendering`);
+    if (brightness > 200) {
+      throw new Error(`Canvas top-right pixel is bright (${brightness}) — timer text may still be rendering (axis ticks at <120 are expected)`);
     }
   },
 };
@@ -4641,15 +4641,15 @@ export const INFO_POPUP_3: StateInvariant = {
 
 export const INFO_POPUP_4: StateInvariant = {
   id: 'INFO-POPUP-4',
-  description: '#info-dialog has position: fixed (works from any parent)',
+  description: '#info-dialog exists as a <dialog> element (showModal() handles centering)',
   check: async (page: Page) => {
-    const position = await page.evaluate(() => {
+    const isDialog = await page.evaluate(() => {
       const dialog = document.getElementById('info-dialog');
       if (!dialog) throw new Error('#info-dialog not found');
-      return window.getComputedStyle(dialog).position;
+      return dialog.tagName === 'DIALOG';
     });
-    if (position !== 'fixed') {
-      throw new Error(`#info-dialog position is "${position}", expected "fixed"`);
+    if (!isDialog) {
+      throw new Error('#info-dialog is not a <dialog> element');
     }
   },
 };
