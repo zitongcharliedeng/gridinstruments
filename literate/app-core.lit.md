@@ -395,9 +395,28 @@ export class DComposeApp {
         opt.textContent = variant.name;
         this.layoutSelect.appendChild(opt);
       }
-      const savedLayout = this.loadSetting('layout', 'ansi');
-      this.layoutSelect.value = savedLayout;
-      this.currentLayout = getLayout(savedLayout);
+      const savedLayout = this.loadSetting('layout', '');
+      if (savedLayout) {
+        // User has explicitly saved a layout preference — use it
+        this.layoutSelect.value = savedLayout;
+        this.currentLayout = getLayout(savedLayout);
+      } else {
+        // Auto-detect: try Keyboard API, fallback to ANSI
+        this.currentLayout = getLayout('ansi');
+        this.layoutSelect.value = 'ansi';
+        try {
+          const kb = (navigator as unknown as Record<string, unknown>)['keyboard'] as { getLayoutMap?: () => Promise<Map<string, string>> } | undefined;
+          if (kb?.getLayoutMap) {
+            kb.getLayoutMap().then((layoutMap) => {
+              if (layoutMap.has('IntlBackslash')) {
+                this.currentLayout = getLayout('iso');
+                if (this.layoutSelect) this.layoutSelect.value = 'iso';
+                this.visualizer?.render();
+              }
+            }).catch(() => { /* fallback to ANSI */ });
+          }
+        } catch { /* Keyboard API not available */ }
+      }
 
       const layoutSS = new SlimSelect({
         select: this.layoutSelect,
