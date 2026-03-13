@@ -64,3 +64,4 @@ src/lib/calibration.ts
 src/lib/midi-parser.ts
 src/lib/synth.ts
 src/components/NumericSlider.ts
+src/lib/mpe-service.ts
