@@ -31,6 +31,23 @@ jobs:
           node-version: '20'
           cache: 'npm'
       
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install Entangled
+        run: pip install entangled-cli==2.4.2
+
+      - name: Tangle literate source
+        run: entangled tangle --force
+
+      - name: Verify tangle output
+        run: |
+          # During migration, this check is informational only
+          echo "Tangled files:"
+          find src -name "*.ts" -newer requirements.txt 2>/dev/null || echo "No newly tangled files (migration not started yet)"
+      
       - name: Install dependencies
         run: npm ci
       
