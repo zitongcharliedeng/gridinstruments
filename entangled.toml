@@ -6,4 +6,4 @@ identifiers = ["typescript", "ts"]
 comment = { open = "// ~~ " }
 
 [entangled]
-watch_list = ["literate/*.lit.md"]
+watch_list = ["literate/**/*.lit.md"]
