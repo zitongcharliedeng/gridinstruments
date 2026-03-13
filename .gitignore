@@ -59,4 +59,4 @@ tests/.vision-cache.json
 # Source of truth: literate/*.lit.md
 # Regenerate: bash scripts/tangle.sh
 # Files are added here as each module is migrated to literate:
-# (none yet — Wave 2+ will add entries here)
+src/lib/note-colors.ts

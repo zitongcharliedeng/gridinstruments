@@ -6,7 +6,9 @@ set -euo pipefail
 
 FILEDB=".entangled/filedb.json"
 
-# Step 1: Remove previously generated .ts files (prevents stale state)
+# Step 1: Remove previously generated .ts files AND clear filedb (prevents stale state)
+# We must delete filedb.json too — entangled caches file hashes there and will skip
+# re-creation of deleted targets if it thinks the hash is current.
 if [ -f "$FILEDB" ] && command -v python3 &>/dev/null; then
   python3 -c "
 import json, os
@@ -22,6 +24,8 @@ try:
 except Exception as e:
     print(f'[tangle] filedb parse note: {e}')
 " 2>/dev/null || true
+  # Clear filedb so entangled starts fresh — prevents "Nothing to be done" after target deletion
+  rm -f "$FILEDB"
 fi
 
 # Step 2: Tangle from .lit.md source (no-op if no .lit.md files exist)

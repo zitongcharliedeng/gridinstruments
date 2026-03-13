@@ -1,3 +1,10 @@
+# Note Colors
+
+OKLCH-based note color system — perceptually uniform chromatic hue mapping for the isomorphic grid keyboard.
+
+Each pitch class maps to a hue on the OKLCH color wheel (30° per semitone, D=29° red). Adjacent grid cells (fifths apart = 7 semitones) differ by 210° for maximum visual contrast.
+
+``` {.typescript file=src/lib/note-colors.ts}
 /**
  * OKLCH-based note colors — perceptually uniform, chromatic hue mapping.
  *
@@ -170,3 +177,4 @@ export function midiToCoord(midi: number): [number, number] {
   const y = Math.round((pitchCents - x * 700) / 1200);
   return [x, y];
 }
+```
