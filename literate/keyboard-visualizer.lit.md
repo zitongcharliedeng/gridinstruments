@@ -438,9 +438,62 @@ export class KeyboardVisualizer {
     const cofDy = fifth * genY1 - octave * genY0;
     // ── Circle of Fifths axis ─────────────────────────────────────
     this.drawAxisLine(centerX, centerY, cofDx, cofDy, 'Circle of Fifths');
+    // Tick spacing: one fifth = vector (genX, -genY0), project onto CoF unit vector
+    {
+      const cofLen = Math.sqrt(cofDx * cofDx + cofDy * cofDy);
+      if (cofLen > 0.01) {
+        const cofNx = cofDx / cofLen;
+        const cofNy = cofDy / cofLen;
+        // One fifth generator step projected onto CoF axis
+        const fifthStepPx = genX * cofNx + (-genY0) * cofNy;
+        // Note names ascending in fifths from D (center = 0 fifths)
+        const fifthNames = ['D','A','E','B','F#','C#','G#','D#','A#','F','C','G'];
+        this.drawAxisTicks(
+          centerX, centerY,
+          cofNx, cofNy,
+          fifthStepPx,
+          8, // range: ±8 fifths
+          (k) => {
+            const cents = k * 700;
+            const name = k >= 0
+              ? fifthNames[k % 12]
+              : fifthNames[((k % 12) + 12) % 12];
+            return `${name} ${cents}¢`;
+          }
+        );
+      }
+    }
 
     // ── Pitch axis ───────────────────────────────────────────────
     this.drawAxisLine(centerX, centerY, pitchDx, pitchDy, 'Pitch');
+    // Tick spacing: one octave = vector (genX1, -genY1)
+    {
+      const pitchLen = Math.sqrt(pitchDx * pitchDx + pitchDy * pitchDy);
+      if (pitchLen > 0.01) {
+        const pitchNx = pitchDx / pitchLen;
+        const pitchNy = pitchDy / pitchLen;
+        // One octave step projected onto pitch axis (should equal pitchLen itself)
+        const octaveStepPx = genX1 * pitchNx + (-genY1) * pitchNy;
+        // D octave Hz values: D2≈73, D3≈147, D4≈294, D5≈587, D6≈1175
+        // Center = D4 (k=0). k=+1 → D5, k=-1 → D3, etc.
+        const dFreqs: Record<number, string> = {
+          [-3]: 'D1 18Hz',
+          [-2]: 'D2 37Hz',
+          [-1]: 'D3 147Hz',
+          [0]:  'D4 294Hz',
+          [1]:  'D5 587Hz',
+          [2]:  'D6 1175Hz',
+          [3]:  'D7 2349Hz',
+        };
+        this.drawAxisTicks(
+          centerX, centerY,
+          pitchNx, pitchNy,
+          octaveStepPx,
+          4, // range: ±4 octaves
+          (k) => dFreqs[k] ?? `D${k + 4}`
+        );
+      }
+    }
     // ── Origin marker (small dot only, no label) ──────────────
     this.ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
     this.ctx.beginPath();
@@ -453,6 +506,60 @@ export class KeyboardVisualizer {
       genX1, -genY1,
     );
 
+  }
+
+
+  /** Draw tick marks along an axis at regular pixel intervals. */
+  private drawAxisTicks(
+    cx: number, cy: number,
+    nx: number, ny: number,   // unit vector along axis (positive direction)
+    stepPx: number,            // pixels per tick interval
+    range: number,             // draw ticks from -range to +range
+    label: (k: number) => string
+  ): void {
+    if (Math.abs(stepPx) < 1) return;
+    const { width, height } = this.options;
+    // Perpendicular unit vector (for tick marks)
+    const perpX = -ny;
+    const perpY = nx;
+    const tickHalf = 5; // half-length of tick mark in pixels
+
+    this.ctx.save();
+    this.ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+    this.ctx.lineWidth = 1;
+    this.ctx.fillStyle = 'rgba(255,255,255,0.45)';
+    this.ctx.font = '8px "JetBrains Mono", monospace';
+    this.ctx.textAlign = 'center';
+    this.ctx.textBaseline = 'middle';
+
+    for (let k = -range; k <= range; k++) {
+      const t = k * stepPx;
+      // Skip if outside canvas (with small margin)
+      const tx = cx + nx * t;
+      const ty = cy + ny * t;
+      if (tx < -20 || tx > width + 20 || ty < -20 || ty > height + 20) continue;
+
+      // Tick mark (skip origin tick — it already has a dot)
+      if (k !== 0) {
+        this.ctx.beginPath();
+        this.ctx.moveTo(tx - perpX * tickHalf, ty - perpY * tickHalf);
+        this.ctx.lineTo(tx + perpX * tickHalf, ty + perpY * tickHalf);
+        this.ctx.stroke();
+      }
+
+      // Label: offset perpendicularly, rotated to follow axis direction
+      const lx = tx + perpX * (tickHalf + 9);
+      const ly = ty + perpY * (tickHalf + 9);
+      this.ctx.save();
+      this.ctx.translate(lx, ly);
+      let textAngle = Math.atan2(ny, nx);
+      if (textAngle > Math.PI / 2) textAngle -= Math.PI;
+      if (textAngle < -Math.PI / 2) textAngle += Math.PI;
+      this.ctx.rotate(textAngle);
+      this.ctx.fillText(label(k), 0, 0);
+      this.ctx.restore();
+    }
+    this.ctx.restore();
   }
 
 
