@@ -90,7 +90,8 @@ export class DComposeApp {
   private defaultZoom = 1.0;
   private updateGraffiti: (() => void) | null = null;
   private gameActor: ReturnType<typeof createActor<typeof gameMachine>> | null = null;
-  private idleGraffitiTimer: ReturnType<typeof setTimeout> | null = null;
+  private idleTimeout: ReturnType<typeof setTimeout> | null = null;
+  private isIdle = true;
   private gameElapsedInterval: ReturnType<typeof setInterval> | null = null;
 
   private calibrating = false;
@@ -1172,13 +1173,12 @@ export class DComposeApp {
       if (calibrateBtn) calibrateBtn.disabled = state === 'playing' || state === 'loading';
 
       if (state === 'playing') {
-        const graffitiEl = document.querySelector<SVGElement>('.graffiti-overlay');
-        if (graffitiEl) graffitiEl.style.opacity = '0';
-        if (this.idleGraffitiTimer !== null) {
-          clearTimeout(this.idleGraffitiTimer);
-          this.idleGraffitiTimer = null;
+        // Force non-idle during game play — suppress all hints
+        if (this.idleTimeout !== null) {
+          clearTimeout(this.idleTimeout);
+          this.idleTimeout = null;
         }
-        this.historyVisualizer?.resetIdleAlpha();
+        this.setIdleState(false);
 
         // Expand target highlights to ALL cells with the same MIDI notes (not just the original cellId)
         const currentGroup = ctx.noteGroups[ctx.currentGroupIndex];
@@ -1616,14 +1616,7 @@ export class DComposeApp {
       this.historyVisualizer?.noteOn(coordX, coordY, midiNote);
     }
     this.noteHoldCounts.set(key, count + 1);
-    const graffitiEl = document.querySelector<SVGElement>('.graffiti-overlay');
-    if (graffitiEl) graffitiEl.style.opacity = '0';
-    const songBarHint = document.getElementById('song-bar-hint');
-    if (songBarHint) songBarHint.style.opacity = '0';
-    if (this.idleGraffitiTimer !== null) {
-      clearTimeout(this.idleGraffitiTimer);
-      this.idleGraffitiTimer = null;
-    }
+    this.resetIdleTimer();
   }
 
   private trackNoteOff(coordX: number, coordY: number): void {
@@ -1632,19 +1625,6 @@ export class DComposeApp {
     if (count <= 1) {
       this.noteHoldCounts.delete(key);
       this.historyVisualizer?.noteOff(coordX, coordY);
-      if (this.noteHoldCounts.size === 0) {
-        if (this.idleGraffitiTimer !== null) clearTimeout(this.idleGraffitiTimer);
-        this.idleGraffitiTimer = setTimeout(() => {
-          const gameState = this.gameActor?.getSnapshot().value as string | undefined;
-          if (gameState !== 'playing') {
-            const graffitiEl = document.querySelector<SVGElement>('.graffiti-overlay');
-            if (graffitiEl) graffitiEl.style.opacity = '1';
-            const songBarHint = document.getElementById('song-bar-hint');
-            if (songBarHint) songBarHint.style.opacity = '1';
-          }
-          this.idleGraffitiTimer = null;
-        }, 5000);
-      }
     } else {
       this.noteHoldCounts.set(key, count - 1);
     }
@@ -1663,6 +1643,56 @@ export class DComposeApp {
     this.pointerDown.clear();
     this.midiChannelVoice.clear();
     this.render();
+  }
+
+  // ─── Centralized idle/activity state ──────────────────────────────────
+
+  /**
+   * Reset the idle timer — called on ANY note play (keyboard, pointer, MIDI).
+   * Immediately marks the app as active (not idle), suppresses hints,
+   * then starts a 10-second timer to return to idle.
+   * Does nothing during game 'playing' state (always forced non-idle).
+   */
+  private resetIdleTimer(): void {
+    // During game playing, stay non-idle — don't start idle timer
+    const gameState = this.gameActor?.getSnapshot().value as string | undefined;
+    if (gameState === 'playing') return;
+
+    if (this.idleTimeout !== null) {
+      clearTimeout(this.idleTimeout);
+      this.idleTimeout = null;
+    }
+
+    if (this.isIdle) {
+      this.setIdleState(false);
+    }
+
+    this.idleTimeout = setTimeout(() => {
+      this.idleTimeout = null;
+      // Re-check game state at timeout fire time
+      const gs = this.gameActor?.getSnapshot().value as string | undefined;
+      if (gs !== 'playing') {
+        this.setIdleState(true);
+      }
+    }, 10000);
+  }
+
+  /**
+   * Apply idle/active state to all UI elements:
+   * - Chord graffiti SVG overlay opacity (CSS transition handles animation)
+   * - NoteHistoryVisualizer "Play some notes" text
+   * - Song bar hint text
+   */
+  private setIdleState(idle: boolean): void {
+    this.isIdle = idle;
+
+    const graffitiEl = document.querySelector<SVGElement>('.graffiti-overlay');
+    if (graffitiEl) graffitiEl.style.opacity = idle ? '1' : '0';
+
+    const songBarHint = document.getElementById('song-bar-hint');
+    if (songBarHint) songBarHint.style.opacity = idle ? '1' : '0';
+
+    this.historyVisualizer?.setIdleState(idle);
   }
 
   private async handleSearchResultClick(result: MidiSearchResult): Promise<void> {

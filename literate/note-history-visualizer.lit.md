@@ -67,14 +67,14 @@ export class NoteHistoryVisualizer {
   private activeNotes = new Map<string, ActiveNote>();
   private history: HistoryNote[] = [];
 
-  // History display window: 3 seconds visible
-  private readonly HISTORY_WINDOW_MS = 3000;
-  // Trim history older than this
-  private readonly MAX_HISTORY_AGE_MS = 4000;
+  // History display window (adjustable via setTimeWindow)
+  private historyWindowMs = 3000;
+  // Trim history older than this (always window + 1s buffer)
+  private maxHistoryAgeMs = 4000;
 
-  // MIDI range for piano roll (C2–C7, MIDI 36–96)
-  private readonly MIDI_MIN = 36;
-  private readonly MIDI_MAX = 96;
+  // MIDI range for piano roll (adjustable via setNoteRange)
+  private midiMin = 36;
+  private midiMax = 96;
 
   // Piano strip width in logical pixels
   private readonly PIANO_W = 52;
@@ -85,9 +85,8 @@ export class NoteHistoryVisualizer {
   private animFrame: number | null = null;
 
   private idleAlpha = 0;
-  private lastNoteOffTime = 0;
-  private readonly IDLE_FADE_DELAY_MS = 3000;
-  private readonly IDLE_FADE_DURATION_MS = 2000;
+  private idleTarget = 1; // 1 = idle (show text), 0 = active (hide text)
+  private readonly IDLE_LERP_SPEED = 0.04; // per-frame lerp factor for smooth transitions
 
   // Game mode: the next expected MIDI note (ghost note indicator).
   private ghostNote: number | null = null;
@@ -97,7 +96,6 @@ export class NoteHistoryVisualizer {
     const ctx = canvas.getContext('2d');
     if (!ctx) throw new Error('No canvas context');
     this.ctx = ctx;
-    this.lastNoteOffTime = performance.now();
     this.resize(canvas.offsetWidth > 0 ? canvas.offsetWidth : 900, canvas.offsetHeight > 0 ? canvas.offsetHeight : 220);
   }
 
@@ -110,10 +108,33 @@ export class NoteHistoryVisualizer {
     this.ctx.scale(dpr, dpr);
   }
 
+  /** Set the visible time window in seconds (e.g., 1–10). */
+  setTimeWindow(seconds: number): void {
+    const clamped = Math.max(1, Math.min(10, seconds));
+    this.historyWindowMs = clamped * 1000;
+    this.maxHistoryAgeMs = this.historyWindowMs + 1000;
+  }
+
+  /** Get the current time window in seconds. */
+  getTimeWindow(): number {
+    return this.historyWindowMs / 1000;
+  }
+
+  /** Set the visible MIDI note range (e.g., 24–108). */
+  setNoteRange(min: number, max: number): void {
+    this.midiMin = Math.max(0, Math.min(127, min));
+    this.midiMax = Math.max(this.midiMin + 12, Math.min(127, max));
+  }
+
+  /** Get the current MIDI note range. */
+  getNoteRange(): { min: number; max: number } {
+    return { min: this.midiMin, max: this.midiMax };
+  }
+
   /** Call when a note starts (from keyboard or MIDI) */
   noteOn(coordX: number, coordY: number, midiNote: number): void {
     this.idleAlpha = 0;
-    this.lastNoteOffTime = 0;
+    this.idleTarget = 0;
     const key = `${coordX}_${coordY}`;
     this.activeNotes.set(key, { coordX, coordY, midiNote, startTime: performance.now() });
   }
@@ -125,9 +146,6 @@ export class NoteHistoryVisualizer {
     if (note) {
       this.history.push({ ...note, endTime: performance.now() });
       this.activeNotes.delete(key);
-      if (this.activeNotes.size === 0) {
-        this.lastNoteOffTime = performance.now();
-      }
     }
   }
 
@@ -144,13 +162,26 @@ export class NoteHistoryVisualizer {
     }
     this.activeNotes.clear();
     this.idleAlpha = 0;
-    this.lastNoteOffTime = performance.now();
+    this.idleTarget = 0;
   }
 
   /** Reset idle alpha — call when game starts playing to suppress hints */
   resetIdleAlpha(): void {
     this.idleAlpha = 0;
-    this.lastNoteOffTime = 0;
+    this.idleTarget = 0;
+  }
+
+  /**
+   * Set idle state from centralized app idle timer.
+   * When idle=true, the "Play some notes" text fades in smoothly.
+   * When idle=false, it fades out smoothly.
+   */
+  setIdleState(idle: boolean): void {
+    this.idleTarget = idle ? 1 : 0;
+    if (!idle) {
+      // When going active, immediately snap alpha to 0 for responsiveness
+      this.idleAlpha = 0;
+    }
   }
 
   /** Set the ghost note — the next expected note in game mode. Shown as faint glow on piano strip. */
@@ -185,7 +216,7 @@ export class NoteHistoryVisualizer {
     const now = performance.now();
 
     // Trim old history
-    this.history = this.history.filter(n => now - n.endTime < this.MAX_HISTORY_AGE_MS);
+    this.history = this.history.filter(n => now - n.endTime < this.maxHistoryAgeMs);
 
     const { width, height } = this;
     const pianoW = this.PIANO_W;
@@ -197,11 +228,11 @@ export class NoteHistoryVisualizer {
 
     // Empty state — single centered message across full canvas
     if (this.history.length === 0 && this.activeNotes.size === 0) {
-      if (this.lastNoteOffTime > 0) {
-        const elapsed = now - this.lastNoteOffTime;
-        if (elapsed > this.IDLE_FADE_DELAY_MS) {
-          this.idleAlpha = Math.min(1, (elapsed - this.IDLE_FADE_DELAY_MS) / this.IDLE_FADE_DURATION_MS);
-        }
+      // Lerp idleAlpha toward idleTarget for smooth fade in/out
+      if (this.idleAlpha < this.idleTarget) {
+        this.idleAlpha = Math.min(this.idleTarget, this.idleAlpha + this.IDLE_LERP_SPEED);
+      } else if (this.idleAlpha > this.idleTarget) {
+        this.idleAlpha = Math.max(this.idleTarget, this.idleAlpha - this.IDLE_LERP_SPEED);
       }
       const ctx = this.ctx;
       const titleSize = Math.min(48, width * 0.06);
@@ -242,12 +273,12 @@ export class NoteHistoryVisualizer {
 
   private drawPianoKeys(x: number, w: number, h: number, _now: number): void {
     const ctx = this.ctx;
-    const midiRange = this.MIDI_MAX - this.MIDI_MIN + 1; // 61 notes
+    const midiRange = this.midiMax - this.midiMin + 1; // 61 notes
     const noteH = h / midiRange;
 
     const isBlackKey = (midi: number): boolean => this.BLACK_KEYS.includes(((midi % 12) + 12) % 12);
 
-    const midiToY = (midi: number): number => h - (midi - this.MIDI_MIN + 1) * noteH;
+    const midiToY = (midi: number): number => h - (midi - this.midiMin + 1) * noteH;
 
     // Collect active midi notes set
     const activeMidis = new Set<number>();
@@ -259,7 +290,7 @@ export class NoteHistoryVisualizer {
       : null;
 
     // Draw white keys first (full width)
-    for (let midi = this.MIDI_MIN; midi <= this.MIDI_MAX; midi++) {
+    for (let midi = this.midiMin; midi <= this.midiMax; midi++) {
       if (isBlackKey(midi)) continue;
       const ky = midiToY(midi);
 
@@ -287,7 +318,7 @@ export class NoteHistoryVisualizer {
     }
 
     // Draw black keys on top (narrower)
-    for (let midi = this.MIDI_MIN; midi <= this.MIDI_MAX; midi++) {
+    for (let midi = this.midiMin; midi <= this.midiMax; midi++) {
       if (!isBlackKey(midi)) continue;
       const ky = midiToY(midi);
       const bw = w * 0.6;
@@ -317,7 +348,7 @@ export class NoteHistoryVisualizer {
     ctx.fillStyle = '#666666';
     ctx.textAlign = 'right';
     ctx.textBaseline = 'middle';
-    for (let midi = this.MIDI_MIN; midi <= this.MIDI_MAX; midi++) {
+    for (let midi = this.midiMin; midi <= this.midiMax; midi++) {
       const pc = ((midi % 12) + 12) % 12;
       if (pc !== 0) continue; // Only C notes
       const ky = midiToY(midi) + noteH / 2;
@@ -338,19 +369,19 @@ export class NoteHistoryVisualizer {
   private drawNoteRoll(x: number, w: number, h: number, now: number): void {
     const ctx = this.ctx;
 
-    const midiRange = this.MIDI_MAX - this.MIDI_MIN + 1;
+    const midiRange = this.midiMax - this.midiMin + 1;
     const noteH = h / midiRange;
 
     const isBlackKey = (midi: number): boolean => this.BLACK_KEYS.includes(((midi % 12) + 12) % 12);
 
-    const midiToY = (midi: number): number => h - (midi - this.MIDI_MIN + 1) * noteH;
+    const midiToY = (midi: number): number => h - (midi - this.midiMin + 1) * noteH;
 
     // Time-to-x mapping: t=now → x=rollX (piano edge), t=now-WINDOW → x=rollX+rollW
     // LEFT = now, RIGHT = past
-    const timeToX = (t: number): number => x + (now - t) / this.HISTORY_WINDOW_MS * w;
+    const timeToX = (t: number): number => x + (now - t) / this.historyWindowMs * w;
 
     // Background stripes per semitone
-    for (let midi = this.MIDI_MIN; midi <= this.MIDI_MAX; midi++) {
+    for (let midi = this.midiMin; midi <= this.midiMax; midi++) {
       const ky = midiToY(midi);
       ctx.fillStyle = isBlackKey(midi) ? '#0a0808' : '#0d0d0d';
       ctx.fillRect(x, ky, w, noteH);
@@ -359,7 +390,7 @@ export class NoteHistoryVisualizer {
     // Subtle octave lines at each C note
     ctx.strokeStyle = '#1a1a1a';
     ctx.lineWidth = 1;
-    for (let midi = this.MIDI_MIN; midi <= this.MIDI_MAX; midi++) {
+    for (let midi = this.midiMin; midi <= this.midiMax; midi++) {
       const pc = ((midi % 12) + 12) % 12;
       if (pc !== 0) continue;
       const ky = midiToY(midi) + noteH;
@@ -374,8 +405,8 @@ export class NoteHistoryVisualizer {
     // Draw released notes
     for (const note of this.history) {
       const age = now - note.endTime;
-      if (age > this.HISTORY_WINDOW_MS) continue;
-      const alpha = Math.max(0, 1 - age / this.HISTORY_WINDOW_MS);
+      if (age > this.historyWindowMs) continue;
+      const alpha = Math.max(0, 1 - age / this.historyWindowMs);
 
       // t_start < t_end, so timeToX(t_start) > timeToX(t_end)
       const xRight = timeToX(note.endTime);   // end time (more recent) → closer to piano

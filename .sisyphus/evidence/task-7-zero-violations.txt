@@ -1,1 +1,0 @@
-ast-grep exit: 0

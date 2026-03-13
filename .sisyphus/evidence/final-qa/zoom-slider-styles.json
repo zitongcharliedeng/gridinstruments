@@ -1,4 +1,0 @@
-{
-  "initial": "linear-gradient(to right, var(--fg) 28.62%, #000 28.62%)",
-  "after": "linear-gradient(to right, var(--fg) 82.06%, #000 82.06%)"
-}

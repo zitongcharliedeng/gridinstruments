@@ -90,9 +90,10 @@ export function noteNameToHz(input: string): number | null {
   return 293.66 * Math.pow(2, semitonesFromD4 / 12);
 }
 
-export function hzToNoteAnnotation(hz: number, _d4Hz: number): string {
+export function hzToNoteAnnotation(hz: number, d4Hz: number): string {
   const NOTE_NAMES = ['D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B', 'C', 'C#'];
-  const semisFromD4 = 12 * Math.log2(hz / 293.66);
+  const refHz = d4Hz > 0 ? d4Hz : 293.66;
+  const semisFromD4 = 12 * Math.log2(hz / refHz);
   const roundedSemis = Math.round(semisFromD4);
   const cents = Math.round((semisFromD4 - roundedSemis) * 100);
   const noteIdx = ((roundedSemis % 12) + 12) % 12;

@@ -1,7 +1,0 @@
-GAME-FREQ-1: correct midiNote with wrong cellId is accepted — PASS
-GAME-FREQ-2: wrong midiNote with matching cellId is rejected — PASS
-
-isCorrectNote guard now checks: context.noteGroups[context.currentGroupIndex]?.midiNotes.includes(event.midiNote)
-Old (buggy): context.noteGroups[context.currentGroupIndex]?.cellIds.includes(event.cellId)
-
-Verified: midiNote-based matching works regardless of cellId.
