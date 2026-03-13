@@ -161,6 +161,17 @@ export class DComposeApp {
     this.setupEventListeners();
     await this.midi.init();
     await this.mpe.init();
+    // MPE expression visualization: pressure → opacity, pitch bend → hue overlay
+    this.mpe.subscribe((voices) => {
+      const expr = new Map<string, { pressure: number; pitchBend: number }>();
+      for (const v of voices) {
+        if (v.state === 'active') {
+          expr.set(v.noteId, { pressure: v.pressure, pitchBend: v.pitchBend });
+        }
+      }
+      this.visualizer?.setMPEExpression(expr);
+      this.visualizer?.render();
+    });
     this.setupMidiListeners();
     this.updateMidiDevicePanel(this.midi.getDevices());
     // Chord shape graffiti overlays (dynamic — reads grid geometry from visualizer)

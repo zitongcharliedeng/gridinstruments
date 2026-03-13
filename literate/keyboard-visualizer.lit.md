@@ -72,6 +72,7 @@ export class KeyboardVisualizer {
   private pressedTargetNotes = new Set<string>();
   private calibratedRange: ReadonlySet<string> | null = null;
   private qwertyLabels: Map<string, string> = new Map();
+  private mpeExpression: Map<string, { pressure: number; pitchBend: number }> = new Map();
 
 
   // Half-vectors for parallelogram cells (computed in generateButtons)
@@ -389,6 +390,10 @@ export class KeyboardVisualizer {
     this.qwertyLabels = labels;
   }
 
+  setMPEExpression(expressions: Map<string, { pressure: number; pitchBend: number }>): void {
+    this.mpeExpression = expressions;
+  }
+
   setGameState(_state: string): void {
     this.render();
   }
@@ -593,6 +598,14 @@ export class KeyboardVisualizer {
       : 'white';
     const { fill: fillColor, text: textColor } = cellColors(coordX, state);
 
+    // MPE expression: pressure → opacity, pitch bend → hue interpolation
+    const mpeExpr = this.mpeExpression.get(noteId);
+    let cellAlpha = 1.0;
+    if (mpeExpr && isActive) {
+      // Pressure: 0 = normal opacity (0.85), 1 = full opacity (1.0)
+      cellAlpha = 0.85 + mpeExpr.pressure * 0.15;
+    }
+
     const { hv1, hv2 } = this;
     const s = (isActive || isTargetPressed || isTargetUnpressed) ? 1.0 : CELL_INSET;
 
@@ -613,7 +626,27 @@ export class KeyboardVisualizer {
     this.ctx.lineTo(px(-1,  1), py(-1,  1)); // top-left
     this.ctx.closePath();
     this.ctx.fillStyle = fillColor;
+    this.ctx.globalAlpha = cellAlpha;
     this.ctx.fill();
+    this.ctx.globalAlpha = 1;
+
+    // MPE pitch bend: overlay target note color
+    if (mpeExpr && isActive && Math.abs(mpeExpr.pitchBend) > 0.01) {
+      const bendSteps = Math.round(mpeExpr.pitchBend * 2);
+      if (bendSteps !== 0) {
+        const { fill: bendFill } = cellColors(coordX + bendSteps, 'active');
+        this.ctx.globalAlpha = Math.min(0.75, Math.abs(mpeExpr.pitchBend) * 0.8);
+        this.ctx.fillStyle = bendFill;
+        this.ctx.beginPath();
+        this.ctx.moveTo(px(-1, -1), py(-1, -1));
+        this.ctx.lineTo(px( 1, -1), py( 1, -1));
+        this.ctx.lineTo(px( 1,  1), py( 1,  1));
+        this.ctx.lineTo(px(-1,  1), py(-1,  1));
+        this.ctx.closePath();
+        this.ctx.fill();
+        this.ctx.globalAlpha = 1;
+      }
+    }
 
     // Note label — size from full cell span, not half-vectors
     const cellW = (Math.abs(hv1.x) + Math.abs(hv2.x)) * 2;
