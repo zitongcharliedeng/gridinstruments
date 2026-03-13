@@ -1,3 +1,8 @@
+# App Actor Wiring
+
+App-level XState actor creation, slider subscribers, and DOM-to-actor event wiring.
+
+``` {.typescript file=src/app-actor-wiring.ts}
 /**
  * App-level XState actor creation, slider subscribers, and DOM↔actor event wiring.
  */
@@ -173,3 +178,4 @@ export function setupAppActor(app: DComposeApp): void {
     getDefaultZoom: () => (app as unknown as { defaultZoom: number }).defaultZoom,
     };
 }
+```

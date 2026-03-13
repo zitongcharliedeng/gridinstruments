@@ -1,3 +1,8 @@
+# App Core
+
+DComposeApp — the main application class managing synth, visualizer, MIDI, keyboard/pointer input, and all UI wiring.
+
+``` {.typescript file=src/app-core.ts}
 /**
  * DComposeApp — the main application class.
  * Manages synth, visualizer, MIDI, keyboard/pointer input, and all UI wiring.
@@ -1933,3 +1938,4 @@ export class DComposeApp {
     this.render();
   }
 }
+```

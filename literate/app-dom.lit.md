@@ -1,3 +1,8 @@
+# App DOM
+
+DOM query helpers and element factory functions — safe element lookup with type narrowing, select-at-slot creation, and cycling button setup.
+
+``` {.typescript file=src/app-dom.ts}
 /**
  * DOM query helpers and element factory functions.
  */
@@ -79,3 +84,4 @@ export function setupCyclingButton(
   });
   return btn;
 }
+```

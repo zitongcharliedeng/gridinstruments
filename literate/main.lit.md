@@ -1,3 +1,8 @@
+# Main Entry Point
+
+DCompose Web entry point — wires together MIDI, synth, keyboard, history visualizer, and XState actors.
+
+``` {.typescript file=src/main.ts}
 /**
  * DCompose Web — Entry Point
  *
@@ -136,3 +141,4 @@ document.addEventListener('DOMContentLoaded', () => {
   const app = new DComposeApp();
   setupAppActor(app);
 });
+```

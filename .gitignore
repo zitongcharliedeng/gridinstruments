@@ -88,3 +88,12 @@ src/machines/waveformMachine.ts
 src/machines/midiPanelMachine.ts
 src/machines/mpeMachine.ts
 src/machines/pedalMachines.ts
+
+src/main.ts
+src/app-constants.ts
+src/app-helpers.ts
+src/app-dom.ts
+src/app-slider.ts
+src/app-panels.ts
+src/app-actor-wiring.ts
+src/app-core.ts

@@ -1,3 +1,8 @@
+# App Helpers
+
+Pure utility functions — Markdown rendering, type guards, numeric parsing, slider annotation formatting, and D-reference note/Hz conversion.
+
+``` {.typescript file=src/app-helpers.ts}
 /**
  * Pure utility functions — no DOM dependencies (except type guards).
  */
@@ -96,3 +101,4 @@ export function hzToNoteAnnotation(hz: number, _d4Hz: number): string {
   if (Math.abs(cents) < 1) return noteName;
   return `${noteName} ${cents > 0 ? '+' : ''}${cents}¢`;
 }
+```

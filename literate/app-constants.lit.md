@@ -1,3 +1,8 @@
+# App Constants
+
+Static constants, presets, and slider info HTML for the DCompose app.
+
+``` {.typescript file=src/app-constants.ts}
 /**
  * Static constants, presets, and slider info HTML for the DCompose app.
  */
@@ -100,3 +105,4 @@ ${tuningTableRows}
 <li><a href="https://www.toverlamp.org/static/wickisynth/wickisynth_lowlatency.html" target="_blank" rel="noopener">WickiSynth</a> by Piers Titus van der Torren</li>
 </ul>`,
 };
+```

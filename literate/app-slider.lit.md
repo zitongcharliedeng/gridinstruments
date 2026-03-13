@@ -1,3 +1,8 @@
+# App Slider
+
+Slider UI helpers — thumb positioning, fill gradients, badge clamping, and info dialog wiring.
+
+``` {.typescript file=src/app-slider.ts}
 /**
  * Slider UI helpers — thumb positioning, fill gradients, and info dialogs.
  */
@@ -108,3 +113,4 @@ export function setupInfoDialogs(): void {
     if (e.target === dialog) infoDialogActor.send({ type: 'CLOSE' });
   });
 }
+```
