@@ -1,3 +1,10 @@
+# Machine Types
+
+Pure TypeScript types for all XState machine events and context. Zero runtime code. Zero XState imports.
+
+Re-exports `WaveformType` and `KeyboardLayout` from their canonical locations to avoid duplication.
+
+``` {.typescript file=src/machines/types.ts}
 /**
  * DCompose XState Machine Types
  *
@@ -382,3 +389,4 @@ export type AppEvent =
   | GoldenLineDragStartEvent
   | GoldenLineDragMoveEvent
   | GoldenLineDragEndEvent;
+```
