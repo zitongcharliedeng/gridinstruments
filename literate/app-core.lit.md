@@ -1443,6 +1443,19 @@ export class DComposeApp {
     const code = event.code;
     if (event.ctrlKey || event.metaKey) return;
 
+    // Arrow keys: pitch bend for all held notes
+    if (code === 'ArrowLeft' || code === 'ArrowRight') {
+      event.preventDefault();
+      const bendSemitones = code === 'ArrowLeft' ? -1 : 1;
+      for (const [noteCode, noteData] of this.activeNotes) {
+        const cx = noteData.coordX + this.transposeOffset;
+        const cy = noteData.coordY + this.octaveOffset;
+        const noteId = `key_${noteCode}_${cx}_${cy}`;
+        this.synth.setPitchBend(noteId, bendSemitones);
+      }
+      return;
+    }
+
     const isSynthKey =
       code === 'ShiftLeft' || code === 'ShiftRight' ||
       code === 'Space' ||
@@ -1502,6 +1515,17 @@ export class DComposeApp {
   private handleKeyUp(event: KeyboardEvent): void {
     const code = event.code;
     this.keyRepeat.delete(code);
+
+    // Arrow key release: reset pitch bend to 0
+    if (code === 'ArrowLeft' || code === 'ArrowRight') {
+      for (const [noteCode, noteData] of this.activeNotes) {
+        const cx = noteData.coordX + this.transposeOffset;
+        const cy = noteData.coordY + this.octaveOffset;
+        const noteId = `key_${noteCode}_${cx}_${cy}`;
+        this.synth.setPitchBend(noteId, 0);
+      }
+      return;
+    }
 
     if (code === 'ShiftLeft' || code === 'ShiftRight') {
       this.vibratoActor?.send({ type: 'DEACTIVATE' });
@@ -1573,7 +1597,8 @@ export class DComposeApp {
           const pitchDirLen = Math.sqrt(cellHv2.x * cellHv2.x + cellHv2.y * cellHv2.y);
           const pitchOffset = (dx * cellHv2.x + dy * cellHv2.y) / pitchDirLen;
           const cellHeight = pitchDirLen * 2; // cellHv2 is a half-vector
-          const semitones = -pitchOffset / cellHeight * 2; // ±2 semitones per cell
+          const rawSemitones = -pitchOffset / cellHeight * 2; // ±2 semitones per cell
+          const semitones = Math.max(-2, Math.min(2, rawSemitones)); // Clamp to ±2 — prevents wild bends on fast gestures
 
           // Timbre axis: project onto cellHv1 (wholetone direction), normalize 0-1
           const timbreDirLen = Math.sqrt(cellHv1.x * cellHv1.x + cellHv1.y * cellHv1.y);
