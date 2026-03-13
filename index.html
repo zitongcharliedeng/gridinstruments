@@ -239,8 +239,9 @@
     }
     .panel-resize-handle:hover .handle-label { color: var(--fg); }
     @media (hover: none) and (pointer: coarse) {
-      .panel-resize-handle { min-height: 24px; }
-      .grip-line { height: 2px; }
+      .panel-resize-handle { min-height: 28px; touch-action: none; }
+      .grip-line { height: 2px; background: var(--fg); }
+      .handle-label { color: var(--fg); opacity: 1; }
     }
     #history-canvas {
       display: block;
@@ -1041,6 +1042,12 @@
                    <button class="slider-info-btn icon-btn icon-lg" data-info="timbre" title="About timbre CC" style="position:static;transform:none;"><i data-lucide="info"></i></button>
                     <button id="timbre-cc-mode" style="font-family:var(--font);font-size:10px;background:var(--bg);color:var(--fg);border:1px solid var(--border);padding:2px 6px;cursor:pointer;" title="Click to cycle timbre CC" value="74">CC74</button>
                    <span style="color:#fff;font-size:12px;">Timbre</span>
+                 </div>
+                <div class="midi-panel-row" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);">
+                   <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;">
+                     <span class="gi-checkbox"><input type="checkbox" id="flat-sound-toggle"><span class="gi-check"></span></span>
+                     <span style="color:var(--dim)">Flat sound (disable all expression)</span>
+                   </label>
                  </div>
                 <div class="midi-panel-row" id="mpe-output-row">
                   <span class="ctrl-label" style="color:#fff">MPE Out:</span>

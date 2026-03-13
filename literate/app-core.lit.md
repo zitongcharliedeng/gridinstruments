@@ -306,8 +306,12 @@ export class DComposeApp {
     if (!this.midiDeviceList) return;
     this.midiDeviceList.innerHTML = '';
 
+    if (!this.midi.isAvailable) {
+      this.midiDeviceList.innerHTML = '<span class="midi-no-devices" style="line-height:1.5;">WebMIDI is not available in this browser.<br>Use <strong>Chrome</strong>, <strong>Edge</strong>, or <strong>Opera</strong> for MIDI input.<br><span style="color:var(--dim);font-size:9px;">Safari, iOS, and Firefox do not support WebMIDI.</span></span>';
+      return;
+    }
     if (devices.length === 0) {
-      this.midiDeviceList.innerHTML = '<span class="midi-no-devices">No MIDI devices detected</span>';
+      this.midiDeviceList.innerHTML = '<span class="midi-no-devices">No MIDI devices detected — plug in a controller</span>';
       return;
     }
 
@@ -860,9 +864,27 @@ export class DComposeApp {
       });
     }
 
+    // Flat sound toggle — disables all expression at once
+    const flatSoundCb = getElementOrNull('flat-sound-toggle', HTMLInputElement);
+    if (flatSoundCb) {
+      flatSoundCb.addEventListener('change', () => {
+        const flat = flatSoundCb.checked;
+        this.expressionBend = !flat;
+        this.expressionVelocity = !flat;
+        this.expressionPressure = !flat;
+        if (exprBendCb) exprBendCb.checked = !flat;
+        if (exprVelCb) exprVelCb.checked = !flat;
+        if (exprPressCb) exprPressCb.checked = !flat;
+        this.saveSetting('exprBend', (!flat).toString());
+        this.saveSetting('exprVelocity', (!flat).toString());
+        this.saveSetting('exprPressure', (!flat).toString());
+      });
+    }
+
     const TIMBRE_CC_OPTIONS = [
       { value: '74', label: 'CC74' },
       { value: '1', label: 'CC1' },
+      { value: '11', label: 'CC11' },
     ];
     const savedTimbreMode = this.loadSetting('timbreCcMode', '74');
     this.applyTimbreCcMode(savedTimbreMode);
