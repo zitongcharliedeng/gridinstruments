@@ -20,6 +20,9 @@ Thumbs.db
 .env.local
 .env.*.local
 
+# Python virtual environment
+.venv/
+
 # Logs
 *.log
 npm-debug.log*
@@ -47,3 +50,6 @@ playwright-report/
 
 # LLM vision cache (test-only, per-machine)
 tests/.vision-cache.json
+
+# Entangled lock file (ephemeral)
+.entangled/filedb.lock

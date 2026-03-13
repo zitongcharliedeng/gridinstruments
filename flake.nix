@@ -10,7 +10,7 @@
     in {
       devShells.${system}.default = pkgs.mkShell {
         # Only tools needed for testing — project uses its own node_modules
-        packages = [ pkgs.nodejs_22 ];
+        packages = [ pkgs.nodejs_22 pkgs.python313 ];
 
         shellHook = ''
           # Point playwright to nixpkgs-provided browser binaries (NixOS-patched)
@@ -19,6 +19,15 @@
           export PLAYWRIGHT_NODEJS_PATH=${pkgs.nodejs_22}/bin/node
           echo "[devshell] PLAYWRIGHT_BROWSERS_PATH=$PLAYWRIGHT_BROWSERS_PATH"
           echo "[devshell] Firefox: $(ls $PLAYWRIGHT_BROWSERS_PATH/ | grep firefox)"
+
+          # Entangled literate programming tool (Python venv)
+          if [ ! -f "$PWD/.venv/bin/entangled" ]; then
+            echo "[devshell] Installing entangled-cli..."
+            python3 -m venv .venv
+            .venv/bin/pip install -q -r requirements.txt
+          fi
+          export PATH="$PWD/.venv/bin:$PATH"
+          echo "[devshell] entangled: $(entangled --version 2>/dev/null || echo 'NOT FOUND')"
         '';
       };
     };
