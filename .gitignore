@@ -71,3 +71,4 @@ src/lib/chord-detector.ts
 src/lib/keyboard-layouts.ts
 src/lib/midi-search.ts
 src/machines/sliderConfigs.ts
+src/lib/chord-graffiti.ts
