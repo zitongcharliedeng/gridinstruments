@@ -60,3 +60,5 @@ tests/.vision-cache.json
 # Regenerate: bash scripts/tangle.sh
 # Files are added here as each module is migrated to literate:
 src/lib/note-colors.ts
+src/lib/calibration.ts
+src/lib/midi-parser.ts
