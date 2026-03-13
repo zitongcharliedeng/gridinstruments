@@ -516,7 +516,7 @@ Max Concurrent: 11 (Wave 9)
   **Evidence**: `.sisyphus/evidence/task-28-remaining-machines.txt`
   **Commit**: YES — `refactor(literate): migrate remaining state machine files to literate programming`
 
-- [ ] 30. Decompose main.ts into focused modules (plain .ts refactoring)
+ - [x] 30. Decompose main.ts into focused modules (plain .ts refactoring)
 
   **What to do**:
   - Read `src/main.ts` (2,664 lines) and identify natural decomposition boundaries
@@ -532,7 +532,7 @@ Max Concurrent: 11 (Wave 9)
   **Evidence**: `.sisyphus/evidence/task-30-decomposition-tests.txt`
   **Commit**: YES — `refactor(main): decompose main.ts into focused modules`
 
-- [ ] 31. Migrate decomposed main.ts modules to literate
+ - [x] 31. Migrate decomposed main.ts modules to literate
 
   **What to do**: Create .lit.md files for each module from T30. Follow established pattern. Full pipeline verification.
   **Recommended Agent Profile**: `deep` | **Skills**: []
@@ -540,7 +540,7 @@ Max Concurrent: 11 (Wave 9)
   **Evidence**: `.sisyphus/evidence/task-31-main-literate.txt`
   **Commit**: YES — `refactor(literate): migrate decomposed main.ts modules to literate programming`
 
-- [ ] 32. Install Effect-TS, create service layer scaffold
+ - [x] 32. Install Effect-TS, create service layer scaffold
 
   **What to do**:
   - `nix develop --command npm install effect`
@@ -552,7 +552,7 @@ Max Concurrent: 11 (Wave 9)
   **Evidence**: `.sisyphus/evidence/task-32-effect-scaffold.txt`
   **Commit**: YES — `feat(services): add Effect-TS service layer scaffold`
 
-- [ ] 33. Wrap browser APIs in Effect services
+ - [x] 33. Wrap browser APIs in Effect services
 
   **What to do**: Implement AudioService, MidiService, CanvasService. Update modules to use services.
   **Must NOT**: Touch synth hot audio path. Wrap pure functions. Use Effect in state machines.
