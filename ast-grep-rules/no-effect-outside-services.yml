@@ -1,0 +1,11 @@
+id: no-effect-outside-services
+language: typescript
+rule:
+  pattern: import $$$FROM from 'effect'
+files:
+  - "src/**/*.ts"
+ignores:
+  - "src/services/**/*.ts"
+severity: error
+message: "Effect-TS imports are only allowed in src/services/. Banned from synth hot path, render loop, pure math, and state machines."
+note: "Move Effect-TS usage to src/services/. See AGENTS.md Literate Programming section."

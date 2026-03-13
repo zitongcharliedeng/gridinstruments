@@ -1,0 +1,19 @@
+id: no-naked-browser-api
+language: typescript
+rule:
+  any:
+    - pattern: new AudioContext()
+    - pattern: new AudioContext($OPTS)
+    - pattern: navigator.requestMIDIAccess($$$)
+files:
+  - "src/**/*.ts"
+ignores:
+  - "src/lib/synth.ts"
+  - "src/lib/midi-input.ts"
+  - "src/lib/mpe-output.ts"
+  - "src/lib/mpe-service.ts"
+  - "src/main.ts"
+  - "src/services/**/*.ts"
+severity: warning
+message: "Direct browser API usage should be wrapped in Effect services (src/services/). This warning will become an error in Wave 8."
+note: "See AGENTS.md for Effect-TS service layer guidance."

@@ -28,6 +28,12 @@
           fi
           export PATH="$PWD/.venv/bin:$PATH"
           echo "[devshell] entangled: $(entangled --version 2>/dev/null || echo 'NOT FOUND')"
+
+          # Auto-tangle on devshell entry (only if .lit.md files exist)
+          if ls "$PWD/literate/"*.lit.md &>/dev/null 2>&1; then
+            echo "[devshell] Auto-tangling from literate source..."
+            bash "$PWD/scripts/tangle.sh"
+          fi
         '';
       };
     };
