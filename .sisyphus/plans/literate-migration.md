@@ -245,7 +245,7 @@ Max Concurrent: 11 (Wave 9)
 
   **Commit**: `00907b6 docs: update AGENTS.md with literate workflow and amended dep rule`
 
-- [ ] 7. Migrate note-colors.ts to literate (VALIDATION SPIKE)
+- [x] 7. Migrate note-colors.ts to literate (VALIDATION SPIKE)
 
   **What to do**:
   - Create `literate/note-colors.lit.md` wrapping `src/lib/note-colors.ts` (172 lines)
@@ -304,7 +304,7 @@ Max Concurrent: 11 (Wave 9)
   - Message: `refactor(literate): migrate note-colors.ts to literate programming`
   - Files: `literate/note-colors.lit.md`, `.gitignore`, `.entangled/filedb.json`
 
-- [ ] 8. Migrate calibration.ts to literate
+- [x] 8. Migrate calibration.ts to literate
 
   **What to do**: Create `literate/calibration.lit.md` wrapping `src/lib/calibration.ts` (32 lines)
   Follow exact same pattern established in T7 (validation spike). Minimal prose, byte-identical output, full test verification.
@@ -315,7 +315,7 @@ Max Concurrent: 11 (Wave 9)
   **Evidence**: `.sisyphus/evidence/task-8-calibration.txt`
   **Commit**: YES — `refactor(literate): migrate calibration.ts to literate programming`
 
-- [ ] 9. Migrate synth.ts to literate
+- [x] 9. Migrate synth.ts to literate
 
   **What to do**: Create `literate/synth.lit.md` wrapping `src/lib/synth.ts` (506 lines)
   This is a complex module (Web Audio synthesis, tuning markers) — prose should explain audio architecture.
@@ -327,7 +327,7 @@ Max Concurrent: 11 (Wave 9)
   **Evidence**: `.sisyphus/evidence/task-9-synth.txt`
   **Commit**: YES — `refactor(literate): migrate synth.ts to literate programming`
 
-- [ ] 10. Migrate chord-detector.ts to literate
+- [x] 10. Migrate chord-detector.ts to literate
 
   **What to do**: Create `literate/chord-detector.lit.md` wrapping `src/lib/chord-detector.ts` (156 lines)
   **Recommended Agent Profile**: `quick` | **Skills**: []
@@ -337,7 +337,7 @@ Max Concurrent: 11 (Wave 9)
   **Evidence**: `.sisyphus/evidence/task-10-chord-detector.txt`
   **Commit**: YES — `refactor(literate): migrate chord-detector.ts to literate programming`
 
-- [ ] 11. Migrate keyboard-layouts.ts to literate
+- [x] 11. Migrate keyboard-layouts.ts to literate
 
   **What to do**: Create `literate/keyboard-layouts.lit.md` wrapping `src/lib/keyboard-layouts.ts` (277 lines)
   **Recommended Agent Profile**: `unspecified-high` | **Skills**: []
@@ -347,7 +347,7 @@ Max Concurrent: 11 (Wave 9)
   **Evidence**: `.sisyphus/evidence/task-11-keyboard-layouts.txt`
   **Commit**: YES — `refactor(literate): migrate keyboard-layouts.ts to literate programming`
 
-- [ ] 12. Migrate midi-input.ts to literate
+- [x] 12. Migrate midi-input.ts to literate
 
   **What to do**: Create `literate/midi-input.lit.md` wrapping `src/lib/midi-input.ts` (226 lines)
   **Recommended Agent Profile**: `unspecified-high` | **Skills**: []
@@ -357,7 +357,7 @@ Max Concurrent: 11 (Wave 9)
   **Evidence**: `.sisyphus/evidence/task-12-midi-input.txt`
   **Commit**: YES — `refactor(literate): migrate midi-input.ts to literate programming`
 
-- [ ] 13. Migrate midi-parser.ts to literate
+- [x] 13. Migrate midi-parser.ts to literate
 
   **What to do**: Create `literate/midi-parser.lit.md` wrapping `src/lib/midi-parser.ts` (348 lines)
   **Recommended Agent Profile**: `unspecified-high` | **Skills**: []
@@ -367,7 +367,7 @@ Max Concurrent: 11 (Wave 9)
   **Evidence**: `.sisyphus/evidence/task-13-midi-parser.txt`
   **Commit**: YES — `refactor(literate): migrate midi-parser.ts to literate programming`
 
-- [ ] 14. Migrate midi-search.ts to literate
+- [x] 14. Migrate midi-search.ts to literate
 
   **What to do**: Create `literate/midi-search.lit.md` wrapping `src/lib/midi-search.ts` (320 lines)
   **Recommended Agent Profile**: `unspecified-high` | **Skills**: []
@@ -377,7 +377,7 @@ Max Concurrent: 11 (Wave 9)
   **Evidence**: `.sisyphus/evidence/task-14-midi-search.txt`
   **Commit**: YES — `refactor(literate): migrate midi-search.ts to literate programming`
 
-- [ ] 15. Migrate mpe-output.ts to literate
+- [x] 15. Migrate mpe-output.ts to literate
 
   **What to do**: Create `literate/mpe-output.lit.md` wrapping `src/lib/mpe-output.ts` (200 lines)
   **Recommended Agent Profile**: `unspecified-high` | **Skills**: []
@@ -387,7 +387,7 @@ Max Concurrent: 11 (Wave 9)
   **Evidence**: `.sisyphus/evidence/task-15-mpe-output.txt`
   **Commit**: YES — `refactor(literate): migrate mpe-output.ts to literate programming`
 
-- [ ] 16. Migrate mpe-service.ts to literate
+- [x] 16. Migrate mpe-service.ts to literate
 
   **What to do**: Create `literate/mpe-service.lit.md` wrapping `src/lib/mpe-service.ts` (338 lines)
   **Recommended Agent Profile**: `unspecified-high` | **Skills**: []
@@ -397,7 +397,7 @@ Max Concurrent: 11 (Wave 9)
   **Evidence**: `.sisyphus/evidence/task-16-mpe-service.txt`
   **Commit**: YES — `refactor(literate): migrate mpe-service.ts to literate programming`
 
-- [ ] 17. Migrate NumericSlider.ts to literate
+- [x] 17. Migrate NumericSlider.ts to literate
 
   **What to do**: Create `literate/components/NumericSlider.lit.md` wrapping `src/components/NumericSlider.ts` (94 lines)
   **Recommended Agent Profile**: `quick` | **Skills**: []
