@@ -124,12 +124,13 @@ export function colorFromCoordX(coordX: number): string {
  * Cell fill + text colors for the keyboard grid.
  *
  * Returns hue-tinted fills so parallelogram shapes are always visible on
- * the pure-black canvas. White/black key distinction via lightness.
+ * the pure-black canvas. All inactive keys share the same brightness —
+ * sharp/flat vs natural distinction is conveyed by note name, not lightness.
  *
  *   Active:    vivid fill, white text
  *   Sustained: warm glow fill, bright hue text
  *   White key: dark tinted fill (L=0.24), readable hue text
- *   Black key: darker tinted fill (L=0.16), dimmer hue text
+ *   Black key: same as white key (L=0.24) — uniform brightness
  */
 export function cellColors(
   coordX: number,
@@ -150,11 +151,11 @@ export function cellColors(
       return { fill: oklch(0.24, 0, h), text: oklch(0.50, 0, h) };
     case 'uncalibrated-black':
       // Brightness/lightness reserved for MPE pressure — uncalibrated uses greyscale (C=0)
-      return { fill: oklch(0.16, 0, h), text: oklch(0.40, 0, h) };
+      return { fill: oklch(0.24, 0, h), text: oklch(0.50, 0, h) };
     case 'white':
       return { fill: oklch(0.24, 0.055, h), text: oklch(0.75, 0.14, h) };
     case 'black':
-      return { fill: oklch(0.16, 0.035, h), text: oklch(0.60, 0.11, h) };
+      return { fill: oklch(0.24, 0.055, h), text: oklch(0.75, 0.14, h) };
   }
 }
 
