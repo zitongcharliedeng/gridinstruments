@@ -4676,7 +4676,7 @@ export const INFO_POPUP_5: StateInvariant = {
 
 export const INFO_POPUP_LABEL_1: StateInvariant = {
   id: 'INFO-POPUP-LABEL-1',
-  description: 'Quantization label text is "QUANTIZE" (not "DIFF")',
+  description: 'Quantization label text is "Quant" (not "DIFF")',
   check: async (page: Page) => {
     const hasDiff = await page.evaluate(() => {
       const statusEl = document.getElementById('song-bar-status');
@@ -4684,15 +4684,15 @@ export const INFO_POPUP_LABEL_1: StateInvariant = {
       return statusEl.textContent?.includes('DIFF') ?? false;
     });
     if (hasDiff) {
-      throw new Error('Found "DIFF" text in #song-bar-status — should be "QUANTIZE"');
+      throw new Error('Found "DIFF" text in #song-bar-status — should be "Quant"');
     }
-    const hasQuantize = await page.evaluate(() => {
+    const hasQuant = await page.evaluate(() => {
       const statusEl = document.getElementById('song-bar-status');
       if (!statusEl) return false;
-      return statusEl.textContent?.includes('QUANTIZE') ?? false;
+      return statusEl.textContent?.includes('Quant') ?? false;
     });
-    if (!hasQuantize) {
-      throw new Error('"QUANTIZE" label not found in #song-bar-status');
+    if (!hasQuant) {
+      throw new Error('"Quant" label not found in #song-bar-status');
     }
   },
 };
