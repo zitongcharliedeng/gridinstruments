@@ -62,3 +62,4 @@ tests/.vision-cache.json
 src/lib/note-colors.ts
 src/lib/calibration.ts
 src/lib/midi-parser.ts
+src/lib/synth.ts
