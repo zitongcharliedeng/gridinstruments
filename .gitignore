@@ -66,3 +66,4 @@ src/lib/synth.ts
 src/components/NumericSlider.ts
 src/lib/mpe-service.ts
 src/lib/midi-input.ts
+src/lib/mpe-output.ts
