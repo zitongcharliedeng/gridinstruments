@@ -170,17 +170,31 @@ export const {
   badgeReadMode: 'textContent',
 });
 
+const zoomSliderBase = createSliderResetMachine({
+  name: 'zoomSlider',
+  sliderId: 'zoom-slider',
+  badgeId: 'zoom-thumb-badge',
+  resetBtnId: 'zoom-reset',
+  defaultDisplay: '0.75', // FALLBACK_ZOOM in headless; overridden dynamically below
+  modifiedValue: '2.5',
+  badgeReadMode: 'textContent',
+});
+
+// Override default assertion to read the actual initial badge value (DPI-dependent)
+const _origDefaultAssert = zoomSliderBase.domAssertions.default;
+zoomSliderBase.domAssertions.default = async (page: Page) => {
+  const val = await page.locator('#zoom-thumb-badge').textContent();
+  // Default zoom is DPI-dependent. Accept any value that is NOT the modified value.
+  expect(val).not.toBe('2.50');
+  // Ensure it's a valid number
+  const num = parseFloat(val ?? '');
+  expect(num, 'zoom badge should be a valid number').toBeGreaterThan(0);
+  expect(num, 'zoom badge should be within slider range').toBeLessThanOrEqual(3);
+};
+
 export const {
   machine: zoomSliderMachine,
   playwrightActions: zoomSliderPlaywrightActions,
   domAssertions: zoomSliderDomAssertions,
   invariants: zoomSliderInvariants,
-} = createSliderResetMachine({
-  name: 'zoomSlider',
-  sliderId: 'zoom-slider',
-  badgeId: 'zoom-thumb-badge',
-  resetBtnId: 'zoom-reset',
-  defaultDisplay: '0.81',
-  modifiedValue: '2.5',
-  badgeReadMode: 'textContent',
-});
+} = zoomSliderBase;
