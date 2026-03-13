@@ -4816,3 +4816,71 @@ export const IDLE_FADE_2: StateInvariant = {
     }
   },
 };
+
+// ─── New Feature Tests (Opus session 2026-03-13) ──────────────────────────────
+
+/** D = {}. Fullscreen button exists in top bar. */
+export const FULLSCREEN_BTN: StateInvariant = {
+  id: 'UI-FULLSCREEN-1',
+  description: '#fullscreen-btn exists in top bar',
+  check: async (page: Page) => {
+    const exists = await page.evaluate(() =>
+      document.getElementById('fullscreen-btn') !== null
+    );
+    if (!exists) throw new Error('#fullscreen-btn not found');
+  },
+};
+
+/** D = {}. Flat sound toggle checkbox exists in MIDI settings. */
+export const FLAT_SOUND_TOGGLE: StateInvariant = {
+  id: 'UI-FLAT-SOUND-1',
+  description: '#flat-sound-toggle checkbox exists',
+  check: async (page: Page) => {
+    const exists = await page.evaluate(() =>
+      document.getElementById('flat-sound-toggle') !== null
+    );
+    if (!exists) throw new Error('#flat-sound-toggle not found');
+  },
+};
+
+/** D = {}. History time slider exists in visualiser handle. */
+export const HISTORY_TIME_SLIDER: StateInvariant = {
+  id: 'UI-HISTORY-TIME-1',
+  description: '#history-time-slider exists',
+  check: async (page: Page) => {
+    const exists = await page.evaluate(() =>
+      document.getElementById('history-time-slider') !== null
+    );
+    if (!exists) throw new Error('#history-time-slider not found');
+  },
+};
+
+/** D = {}. History note range buttons exist. */
+export const HISTORY_RANGE_BTNS: StateInvariant = {
+  id: 'UI-HISTORY-RANGE-1',
+  description: 'History range shrink/expand buttons exist',
+  check: async (page: Page) => {
+    const result = await page.evaluate(() => ({
+      shrink: document.getElementById('history-range-shrink') !== null,
+      expand: document.getElementById('history-range-expand') !== null,
+      label: document.getElementById('history-range-label') !== null,
+    }));
+    if (!result.shrink || !result.expand || !result.label) {
+      throw new Error(`History range controls missing: ${JSON.stringify(result)}`);
+    }
+  },
+};
+
+/** D = {}. All 15 slider info buttons exist with content. */
+export const ALL_INFO_BTNS: StateInvariant = {
+  id: 'UI-INFO-COMPLETE-1',
+  description: 'All 15 info buttons exist with data-info attributes',
+  check: async (page: Page) => {
+    const count = await page.evaluate(() =>
+      document.querySelectorAll('.slider-info-btn[data-info]').length
+    );
+    if (count < 15) {
+      throw new Error(`Expected ≥15 info buttons, found ${count}`);
+    }
+  },
+};
