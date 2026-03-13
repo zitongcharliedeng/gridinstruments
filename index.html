@@ -907,6 +907,11 @@
                 <input type="range" id="history-time-slider" min="1" max="10" step="0.5" value="3" style="width:50px;height:2px;accent-color:var(--fg);">
                 <span id="history-time-label">3s</span>
               </label>
+              <label style="display:inline-flex;align-items:center;gap:2px;cursor:pointer;" title="Note range: adjust visible MIDI range (octaves)">
+                <button id="history-range-shrink" style="font-size:8px;background:none;border:1px solid var(--border);color:var(--dim);width:14px;height:14px;cursor:pointer;padding:0;line-height:1;" title="Shrink note range">−</button>
+                <span id="history-range-label" style="min-width:5ch;text-align:center;">C2–C7</span>
+                <button id="history-range-expand" style="font-size:8px;background:none;border:1px solid var(--border);color:var(--dim);width:14px;height:14px;cursor:pointer;padding:0;line-height:1;" title="Expand note range">+</button>
+              </label>
             </span><span class="grip-lines"><span class="grip-line"></span><span class="grip-line"></span><span class="grip-line"></span></span></div>
       </div>
     </div>
