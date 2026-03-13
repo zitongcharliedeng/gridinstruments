@@ -48,6 +48,11 @@ ${tuningTableRows}
 <li><a href="https://en.wikipedia.org/wiki/Regular_temperament" target="_blank" rel="noopener">Regular temperament</a> — Wikipedia</li>
 <li><a href="https://en.xen.wiki/w/Gallery_of_EDO_visualizations" target="_blank" rel="noopener">EDO Visualizations</a> — Xenharmonic Wiki</li>
 </ul>
+<h3>Videos</h3>
+<ul>
+<li><a href="https://www.youtube.com/watch?v=cyW5z-M2yzw" target="_blank" rel="noopener">Why 12 notes?</a> — 12-TET explained visually</li>
+<li><a href="https://www.youtube.com/watch?v=IT9CPoe5LnM" target="_blank" rel="noopener">Microtonal Music</a> — Beyond 12 equal divisions</li>
+</ul>
 ${srcLink('synth.lit.md', 'Source: synth.lit.md — tuning system implementation')}`,
 
   skew: `
@@ -66,6 +71,10 @@ ${srcLink('synth.lit.md', 'Source: synth.lit.md — tuning system implementation
 <li><a href="https://github.com/flipcoder/midimech" target="_blank" rel="noopener">MidiMech</a> by flipcoder — isomorphic layout visualizer</li>
 <li><a href="https://www.striso.org/the-note-layout/" target="_blank" rel="noopener">Striso board</a> by Piers Titus van der Torren — physical isomorphic instrument</li>
 <li><a href="https://en.wikipedia.org/wiki/Wicki-Hayden_note_layout" target="_blank" rel="noopener">Wicki-Hayden note layout</a> — Wikipedia</li>
+</ul>
+<h3>Videos</h3>
+<ul>
+<li><a href="https://www.youtube.com/watch?v=MdVhYGjMPbo" target="_blank" rel="noopener">Isomorphic Keyboards Explained</a> — Layout theory</li>
 </ul>
 ${srcLink('note-colors.lit.md', 'Source: note-colors.lit.md — skew interpolation math')}`,
 
@@ -127,6 +136,10 @@ ${srcLink('calibration.lit.md', 'Source: calibration.lit.md — range storage an
 <p>Set from <strong>±2</strong> (subtle vibrato) to <strong>±48 semitones</strong> (four octaves). The default ±2 matches most MIDI controllers. MPE instruments like the <a href="https://www.rogerlinndesign.com/linnstrument" target="_blank" rel="noopener">LinnStrument</a> or <a href="https://rfrsr.com/" target="_blank" rel="noopener">Seaboard</a> typically use ±24 or ±48.</p>
 <h3>Per-Note vs Channel</h3>
 <p>In MPE mode, each note gets its own pitch bend on a dedicated MIDI channel. In standard mode, pitch bend affects all sounding notes simultaneously.</p>
+<h3>Videos</h3>
+<ul>
+<li><a href="https://www.youtube.com/watch?v=gRGDJJRYYoE" target="_blank" rel="noopener">What is MPE?</a> — MIDI Polyphonic Expression explained</li>
+</ul>
 ${srcLink('mpe-service.lit.md', 'Source: mpe-service.lit.md — MPE pitch bend handling')}`,
 
   velocity: `
