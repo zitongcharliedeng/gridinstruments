@@ -1,0 +1,22 @@
+# MIDI Panel Machine
+
+XState machine for toggling the MIDI device panel between open and closed states.
+
+``` {.typescript file=src/machines/midiPanelMachine.ts}
+import { setup } from 'xstate';
+
+interface MidiPanelEvent { type: 'TOGGLE_MIDI' }
+
+export const midiPanelMachine = setup({
+  types: {
+    events: {} as MidiPanelEvent,
+  },
+}).createMachine({
+  id: 'midiPanel',
+  initial: 'closed',
+  states: {
+    closed: { on: { TOGGLE_MIDI: 'open' } },
+    open: { on: { TOGGLE_MIDI: 'closed' } },
+  },
+});
+```

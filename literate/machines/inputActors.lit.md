@@ -1,3 +1,8 @@
+# inputActors
+
+Input handling actors (keyboard, touch, mouse) for GridInstruments state machines.
+
+``` {.typescript file=src/machines/inputActors.ts}
 /**
  * DCompose Input Actors
  *
@@ -242,3 +247,4 @@ export const windowListener = fromCallback<CleanupEvent>(
     };
   },
 );
+```

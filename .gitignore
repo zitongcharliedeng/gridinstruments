@@ -77,3 +77,14 @@ src/lib/note-history-visualizer.ts
 src/lib/keyboard-visualizer.ts
 src/machines/types.ts
 src/machines/appMachine.ts
+src/machines/inputActors.ts
+src/machines/gameMachine.ts
+src/machines/midiActor.ts
+
+src/machines/panelMachine.ts
+src/machines/overlayMachine.ts
+src/machines/dialogMachine.ts
+src/machines/waveformMachine.ts
+src/machines/midiPanelMachine.ts
+src/machines/mpeMachine.ts
+src/machines/pedalMachines.ts
