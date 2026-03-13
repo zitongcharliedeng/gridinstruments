@@ -63,3 +63,4 @@ src/lib/note-colors.ts
 src/lib/calibration.ts
 src/lib/midi-parser.ts
 src/lib/synth.ts
+src/components/NumericSlider.ts
