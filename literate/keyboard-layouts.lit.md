@@ -1,3 +1,20 @@
+# Keyboard Layouts
+
+Isomorphic coordinate mapping from physical keyboard positions to the DCompose/Wicki-Hayden grid. Uses the `isomorphic-qwerty` library to derive grid coordinates for every key code, plus note naming utilities for circle-of-fifths positions.
+
+## Coordinate System
+
+The DCompose/Wicki-Hayden layout is a rank-2 pitch lattice: x-axis = circle of fifths (each step = a fifth), y-axis = octaves. D is the central note at coordinate [0, 0] (physical position KeyH). The formula maps isomorphic-qwerty (iqX, iqY) coordinates to DCompose grid positions, accounting for physical row stagger.
+
+## Note Naming
+
+Circle-of-fifths spelling with ♯/♭ glyphs. Frequency and MIDI conversion utilities for the rank-2 lattice.
+
+## Layout Math
+
+Multiple keyboard form factors (ANSI, ISO, 60%/65%/75%) are built by filtering the full key map based on which keys are physically present.
+
+``` {.typescript file=src/lib/keyboard-layouts.ts}
 /**
  * PHYSICAL POSITION Keyboard to Isomorphic Coordinate Mapping
  *
@@ -275,3 +292,4 @@ export function isKeyMapped(code: string): boolean {
 
 // Legacy export for code that imports 'standardLayout' by name
 export const standardLayout: KeyboardLayout = KEYBOARD_VARIANTS[0];
+```

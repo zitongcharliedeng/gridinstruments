@@ -67,3 +67,6 @@ src/components/NumericSlider.ts
 src/lib/mpe-service.ts
 src/lib/midi-input.ts
 src/lib/mpe-output.ts
+src/lib/chord-detector.ts
+src/lib/keyboard-layouts.ts
+src/lib/midi-search.ts
