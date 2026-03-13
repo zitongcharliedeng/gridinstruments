@@ -312,7 +312,7 @@ export class NoteHistoryVisualizer {
       }
     }
 
-    // Octave labels (C notes)
+    // Octave labels (C notes) — D-relative octave notation
     ctx.font = `bold ${Math.max(6, noteH * 0.75)}px 'JetBrains Mono', monospace`;
     ctx.fillStyle = '#666666';
     ctx.textAlign = 'right';
@@ -320,9 +320,8 @@ export class NoteHistoryVisualizer {
     for (let midi = this.MIDI_MIN; midi <= this.MIDI_MAX; midi++) {
       const pc = ((midi % 12) + 12) % 12;
       if (pc !== 0) continue; // Only C notes
-      const octave = Math.floor(midi / 12) - 1;
       const ky = midiToY(midi) + noteH / 2;
-      ctx.fillText(`C${octave}`, x + w - 2, ky);
+      ctx.fillText(this.midiToDRelativeNoteName(midi), x + w - 2, ky);
     }
 
     // "Now" boundary — thin white line on right edge of piano strip
@@ -425,6 +424,24 @@ export class NoteHistoryVisualizer {
     return names[((midi % 12) + 12) % 12];
   }
 
+  /**
+   * Convert MIDI note to D-relative octave notation.
+   * D-ref = MIDI 62 (D4). Octave offset = floor((midi - 62) / 12).
+   * Octave 0 (D4–C#5): just the note name, e.g. "E", "F#"
+   * Octave +1 (D5–C#6): note name + "'", e.g. "E'"
+   * Octave +2 (D6–C#7): note name + "''", e.g. "E''"
+   * Octave -1 (D3–C#4): note name + ",", e.g. "E,"
+   * Octave -2 (D2–C#3): note name + ",,", e.g. "E,,"
+   */
+  private midiToDRelativeNoteName(midi: number): string {
+    const names = ['C','C#','D','Eb','E','F','F#','G','Ab','A','Bb','B'];
+    const noteName = names[((midi % 12) + 12) % 12];
+    const dOctave = Math.floor((midi - 62) / 12);
+    if (dOctave === 0) return noteName;
+    if (dOctave > 0) return noteName + "'".repeat(dOctave);
+    return noteName + ','.repeat(-dOctave);
+  }
+
   private drawChordPanel(x: number, w: number, h: number, _now: number): void {
     const ctx = this.ctx;
     const pad = 12;
@@ -465,11 +482,11 @@ export class NoteHistoryVisualizer {
       ctx.fillText('—', x + pad, chordY);
     }
 
-    // Active note names (sorted by pitch, stacked vertically)
+    // Active note names (sorted by pitch, stacked vertically) — D-relative octave notation
     const noteNames: string[] = [];
     const sortedNotes = [...this.activeNotes.values()].sort((a, b) => b.midiNote - a.midiNote);
     for (const n of sortedNotes) {
-      noteNames.push(this.midiToNoteName(n.midiNote) + String(Math.floor(n.midiNote / 12) - 1));
+      noteNames.push(this.midiToDRelativeNoteName(n.midiNote));
     }
 
     const noteListY = h * 0.58;
