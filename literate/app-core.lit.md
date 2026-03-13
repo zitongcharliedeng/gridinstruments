@@ -1059,7 +1059,8 @@ export class DComposeApp {
               clickScroll: true,
             },
           });
-          requestAnimationFrame(refreshAllSliderUI);
+          // Double-rAF: first frame removes .hidden, second frame has correct offsetWidth
+          requestAnimationFrame(() => requestAnimationFrame(refreshAllSliderUI));
         }
       });
       overlayActor.start();

@@ -81,7 +81,7 @@ async function loadGitHubMidis(
 ): Promise<GitHubTreeItem[]> {
   if (cache.items !== null) return cache.items;
 
-  const url = `https://api.github.com/repos/${owner}/${repo}/git/trees/main?recursive=1`;
+  const url = `https://api.github.com/repos/${owner}/${repo}/git/trees/HEAD?recursive=1`;
   const response = await fetch(url);
   if (!response.ok) {
     throw new Error(
@@ -101,7 +101,7 @@ function encodeGitHubPath(path: string): string {
 
 /** Build a raw.githubusercontent.com content URL for a file in a GitHub repo. */
 function rawUrl(owner: string, repo: string, path: string): string {
-  return `https://raw.githubusercontent.com/${owner}/${repo}/main/${encodeGitHubPath(path)}`;
+  return `https://raw.githubusercontent.com/${owner}/${repo}/HEAD/${encodeGitHubPath(path)}`;
 }
 
 /**
@@ -155,8 +155,8 @@ async function fetchArrayBuffer(url: string): Promise<ArrayBuffer> {
  * Data source: https://github.com/thewildwestmidis/midis
  * Contains ~1,700 .mid files in a flat directory structure.
  *
- * GitHub Trees API: https://api.github.com/repos/thewildwestmidis/midis/git/trees/main?recursive=1
- * Raw content URL: https://raw.githubusercontent.com/thewildwestmidis/midis/main/{filename}
+ * GitHub Trees API: https://api.github.com/repos/thewildwestmidis/midis/git/trees/HEAD?recursive=1
+ * Raw content URL: https://raw.githubusercontent.com/thewildwestmidis/midis/HEAD/{filename}
  *
  * CORS: GitHub API includes CORS headers; raw.githubusercontent.com returns
  * Access-Control-Allow-Origin: * — both are safe to call from the browser.
@@ -189,8 +189,8 @@ export class GitHubMidiAdapter implements MidiSearchAdapter {
  * Data source: https://github.com/MutopiaProject/MutopiaProject
  * Contains ~2,124 classical music pieces in nested ftp/Composer/Catalog/ structure.
  *
- * GitHub Trees API: https://api.github.com/repos/MutopiaProject/MutopiaProject/git/trees/main?recursive=1
- * Raw content URL: https://raw.githubusercontent.com/MutopiaProject/MutopiaProject/main/{path}
+ * GitHub Trees API: https://api.github.com/repos/MutopiaProject/MutopiaProject/git/trees/HEAD?recursive=1
+ * Raw content URL: https://raw.githubusercontent.com/MutopiaProject/MutopiaProject/HEAD/{path}
  *
  * CORS: GitHub API includes CORS headers; raw.githubusercontent.com returns
  * Access-Control-Allow-Origin: * — both are safe to call from the browser.

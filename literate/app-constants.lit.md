@@ -28,6 +28,10 @@ const tuningTableRows = TUNING_MARKERS
   .map(m => `<tr><td><strong>${m.fifth % 1 === 0 ? m.fifth : `~${String(m.fifth)}`}¢</strong></td><td>${m.description}</td></tr>`)
   .join('\n');
 
+const SRC = 'https://github.com/zitongcharliedeng/gridinstruments/blob/main/literate';
+const srcLink = (file: string, label = 'Source') =>
+  `<p style="margin-top:16px;padding-top:8px;border-top:1px solid #222;font-size:10px;"><a href="${SRC}/${file}" target="_blank" rel="noopener" style="color:var(--dim);">📄 ${label}</a></p>`;
+
 export const SLIDER_INFO: Record<string, string> = {
   tuning: `
 <h2>Fifths Tuning</h2>
@@ -43,7 +47,8 @@ ${tuningTableRows}
 <li><a href="https://en.wikipedia.org/wiki/Equal_temperament" target="_blank" rel="noopener">Equal temperament</a> — Wikipedia</li>
 <li><a href="https://en.wikipedia.org/wiki/Regular_temperament" target="_blank" rel="noopener">Regular temperament</a> — Wikipedia</li>
 <li><a href="https://en.xen.wiki/w/Gallery_of_EDO_visualizations" target="_blank" rel="noopener">EDO Visualizations</a> — Xenharmonic Wiki</li>
-</ul>`,
+</ul>
+${srcLink('synth.lit.md', 'Source: synth.lit.md — tuning system implementation')}`,
 
   skew: `
 <h2>Mech Skew</h2>
@@ -61,21 +66,103 @@ ${tuningTableRows}
 <li><a href="https://github.com/flipcoder/midimech" target="_blank" rel="noopener">MidiMech</a> by flipcoder — isomorphic layout visualizer</li>
 <li><a href="https://www.striso.org/the-note-layout/" target="_blank" rel="noopener">Striso board</a> by Piers Titus van der Torren — physical isomorphic instrument</li>
 <li><a href="https://en.wikipedia.org/wiki/Wicki-Hayden_note_layout" target="_blank" rel="noopener">Wicki-Hayden note layout</a> — Wikipedia</li>
-</ul>`,
+</ul>
+${srcLink('note-colors.lit.md', 'Source: note-colors.lit.md — skew interpolation math')}`,
 
-  search: `Search for MIDI files across online libraries to load as songs. Results stream in as you type.`,
+  search: `
+<h2>Song Search</h2>
+<p>Search for MIDI files across online libraries. Results stream in as you type — no account or download needed.</p>
+<h3>How It Works</h3>
+<p>The search queries multiple <a href="https://en.wikipedia.org/wiki/MIDI" target="_blank" rel="noopener">MIDI</a> file repositories via their public APIs. Click any result to load it instantly into the play-along game.</p>
+<h3>Sources</h3>
+<table>
+<tr><td><strong>GitHub</strong></td><td>Open-source MIDI collections (thewildwestmidis, MutopiaProject)</td></tr>
+<tr><td><strong>Midishare</strong></td><td>Community-contributed MIDI arrangements</td></tr>
+</table>
+<h3>Tips</h3>
+<ul>
+<li>Search by song name, artist, or genre</li>
+<li>Use <strong>Calibrate</strong> first to set your playable range — the game auto-transposes songs to fit</li>
+<li>Adjust <strong>Quant</strong> level to simplify complex passages for beginners</li>
+</ul>
+${srcLink('midi-search.lit.md', 'Source: midi-search.lit.md — search adapters and API integration')}`,
 
-  quantization: `Quantization snaps note timings to the nearest beat division so fast passages are easier to read. Use None to play freely with no snapping.`,
+  quantization: `
+<h2>Quantization</h2>
+<p>Snaps note timings to a beat grid, simplifying complex passages into a <a href="https://en.wikipedia.org/wiki/Piano_Tiles" target="_blank" rel="noopener">Piano Tiles</a>-style game.</p>
+<h3>Levels</h3>
+<table>
+<tr><td><strong>None</strong></td><td>Raw MIDI timing — every note as the composer wrote it</td></tr>
+<tr><td><strong>1/4</strong></td><td>Quarter note grid — beginner-friendly, trills become single chords</td></tr>
+<tr><td><strong>1/8</strong></td><td>Eighth note grid — intermediate, most melodic detail preserved</td></tr>
+<tr><td><strong>1/16</strong></td><td>Sixteenth note grid — advanced, includes fast runs and grace notes</td></tr>
+</table>
+<h3>How It Works</h3>
+<p>Notes snap to the nearest grid point. Long notes that span multiple grid points are split into repeated taps — so a half note at 1/8 quantization becomes 4 consecutive taps. This means playing at a constant pace naturally reproduces the original tempo.</p>
+<p>The grid adapts to <a href="https://en.wikipedia.org/wiki/Time_signature" target="_blank" rel="noopener">time signature</a> changes and <a href="https://en.wikipedia.org/wiki/Tempo" target="_blank" rel="noopener">tempo map</a> variations within the song.</p>
+${srcLink('game-engine.lit.md', 'Source: game-engine.lit.md — quantization algorithm')}`,
 
-  calibration: `Marks which notes are reachable on your input device. Play through your range, press Confirm, and the grid highlights only your playable area.`,
+  calibration: `
+<h2>Calibrate Playable Area</h2>
+<p>Defines which notes your input device can physically reach. After calibration, unreachable cells are greyed out and the game auto-transposes songs to fit your range.</p>
+<h3>How to Calibrate</h3>
+<ol>
+<li>Click <strong>Calibrate playable area</strong> — all cells turn grey</li>
+<li>Play every reachable note on your MIDI controller or keyboard — cells light up as you play them</li>
+<li>Click <strong>Confirm</strong> to save your range, or <strong>Cancel</strong> to discard</li>
+</ol>
+<h3>What Happens After</h3>
+<ul>
+<li>Unreachable cells stay greyed on the grid (still playable, just visually dimmed)</li>
+<li>When loading a song, the game finds the optimal <a href="https://en.wikipedia.org/wiki/Transposition_(music)" target="_blank" rel="noopener">transposition</a> to maximize notes within your calibrated range</li>
+<li>Your range is saved to <code>localStorage</code> and restored on reload</li>
+</ul>
+<p>Re-calibrate any time if you switch input devices or want to expand your range.</p>
+${srcLink('calibration.lit.md', 'Source: calibration.lit.md — range storage and persistence')}`,
 
-  bend: `Controls pitch bend range — how far a MIDI pitch bend wheel or MPE finger slide changes the pitch in semitones.`,
+  bend: `
+<h2>Pitch Bend</h2>
+<p>Controls the pitch bend range — how far a MIDI pitch bend wheel or <a href="https://www.midi.org/midi-articles/midi-polyphonic-expression-mpe" target="_blank" rel="noopener">MPE</a> finger slide changes the pitch.</p>
+<h3>Range</h3>
+<p>Set from <strong>±2</strong> (subtle vibrato) to <strong>±48 semitones</strong> (four octaves). The default ±2 matches most MIDI controllers. MPE instruments like the <a href="https://www.rogerlinndesign.com/linnstrument" target="_blank" rel="noopener">LinnStrument</a> or <a href="https://rfrsr.com/" target="_blank" rel="noopener">Seaboard</a> typically use ±24 or ±48.</p>
+<h3>Per-Note vs Channel</h3>
+<p>In MPE mode, each note gets its own pitch bend on a dedicated MIDI channel. In standard mode, pitch bend affects all sounding notes simultaneously.</p>
+${srcLink('mpe-service.lit.md', 'Source: mpe-service.lit.md — MPE pitch bend handling')}`,
 
-  velocity: `Note-on velocity controls how hard each note strikes, affecting initial volume and timbre brightness.`,
+  velocity: `
+<h2>Velocity</h2>
+<p>Note-on velocity measures how hard each note is struck, controlling initial volume and timbre brightness.</p>
+<h3>How It Works</h3>
+<ul>
+<li><strong>MIDI controllers</strong>: velocity comes from the key/pad sensor (0–127)</li>
+<li><strong>Computer keyboard</strong>: fixed velocity (no pressure sensitivity)</li>
+<li><strong>Touch screen</strong>: velocity mapped from touch pressure where supported</li>
+</ul>
+<p>The grid visualizes velocity as cell brightness — harder strikes produce brighter cells.</p>
+${srcLink('keyboard-visualizer.lit.md', 'Source: keyboard-visualizer.lit.md — velocity visualization')}`,
 
-  pressure: `Aftertouch (pressure) is continuous force applied after the initial strike, used for expressive swells and filter sweeps.`,
+  pressure: `
+<h2>Pressure (Aftertouch)</h2>
+<p>Continuous force applied <em>after</em> the initial note strike. Used for expressive swells, filter sweeps, and vibrato depth.</p>
+<h3>Types</h3>
+<table>
+<tr><td><strong>Channel pressure</strong></td><td>One value for all notes — most common on standard keyboards</td></tr>
+<tr><td><strong>Poly pressure</strong></td><td>Independent per note — available on MPE devices</td></tr>
+</table>
+<p>The grid visualizes pressure as cell opacity — more pressure makes cells more opaque.</p>
+${srcLink('mpe-service.lit.md', 'Source: mpe-service.lit.md — pressure/aftertouch handling')}`,
 
-  timbre: `Timbre CC selects which MIDI continuous controller carries brightness/timbre data from MPE devices.`,
+  timbre: `
+<h2>Timbre (CC74)</h2>
+<p>Controls brightness/timbre via <a href="https://www.midi.org/specifications-old/item/table-3-control-change-messages-data-bytes-2" target="_blank" rel="noopener">MIDI CC74</a>. In MPE, this is the standard "slide" dimension — typically mapped to the Y-axis on surfaces like the <a href="https://www.rogerlinndesign.com/linnstrument" target="_blank" rel="noopener">LinnStrument</a>.</p>
+<h3>Alternatives</h3>
+<table>
+<tr><td><strong>CC74</strong></td><td>MPE standard — "Brightness" per the MIDI spec</td></tr>
+<tr><td><strong>CC11</strong></td><td>Expression — used by some orchestral instruments</td></tr>
+<tr><td><strong>Poly pressure</strong></td><td>Some devices route Y-axis here instead</td></tr>
+</table>
+<p>The grid visualizes timbre as a color shift on the cell.</p>
+${srcLink('mpe-service.lit.md', 'Source: mpe-service.lit.md — timbre CC routing')}`,
 
   shear: `
 <h2>Wicked Shear</h2>
@@ -103,6 +190,7 @@ ${tuningTableRows}
 <li><a href="https://en.wikipedia.org/wiki/Wigner%E2%80%93Seitz_cell" target="_blank" rel="noopener">Wigner–Seitz cell</a> — Wikipedia</li>
 <li><a href="https://en.wikipedia.org/wiki/Wicki-Hayden_note_layout" target="_blank" rel="noopener">Wicki-Hayden note layout</a> — Wikipedia</li>
 <li><a href="https://www.toverlamp.org/static/wickisynth/wickisynth_lowlatency.html" target="_blank" rel="noopener">WickiSynth</a> by Piers Titus van der Torren</li>
-</ul>`,
+</ul>
+${srcLink('note-colors.lit.md', 'Source: note-colors.lit.md — coordinate system and shear math')}`,
 };
 ```
