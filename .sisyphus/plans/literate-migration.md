@@ -407,7 +407,7 @@ Max Concurrent: 11 (Wave 9)
   **Evidence**: `.sisyphus/evidence/task-17-numeric-slider.txt`
   **Commit**: YES — `refactor(literate): migrate NumericSlider.ts to literate programming`
 
-- [ ] 18. Migrate keyboard-visualizer.ts to literate
+- [x] 18. Migrate keyboard-visualizer.ts to literate
 
   **What to do**: Create `literate/keyboard-visualizer.lit.md` wrapping `src/lib/keyboard-visualizer.ts` (691 lines)
   Largest lib module — Canvas rendering, Voronoi hit detection, layout math.
@@ -418,7 +418,7 @@ Max Concurrent: 11 (Wave 9)
   **Evidence**: `.sisyphus/evidence/task-18-keyboard-visualizer.txt`
   **Commit**: YES — `refactor(literate): migrate keyboard-visualizer.ts to literate programming`
 
-- [ ] 19. Migrate note-history-visualizer.ts to literate
+- [x] 19. Migrate note-history-visualizer.ts to literate
 
   **What to do**: Create `literate/note-history-visualizer.lit.md` wrapping `src/lib/note-history-visualizer.ts` (481 lines)
   **Recommended Agent Profile**: `unspecified-high` | **Skills**: []
@@ -427,7 +427,7 @@ Max Concurrent: 11 (Wave 9)
   **Evidence**: `.sisyphus/evidence/task-19-note-history-visualizer.txt`
   **Commit**: YES — `refactor(literate): migrate note-history-visualizer.ts to literate programming`
 
-- [ ] 20. Migrate chord-graffiti.ts to literate
+- [x] 20. Migrate chord-graffiti.ts to literate
 
   **What to do**: Create `literate/chord-graffiti.lit.md` wrapping `src/lib/chord-graffiti.ts` (192 lines)
   **Recommended Agent Profile**: `unspecified-high` | **Skills**: []
@@ -436,7 +436,7 @@ Max Concurrent: 11 (Wave 9)
   **Evidence**: `.sisyphus/evidence/task-20-chord-graffiti.txt`
   **Commit**: YES — `refactor(literate): migrate chord-graffiti.ts to literate programming`
 
-- [ ] 21. Migrate game-engine.ts to literate
+- [x] 21. Migrate game-engine.ts to literate
 
   **What to do**: Create `literate/game-engine.lit.md` wrapping `src/lib/game-engine.ts` (334 lines)
   **Recommended Agent Profile**: `unspecified-high` | **Skills**: []
@@ -445,7 +445,7 @@ Max Concurrent: 11 (Wave 9)
   **Evidence**: `.sisyphus/evidence/task-21-game-engine.txt`
   **Commit**: YES — `refactor(literate): migrate game-engine.ts to literate programming`
 
-- [ ] 22. Migrate sliderConfigs.ts to literate
+- [x] 22. Migrate sliderConfigs.ts to literate
 
   **What to do**: Create `literate/machines/sliderConfigs.lit.md` wrapping `src/machines/sliderConfigs.ts` (89 lines)
   **Recommended Agent Profile**: `quick` | **Skills**: []
@@ -454,7 +454,7 @@ Max Concurrent: 11 (Wave 9)
   **Evidence**: `.sisyphus/evidence/task-22-slider-configs.txt`
   **Commit**: YES — `refactor(literate): migrate sliderConfigs.ts to literate programming`
 
-- [ ] 23. Migrate machines/types.ts to literate
+- [x] 23. Migrate machines/types.ts to literate
 
   **What to do**: Create `literate/machines/types.lit.md` wrapping `src/machines/types.ts` (384 lines)
   This re-exports types from synth and keyboard-layouts — critical dependency node.
@@ -464,7 +464,7 @@ Max Concurrent: 11 (Wave 9)
   **Evidence**: `.sisyphus/evidence/task-23-machines-types.txt`
   **Commit**: YES — `refactor(literate): migrate machines/types.ts to literate programming`
 
-- [ ] 24. Migrate appMachine.ts to literate
+- [x] 24. Migrate appMachine.ts to literate
 
   **What to do**: Create `literate/machines/appMachine.lit.md` wrapping `src/machines/appMachine.ts` (185 lines)
   **Recommended Agent Profile**: `unspecified-high` | **Skills**: []
@@ -473,7 +473,7 @@ Max Concurrent: 11 (Wave 9)
   **Evidence**: `.sisyphus/evidence/task-24-app-machine.txt`
   **Commit**: YES — `refactor(literate): migrate appMachine.ts to literate programming`
 
-- [ ] 25. Migrate gameMachine.ts to literate
+- [x] 25. Migrate gameMachine.ts to literate
 
   **What to do**: Create `literate/machines/gameMachine.lit.md` wrapping `src/machines/gameMachine.ts` (208 lines)
   **Recommended Agent Profile**: `unspecified-high` | **Skills**: []
@@ -482,7 +482,7 @@ Max Concurrent: 11 (Wave 9)
   **Evidence**: `.sisyphus/evidence/task-25-game-machine.txt`
   **Commit**: YES — `refactor(literate): migrate gameMachine.ts to literate programming`
 
-- [ ] 26. Migrate midiActor.ts to literate
+- [x] 26. Migrate midiActor.ts to literate
 
   **What to do**: Create `literate/machines/midiActor.lit.md` wrapping `src/machines/midiActor.ts` (160 lines)
   **Recommended Agent Profile**: `unspecified-high` | **Skills**: []
@@ -491,7 +491,7 @@ Max Concurrent: 11 (Wave 9)
   **Evidence**: `.sisyphus/evidence/task-26-midi-actor.txt`
   **Commit**: YES — `refactor(literate): migrate midiActor.ts to literate programming`
 
-- [ ] 27. Migrate inputActors.ts to literate
+- [x] 27. Migrate inputActors.ts to literate
 
   **What to do**: Create `literate/machines/inputActors.lit.md` wrapping `src/machines/inputActors.ts` (244 lines)
   **Recommended Agent Profile**: `unspecified-high` | **Skills**: []
@@ -500,7 +500,7 @@ Max Concurrent: 11 (Wave 9)
   **Evidence**: `.sisyphus/evidence/task-27-input-actors.txt`
   **Commit**: YES — `refactor(literate): migrate inputActors.ts to literate programming`
 
-- [ ] 28. Migrate remaining machine files to literate (batch)
+- [x] 28. Migrate remaining machine files to literate (batch)
 
   **What to do**: Migrate these 7 smaller machine files in one task:
   - `panelMachine.ts` (127 lines) → `literate/machines/panelMachine.lit.md`
