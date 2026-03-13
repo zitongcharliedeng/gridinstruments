@@ -130,6 +130,14 @@ export const appMachine = setup({
       assertEvent(event, 'SET_LAYOUT');
       return { layoutId: event.layoutId };
     }),
+
+    handleWindowBlur: assign(() => ({
+      activeNotes: new Map(),
+      heldKeys: new Set(),
+      activePointers: new Set(),
+      vibratoActive: false,
+      sustainActive: false,
+    })),
   },
 }).createMachine({
   id: 'dcompose',
@@ -172,6 +180,7 @@ export const appMachine = setup({
         MPE_SELECT_OUTPUT: { actions: 'handleMpeSelectOutput' },
         SET_WAVEFORM:      { actions: 'handleSetWaveform' },
         SET_LAYOUT:        { actions: 'handleSetLayout' },
+        WINDOW_BLUR:       { actions: 'handleWindowBlur' },
       },
     },
     audioReady: {
@@ -184,6 +193,7 @@ export const appMachine = setup({
         MPE_SELECT_OUTPUT: { actions: 'handleMpeSelectOutput' },
         SET_WAVEFORM:      { actions: 'handleSetWaveform' },
         SET_LAYOUT:        { actions: 'handleSetLayout' },
+        WINDOW_BLUR:       { actions: 'handleWindowBlur' },
       },
     },
   },
