@@ -1,0 +1,9 @@
+version = "2.0"
+
+[[languages]]
+name = "TypeScript"
+identifiers = ["typescript", "ts"]
+comment = { open = "// ~~ " }
+
+[entangled]
+watch_list = ["literate/*.lit.md"]
