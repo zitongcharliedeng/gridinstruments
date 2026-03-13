@@ -1303,7 +1303,8 @@ export class DComposeApp {
         if (searchDebounce !== null) clearTimeout(searchDebounce);
         searchDebounce = setTimeout(async () => {
           const query = searchInput.value.trim();
-          if (query.length < 2) { resultsDiv.innerHTML = ''; return; }
+          if (query.length < 2) { resultsDiv.innerHTML = ''; resultsDiv.style.display = 'none'; return; }
+          resultsDiv.style.display = 'block';
           resultsDiv.innerHTML = '<div class="search-status">Searching\u2026</div>';
           try {
             const results = await searchAllAdapters(query);
@@ -1330,6 +1331,7 @@ export class DComposeApp {
 
               row.addEventListener('click', () => {
                 this.handleSearchResultClick(r);
+                resultsDiv.style.display = 'none';
               });
 
               resultsDiv.appendChild(row);
@@ -1348,6 +1350,8 @@ export class DComposeApp {
         songBarHintEl.style.display = 'none';
       });
       searchInput.addEventListener('blur', () => {
+        // Hide results after a short delay to allow click events to fire first
+        setTimeout(() => { if (resultsDiv) resultsDiv.style.display = 'none'; }, 150);
         if (searchInput.value.trim() === '') {
           const gameState = this.gameActor?.getSnapshot().value as string | undefined;
           if (!gameState || gameState === 'idle' || gameState === 'error') {
