@@ -177,7 +177,7 @@ ${tuningTableRows}
 
   search: `Search for MIDI files across online libraries to load as songs. Results stream in as you type.`,
 
-  quantization: `Snaps note timings to the nearest beat division so fast passages are easier to read. Use None to play freely with no snapping.`,
+  quantization: `Quantization snaps note timings to the nearest beat division so fast passages are easier to read. Use None to play freely with no snapping.`,
 
   calibration: `Marks which notes are reachable on your input device. Play through your range, press Confirm, and the grid highlights only your playable area.`,
 
