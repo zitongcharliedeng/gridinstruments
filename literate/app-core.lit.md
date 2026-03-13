@@ -216,6 +216,18 @@ export class DComposeApp {
     this.historyVisualizer = new NoteHistoryVisualizer(this.historyCanvas);
     this.historyVisualizer.start();
 
+    // Wire history time window slider
+    const historyTimeSlider = document.getElementById('history-time-slider') as HTMLInputElement | null;
+    const historyTimeLabel = document.getElementById('history-time-label');
+    if (historyTimeSlider && this.historyVisualizer) {
+      const viz = this.historyVisualizer;
+      historyTimeSlider.addEventListener('input', () => {
+        const seconds = parseFloat(historyTimeSlider.value);
+        viz.setTimeWindow(seconds);
+        if (historyTimeLabel) historyTimeLabel.textContent = `${seconds}s`;
+      });
+    }
+
     const historyContainer = this.historyCanvas.parentElement;
     if (historyContainer) {
       new ResizeObserver((entries) => {
