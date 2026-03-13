@@ -74,3 +74,4 @@ src/machines/sliderConfigs.ts
 src/lib/chord-graffiti.ts
 src/lib/game-engine.ts
 src/lib/note-history-visualizer.ts
+src/lib/keyboard-visualizer.ts

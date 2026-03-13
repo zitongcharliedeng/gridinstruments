@@ -1,3 +1,12 @@
+# Keyboard Visualizer
+
+DCompose/Wicki-Hayden keyboard visualizer — Canvas 2D rendering of an isomorphic grid as a tiling of parallelograms.
+
+Every pixel maps to exactly one cell (Voronoi = parallelogram partition). No gaps, no overlaps. `CELL_INSET` shrinks inactive cells to reveal black background as "mortar". `skewFactor` interpolates between DCompose (diagonal) and MidiMech (orthogonal) layouts.
+
+## Imports and types
+
+``` {.typescript file=src/lib/keyboard-visualizer.ts}
 /**
  * DCompose/Wicki-Hayden Keyboard Visualizer
  *
@@ -48,6 +57,11 @@ interface Button {
 // Gap = 1 - CELL_INSET appears as black "mortar" between cells.
 const CELL_INSET = 0.93;
 
+```
+
+## Class definition and state
+
+``` {.typescript file=src/lib/keyboard-visualizer.ts}
 export class KeyboardVisualizer {
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
@@ -101,6 +115,11 @@ export class KeyboardVisualizer {
 
 
 
+```
+
+## Canvas setup and public API
+
+``` {.typescript file=src/lib/keyboard-visualizer.ts}
   private setupCanvas(): void {
     const dpr = window.devicePixelRatio > 0 ? window.devicePixelRatio : 1;
     this.canvas.width = this.options.width * dpr;
@@ -210,6 +229,11 @@ export class KeyboardVisualizer {
     return undefined;
   }
 
+```
+
+## Geometry: spacing and button generation
+
+``` {.typescript file=src/lib/keyboard-visualizer.ts}
   private getSpacing(): {
     genX: number; genY0: number; genX1: number; genY1: number;
     cellHv1: { x: number; y: number }; cellHv2: { x: number; y: number };
@@ -324,6 +348,11 @@ export class KeyboardVisualizer {
     this.buttons.sort((a, b) => a.y - b.y);
   }
 
+```
+
+## Note state setters
+
+``` {.typescript file=src/lib/keyboard-visualizer.ts}
   setActiveNotes(noteIds: string[]): void {
     this.activeNotes = new Set(noteIds);
   }
@@ -363,6 +392,11 @@ export class KeyboardVisualizer {
     this.render();
   }
 
+```
+
+## Rendering
+
+``` {.typescript file=src/lib/keyboard-visualizer.ts}
   render(): void {
     const { width, height } = this.options;
 
@@ -617,6 +651,11 @@ export class KeyboardVisualizer {
     this.ctx.globalAlpha = 1;
   }
 
+```
+
+## Resize, static helpers, and hit detection
+
+``` {.typescript file=src/lib/keyboard-visualizer.ts}
   resize(width: number, height: number): void {
     this.options.width = width;
     this.options.height = height;
@@ -689,3 +728,4 @@ export class KeyboardVisualizer {
     return this.buttons;
   }
 }
+```
