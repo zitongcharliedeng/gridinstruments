@@ -1,0 +1,9 @@
+id: no-native-select-in-html
+language: html
+rule:
+  pattern: <select $$$ATTRS>$$$BODY</select>
+files:
+  - "**/*.html"
+severity: error
+message: "Native <select> banned in HTML — create <select> elements in JavaScript (for SlimSelect wrapping) or use a cycling <button>. See waveform/layout controls for the pattern."
+note: "SlimSelect-wrapped selects must be created programmatically in main.ts, not declared in HTML. For enum-type controls, use a cycling button with click handler."
