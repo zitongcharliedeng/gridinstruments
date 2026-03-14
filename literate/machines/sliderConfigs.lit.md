@@ -28,8 +28,8 @@ function noteNameToHz(input: string): number | null {
   const semitone = NOTE_SEMITONES[noteKey];
   if (semitone === undefined) return null;
   const octave = parseInt(m[2], 10);
-  // D4 = 293.66 Hz; D = semitone 2
-  const semitonesFromD4 = (octave - 4) * 12 + (semitone - 2);
+  // Default D-ref = 293.66 Hz (standard A440); D = semitone 2
+  const semitonesFromD4 = (octave - 4) * 12 + (semitone - 2); // variable name kept for compat
   return 293.66 * Math.pow(2, semitonesFromD4 / 12);
 }
 
@@ -78,7 +78,7 @@ export const ZOOM_SLIDER_CONFIG: SliderComponentConfig = {
   editable: false,
 };
 
-// ─── D-ref (73.42–1174.66 Hz; D4 = 293.66 Hz default) ────────────────────────
+// ─── D-ref (73.42–1174.66 Hz; default 293.66 Hz at A440) ─────────────────────
 
 export const DREF_SLIDER_CONFIG: SliderComponentConfig = {
   name: 'dref',

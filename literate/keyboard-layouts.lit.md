@@ -262,7 +262,7 @@ export function getCentDeviation(x: number, fifth: number): number {
 
 /**
  * Convert coordinate to MIDI note number
- * D4 (MIDI 62) is at [0, 0]
+ * D-ref (MIDI 62 at default) is at coordinate [0, 0]
  */
 export function coordToMidi(x: number, y: number, octaveOffset = 0): number {
   return 62 + x * 7 + y * 12 + octaveOffset * 12;
