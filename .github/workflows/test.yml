@@ -41,7 +41,7 @@ jobs:
 
       - name: Literate comment check (no // comments in code blocks)
         run: |
-          violations=$(grep -rn '^\s*//' literate/ --include='*.lit.md' | grep -v '^\s*///' | grep -v 'http://' | grep -v 'https://' || true)
+          violations=$(grep -rn '^\s*\(//\|/\*\|\*/\)' literate/ --include='*.lit.md' | grep -v 'http://' | grep -v 'https://' || true)
           count=$(echo "$violations" | grep -c '.' || true)
           if [ "$count" -gt 0 ]; then
             echo "ERROR: Found $count inline comments in literate code blocks."
