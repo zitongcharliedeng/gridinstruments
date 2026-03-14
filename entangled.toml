@@ -10,5 +10,10 @@ name = "HTML"
 identifiers = ["html"]
 comment = { open = "<!-- ~~ ", close = " -->" }
 
+[[languages]]
+name = "CSS"
+identifiers = ["css"]
+comment = { open = "/* ~~ ", close = " */" }
+
 [entangled]
 watch_list = ["literate/**/*.lit.md"]
