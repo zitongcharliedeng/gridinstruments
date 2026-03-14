@@ -4683,12 +4683,12 @@ export const INFO_POPUP_1: StateInvariant = {
 
 export const INFO_POPUP_2: StateInvariant = {
   id: 'INFO-POPUP-2',
-  description: '.slider-info-btn[data-info="calibration"] exists in song-bar area',
+  description: '#calibrate-btn exists in song-bar (calibration info moved to overlay)',
   check: async (page: Page) => {
-    const exists = await page.evaluate(() => {
-      return document.querySelector('.slider-info-btn[data-info="calibration"]') !== null;
-    });
-    if (!exists) throw new Error('.slider-info-btn[data-info="calibration"] not found');
+    const exists = await page.evaluate(() =>
+      document.getElementById('calibrate-btn') !== null
+    );
+    if (!exists) throw new Error('#calibrate-btn not found');
   },
 };
 

@@ -12,10 +12,9 @@ import type { StateInvariant } from './types';
 const bracketAnnotationCheck: StateInvariant = {
   id: 'BH-BRACKET-1',
   check: async (page: Page) => {
-    const html = await page.locator('#d-ref-label').innerHTML();
-    expect(html).toContain('style=');
-    const greenMatch = /color:\s*([^;"]+)/.exec(html);
-    expect(greenMatch, 'Annotation should have a color style').toBeTruthy();
+    const text = await page.locator('#d-ref-label').textContent();
+    expect(text).toContain('D REF');
+    expect(text).toContain('Hz');
   },
 };
 
