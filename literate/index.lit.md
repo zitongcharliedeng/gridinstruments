@@ -962,9 +962,10 @@ The page is a vertical flex layout (`#app`) with these major sections:
               <button class="slider-reset icon-btn icon-md" id="wave-reset" title="Reset waveform to sawtooth (default)"><i data-lucide="rotate-cw"></i></button>
             </div>
             <div class="ctrl-group" style="margin-top: 18px">
+              <button class="slider-info-btn icon-btn icon-lg" data-info="volume"><i data-lucide="info"></i></button>
               <div class="slider-track">
                <span class="slider-label-overlay">VOL (dB)</span>
-                <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.3" title="Master volume">
+                <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.5" title="Master volume">
                 <span class="slider-value-badge" id="volume-thumb-badge">-10.5</span>
                 <button class="slider-reset icon-btn icon-md" id="volume-reset" title="Reset volume to default (0.3)"><i data-lucide="rotate-cw"></i></button>
               </div>
@@ -980,6 +981,7 @@ The page is a vertical flex layout (`#app`) with these major sections:
              <div class="tet-presets" id="tet-presets" data-alternate-ticks></div>
            </div>
            <div class="overlay-section d-ref-group" style="margin-top: 18px">
+             <button class="slider-info-btn icon-btn icon-lg" data-info="dref"><i data-lucide="info"></i></button>
              <div class="slider-track">
                <span class="slider-label-overlay" id="d-ref-label">D REF (Hz)</span>
               <input type="range" id="d-ref-slider" min="73.42" max="1174.66" step="0.01" value="293.66" title="Reference pitch slider (D2–D6)">
