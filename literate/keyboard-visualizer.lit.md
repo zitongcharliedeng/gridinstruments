@@ -975,7 +975,7 @@ colors for the resolved state.
       : isUncalibrated ? (isBlackKey ? 'uncalibrated-black' : 'uncalibrated-white')
       : isBlackKey ? 'black'
       : 'white';
-    const { fill: fillColor, text: textColor } = cellColors(coordX, state);
+    const { fill: fillColor, text: textColor } = cellColors(coordX, state, coordY);
 ```
 
 ### MPE pressure -- opacity modulation
