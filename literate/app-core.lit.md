@@ -1038,8 +1038,8 @@ export class DComposeApp {
      // Fallback to 0.75 if DPI is unavailable (screen.width or outerWidth is zero/missing).
      // Touch devices: Math.min(1.2, innerWidth / 480) — scales to viewport width.
      const PIANO_KEY_MM = 23.5;   // visible key width at zoom=1.0 (W3C CSS px units)
-     const TARGET_KEY_MM = 15;    // target physical key width ≈ QWERTY key cap
-     const FALLBACK_ZOOM = 0.75;
+     const TARGET_KEY_MM = 20;    // target physical key width — larger than QWERTY cap for readability
+     const FALLBACK_ZOOM = 0.85;
      const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
      if (isTouchDevice) {
        this.defaultZoom = Math.min(1.2, window.innerWidth / 480);
@@ -1049,7 +1049,7 @@ export class DComposeApp {
        if (screenW > 0 && outerW > 0) {
          const dpi = screenW / outerW * 96;
          const zoom = TARGET_KEY_MM * dpi / (PIANO_KEY_MM * 96);
-         this.defaultZoom = Math.max(0.3, Math.min(2.0, zoom));
+         this.defaultZoom = Math.max(0.7, Math.min(2.0, zoom));
        } else {
          this.defaultZoom = FALLBACK_ZOOM;
        }
