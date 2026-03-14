@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
-# scripts/tangle.sh — the ONLY way to generate .ts from .lit.md
+# scripts/tangle.sh — the ONLY way to generate source from .lit.md
+# Targets: _generated/*.ts and index.html
 # Pattern: delete → tangle → lock (chmod 444)
 # Called by: npm run build (prebuild), npm test (pretest), nix develop (shellHook)
 set -euo pipefail
 
 FILEDB=".entangled/filedb.json"
 
-# Step 1: Remove previously generated .ts files AND clear filedb (prevents stale state)
+# Step 1: Remove previously generated files AND clear filedb (prevents stale state)
 # We must delete filedb.json too — entangled caches file hashes there and will skip
 # re-creation of deleted targets if it thinks the hash is current.
 if [ -f "$FILEDB" ] && command -v python3 &>/dev/null; then

@@ -62,3 +62,5 @@ tests/.vision-cache.json
 # Regenerate: bash scripts/tangle.sh
 # The entire _generated/ directory is tangled output:
 _generated/
+# index.html is also tangled from literate/index.lit.md:
+index.html

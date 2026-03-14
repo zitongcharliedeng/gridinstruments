@@ -1,3 +1,48 @@
+# Index Page
+
+Single-page HTML for GridInstruments — all CSS inline, all DOM structure.
+This is the sole HTML file in the project; everything else is TypeScript
+generated from literate sources into `_generated/`.
+
+## Structure
+
+The page is a vertical flex layout (`#app`) with these major sections:
+
+- **Head / CSS** (lines 1--836) — meta tags, Google Fonts import, and a single
+  `<style>` block containing the complete design system: CSS variables, icon
+  system, top bar, song bar, visualiser panel, grid area, grid settings overlay,
+  pedals panel, slider controls, dialogs, chord graffiti, responsive breakpoints.
+
+- **Top bar** (`#top-bar`, line 841) — site title, GitHub star/suggest links,
+  fullscreen toggle, and a layout-reset button.
+
+- **Song bar** (`#song-bar`, line 861) — calibration controls, MIDI song search
+  input with dropdown results, quantization cycling button, game-mode progress
+  display with elapsed timer and restart.
+
+- **Visualiser panel** (`#visualiser-panel`, line 902) — canvas for the note
+  history waterfall, with a resize handle that embeds time-window and range
+  controls.
+
+- **Grid area** (`#grid-area`, line 920) — the keyboard canvas and the settings
+  overlay (`#grid-overlay`) containing sound controls (waveform, volume, tuning
+  slider with TET presets, D-reference pitch), visual controls (mech skew,
+  wicked shear, zoom, QWERTY labels toggle), and input controls (keyboard
+  layout, MIDI device list, pitch bend range, MPE expression checkboxes,
+  flat-sound toggle, MPE output).
+
+- **Pedals panel** (`#pedals-panel`, line 1070) — sustain and vibrato pedal
+  buttons with a resize handle.
+
+- **Toasts and dialogs** (lines 1080--1094) — keyboard rollover warning toast,
+  about dialog, and info dialog (both `<dialog>` elements used with
+  `showModal()`).
+
+- **Scripts** (lines 1096--1111) — ES module entry point
+  (`/_generated/main.ts`), inline GitHub star-count fetch, and an SVG `<defs>`
+  block defining the spray-paint roughen filter for chord graffiti.
+
+``` {.html file=index.html}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1111,3 +1156,4 @@
   </svg>
 </body>
 </html>
+```

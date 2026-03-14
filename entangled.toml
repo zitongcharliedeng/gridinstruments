@@ -5,5 +5,10 @@ name = "TypeScript"
 identifiers = ["typescript", "ts"]
 comment = { open = "// ~~ " }
 
+[[languages]]
+name = "HTML"
+identifiers = ["html"]
+comment = { open = "<!-- ~~ ", close = " -->" }
+
 [entangled]
 watch_list = ["literate/**/*.lit.md"]
