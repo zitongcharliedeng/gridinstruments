@@ -76,14 +76,14 @@ export const songBarPlaywrightActions: Record<SongBarEvent['type'], (page: Page)
 
 export const songBarDomAssertions: Record<string, (page: Page) => Promise<void>> = {
   idle: async (page) => {
-    // hint is visible when idle and not searching
-    await expect(page.locator('#song-bar-hint')).not.toHaveCSS('display', 'none');
+    // search input visible when idle
+    await expect(page.locator('#midi-search-input')).toBeVisible();
     await expect(page.locator('#game-status')).toHaveCSS('display', 'none');
     await expect(page.locator('#calibration-banner')).toHaveCSS('display', 'none');
   },
   searching: async (page) => {
-    // hint hidden when search is active
-    await expect(page.locator('#song-bar-hint')).toHaveCSS('display', 'none');
+    // search input focused when searching
+    await expect(page.locator('#midi-search-input')).toBeVisible();
     await expect(page.locator('#midi-search-input')).toBeFocused();
   },
   calibrating: async (page) => {
