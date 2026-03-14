@@ -1047,8 +1047,8 @@ The page is a vertical flex layout (`#app`) with these major sections:
                    <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;">
                      <span class="gi-checkbox"><input type="checkbox" id="expr-bend" checked><span class="gi-check"></span></span>
                      <span style="color:#fff">Pitch Bend</span>
+                     <input type="text" inputmode="numeric" pattern="[0-9]*" id="midi-pb-range-expr" value="48" style="width:3ch;text-align:center;font-family:var(--font);font-size:10px;background:var(--bg);color:var(--fg);border:1px solid var(--border);padding:2px 3px;">
                    </label>
-                   <span style="color:var(--dim);font-size:10px;">±</span><input type="text" inputmode="numeric" pattern="[0-9]*" id="midi-pb-range-expr" value="48" style="width:3ch;text-align:center;font-family:var(--font);font-size:10px;background:var(--bg);color:var(--fg);border:1px solid var(--border);padding:2px 3px;"><span style="color:var(--dim);font-size:10px;">st</span>
                  </div>
                  <div class="midi-panel-row" id="expr-velocity-row" style="gap:6px">
                    <button class="slider-info-btn icon-btn icon-lg" data-info="velocity" style="position:static;transform:none;"><i data-lucide="info"></i></button>
