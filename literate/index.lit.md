@@ -550,19 +550,21 @@ The page is a vertical flex layout (`#app`) with these major sections:
     }
     input[type="range"]::-webkit-slider-thumb {
       -webkit-appearance: none;
-      width: 3px;
+      width: 6px;
       height: 18px;
       background: var(--fg);
-      cursor: pointer;
+      cursor: grab;
     }
+    input[type="range"]::-webkit-slider-thumb:active { cursor: grabbing; }
     input[type="range"]::-moz-range-thumb {
-      width: 3px;
+      width: 6px;
       height: 18px;
       background: var(--fg);
-      cursor: pointer;
+      cursor: grab;
       border: none;
       border-radius: 0;
     }
+    input[type="range"]::-moz-range-thumb:active { cursor: grabbing; }
 
     .slider-track {
       position: relative;
