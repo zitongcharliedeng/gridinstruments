@@ -1,24 +1,22 @@
 # Synth
 
-Low-latency Web Audio API synthesizer — polyphonic oscillator-based synth with envelope, EQ, and dynamic tuning. Based on original WickiSynth by Piers Titus van der Torren.
+Low-latency [Web Audio API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API)
+synthesizer -- polyphonic oscillator-based synth with envelope, EQ, and dynamic
+tuning. Based on original WickiSynth by Piers Titus van der Torren.
 
-Key features: live tuning changes (setGenerator updates all playing notes), volume control with smooth transitions, EQ filter for tone shaping, multiple waveforms, vibrato via shared LFO, MPE support (pitch bend, timbre, pressure).
+The synth is designed for an
+[isomorphic keyboard](https://en.wikipedia.org/wiki/Isomorphic_keyboard) where
+every key is addressed by a two-dimensional coordinate `(x, y)` on the
+circle-of-fifths / octave grid. Changing the generator (fifth size in cents)
+re-tunes every sounding note in real time -- no restart required.
 
-## Types and Tuning Markers
+## Waveform Type and Voice Interface
 
-`WaveformType` enumerates the four Web Audio oscillator types. `TUNING_MARKERS` provides reference points for the continuous fifth-size slider — from 5-TET (720¢) down through 7-TET (685.71¢).
-
-## Synth Class
-
-The `Synth` class manages an `AudioContext`, a master gain node, an EQ highshelf filter, and a `Map` of active `Voice` objects. The audio chain is: oscillators → per-voice gain → masterGain → eqFilter → destination.
-
-## Vibrato
-
-A single shared LFO drives vibrato for all voices. Per-voice `vibratoGainNode` nodes scale the LFO depth proportionally to each note's frequency (in Hz, not cents), so vibrato sounds consistent across the range.
-
-## Note Playing
-
-`playNote` creates an oscillator + lowpass timbre filter + gain node per voice. `stopNote` applies a release envelope then schedules oscillator stop. `setGenerator` updates all playing voices in real-time — no restart needed.
+`WaveformType` enumerates the four native
+[OscillatorNode](https://developer.mozilla.org/en-US/docs/Web/API/OscillatorNode)
+waveforms. The `Voice` interface tracks everything needed per sounding note:
+oscillator, timbre filter, gain envelope, grid coordinates (for live re-tuning),
+and a per-voice vibrato gain node.
 
 ``` {.typescript file=_generated/lib/synth.ts}
 /**
@@ -46,6 +44,34 @@ interface Voice {
   vibratoGainNode: GainNode;
 }
 
+```
+
+
+## Tuning Markers
+
+Reference points for the continuous fifth-size slider. The slider itself is
+continuous from `FIFTH_MIN` to `FIFTH_MAX`; these markers are just labels at
+musically significant values.
+
+The fifth sizes below span from wide (5-TET, 720 cents) to narrow (7-TET,
+685.71 cents). Between these extremes lie the historically important tuning
+systems:
+
+| Marker | Fifth (cents) | System | Cultural context |
+|--------|--------------|--------|-----------------|
+| `tet5` | 720.00 | [5-TET](https://en.xen.wiki/w/5edo) | Indonesian [slendro](https://en.wikipedia.org/wiki/Slendro) |
+| `tet17` | 705.88 | [17-TET](https://en.xen.wiki/w/17edo) | 17 equal divisions |
+| `pythagorean` | 701.96 | [Pythagorean](https://en.xen.wiki/w/Pythagorean_tuning) | Pure fifths (3:2 ratio) |
+| `tet12` | 700.00 | [12-TET](https://en.xen.wiki/w/12edo) | Western standard tuning |
+| `tet31` | 696.77 | [31-TET](https://en.xen.wiki/w/31edo) | Meantone-compatible, Huygens |
+| `meantone` | 696.58 | [1/4-comma meantone](https://en.xen.wiki/w/Quarter-comma_meantone) | Pure major thirds (5:4) |
+| `tet19` | 694.74 | [19-TET](https://en.xen.wiki/w/19edo) | 19 equal divisions |
+| `tet7` | 685.71 | [7-TET](https://en.xen.wiki/w/7edo) | Thai, Mandinka balafon |
+
+`findNearestMarker` performs a linear scan to snap a continuous slider value to
+the closest named tuning. This drives the UI label that appears on the slider.
+
+``` {.typescript file=_generated/lib/synth.ts}
 /**
  * Reference tuning markers for the continuous slider
  * These are just labels - the slider is continuous from ~650 to ~750+ cents
@@ -86,6 +112,32 @@ export function findNearestMarker(fifthCents: number): { marker: typeof TUNING_M
   return { marker: nearest, distance: minDistance };
 }
 
+```
+
+
+## Synth Class -- State and Audio Graph Initialization
+
+The `Synth` class manages an
+[AudioContext](https://developer.mozilla.org/en-US/docs/Web/API/AudioContext),
+a master gain node, a highshelf EQ
+[BiquadFilterNode](https://developer.mozilla.org/en-US/docs/Web/API/BiquadFilterNode),
+and a `Map<string, Voice>` of active voices.
+
+The audio signal chain is:
+
+    oscillators --> per-voice gain --> masterGain --> eqFilter --> destination
+
+Initialization is deferred to the first user gesture (`initSync`) because
+mobile browsers require a user interaction before creating an AudioContext
+([autoplay policy](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API/Best_practices#autoplay_policy)).
+
+The tuning state is a two-element generator `[fifth, octave]` in
+[cents](https://en.wikipedia.org/wiki/Cent_(music)). The default `[700, 1200]`
+produces standard 12-TET. The base frequency `293.66 Hz` is D4 at A440 -- the
+center of the [DCompose](https://en.xen.wiki/w/Wicki-Hayden_note_layout)
+isomorphic layout (coordinate `[0, 0]`).
+
+``` {.typescript file=_generated/lib/synth.ts}
 export class Synth {
   private context: AudioContext | null = null;
   private masterGain: GainNode | null = null;
@@ -157,6 +209,17 @@ export class Synth {
     return this.context !== null && this.context.state === 'running';
   }
   
+```
+
+
+## Waveform Selection
+
+The waveform can be changed at any time. When set, all currently sounding
+voices update their
+[OscillatorNode.type](https://developer.mozilla.org/en-US/docs/Web/API/OscillatorNode/type)
+immediately -- no click, no gap.
+
+``` {.typescript file=_generated/lib/synth.ts}
   // === Waveform ===
   
   setWaveform(waveform: WaveformType): void {
@@ -171,6 +234,21 @@ export class Synth {
     return this.waveform;
   }
   
+```
+
+
+## Live Tuning -- Generator Control
+
+The [regular temperament](https://en.xen.wiki/w/Regular_temperament) generator
+is the pair `[fifth, octave]` measured in cents. Changing it re-tunes every
+active voice instantly by recalculating frequencies from stored grid
+coordinates.
+
+`setFifth` is a convenience wrapper that keeps the octave at 1200 cents
+(standard 2:1 ratio) and only varies the fifth. `setTuningMarker` jumps to a
+named preset from the `TUNING_MARKERS` table above.
+
+``` {.typescript file=_generated/lib/synth.ts}
   // === Tuning (Generator) ===
   
   /**
@@ -215,6 +293,21 @@ export class Synth {
     }
   }
   
+```
+
+
+## D Reference Frequency
+
+D-ref is the frequency of grid coordinate `(0, 0)` -- the center of the
+[Wicki-Hayden](https://en.wikipedia.org/wiki/Wicki%E2%80%93Hayden_note_layout)
+isomorphic layout. At default settings this is D4 = 293.66 Hz (derived from
+A440).
+
+The user can shift D-ref across the full range 100 Hz -- 2000 Hz to transpose
+the entire instrument. Every sounding voice updates immediately, just like
+`setGenerator`.
+
+``` {.typescript file=_generated/lib/synth.ts}
   // === D Reference Frequency ===
 
   /**
@@ -246,6 +339,17 @@ export class Synth {
     this.baseFreq = this._d4Hz;
   }
   
+```
+
+
+## Volume Control
+
+Master volume is applied via
+[setTargetAtTime](https://developer.mozilla.org/en-US/docs/Web/API/AudioParam/setTargetAtTime)
+with a 10 ms time constant. This exponential ramp avoids the audible clicks
+that an instantaneous `.value =` assignment would cause.
+
+``` {.typescript file=_generated/lib/synth.ts}
   // === Volume ===
   
   setMasterVolume(volume: number): void {
@@ -264,6 +368,16 @@ export class Synth {
     return this._masterVolume;
   }
   
+```
+
+
+## EQ / Tone Shaping
+
+A single [highshelf](https://developer.mozilla.org/en-US/docs/Web/API/BiquadFilterNode/type)
+filter at 3 kHz provides a simple tone control. The UI maps `-1..+1` to
+`-12 dB..+12 dB`, giving a bass-boost to treble-boost sweep.
+
+``` {.typescript file=_generated/lib/synth.ts}
   // === EQ/Tone ===
   
   /**
@@ -286,6 +400,16 @@ export class Synth {
     return this._eqValue;
   }
   
+```
+
+
+## Sustain Pedal
+
+When sustain is on, `stopNote` defers the release -- the voice keeps sounding
+until sustain is toggled off. This mirrors the behavior of a piano sustain
+pedal and is wired to the MIDI CC64 (damper) input.
+
+``` {.typescript file=_generated/lib/synth.ts}
   // === Sustain ===
   
   setSustain(enabled: boolean): void {
@@ -305,6 +429,24 @@ export class Synth {
   }
   
   
+```
+
+
+## Vibrato -- Shared LFO
+
+A single shared
+[OscillatorNode](https://developer.mozilla.org/en-US/docs/Web/API/OscillatorNode)
+at `vibratoRate` Hz (default 5 Hz) drives pitch modulation for all voices.
+Per-voice `GainNode`s scale the LFO amplitude proportionally to each note's
+frequency in Hz (not cents), so a 10-cent wobble at A4 (440 Hz) and at A2
+(110 Hz) both sound like the same musical interval.
+
+The depth conversion is: `depthHz = frequency * (vibratoDepth / 1200)`. This
+comes from the cents-to-ratio formula: a small interval of `d` cents
+corresponds to a frequency deviation of `f * (2^(d/1200) - 1)`, which for
+small `d` approximates to `f * d / 1200`.
+
+``` {.typescript file=_generated/lib/synth.ts}
   // === Vibrato ===
   
   /**
@@ -350,6 +492,24 @@ export class Synth {
     return this._vibratoEnabled;
   }
   
+```
+
+
+## Frequency Calculation from Isomorphic Coordinates
+
+All note frequencies derive from the
+[regular temperament](https://en.xen.wiki/w/Regular_temperament) formula:
+
+    freq = baseFreq * 2^(cents / 1200)
+
+where `cents = y * octave + x * fifth + octaveOffset * 1200`.
+
+Coordinate `(0, 0)` always produces `baseFreq` (D-ref). Moving along the
+x-axis steps through the
+[circle of fifths](https://en.wikipedia.org/wiki/Circle_of_fifths); moving
+along y steps through octaves.
+
+``` {.typescript file=_generated/lib/synth.ts}
   // === Note Playing ===
   
   /**
@@ -363,6 +523,30 @@ export class Synth {
     return this.baseFreq * Math.pow(2, cents / 1200);
   }
   
+```
+
+
+## Note On -- Voice Creation
+
+`playNote` creates the per-voice audio graph:
+
+    oscillator --> timbreFilter (lowpass) --> gainNode --> masterGain
+
+The timbre filter maps velocity to cutoff frequency via an exponential curve:
+`cutoff = 500 * 36^velocity`. At velocity 0 the cutoff is 500 Hz (muffled);
+at velocity 1 it reaches 18 000 Hz (bright). This `500 * 36^v` curve was
+chosen because `500 * 36 = 18000`, giving a musically useful range from a
+single multiplication.
+
+The gain envelope uses
+[setTargetAtTime](https://developer.mozilla.org/en-US/docs/Web/API/AudioParam/setTargetAtTime)
+for a smooth exponential attack. A square-root velocity curve
+(`vel^0.5`) ensures light touches are still audible.
+
+If vibrato is active, the shared LFO is connected to this voice's frequency
+input through a per-voice gain node.
+
+``` {.typescript file=_generated/lib/synth.ts}
   /**
    * Play a note
    * @param noteId Unique identifier for this note instance
@@ -411,6 +595,20 @@ export class Synth {
     });
   }
   
+```
+
+
+## Note Off -- Release Envelope
+
+`stopNote` applies a release envelope: gain ramps to zero via `setTargetAtTime`
+with the `releaseTime` time constant, then the oscillator is scheduled to stop
+after `5 * releaseTime` (roughly 99.3% of the exponential decay). The vibrato
+gain node is disconnected during cleanup.
+
+If sustain is active and `force` is false, the note is deferred to the
+`sustainedVoices` set instead of being released.
+
+``` {.typescript file=_generated/lib/synth.ts}
   /**
    * Stop a note
    * @param noteId The note to stop
@@ -446,6 +644,28 @@ export class Synth {
     this.sustainedVoices.delete(noteId);
   }
   
+```
+
+
+## MPE Expression -- Pitch Bend, Timbre, Pressure
+
+[MIDI Polyphonic Expression](https://www.midi.org/midi-articles/midi-polyphonic-expression-mpe)
+(MPE) provides per-note control over pitch bend, timbre (CC74 / slide), and
+pressure (channel aftertouch). Each method targets a single voice by `noteId`.
+
+**Pitch bend** shifts the oscillator frequency by a given number of semitones
+(can be fractional) using the standard equal-temperament formula
+`bentFreq = baseFreq * 2^(semitones/12)`.
+
+**Timbre** controls the lowpass filter cutoff via the same `500 * 36^v`
+exponential curve used in `playNote`, giving CC74 slide a consistent brightness
+range.
+
+**Pressure** controls per-voice gain with a square-root curve (`value^0.5`),
+matching the velocity response so that MPE pressure feels continuous with the
+initial strike velocity.
+
+``` {.typescript file=_generated/lib/synth.ts}
   /**
    * Apply pitch bend to a specific voice by detuning the oscillator.
    * @param noteId The voice to bend
@@ -491,6 +711,15 @@ export class Synth {
   /**
    * Stop all notes
    */
+```
+
+
+## Lifecycle -- Stop All, Query, Dispose
+
+Utility methods for panic (stop all voices), introspection (active note list,
+voice count), and teardown (close the AudioContext).
+
+``` {.typescript file=_generated/lib/synth.ts}
   stopAll(): void {
     for (const noteId of this.voices.keys()) {
       this.stopNote(noteId, true);
