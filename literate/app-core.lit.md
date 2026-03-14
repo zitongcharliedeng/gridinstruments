@@ -2086,9 +2086,10 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
     requestAnimationFrame(() => {
       this.renderScheduled = false;
       if (!this.visualizer) return;
-      const activeNoteIds = Array.from(this.activeNotes.values()).map(
-        ({ coordX, coordY }) => `${coordX}_${coordY}`
+      const activeMidiNotes = new Set(
+        Array.from(this.activeNotes.values()).map(({ coordX, coordY }) => coordToMidiNote(coordX, coordY))
       );
+      const activeNoteIds = this.visualizer.getCellIdsForMidiNotes(activeMidiNotes);
       this.visualizer.setActiveNotes(activeNoteIds);
       this.visualizer.render();
     });
