@@ -1924,12 +1924,12 @@ export const iss92OverlayHeadingsCheck: StateInvariant = {
     await page.waitForTimeout(300);
     const headings = page.locator('#grid-overlay .overlay-section-title');
     const texts = await headings.allTextContents();
-    for (const expected of ['SOUND', 'VISUAL', 'INPUT', 'EXPRESSION']) {
+    for (const expected of ['SOUND', 'VISUAL', 'INPUT', 'MIDI', 'EXPRESSION']) {
       if (!texts.some(t => t.trim() === expected)) {
         throw new Error(`Missing overlay category heading: ${expected}`);
       }
     }
-    expect(texts.length, 'Should have exactly 4 overlay section headings').toBe(4);
+    expect(texts.length, 'Should have exactly 5 overlay section headings').toBe(5);
     // Verify headings are greyish (not white)
     const firstHeading = headings.first();
     const color = await firstHeading.evaluate((el) => getComputedStyle(el).color);
@@ -2611,15 +2611,15 @@ export const gameChordSingle: StateInvariant = {
   },
 };
 
-/** D = {}. Song-bar hint text exists as game instruction placeholder. */
+/** D = {}. Search input placeholder contains ".mid" drop hint. */
 export const gameInstructionsText: StateInvariant = {
   id: 'GAME-UI-2',
   check: async (page: Page) => {
-    const hint = page.locator('#song-bar-hint');
-    await expect(hint).toBeAttached();
-    const text = await hint.textContent();
-    if (!text) throw new Error('#song-bar-hint has no text');
-    expect(text).toContain('.mid');
+    const search = page.locator('#midi-search-input');
+    await expect(search).toBeAttached();
+    const placeholder = await search.getAttribute('placeholder');
+    if (!placeholder) throw new Error('#midi-search-input has no placeholder');
+    expect(placeholder).toContain('.mid');
   },
 };
 
