@@ -947,17 +947,7 @@ The page is a vertical flex layout (`#app`) with these major sections:
     <div id="visualiser-panel">
       <canvas id="history-canvas" height="120"></canvas>
       <div class="panel-resize-handle-wrap">
-         <div class="panel-resize-handle" tabindex="0" role="separator" aria-orientation="horizontal" aria-label="Resize visualiser" title="Drag to resize visualiser panel" data-target="visualiser-panel" data-min="60" data-max="400" data-default="120" data-key="gi_visualiser_h" data-hidden-key="gi_history_hidden"><span class="grip-lines"><span class="grip-line"></span><span class="grip-line"></span><span class="grip-line"></span></span><span class="handle-label">VISUALISER</span><span style="display:inline-flex;align-items:center;gap:4px;margin-left:8px;font-size:9px;color:var(--dim);font-family:var(--font);">
-              <label style="display:inline-flex;align-items:center;gap:2px;cursor:pointer;" title="Time window: how many seconds of note history are visible">
-                <input type="range" id="history-time-slider" min="1" max="10" step="0.5" value="3" style="width:50px;height:2px;accent-color:var(--fg);">
-                <span id="history-time-label">3s</span>
-              </label>
-              <label style="display:inline-flex;align-items:center;gap:2px;cursor:pointer;" title="Note range: adjust visible MIDI range (octaves)">
-                <button id="history-range-shrink" style="font-size:8px;background:none;border:1px solid var(--border);color:var(--dim);width:14px;height:14px;cursor:pointer;padding:0;line-height:1;" title="Shrink note range">−</button>
-                <span id="history-range-label" style="min-width:5ch;text-align:center;">C2–C7</span>
-                <button id="history-range-expand" style="font-size:8px;background:none;border:1px solid var(--border);color:var(--dim);width:14px;height:14px;cursor:pointer;padding:0;line-height:1;" title="Expand note range">+</button>
-              </label>
-            </span><span class="grip-lines"><span class="grip-line"></span><span class="grip-line"></span><span class="grip-line"></span></span></div>
+         <div class="panel-resize-handle" tabindex="0" role="separator" aria-orientation="horizontal" aria-label="Resize visualiser" title="Drag to resize visualiser panel" data-target="visualiser-panel" data-min="60" data-max="400" data-default="120" data-key="gi_visualiser_h" data-hidden-key="gi_history_hidden"><span class="grip-lines"><span class="grip-line"></span><span class="grip-line"></span><span class="grip-line"></span></span><span class="handle-label">VISUALISER</span><span class="grip-lines"><span class="grip-line"></span><span class="grip-line"></span><span class="grip-line"></span></span></div>
       </div>
     </div>
 

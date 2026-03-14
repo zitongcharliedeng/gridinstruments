@@ -216,43 +216,6 @@ export class DComposeApp {
     this.historyVisualizer = new NoteHistoryVisualizer(this.historyCanvas);
     this.historyVisualizer.start();
 
-    // Wire history time window slider
-    const historyTimeSlider = document.getElementById('history-time-slider') as HTMLInputElement | null;
-    const historyTimeLabel = document.getElementById('history-time-label');
-    if (historyTimeSlider && this.historyVisualizer) {
-      const viz = this.historyVisualizer;
-      historyTimeSlider.addEventListener('input', () => {
-        const seconds = parseFloat(historyTimeSlider.value);
-        viz.setTimeWindow(seconds);
-        if (historyTimeLabel) historyTimeLabel.textContent = `${seconds}s`;
-      });
-    }
-
-    // Wire note range +/- buttons
-    const rangeLabel = document.getElementById('history-range-label');
-    const rangeShrink = document.getElementById('history-range-shrink');
-    const rangeExpand = document.getElementById('history-range-expand');
-    if (rangeShrink && rangeExpand && rangeLabel && this.historyVisualizer) {
-      const viz = this.historyVisualizer;
-      const midiToNote = (m: number) => {
-        const names = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
-        return `${names[m % 12]}${Math.floor(m / 12) - 1}`;
-      };
-      const updateLabel = () => {
-        const { min, max } = viz.getNoteRange();
-        rangeLabel.textContent = `${midiToNote(min)}–${midiToNote(max)}`;
-      };
-      rangeShrink.addEventListener('click', () => {
-        const { min, max } = viz.getNoteRange();
-        if (max - min > 24) { viz.setNoteRange(min + 6, max - 6); updateLabel(); }
-      });
-      rangeExpand.addEventListener('click', () => {
-        const { min, max } = viz.getNoteRange();
-        viz.setNoteRange(Math.max(0, min - 6), Math.min(127, max + 6));
-        updateLabel();
-      });
-    }
-
     const historyContainer = this.historyCanvas.parentElement;
     if (historyContainer) {
       new ResizeObserver((entries) => {
