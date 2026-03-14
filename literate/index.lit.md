@@ -903,7 +903,7 @@ The page is a vertical flex layout (`#app`) with these major sections:
       <div id="song-bar-search" style="position:relative;">
           <button class="slider-info-btn icon-btn icon-lg" data-info="search" style="position:static;transform:none;"><i data-lucide="info"></i></button>
           <span style="color:var(--dim);font-size:10px;font-family:var(--font);white-space:nowrap;">SEARCH</span>
-          <input id="midi-search-input" type="text" placeholder="Search songs..." title="Search for MIDI songs across online libraries" style="width:180px;box-sizing:border-box;font-family:var(--font);font-size:10px;background:var(--bg);color:var(--fg);border:1px solid var(--border);padding:2px 6px;">
+          <input id="midi-search-input" type="text" placeholder="Search or drop .mid file..." title="Search for MIDI songs or drop a .mid file anywhere" style="width:200px;box-sizing:border-box;font-family:var(--font);font-size:10px;background:var(--bg);color:var(--fg);border:1px solid var(--border);padding:2px 6px;">
           <div id="midi-search-results" style="position:absolute;top:100%;left:0;min-width:280px;max-height:300px;overflow-y:auto;background:var(--bg);border:1px solid var(--border);z-index:25;display:none;"></div>
         </div>
       <div id="song-bar-status" style="display:inline-flex;align-items:center;gap:8px;">
@@ -924,7 +924,7 @@ The page is a vertical flex layout (`#app`) with these major sections:
             <button id="game-reset-btn" class="overlay-btn" style="font-size:10px;padding:2px 6px;" title="Restart the current song from the beginning">⟲ Restart</button>
           </div>
         </div>
-      <span id="song-bar-hint" style="color:var(--dim);font-size:10px;font-family:var(--font);">Drop a .mid file or search for a song to learn</span>
+      <span id="song-bar-hint" style="display:none;"></span>
       <div id="song-bar-calibrate" style="margin-left:auto;">
           <button id="calibrate-btn" style="font-family:var(--font);font-size:9px;background:none;color:var(--dim);border:1px solid var(--border);padding:2px 8px;cursor:pointer;" title="Calibrate: play all reachable notes to set your playable area">Calibrate</button>
           <div id="calibration-banner" style="display:none;flex-direction:column;gap:8px;">
