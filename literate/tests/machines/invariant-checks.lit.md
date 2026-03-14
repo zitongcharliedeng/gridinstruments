@@ -326,12 +326,12 @@ export const sliderValuesCheck: StateInvariant = {
     expect(tuningText.toUpperCase()).toContain('FIFTHS TUNING');
     expect(tuningText.toUpperCase()).toContain('CENTS');
 
-    // SM-VAL-6: d-ref input = '293.66', label contains 'D4'
+    // SM-VAL-6: d-ref input = '293.66', label contains 'D REF'
     const drefVal = await page.locator('#d-ref-input').inputValue();
     expect(drefVal).toBe('293.66');
     const drefLabelText = await page.locator('#d-ref-label').textContent();
     if (drefLabelText === null) throw new Error('#d-ref-label text is null');
-    expect(drefLabelText).toContain('D4');
+    expect(drefLabelText).toContain('D REF');
 
     // SM-VAL-7: d-ref label contains 'D REF' and 'HZ'
     const drefGroupText = await page.locator('.d-ref-group .slider-label-overlay').textContent();
@@ -397,7 +397,7 @@ export const drefAnnotationCheck: StateInvariant = {
     expect(val).not.toContain('[');
     const labelText = await page.locator('#d-ref-label').textContent();
     if (labelText === null) throw new Error('#d-ref-label text is null');
-    expect(labelText).toContain('D4');
+    expect(labelText).toContain('D REF');
   },
 };
 

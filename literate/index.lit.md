@@ -916,13 +916,13 @@ The page is a vertical flex layout (`#app`) with these major sections:
           </div>
         </div>
       <div id="song-bar-search" style="position:relative;">
-          <button class="slider-info-btn icon-btn icon-lg" data-info="class="slider-info-btn icon-btn icon-lg" data-info="search" style="position:static;transform:none;"><i data-lucide="info"></i></button>
+          <button class="slider-info-btn icon-btn icon-lg" data-info="search" style="position:static;transform:none;"><i data-lucide="info"></i></button>
           <span style="color:var(--dim);font-size:10px;font-family:var(--font);white-space:nowrap;">SEARCH</span>
           <input id="midi-search-input" type="text" placeholder="Search songs..." title="Search for MIDI songs across online libraries" style="width:180px;box-sizing:border-box;font-family:var(--font);font-size:10px;background:var(--bg);color:var(--fg);border:1px solid var(--border);padding:2px 6px;">
           <div id="midi-search-results" style="position:absolute;top:100%;left:0;min-width:280px;max-height:300px;overflow-y:auto;background:var(--bg);border:1px solid var(--border);z-index:25;display:none;"></div>
         </div>
       <div id="song-bar-status" style="display:inline-flex;align-items:center;gap:8px;">
-          <button class="slider-info-btn icon-btn icon-lg" data-info="class="slider-info-btn icon-btn icon-lg" data-info="quantization" style="position:static;transform:none;"><i data-lucide="info"></i></button>
+          <button class="slider-info-btn icon-btn icon-lg" data-info="quantization" style="position:static;transform:none;"><i data-lucide="info"></i></button>
           <label style="display:inline-flex;align-items:center;gap:4px;font-size:10px;color:var(--dim);">
             Quant
             <button id="quantization-level" style="font-family:var(--font);font-size:10px;background:var(--bg);color:var(--fg);border:1px solid var(--border);padding:2px 6px;cursor:pointer;" title="Click to cycle quantization level: None → 1/4 → 1/8 → 1/16" value="none">None</button>
@@ -1052,7 +1052,7 @@ The page is a vertical flex layout (`#app`) with these major sections:
                  </div>
                  <span class="overlay-section-title">EXPRESSION</span>
                  <div class="midi-panel-row" id="expr-bend-row" style="gap:6px">
-                   <button class="slider-info-btn icon-btn icon-lg" data-info="class="slider-info-btn icon-btn icon-lg" data-info="bend" style="position:static;transform:none;"><i data-lucide="info"></i></button>
+                   <button class="slider-info-btn icon-btn icon-lg" data-info="bend" style="position:static;transform:none;"><i data-lucide="info"></i></button>
                     <input type="text" inputmode="numeric" pattern="[0-9]*" id="midi-pb-range-expr" value="48" style="width:4ch;text-align:center;font-family:var(--font);font-size:10px;background:var(--bg);color:var(--fg);border:1px solid var(--border);padding:2px 4px;">
                    <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;">
                      <span class="gi-checkbox"><input type="checkbox" id="expr-bend" checked><span class="gi-check"></span></span>
@@ -1060,21 +1060,21 @@ The page is a vertical flex layout (`#app`) with these major sections:
                    </label>
                  </div>
                  <div class="midi-panel-row" id="expr-velocity-row" style="gap:6px">
-                   <button class="slider-info-btn icon-btn icon-lg" data-info="class="slider-info-btn icon-btn icon-lg" data-info="velocity" style="position:static;transform:none;"><i data-lucide="info"></i></button>
+                   <button class="slider-info-btn icon-btn icon-lg" data-info="velocity" style="position:static;transform:none;"><i data-lucide="info"></i></button>
                    <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;">
                      <span class="gi-checkbox"><input type="checkbox" id="expr-velocity" checked><span class="gi-check"></span></span>
                      <span style="color:#fff">Velocity</span>
                    </label>
                  </div>
                  <div class="midi-panel-row" id="expr-pressure-row" style="gap:6px">
-                   <button class="slider-info-btn icon-btn icon-lg" data-info="class="slider-info-btn icon-btn icon-lg" data-info="pressure" style="position:static;transform:none;"><i data-lucide="info"></i></button>
+                   <button class="slider-info-btn icon-btn icon-lg" data-info="pressure" style="position:static;transform:none;"><i data-lucide="info"></i></button>
                    <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;">
                      <span class="gi-checkbox"><input type="checkbox" id="expr-pressure" checked><span class="gi-check"></span></span>
                      <span style="color:#fff">Pressure</span>
                    </label>
                  </div>
                  <div class="midi-panel-row" id="expr-timbre-row" style="gap:6px">
-                   <button class="slider-info-btn icon-btn icon-lg" data-info="class="slider-info-btn icon-btn icon-lg" data-info="timbre" style="position:static;transform:none;"><i data-lucide="info"></i></button>
+                   <button class="slider-info-btn icon-btn icon-lg" data-info="timbre" style="position:static;transform:none;"><i data-lucide="info"></i></button>
                     <button id="timbre-cc-mode" style="font-family:var(--font);font-size:10px;background:var(--bg);color:var(--fg);border:1px solid var(--border);padding:2px 6px;cursor:pointer;" title="Click to cycle timbre CC" value="74">CC74</button>
                    <span style="color:#fff;font-size:12px;">Timbre</span>
                  </div>
