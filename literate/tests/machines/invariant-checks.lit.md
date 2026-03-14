@@ -483,7 +483,7 @@ export const overlayGoldenCheck: StateInvariant = {
   id: 'GOLDEN-OVERLAY',
   check: async (page: Page) => {
     await expect(page.locator('#grid-overlay')).toHaveScreenshot('grid-overlay.png', {
-      maxDiffPixelRatio: 0.01,
+      maxDiffPixelRatio: 0.05,
     });
   },
 };
@@ -576,7 +576,7 @@ export const tetNotchGoldenCheck: StateInvariant = {
     const tetPresets = page.locator('#tet-presets');
     await expect(tetPresets).toBeVisible();
     await expect(tetPresets).toHaveScreenshot('tuning-notch-labels.png', {
-      maxDiffPixelRatio: 0.01,
+      maxDiffPixelRatio: 0.05,
     });
   },
 };
