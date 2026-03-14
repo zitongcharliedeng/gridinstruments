@@ -4969,13 +4969,17 @@ export const NO_D4_IN_UI: StateInvariant = {
   description: 'No "D4" text visible in UI elements (use D-ref)',
   check: async (page: Page) => {
     const d4Text = await page.evaluate(() => {
-      const body = document.body.innerText;
       // Ignore the note name "D4" that appears on grid cells — those are valid
-      // Check for "D4" in labels, titles, descriptions (non-grid UI)
-      const overlayText = document.getElementById('grid-overlay')?.innerText ?? '';
+      // Also ignore the D-ref label note-name annotation (e.g. "D4" meaning note D octave 4)
+      // Check for "D4" as a label/title/description in non-grid UI
+      const dRefLabelText = document.getElementById('d-ref-label')?.innerText ?? '';
+      const overlayEl = document.getElementById('grid-overlay');
+      const overlayText = overlayEl?.innerText ?? '';
+      // Strip the D-ref note annotation from overlayText before checking
+      const overlayTextFiltered = overlayText.replace(dRefLabelText, '');
       const songBarText = document.getElementById('song-bar')?.innerText ?? '';
       const headerText = document.getElementById('top-bar')?.innerText ?? '';
-      return { overlayText, songBarText, headerText };
+      return { overlayText: overlayTextFiltered, songBarText, headerText };
     });
     for (const [area, text] of Object.entries(d4Text)) {
       if (text.includes('D4') && !text.includes('D4=')) {
