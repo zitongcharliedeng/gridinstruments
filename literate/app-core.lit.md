@@ -1227,11 +1227,11 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
         }
         this.setIdleState(false);
 
-        // Expand target highlights to ALL cells with the same MIDI notes (not just the original cellId)
+        // Show target highlights using the group's own cellIds (not MIDI-expanded).
+        // In non-12-TET, MIDI equivalents have different pitches — don't expand.
         const currentGroup = ctx.noteGroups[ctx.currentGroupIndex];
         if (currentGroup && this.visualizer) {
-          const allTargetCellIds = this.visualizer.getCellIdsForMidiNotes(new Set(currentGroup.midiNotes));
-          this.visualizer.setTargetNotes(allTargetCellIds);
+          this.visualizer.setTargetNotes(ctx.targetCellIds);
           const pressedMidis = new Set(ctx.pressedMidiNotes);
           if (pressedMidis.size > 0) {
             const pressedCellIds = currentGroup.cellIds.filter((_cellId, i) =>
@@ -2087,10 +2087,12 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
     requestAnimationFrame(() => {
       this.renderScheduled = false;
       if (!this.visualizer) return;
-      const activeMidiNotes = new Set(
-        Array.from(this.activeNotes.values()).map(({ coordX, coordY }) => coordToMidiNote(coordX, coordY))
+      // Use direct coordinates — NOT MIDI. In non-12-TET, enharmonic
+      // equivalents (e.g. Ebb vs D) have different frequencies and must
+      // NOT highlight as the same note. MIDI assumes 12-TET equivalence.
+      const activeNoteIds = Array.from(this.activeNotes.values()).map(
+        ({ coordX, coordY }) => `${coordX}_${coordY}`
       );
-      const activeNoteIds = this.visualizer.getCellIdsForMidiNotes(activeMidiNotes);
       this.visualizer.setActiveNotes(activeNoteIds);
       this.visualizer.render();
     });
