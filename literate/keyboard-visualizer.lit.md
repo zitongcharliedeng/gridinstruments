@@ -693,10 +693,10 @@ export class KeyboardVisualizer {
     // QWERTY overlay label (bottom-right corner of cell)
     const qLabel = this.qwertyLabels.get(noteId);
     if (qLabel) {
-      const qSize = Math.max(6, fontSize * 0.55);
-      this.ctx.font = `${qSize}px "JetBrains Mono", monospace`;
-      this.ctx.fillStyle = textColor;
-      this.ctx.globalAlpha = 0.5;
+      const qSize = Math.max(9, fontSize * 0.6);
+      this.ctx.font = `bold ${qSize}px "JetBrains Mono", monospace`;
+      this.ctx.fillStyle = '#fff';
+      this.ctx.globalAlpha = 0.85;
       this.ctx.textAlign = 'right';
       this.ctx.textBaseline = 'bottom';
       this.ctx.fillText(qLabel, x + Math.abs(hv1.x) + Math.abs(hv2.x) - 2, y + Math.abs(hv1.y) + Math.abs(hv2.y) - 2);
