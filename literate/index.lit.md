@@ -204,6 +204,7 @@ The page is a vertical flex layout (`#app`) with these major sections:
       padding: 2px 8px;
       flex-shrink: 0;
       border-bottom: 1px solid var(--border);
+      background: rgba(255,255,255,0.02);
       font-size: 11px;
       min-height: 28px;
       z-index: 2;
