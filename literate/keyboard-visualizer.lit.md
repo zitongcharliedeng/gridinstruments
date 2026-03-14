@@ -1093,7 +1093,6 @@ The sub-label renders at 60% of the main font size and 60% opacity.
     const deviation = getCentDeviation(coordX, fifth);
     const hasBracket = noteName !== tetName || Math.abs(deviation) >= 0.5;
 
-    // D-relative octave suffix: coordY=0 → no suffix, +1 → ⁺¹, -1 → ⁻¹
     const octSuffix = coordY === 0 ? '' : (coordY > 0 ? '+' : '') + coordY;
 
     if (hasBracket && cellMin > 30) {
@@ -1133,18 +1132,12 @@ key label width.
 
 ``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
 
-    // QWERTY overlay label (topmost corner of cell, high contrast)
     const qLabel = this.qwertyLabels.get(noteId);
     if (qLabel) {
       const qSize = Math.max(10, fontSize * 0.5);
       this.ctx.font = `bold ${qSize}px "JetBrains Mono", monospace`;
       const metrics = this.ctx.measureText(qLabel);
       const pad = 2;
-      // Find the actual topmost corner of the parallelogram cell.
-      // The four corners are center ± hv1 ± hv2. We want the one with
-      // minimum Y (topmost on screen), breaking ties by minimum X.
-      // Using Math.abs would give the bounding-box corner, which for
-      // skewed parallelograms lands in the adjacent cell.
       const corners = [
         { x: hv1.x + hv2.x, y: hv1.y + hv2.y },
         { x: hv1.x - hv2.x, y: hv1.y - hv2.y },

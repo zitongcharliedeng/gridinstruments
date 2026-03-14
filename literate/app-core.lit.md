@@ -68,7 +68,6 @@ export class DComposeApp {
   // MPE vibrato state (Space key sends sinusoidal pitch bend to all active MPE notes)
   private vibratoRAF: number | null = null;
   private vibratoPhase = 0;
-  // Arrow key vibrato — holding both ArrowLeft + ArrowRight oscillates pitch
   private arrowLeftHeld = false;
   private arrowRightHeld = false;
   private arrowVibratoInterval: ReturnType<typeof setInterval> | null = null;
@@ -1227,8 +1226,6 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
         }
         this.setIdleState(false);
 
-        // Show target highlights using the group's own cellIds (not MIDI-expanded).
-        // In non-12-TET, MIDI equivalents have different pitches — don't expand.
         const currentGroup = ctx.noteGroups[ctx.currentGroupIndex];
         if (currentGroup && this.visualizer) {
           this.visualizer.setTargetNotes(ctx.targetCellIds);
@@ -1472,7 +1469,6 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
     const code = event.code;
     if (event.ctrlKey || event.metaKey) return;
 
-    // Arrow keys: pitch bend or vibrato (both held = vibrato)
     if (code === 'ArrowLeft' || code === 'ArrowRight') {
       event.preventDefault();
       if (code === 'ArrowLeft') this.arrowLeftHeld = true;
@@ -1552,7 +1548,6 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
     const code = event.code;
     this.keyRepeat.delete(code);
 
-    // Arrow key release: stop vibrato or reset bend
     if (code === 'ArrowLeft' || code === 'ArrowRight') {
       if (code === 'ArrowLeft') this.arrowLeftHeld = false;
       if (code === 'ArrowRight') this.arrowRightHeld = false;
@@ -2087,9 +2082,6 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
     requestAnimationFrame(() => {
       this.renderScheduled = false;
       if (!this.visualizer) return;
-      // Use direct coordinates — NOT MIDI. In non-12-TET, enharmonic
-      // equivalents (e.g. Ebb vs D) have different frequencies and must
-      // NOT highlight as the same note. MIDI assumes 12-TET equivalence.
       const activeNoteIds = Array.from(this.activeNotes.values()).map(
         ({ coordX, coordY }) => `${coordX}_${coordY}`
       );
