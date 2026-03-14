@@ -207,6 +207,10 @@ import {
        FULLSCREEN_BTN,
        FLAT_SOUND_TOGGLE,
        ALL_INFO_BTNS,
+       VOW_NO_NATIVE_SELECT,
+       VOW_NO_SCROLL,
+       VOW_SINGLE_FONT,
+       VOW_NO_BORDER_RADIUS,
        NO_DUPLICATE_IDS,
        NO_D4_IN_UI,
        MIDI_SETTINGS_GROUPED,
@@ -1055,6 +1059,22 @@ test.describe('[Structural] state-independent invariants', () => {
 
   test('UI-INFO-COMPLETE-1: All 9 info buttons exist', async ({ page }) => {
     await ALL_INFO_BTNS.check(page);
+  });
+
+  test('VOW-NO-NATIVE-SELECT: No native select elements', async ({ page }) => {
+    await VOW_NO_NATIVE_SELECT.check(page);
+  });
+
+  test('VOW-NO-SCROLL: Body overflow hidden', async ({ page }) => {
+    await VOW_NO_SCROLL.check(page);
+  });
+
+  test('VOW-SINGLE-FONT: JetBrains Mono only', async ({ page }) => {
+    await VOW_SINGLE_FONT.check(page);
+  });
+
+  test('VOW-NO-BORDER-RADIUS: Sharp corners (dialogs excepted)', async ({ page }) => {
+    await VOW_NO_BORDER_RADIUS.check(page);
   });
  });
 

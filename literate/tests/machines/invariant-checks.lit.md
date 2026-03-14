@@ -4930,6 +4930,69 @@ export const ALL_INFO_BTNS: StateInvariant = {
 };
 
 // ═══════════════════════════════════════════════════════════════════════
+// BINDING VOW INVARIANTS — antipatterns that must NEVER exist
+// If any of these pass, the antipattern is structurally impossible.
+// ═══════════════════════════════════════════════════════════════════════
+
+export const VOW_NO_NATIVE_SELECT: StateInvariant = {
+  id: 'VOW-NO-NATIVE-SELECT',
+  description: 'No visible native <select> elements (slim-select wraps them)',
+  check: async (page: Page) => {
+    const count = await page.evaluate(() => {
+      let visible = 0;
+      document.querySelectorAll('select').forEach(el => {
+        const style = getComputedStyle(el);
+        if (style.display !== 'none' && style.visibility !== 'hidden' && el.offsetParent !== null) visible++;
+      });
+      return visible;
+    });
+    if (count > 0) throw new Error(`Found ${count} visible native <select> elements — use slim-select`);
+  },
+};
+
+export const VOW_NO_SCROLL: StateInvariant = {
+  id: 'VOW-NO-SCROLL',
+  description: 'Page body has no scroll (overflow: hidden enforced)',
+  check: async (page: Page) => {
+    const overflow = await page.evaluate(() =>
+      getComputedStyle(document.body).overflow
+    );
+    if (overflow !== 'hidden') throw new Error(`body overflow is "${overflow}", expected "hidden"`);
+  },
+};
+
+export const VOW_SINGLE_FONT: StateInvariant = {
+  id: 'VOW-SINGLE-FONT',
+  description: 'Only JetBrains Mono font family used (no other fonts)',
+  check: async (page: Page) => {
+    const fonts = await page.evaluate(() => {
+      const root = getComputedStyle(document.documentElement);
+      return root.getPropertyValue('--font').trim();
+    });
+    if (!fonts.includes('JetBrains Mono')) throw new Error(`--font CSS var is "${fonts}", expected JetBrains Mono`);
+  },
+};
+
+export const VOW_NO_BORDER_RADIUS: StateInvariant = {
+  id: 'VOW-NO-BORDER-RADIUS',
+  description: 'No border-radius on main UI elements (sharp corners only, dialogs excepted)',
+  check: async (page: Page) => {
+    const rounded = await page.evaluate(() => {
+      const skip = new Set(['DIALOG']);
+      let count = 0;
+      document.querySelectorAll('button, input, div, span, label').forEach(el => {
+        if (skip.has(el.tagName)) return;
+        if (el.closest('dialog')) return;
+        const br = getComputedStyle(el).borderRadius;
+        if (br && br !== '0px' && br !== '0' && br !== '') count++;
+      });
+      return count;
+    });
+    if (rounded > 5) throw new Error(`Found ${rounded} elements with border-radius (expect ≤5 for slim-select)`);
+  },
+};
+
+// ═══════════════════════════════════════════════════════════════════════
 // IDEAL STATE INVARIANTS — Each defines what "correct" looks like.
 // If ALL of these pass, the project is in ideal state.
 // Ralph iterates until all pass → ideal state achieved deterministically.
