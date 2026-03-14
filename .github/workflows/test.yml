@@ -41,12 +41,29 @@ jobs:
 
       - name: Literate comment check (no // comments in code blocks)
         run: |
-          count=$(grep -rn '^\s*//' literate/ --include='*.lit.md' | grep -v '^\s*///' | grep -v 'http://' | grep -v 'https://' | wc -l)
+          violations=$(grep -rn '^\s*//' literate/ --include='*.lit.md' | grep -v '^\s*///' | grep -v 'http://' | grep -v 'https://' || true)
+          count=$(echo "$violations" | grep -c '.' || true)
           if [ "$count" -gt 0 ]; then
-            echo "Found $count inline comments in literate code blocks — use prose between blocks instead"
-            grep -rn '^\s*//' literate/ --include='*.lit.md' | grep -v '^\s*///' | grep -v 'http://' | grep -v 'https://' | head -20
+            echo "ERROR: Found $count inline comments in literate code blocks."
+            echo ""
+            echo "FIX: End the code block, write the explanation as Markdown prose,"
+            echo "then start a new code block. Entangled concatenates blocks targeting"
+            echo "the same file in document order. Example:"
+            echo ""
+            echo '  ``` {.typescript file=_generated/example.ts}'
+            echo '  const a = computeValue();'
+            echo '  ```'
+            echo ''
+            echo '  Explain WHY a is computed this way here in prose.'
+            echo ''
+            echo '  ``` {.typescript file=_generated/example.ts}'
+            echo '  const b = a * KNOWN_CONSTANT;'
+            echo '  ```'
+            echo ""
+            echo "First 20 violations:"
+            echo "$violations" | head -20
+            exit 1
           fi
-        continue-on-error: true
 
       - name: Lint (informational)
         run: npm run lint || true
