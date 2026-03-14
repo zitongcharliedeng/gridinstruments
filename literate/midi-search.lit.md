@@ -20,10 +20,6 @@ The [GitHub Trees API](https://docs.github.com/en/rest/git/trees) returns a flat
  * No localStorage, no IndexedDB — memory only, reset on page refresh.
  */
 
-// ---------------------------------------------------------------------------
-// Internal GitHub API types
-// ---------------------------------------------------------------------------
-
 type GitHubTreeItem = {
   path: string;
   type: string;
@@ -44,10 +40,6 @@ type GitHubTreeResponse = {
 `MidiSearchAdapter` is the interface every adapter must satisfy. The `id` field is a stable dot-free identifier (e.g. `github:mutopia`) used for display attribution and deduplication. Both `search` and `fetch` return Promises; `search` must never throw — it returns an empty array on failure. `fetch` may throw on network error.
 
 ``` {.typescript file=_generated/lib/midi-search.ts}
-// ---------------------------------------------------------------------------
-// Exported types and interface
-// ---------------------------------------------------------------------------
-
 /** A single result from a MIDI search adapter. */
 export type MidiSearchResult = {
   /** Human-readable display name (filename without .mid extension). */
@@ -90,10 +82,6 @@ The result is stored in the caller-provided `cache` object — a mutable holder 
 GitHub's unauthenticated rate limit is 60 requests per hour. The tree fetch counts as one request and is cached for the full browser session, so repeated searches cost nothing after the first.
 
 ``` {.typescript file=_generated/lib/midi-search.ts}
-// ---------------------------------------------------------------------------
-// Internal helpers — not exported
-// ---------------------------------------------------------------------------
-
 /**
  * Fetch the full file tree from a GitHub repo via the Trees API,
  * filtering for .mid blobs only. Caches the result in the provided holder.
@@ -201,10 +189,6 @@ async function fetchArrayBuffer(url: string): Promise<ArrayBuffer> {
 The adapter holds its own `_cache` object so the tree is loaded once per browser session. Both `search` and `fetch` delegate to the shared helpers above.
 
 ``` {.typescript file=_generated/lib/midi-search.ts}
-// ---------------------------------------------------------------------------
-// Exported adapter classes
-// ---------------------------------------------------------------------------
-
 /**
  * Adapter for the thewildwestmidis/midis GitHub repository.
  *
@@ -379,10 +363,6 @@ export class MidishareMidiAdapter implements MidiSearchAdapter {
 The three adapter instances are registered in a module-level array. `searchAllAdapters` fans out to all of them in parallel using `Promise.allSettled`, which — unlike `Promise.all` — never short-circuits on failure. A rejected adapter logs a warning and contributes an empty array; the merged result always includes output from every adapter that succeeded.
 
 ``` {.typescript file=_generated/lib/midi-search.ts}
-// ---------------------------------------------------------------------------
-// Composite search
-// ---------------------------------------------------------------------------
-
 /** Registered adapters — all available MIDI data sources. */
 const adapters: MidiSearchAdapter[] = [
   new GitHubMidiAdapter(),

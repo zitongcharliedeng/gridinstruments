@@ -149,8 +149,8 @@ characteristic leaning parallelograms.
 
 ``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
 
-  private hv1 = { x: 0, y: 0 }; // half-step in coordX direction
-  private hv2 = { x: 0, y: 0 }; // half-step in coordY direction
+  private hv1 = { x: 0, y: 0 };
+  private hv2 = { x: 0, y: 0 };
 
 
 ```
@@ -164,8 +164,6 @@ the mapping from CSS pixels to physical device pixels.
 
 ``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
 
-  // W3C CSS spec: 1 CSS px = 1/96 inch. Always 96 — this is a spec constant,
-  // not a measurement. devicePixelRatio handles physical pixels separately.
   private readonly cssPxPerInch: number = 96;
 
 ```
@@ -190,8 +188,6 @@ row-flattening.
     bFact: 0,
   };
 
-  // (spacing is computed dynamically from canvas size and generator ratio)
-
   constructor(canvas: HTMLCanvasElement, options?: Partial<VisualizerOptions>) {
     this.canvas = canvas;
     const ctx = canvas.getContext('2d');
@@ -202,7 +198,6 @@ row-flattening.
       this.options = { ...this.options, ...options };
     }
 
-    // cssPxPerInch is a constant (96), no measurement needed
     this.setupCanvas();
     this.generateButtons();
   }
@@ -224,8 +219,6 @@ layout sizing via `width: 100%; height: 100%`.
     const dpr = window.devicePixelRatio > 0 ? window.devicePixelRatio : 1;
     this.canvas.width = this.options.width * dpr;
     this.canvas.height = this.options.height * dpr;
-    // Do NOT set canvas.style.width/height — let CSS (width:100%; height:100%) control layout.
-    // Only canvas.width/height (physical pixel buffer) are set here.
     this.ctx.scale(dpr, dpr);
   }
 ```
@@ -294,7 +287,6 @@ expected a configurable spacing parameter.
 ``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
 
   setButtonSpacing(_spacing: number): void {
-    // No-op: gap is determined by CELL_INSET, not a spacing parameter
     this.render();
   }
 
@@ -302,7 +294,6 @@ expected a configurable spacing parameter.
     return 0;
   }
 
-  // Kept for API compat (used by NoteHistoryVisualizer waterfall golden line)
   getButtonRadius(): number {
     return Math.min(
       Math.abs(this.hv1.x) + Math.abs(this.hv2.x),
@@ -425,19 +416,10 @@ CSS pixels per inch.
   } {
     const { generator, skewFactor, scaleX, scaleY, bFact } = this.options;
     const t = skewFactor;
-    // From WickiSynth by Piers Titus van der Torren.
-    //   a = gen[0]/gen[1]  (fifth/octave ratio, ~0.583 for 12-TET)
-    //   b = sqrt(2a/3 − a²) (horizontal spread for Wicki hex-like tiling)
-    // The fifth vector leans at ~69° from horizontal (Striso angle).
-    // genY1 = py = octave step in pixels (controls visible range).
     const a = generator[0] / generator[1];
     const bSq = Math.max(0.001, (2 / 3) * a - a * a);
     const b = Math.sqrt(bSq);
 
-    // ── Physical key sizing (metric) ──────────────────────────────────
-    // VISIBLE key = piano white key width (23.5mm). CELL_INSET (0.93) shrinks
-    // the visible key from the full cell, so we inflate the cell to compensate.
-    // cssPxPerInch = 96 (W3C spec constant, not a measurement).
     const PIANO_KEY_MM   = 23.5;   // standard white piano key width
     const KEY_SIZE_MM    = PIANO_KEY_MM / CELL_INSET;  // ~25.3mm cell → 23.5mm visible
     const MM_PER_INCH    = 25.4;
@@ -460,11 +442,6 @@ fourth direction (-fifth + octave) purely vertical, producing an orthogonal
 rectangular grid.
 
 ``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
-    // In (fifth, octave) coordinates:
-    //   Fifth  = 1 wholetone-cell right + 1 fourth-cell up  → (mCS, mCS)
-    //   Octave = 1 wholetone-cell right + 2 fourth-cells up → (mCS, 2·mCS)
-    // This makes: wholetone = (2·fifth − octave) → pure horizontal,
-    //             fourth   = (−fifth + octave)  → pure vertical.
     const mCS    = dPy * 0.5;
     const mGenX  = mCS;
     const mGenY0 = mCS;
@@ -480,14 +457,10 @@ applies a secondary shear that pushes `genY0` toward `genY1/2`, making the
 wholetone direction horizontal (Wicki-Hayden-style flat rows).
 
 ``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
-    // ── Interpolate basis vectors (t=0 DCompose, t=1 MidiMech) ─────────
     const genX  = (dGenX  + t * (mGenX  - dGenX))  * scaleX;
     let   genY0 = (dGenY0 + t * (mGenY0 - dGenY0)) * scaleY;
     const genX1 = (dGenX1 + t * (mGenX1 - dGenX1)) * scaleX;
     const genY1 = (dGenY1 + t * (mGenY1 - dGenY1)) * scaleY;
-    // ── Row-flattening shear (bFact: 0=current, 1=Wicki-Hayden) ──────
-    // genY0 → genY1/2 makes wholetone direction horizontal.
-    // Honeycomb offset (fourth_X = -wholetone_X/2) follows from lattice math.
     genY0 = genY0 + bFact * (genY1 / 2 - genY0);
 ```
 
@@ -506,21 +479,13 @@ regardless of the skew factor. At DCompose both vectors are diagonal
 intermediate value the tiling remains valid.
 
 ``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
-    // ── Cell half-vectors (parallelogram shape) ─────────────────────────
-    // Derive tiling vectors from the CURRENT interpolated basis vectors.
-    // wholetone = 2*fifth − octave  → always the horizontal-ish cell axis
-    // fourth    = −fifth + octave   → always the vertical-ish cell axis
-    // These ALWAYS tile because they're the reduced basis of the lattice.
-    // At t=0 (DCompose): wholetone and fourth are both diagonal → parallelograms.
-    // At t=1 (MidiMech): wholetone is pure horizontal, fourth is pure vertical → rectangles.
-    // At ANY intermediate t: still tiles perfectly (reduced basis is always valid).
     const cellHv1 = {
-      x: (2 * genX - genX1) / 2,           // half-wholetone x
-      y: -(2 * genY0 - genY1) / 2,         // half-wholetone y
+      x: (2 * genX - genX1) / 2,
+      y: -(2 * genY0 - genY1) / 2,
     };
     const cellHv2 = {
-      x: (-genX + genX1) / 2,              // half-fourth x
-      y: (genY0 - genY1) / 2,              // half-fourth y
+      x: (-genX + genX1) / 2,
+      y: (genY0 - genY1) / 2,
     };
 
     return { genX, genY0, genX1, genY1, cellHv1, cellHv2 };
@@ -552,9 +517,6 @@ front) so that active cells render on top of their neighbors.
     const { genX, genY0, genX1, genY1, cellHv1, cellHv2 } = this.getSpacing();
     const centerX = width / 2;
     const centerY = height / 2;
-    // Cell half-vectors: at MidiMech = wholetone/fourth aligned (upright rectangle),
-    // at DCompose = fifth/octave aligned (leaning parallelogram).
-    // Interpolated by getSpacing().
     this.hv1 = cellHv1;
     this.hv2 = cellHv2;
 
@@ -567,7 +529,6 @@ front) so that active cells render on top of their neighbors.
         const screenX = centerX + i * genX + j * genX1;
         const screenY = centerY - (i * genY0 + j * genY1);
 
-        // Broad cull — keep cells whose center is near the canvas
         const margin = (Math.abs(this.hv1.x) + Math.abs(this.hv2.x) + Math.abs(this.hv1.y) + Math.abs(this.hv2.y)) * 2;
         if (screenX < -margin || screenX > width + margin) continue;
         if (screenY < -margin || screenY > height + margin) continue;
@@ -589,7 +550,6 @@ front) so that active cells render on top of their neighbors.
       }
     }
 
-    // Sort back to front (lower Y = further back) so active cells render on top
     this.buttons.sort((a, b) => a.y - b.y);
   }
 
@@ -743,25 +703,17 @@ through the grid center and a set of faint vertical guide lines:
     const fifth = this.options.generator[0];
     const octave = this.options.generator[1];
 
-    // ── Pitch axis = octave direction (through all D cells) ────────────
-    // D notes at (i=0, varying j): x = centerX + j*genX1, y = centerY - j*genY1
-    // D-to-D direction is (genX1, -genY1). Passes through EVERY D center.
     const pitchDx = genX1;
     const pitchDy = -genY1;
-    // ── CoF axis = iso-pitch direction ────────────────────────────────
     const cofDx = octave * genX - fifth * genX1;
     const cofDy = fifth * genY1 - octave * genY0;
-    // ── Circle of Fifths axis ─────────────────────────────────────
     this.drawAxisLine(centerX, centerY, cofDx, cofDy, 'Circle of Fifths');
 
-    // ── Pitch axis ───────────────────────────────────────────────
     this.drawAxisLine(centerX, centerY, pitchDx, pitchDy, 'Pitch');
-    // ── Origin marker (small dot only, no label) ──────────────
     this.ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
     this.ctx.beginPath();
     this.ctx.arc(centerX, centerY, 3, 0, Math.PI * 2);
     this.ctx.fill();
-    // ── Fifth index lines (connect same-fifth notes via octave direction) ────
     this.drawFifthIndexLines(
       centerX, centerY,
       genX, -genY0,
@@ -847,7 +799,6 @@ direction but flips to remain left-to-right readable.
     const ny = dy / len;
     const ext = Math.sqrt(width * width + height * height);
 
-    // Axis line (white, semi-transparent)
     this.ctx.save();
     this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
     this.ctx.lineWidth = 1.5;
@@ -864,7 +815,6 @@ angle of 2 * PI/7 radians (approximately 51 degrees).
 
 ``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
 
-    // Find where positive direction hits canvas edge (with margin)
     const margin = 60;
     const candidates: number[] = [];
     if (nx > 0.001) candidates.push((width - margin - cx) / nx);
@@ -879,7 +829,6 @@ angle of 2 * PI/7 radians (approximately 51 degrees).
     const tipX = cx + nx * tMax;
     const tipY = cy + ny * tMax;
 
-    // Arrowhead (filled triangle)
     const arrowLen = 12;
     const arrowHalf = Math.PI / 7;
     const angle = Math.atan2(ny, nx);
@@ -906,7 +855,6 @@ flipped by PI radians to remain readable.
 
 ``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
 
-    // Label near arrowhead, offset perpendicular to axis
     const labelDist = 28;
     const lx = tipX - nx * labelDist;
     const ly = tipY - ny * labelDist;
@@ -918,7 +866,6 @@ flipped by PI radians to remain readable.
     this.ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
     this.ctx.textAlign = 'center';
     this.ctx.textBaseline = 'middle';
-    // Rotate text to follow axis direction (keep readable left-to-right)
     this.ctx.save();
     this.ctx.translate(lx + perpX * perpOff, ly + perpY * perpOff);
     let textAngle = angle;
@@ -985,11 +932,9 @@ invisible.
 
 ``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
 
-    // MPE expression: pressure → opacity, pitch bend → hue interpolation
     const mpeExpr = this.mpeExpression.get(noteId);
     let cellAlpha = 1.0;
     if (mpeExpr && isActive) {
-      // Pressure: 0 = normal opacity (0.85), 1 = full opacity (1.0)
       cellAlpha = 0.85 + mpeExpr.pressure * 0.15;
     }
 ```
@@ -1006,21 +951,17 @@ computed as center +/- (hv1 * s) +/- (hv2 * s).
     const { hv1, hv2 } = this;
     const s = (isActive || isTargetPressed || isTargetUnpressed) ? 1.0 : CELL_INSET;
 
-    // 4 corners of the parallelogram cell, scaled by s around center
     const h1x = hv1.x * s, h1y = hv1.y * s;
     const h2x = hv2.x * s, h2y = hv2.y * s;
 
-    // corners: ±hv1 ± hv2
     const px = (a: number, b: number): number => x + a * h1x + b * h2x;
     const py = (a: number, b: number): number => y + a * h1y + b * h2y;
 
-    // No vignette — all cells render at full brightness
-
     this.ctx.beginPath();
-    this.ctx.moveTo(px(-1, -1), py(-1, -1)); // bottom-left
-    this.ctx.lineTo(px( 1, -1), py( 1, -1)); // bottom-right
-    this.ctx.lineTo(px( 1,  1), py( 1,  1)); // top-right
-    this.ctx.lineTo(px(-1,  1), py(-1,  1)); // top-left
+    this.ctx.moveTo(px(-1, -1), py(-1, -1));
+    this.ctx.lineTo(px( 1, -1), py( 1, -1));
+    this.ctx.lineTo(px( 1,  1), py( 1,  1));
+    this.ctx.lineTo(px(-1,  1), py(-1,  1));
     this.ctx.closePath();
     this.ctx.fillStyle = fillColor;
     this.ctx.globalAlpha = cellAlpha;
@@ -1043,7 +984,6 @@ their pitch bend is heading on the
 
 ``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
 
-    // MPE pitch bend: overlay target note color
     if (mpeExpr && isActive && Math.abs(mpeExpr.pitchBend) > 0.01) {
       const bendSteps = Math.round(mpeExpr.pitchBend * 2);
       if (bendSteps !== 0) {
@@ -1076,7 +1016,6 @@ The sub-label renders at 60% of the main font size and 60% opacity.
 
 ``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
 
-    // Note label — size from full cell span, not half-vectors
     const cellW = (Math.abs(hv1.x) + Math.abs(hv2.x)) * 2;
     const cellH = (Math.abs(hv1.y) + Math.abs(hv2.y)) * 2;
     const cellMin = Math.min(cellW, cellH);
@@ -1084,7 +1023,6 @@ The sub-label renders at 60% of the main font size and 60% opacity.
     this.ctx.fillStyle = textColor;
     this.ctx.font = `bold ${fontSize}px "JetBrains Mono", monospace`;
     this.ctx.textAlign = 'center';
-    // Bracket sub-label: show 12-TET equivalent ± cents when useful
     const fifth = this.options.generator[0];
     const tetName = get12TETName(coordX);
     const deviation = getCentDeviation(coordX, fifth);
@@ -1093,10 +1031,8 @@ The sub-label renders at 60% of the main font size and 60% opacity.
     const octSuffix = coordY === 0 ? '' : (coordY > 0 ? '+' : '') + coordY;
 
     if (hasBracket && cellMin > 30) {
-      // Two-line: main name + octave above center, bracket below
       this.ctx.textBaseline = 'bottom';
       this.ctx.fillText(noteName + octSuffix, x, y);
-      // Bracket sub-label (smaller, dimmer)
       const subSize = Math.max(7, fontSize * 0.6);
       this.ctx.font = `${subSize}px "JetBrains Mono", monospace`;
       this.ctx.fillStyle = textColor;
@@ -1112,7 +1048,6 @@ The sub-label renders at 60% of the main font size and 60% opacity.
       }
       this.ctx.fillText(bracket, x, y + 1);
     } else {
-      // Single-line centered
       this.ctx.textBaseline = 'middle';
       this.ctx.fillText(noteName + octSuffix, x, y);
     }
@@ -1209,18 +1144,14 @@ grids.
   getButtonAtPoint(screenX: number, screenY: number): { coordX: number; coordY: number; noteId: string } | null {
     if (this.buttons.length === 0) return null;
 
-    // Use parallelogram metric: solve 2×2 linear system for grid coords.
-    // Screen: x = cx + i*genX + j*genX1,  y = cy - (i*genY0 + j*genY1)
     const { genX, genY0, genX1, genY1 } = this.getSpacing();
     const { width, height } = this.options;
     const dx = screenX - width / 2;
-    const dy = -(screenY - height / 2); // flip Y: screen Y↓ vs coord Y↑
-    // Solve: dx = i*genX + j*genX1,  dy = i*genY0 + j*genY1
+    const dy = -(screenY - height / 2);
     const det = genX * genY1 - genX1 * genY0;
     const iFloat = det !== 0 ? (dx * genY1 - genX1 * dy) / det : 0;
     const jFloat = det !== 0 ? (genX * dy - dx * genY0) / det : 0;
 
-    // Check integer neighbours (±1 in each direction due to rounding)
     let nearest = this.buttons[0];
     let nearestDist = Infinity;
 
@@ -1238,7 +1169,6 @@ grids.
       }
     }
 
-    // Fallback: full scan if restricted search missed everything
     if (nearestDist === Infinity) {
       for (const button of this.buttons) {
         const bx = screenX - button.x;

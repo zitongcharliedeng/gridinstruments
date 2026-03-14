@@ -22,9 +22,6 @@ The [MPE specification (MIDI Association, 2018)](https://www.midi.org/specificat
  *
  * Reference: François Georgy's MPE Tester (https://studiocode.dev/mpe-monitor/)
  */
-
-// ─── Types ──────────────────────────────────────────────────────────────────
-
 export interface MPESettings {
   masterChannel: 1 | 16;
   memberChannelCount: number;
@@ -66,9 +63,6 @@ The service holds a reference to the `MIDIAccess` object (obtained during `init(
 The constructor accepts an optional partial settings override and immediately builds the free-channel pool from the resulting settings.
 
 ``` {.typescript file=_generated/lib/mpe-service.ts}
-
-// ─── Service ────────────────────────────────────────────────────────────────
-
 export class MPEService {
   private access: MIDIAccess | null = null;
   private output: MIDIOutput | null = null;
@@ -92,18 +86,13 @@ export class MPEService {
 
 ``` {.typescript file=_generated/lib/mpe-service.ts}
 
-  // ─── Init ──────────────────────────────────────────────────────────────────
-
   async init(): Promise<void> {
     if (!('requestMIDIAccess' in navigator)) return;
     try {
       this.access = await navigator.requestMIDIAccess({ sysex: false });
     } catch {
-      // MIDI not available — degrade gracefully
     }
   }
-
-  // ─── Settings ─────────────────────────────────────────────────────────────
 
   getSettings(): Readonly<MPESettings> {
     return { ...this.settings };
@@ -125,8 +114,6 @@ export class MPEService {
 `getAvailableOutputs()` iterates the `MIDIAccess.outputs` map (a `MIDIOutputMap`, not a plain array) and returns it as a plain array for easier rendering in select UI elements.
 
 ``` {.typescript file=_generated/lib/mpe-service.ts}
-
-  // ─── Enable / Output ─────────────────────────────────────────────────────
 
   setEnabled(enabled: boolean): void {
     this._enabled = enabled;
@@ -160,8 +147,6 @@ The listener set implements a simple pub/sub for reactive UI. `subscribe()` retu
 
 ``` {.typescript file=_generated/lib/mpe-service.ts}
 
-  // ─── Subscription ─────────────────────────────────────────────────────────
-
   subscribe(listener: MPEListener): () => void {
     this.listeners.add(listener);
     return () => { this.listeners.delete(listener); };
@@ -182,24 +167,20 @@ The listener set implements a simple pub/sub for reactive UI. `subscribe()` retu
 
 ``` {.typescript file=_generated/lib/mpe-service.ts}
 
-  // ─── MPE messages ─────────────────────────────────────────────────────────
-
   noteOn(noteId: string, midiNote: number, velocity: number): void {
     if (!this._enabled || !this.output) return;
     const ch = this.allocate();
     if (ch === null) return;
 
-    const chIdx = ch - 1; // 0-indexed for status byte
+    const chIdx = ch - 1;
 
-    // Reset per-note state before note-on
     if (this.settings.bendAutoReset) {
-      this.output.send([0xE0 | chIdx, 0x00, 0x40]);                // pitch bend center
+      this.output.send([0xE0 | chIdx, 0x00, 0x40]);
     }
-    this.output.send([0xB0 | chIdx, this.settings.timbreCC, 64]);  // timbre center
-    this.sendPressureRaw(chIdx, midiNote, 0);                       // pressure 0
-    this.output.send([0x90 | chIdx, midiNote, Math.round(velocity * 127)]); // note on
+    this.output.send([0xB0 | chIdx, this.settings.timbreCC, 64]);
+    this.sendPressureRaw(chIdx, midiNote, 0);
+    this.output.send([0x90 | chIdx, midiNote, Math.round(velocity * 127)]);
 
-    // Track voice state
     const voice: MPEVoice = {
       noteId,
       channel: ch,
@@ -220,7 +201,7 @@ The listener set implements a simple pub/sub for reactive UI. `subscribe()` retu
     if (!voice) return;
 
     const chIdx = voice.channel - 1;
-    this.output.send([0x80 | chIdx, midiNote, 64]); // note off, release velocity 64
+    this.output.send([0x80 | chIdx, midiNote, 64]);
     voice.state = 'released';
     this.notify();
     this.release(noteId);
@@ -266,8 +247,8 @@ These three methods deliver the "3D" expression that distinguishes MPE from stan
     if (!voice) return;
 
     const chIdx = voice.channel - 1;
-    const normalized = semitones / this.settings.pitchBendRange;       // -1..+1
-    const uint14 = Math.round((normalized + 1) * 8191.5);             // 0..16383
+    const normalized = semitones / this.settings.pitchBendRange;
+    const uint14 = Math.round((normalized + 1) * 8191.5);
     const lsb = uint14 & 0x7F;
     const msb = (uint14 >> 7) & 0x7F;
     this.output.send([0xE0 | chIdx, lsb, msb]);
@@ -284,14 +265,12 @@ These three methods deliver the "3D" expression that distinguishes MPE from stan
 
 ``` {.typescript file=_generated/lib/mpe-service.ts}
 
-  // ─── Cleanup ──────────────────────────────────────────────────────────────
-
   /** Send All Notes Off on every member channel and reset channel pool. */
   panic(): void {
     if (this.output) {
       const channels = this.buildChannelPool();
       for (const ch of channels) {
-        this.output.send([0xB0 | (ch - 1), 123, 0]); // CC123 All Notes Off
+        this.output.send([0xB0 | (ch - 1), 123, 0]);
       }
     }
     this.voiceByNoteId.clear();
@@ -315,17 +294,13 @@ The MIDI spec allows any voice-allocation strategy; this implementation uses a s
 
 ``` {.typescript file=_generated/lib/mpe-service.ts}
 
-  // ─── Private: channel pool (FIFO) ────────────────────────────────────────
-
   /** Build the full set of member channels based on current settings. */
   private buildChannelPool(): number[] {
     const channels: number[] = [];
     if (this.settings.masterChannel === 1) {
-      // Lower zone: members = 2 .. (1 + memberChannelCount), capped at 16
       const end = Math.min(1 + this.settings.memberChannelCount, 16);
       for (let ch = 2; ch <= end; ch++) channels.push(ch);
     } else {
-      // Upper zone: members = (16 - memberChannelCount) .. 15, floored at 1
       const start = Math.max(16 - this.settings.memberChannelCount, 1);
       for (let ch = start; ch <= 15; ch++) channels.push(ch);
     }
@@ -365,8 +340,6 @@ The MPE spec leaves pressure routing open to the implementer. Channel Aftertouch
 
 ``` {.typescript file=_generated/lib/mpe-service.ts}
 
-  // ─── Private: pressure routing ────────────────────────────────────────────
-
   /** Send pressure using the configured mode (channel aftertouch, poly AT, or CC). */
   private sendPressureRaw(chIdx: number, midiNote: number, pressure: number): void {
     if (!this.output) return;
@@ -395,23 +368,19 @@ Both RPNs are terminated with a null RPN (CC 101 = 127, CC 100 = 127) to prevent
 
 ``` {.typescript file=_generated/lib/mpe-service.ts}
 
-  // ─── Private: zone configuration ──────────────────────────────────────────
-
   /** Send MCM (MPE Configuration Message) + Pitch Bend Sensitivity. */
   private sendMCM(): void {
     if (!this.output) return;
 
-    const managerIdx = this.settings.masterChannel - 1; // 0-indexed
+    const managerIdx = this.settings.masterChannel - 1;
     const status = 0xB0 | managerIdx;
 
-    // ── Zone MCM: RPN 0x00/0x06 = MPE Configuration ────────────────────
-    this.output.send([status, 101, 0]);    // CC101 = 0 (RPN MSB)
-    this.output.send([status, 100, 6]);    // CC100 = 6 (RPN LSB = MCM)
-    this.output.send([status, 6, this.settings.memberChannelCount]); // member count
-    this.output.send([status, 101, 127]);  // null RPN
+    this.output.send([status, 101, 0]);
+    this.output.send([status, 100, 6]);
+    this.output.send([status, 6, this.settings.memberChannelCount]);
+    this.output.send([status, 101, 127]);
     this.output.send([status, 100, 127]);
 
-    // ── Disable opposite zone ──────────────────────────────────────────
     const otherZoneIdx = this.settings.masterChannel === 1 ? 15 : 0;
     const otherStatus = 0xB0 | otherZoneIdx;
     this.output.send([otherStatus, 101, 0]);
@@ -420,11 +389,8 @@ Both RPNs are terminated with a null RPN (CC 101 = 127, CC 100 = 127) to prevent
     this.output.send([otherStatus, 101, 127]);
     this.output.send([otherStatus, 100, 127]);
 
-    // ── Pitch Bend Sensitivity (RPN 0x00/0x00) ────────────────────────
-    // Send on manager channel to set default for all members
     this.sendPitchBendSensitivity(managerIdx, this.settings.pitchBendRange);
 
-    // Also send per-member-channel for synths that don't propagate from manager
     const memberChannels = this.buildChannelPool();
     for (const ch of memberChannels) {
       this.sendPitchBendSensitivity(ch - 1, this.settings.pitchBendRange);
@@ -435,11 +401,11 @@ Both RPNs are terminated with a null RPN (CC 101 = 127, CC 100 = 127) to prevent
   private sendPitchBendSensitivity(chIdx: number, semitones: number): void {
     if (!this.output) return;
     const status = 0xB0 | chIdx;
-    this.output.send([status, 101, 0]);              // RPN MSB = 0
-    this.output.send([status, 100, 0]);              // RPN LSB = 0
-    this.output.send([status, 6, semitones & 0x7F]); // Data Entry MSB = semitones
-    this.output.send([status, 38, 0]);               // Data Entry LSB = 0 cents
-    this.output.send([status, 101, 127]);            // null RPN
+    this.output.send([status, 101, 0]);
+    this.output.send([status, 100, 0]);
+    this.output.send([status, 6, semitones & 0x7F]);
+    this.output.send([status, 38, 0]);
+    this.output.send([status, 101, 127]);
     this.output.send([status, 100, 127]);
   }
 }

@@ -12,12 +12,12 @@ A `NoteEvent` is the primary output unit — one record per sounded note, with t
 /** Inline MIDI file parser — no npm dependencies. Type 0 + Type 1, running status, drum filter. */
 
 export interface NoteEvent {
-  midiNote: number;    // 0-127 MIDI note number
-  startMs: number;     // note start in milliseconds (from tempo map)
-  durationMs: number;  // note duration in milliseconds
-  velocity: number;    // 0-127
-  channel: number;     // 0-indexed MIDI channel (channel 10 drums = channel index 9)
-  track: number;       // 0-indexed track number
+  midiNote: number;
+  startMs: number;
+  durationMs: number;
+  velocity: number;
+  channel: number;
+  track: number;
 }
 
 ```
@@ -33,7 +33,7 @@ Time signatures use a compact encoding: the denominator is stored as a power of 
 export interface TempoEvent {
   tickPosition: number;
   microsecondsPerQuarter: number;
-  bpm: number;         // 60_000_000 / microsecondsPerQuarter
+  bpm: number;
 }
 
 /**
@@ -49,7 +49,7 @@ export interface TimeSigEvent {
   tickPosition: number;
   numerator: number;
   denominatorPower: number;
-  ticksPerQuarter: number;  // ppq from header — included for grid spacing convenience
+  ticksPerQuarter: number;
 }
 
 /** Parsed output of a MIDI file: note events plus extracted tempo and time signature maps. */
@@ -127,7 +127,7 @@ Tick time is converted to wall-clock milliseconds by walking the sorted tempo ma
 function tickToMs(tick: number, tempoMap: ReadonlyArray<TempoEntry>, ppq: number): number {
   let ms = 0;
   let prevTick = 0;
-  let tempoUs = 500000; // 120 BPM default
+  let tempoUs = 500000;
 
   for (const entry of tempoMap) {
     if (entry.tick >= tick) break;
@@ -192,7 +192,6 @@ function parseTrack(
 
     let statusByte = view.getUint8(offset);
 
-    // Running status: data byte (< 0x80) reuses previous status
     if (statusByte < 0x80) {
       statusByte = runningStatus;
     } else {
@@ -208,19 +207,16 @@ Meta events (`0xFF`) carry non-audio information. The type byte immediately foll
 Three meta types matter here. `FF 51` (Set Tempo) updates the tempo map — collected only from the authoritative tempo track. `FF 58` (Time Signature) updates the meter map similarly. `FF 2F` (End of Track) is mandatory at the end of every `MTrk` chunk; on encountering it the parser advances past the payload and exits the loop.
 
 ``` {.typescript file=_generated/lib/midi-parser.ts}
-    // 0xFF = meta event
     if (statusByte === 0xff) {
       const metaType = view.getUint8(offset);
       offset++;
       const len = readVarLen(view, offset);
       offset += len.bytesRead;
 
-      // 0x51 = tempo (3 bytes: microseconds per quarter note)
       if (metaType === 0x51 && len.value === 3 && collectTempo) {
         tempoMap.push({ tick, tempoUs: readUint24(view, offset) });
       }
 
-      // 0x58 = time signature (4 bytes: nn dd cc bb)
       if (metaType === 0x58 && len.value === 4 && collectTempo) {
         timeSigEntries.push({
           tick,
@@ -229,7 +225,6 @@ Three meta types matter here. `FF 51` (Set Tempo) updates the tempo map — coll
         });
       }
 
-      // 0x2F = end of track
       if (metaType === 0x2f) {
         offset += len.value;
         break;
@@ -248,19 +243,17 @@ SysEx messages (`0xF0` / `0xF7`) carry manufacturer-specific data and are skippe
 Channel voice messages occupy the lower nybble of the status byte for channel (0–15) and the upper nybble for message type. Note On (`0x90`) with velocity zero is treated as Note Off per the MIDI 1.0 spec. Aftertouch (`0xA0`), Control Change (`0xB0`), and Pitch Bend (`0xE0`) each consume two data bytes; Program Change (`0xC0`) and Channel Pressure (`0xD0`) consume one. Any notes still open when the track ends are closed at the final tick.
 
 ``` {.typescript file=_generated/lib/midi-parser.ts}
-    // 0xF0/0xF7 = sysex
     if (statusByte === 0xf0 || statusByte === 0xf7) {
       const len = readVarLen(view, offset);
       offset += len.bytesRead + len.value;
       continue;
     }
 
-    // Other system messages (0xF1-0xF6, 0xF8-0xFE)
     if ((statusByte & 0xf0) === 0xf0) {
       switch (statusByte) {
-        case 0xf1: offset += 1; break; // MTC quarter frame
-        case 0xf2: offset += 2; break; // Song position
-        case 0xf3: offset += 1; break; // Song select
+        case 0xf1: offset += 1; break;
+        case 0xf2: offset += 2; break;
+        case 0xf3: offset += 1; break;
         default: break;
       }
       continue;
@@ -271,7 +264,6 @@ Channel voice messages occupy the lower nybble of the status byte for channel (0
     const channel = statusByte & 0x0f;
 
     switch (msgType) {
-      // 0x80 = Note Off
       case 0x80: {
         const note = view.getUint8(offset);
         offset += 2;
@@ -279,7 +271,6 @@ Channel voice messages occupy the lower nybble of the status byte for channel (0
         break;
       }
 
-      // 0x90 = Note On (vel=0 is Note Off per MIDI spec)
       case 0x90: {
         const note = view.getUint8(offset);
         const vel = view.getUint8(offset + 1);
@@ -295,14 +286,14 @@ Channel voice messages occupy the lower nybble of the status byte for channel (0
         break;
       }
 
-      case 0xa0: // Aftertouch
-      case 0xb0: // Control Change
-      case 0xe0: // Pitch Bend
+      case 0xa0:
+      case 0xb0:
+      case 0xe0:
         offset += 2;
         break;
 
-      case 0xc0: // Program Change
-      case 0xd0: // Channel Pressure
+      case 0xc0:
+      case 0xd0:
         offset += 1;
         break;
 
@@ -374,7 +365,6 @@ export function parseMidi(buffer: ArrayBuffer): ParsedMidi {
     const trackLength = view.getUint32(offset + 4, false);
     const trackDataStart = offset + 8;
 
-    // Type 0: single track collects tempo. Type 1: only track 0 is authoritative for tempo.
     const collectTempo = format === 0 || t === 0;
     allTickNotes.push(...parseTrack(view, trackDataStart, trackLength, t, tempoMap, timeSigEntries, collectTempo));
     offset = trackDataStart + trackLength;
@@ -394,14 +384,13 @@ The exported tempo map adds the pre-computed `bpm` field. If no tempo events wer
   tempoMap.sort((a, b) => a.tick - b.tick);
   timeSigEntries.sort((a, b) => a.tick - b.tick);
 
-  // Default 4/4 if no FF 58 event found
   if (timeSigEntries.length === 0) {
     timeSigEntries.push({ tick: 0, numerator: 4, denominatorPower: 2 });
   }
 
   const events: NoteEvent[] = [];
   for (const tn of allTickNotes) {
-    if (tn.channel === 9) continue; // Filter channel 9 (drums)
+    if (tn.channel === 9) continue;
 
     const startMs = tickToMs(tn.startTick, tempoMap, ppq);
     const endMs = tickToMs(tn.endTick, tempoMap, ppq);
@@ -417,14 +406,12 @@ The exported tempo map adds the pre-computed `bpm` field. If no tempo events wer
 
   events.sort((a, b) => a.startMs - b.startMs);
 
-  // Build exported tempo map with BPM calculated
   const exportedTempoMap: TempoEvent[] = tempoMap.map(e => ({
     tickPosition: e.tick,
     microsecondsPerQuarter: e.tempoUs,
     bpm: 60_000_000 / e.tempoUs,
   }));
 
-  // Default 120 BPM if no tempo events found
   if (exportedTempoMap.length === 0) {
     exportedTempoMap.push({ tickPosition: 0, microsecondsPerQuarter: 500000, bpm: 120 });
   }

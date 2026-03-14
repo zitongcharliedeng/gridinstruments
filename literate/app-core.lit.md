@@ -3,11 +3,6 @@
 DComposeApp — the main application class managing synth, visualizer, MIDI, keyboard/pointer input, and all UI wiring.
 
 ``` {.typescript file=_generated/app-core.ts}
-/**
- * DComposeApp — the main application class.
- * Manages synth, visualizer, MIDI, keyboard/pointer input, and all UI wiring.
- */
-
 import { getLayout, KEYBOARD_VARIANTS, KeyboardLayout, codeToLabel } from './lib/keyboard-layouts';
 import { Synth, WaveformType, FIFTH_MIN, FIFTH_MAX, FIFTH_DEFAULT, findNearestMarker, TUNING_MARKERS } from './lib/synth';
 import { KeyboardVisualizer } from './lib/keyboard-visualizer';
@@ -47,9 +42,7 @@ export class DComposeApp {
   private octaveOffset = 0;
   private transposeOffset = 0;
 
-  // Active notes keyed by the input source string (keyboard code, pointer id, or midi device+note)
   private activeNotes = new Map<string, { coordX: number; coordY: number }>();
-  // Reference counts per coordinate — only fires historyVisualizer noteOff when all sources release
   private noteHoldCounts = new Map<string, number>();
   private keyRepeat = new Set<string>();
   private midiChannelVoice = new Map<string, string>();
@@ -61,11 +54,9 @@ export class DComposeApp {
 
   private pointerDown = new Map<number, { coordX: number; coordY: number } | null>();
 
-  // Keyboard rollover tracking
   private maxSimultaneousKeys = 0;
   private ghostingWarningShown = false;
 
-  // MPE vibrato state (Space key sends sinusoidal pitch bend to all active MPE notes)
   private vibratoRAF: number | null = null;
   private vibratoPhase = 0;
   private arrowLeftHeld = false;
@@ -73,11 +64,8 @@ export class DComposeApp {
   private arrowVibratoInterval: ReturnType<typeof setInterval> | null = null;
   private arrowVibratoPhase = 0;
 
-  // Cached canvas rect — invalidated on resize only
   private cachedCanvasRect: DOMRect | null = null;
-  // RAF-throttled render scheduling
   private renderScheduled = false;
-  // DOM
   private canvas: HTMLCanvasElement;
   private historyCanvas: HTMLCanvasElement;
   private layoutSelect: HTMLSelectElement | null = null;
@@ -192,8 +180,6 @@ export class DComposeApp {
     requestAnimationFrame(() => this.updateGraffiti?.());
   }
 
-  // ─── Visualizer setup ───────────────────────────────────────────────────
-
   private setupVisualizer(): void {
     const container = this.canvas.parentElement;
     if (!container) return;
@@ -234,8 +220,6 @@ export class DComposeApp {
       }).observe(historyContainer);
     }
   }
-
-  // ─── MIDI ───────────────────────────────────────────────────────────────
 
   private setupMidiListeners(): void {
     this.midi.onNoteOn((note, velocity, channel, deviceId) => {
@@ -286,7 +270,6 @@ export class DComposeApp {
       this.gameActor.send({ type: 'NOTE_PRESSED', cellId: `${coordX}_${coordY}`, midiNote });
     }
     this.render();
-    // Audio only when synth is ready
     this.synth.tryUnlock();
     if (this.synth.isInitialized()) {
       this.synth.playNote(audioNoteId, coordX, coordY, 0, this.expressionVelocity ? velocity / 127 : 1);
@@ -352,8 +335,6 @@ export class DComposeApp {
     }
   }
 
-  // ─── Event listeners ────────────────────────────────────────────────────
-
   private setupEventListeners(): void {
     document.addEventListener('keydown', this.handleKeyDown.bind(this));
     document.addEventListener('keyup', this.handleKeyUp.bind(this));
@@ -363,7 +344,6 @@ export class DComposeApp {
     this.canvas.addEventListener('pointerup', this.handlePointerUp.bind(this));
     this.canvas.addEventListener('pointerleave', this.handlePointerUp.bind(this));
     this.canvas.addEventListener('pointercancel', this.handlePointerUp.bind(this));
-    // touch-action: none in CSS eliminates the need for touchstart preventDefault
     this.canvas.addEventListener('contextmenu', (e) => { e.preventDefault(); });
     const savedWaveform = this.loadSetting('waveform', 'sawtooth');
     const initialWaveform = isWaveformType(savedWaveform) ? savedWaveform : 'sawtooth' as WaveformType;
@@ -403,11 +383,9 @@ export class DComposeApp {
       }
       const savedLayout = this.loadSetting('layout', '');
       if (savedLayout) {
-        // User has explicitly saved a layout preference — use it
         this.layoutSelect.value = savedLayout;
         this.currentLayout = getLayout(savedLayout);
       } else {
-        // Auto-detect: try Keyboard API, fallback to ANSI
         this.currentLayout = getLayout('ansi');
         this.layoutSelect.value = 'ansi';
         try {
@@ -449,7 +427,6 @@ export class DComposeApp {
       });
     }
 
-    // DCompose ↔ MidiMech skew slider (DOM mutations driven by appActor subscriber)
     if (this.skewSlider) {
       const skewRef = this.skewSlider;
       const skewBadge = getElementOrNull('skew-thumb-badge', HTMLInputElement);
@@ -465,7 +442,6 @@ export class DComposeApp {
         this.saveSetting('skew', skewRef.value);
       });
 
-      // Skew reset
       const skewReset = getElementOrNull('skew-reset', HTMLButtonElement);
       skewReset?.addEventListener('click', () => {
         if (this.skewSlider) {
@@ -500,7 +476,6 @@ export class DComposeApp {
       ]);
     }
 
-    // Shear (bFact) slider — row-flattening toward Wicki-Hayden
     if (this.bfactSlider) {
       const bfactRef = this.bfactSlider;
       const bfactBadge = getElementOrNull('bfact-thumb-badge', HTMLInputElement);
@@ -576,8 +551,6 @@ export class DComposeApp {
       ]);
     }
 
-    // Tuning slider
-
     if (this.tuningSlider) {
       const tuningRef = this.tuningSlider;
       tuningRef.min = FIFTH_MIN.toString();
@@ -633,7 +606,6 @@ export class DComposeApp {
         updateThumbBadge(marker.fifth);
         updateTuningLabel(marker.fifth);
       });
-      // Tuning reset
       const tuningReset = getElementOrNull('tuning-reset', HTMLButtonElement);
       tuningReset?.addEventListener('click', () => {
         if (this.tuningSlider) {

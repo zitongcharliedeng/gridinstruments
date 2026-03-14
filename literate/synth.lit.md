@@ -95,10 +95,9 @@ The slider range `[683, 722]` is chosen to tightly cover all presets from
 the closest named tuning. This drives the UI label that appears on the slider.
 
 ``` {.typescript file=_generated/lib/synth.ts}
-// Slider range — tightly covers all TET presets (7-TET=685.71¢ to 5-TET=720¢)
-export const FIFTH_MIN = 683;  // Just below 7-TET (685.71¢)
-export const FIFTH_MAX = 722;  // Just above 5-TET (720¢)
-export const FIFTH_DEFAULT = 700; // 12-TET
+export const FIFTH_MIN = 683;
+export const FIFTH_MAX = 722;
+export const FIFTH_DEFAULT = 700;
 
 /**
  * Find the nearest tuning marker to a given fifth value
@@ -145,27 +144,20 @@ export class Synth {
   private sustain = false;
   private waveform: WaveformType = 'sawtooth';
   
-  // Vibrato (LFO modulating pitch)
-  // Shared LFO for all voices, per-voice gain nodes for individual control
   private vibratoLFO: OscillatorNode | null = null;
   private _vibratoEnabled = false;
-  private vibratoRate = 5; // Hz
-  private vibratoDepth = 10; // cents
-  
-  // Tuning parameters (can be changed live!)
-  private generator: [number, number] = [700, 1200]; // [fifth, octave] in cents
-  private baseFreq = 293.66; // D-ref base frequency (default: standard D at A440)
-  private _d4Hz = 293.66; // D reference frequency — adjustable, not locked to octave 4
-  
-  // Envelope parameters
+  private vibratoRate = 5;
+  private vibratoDepth = 10;
+
+  private generator: [number, number] = [700, 1200];
+  private baseFreq = 293.66;
+  private _d4Hz = 293.66;
+
   private attackTime = 0.01;
   private releaseTime = 0.1;
   private _masterVolume = 0.3;
-  
-  // EQ parameter (-1 = bass boost, 0 = flat, +1 = treble boost)
+
   private _eqValue = 0;
-  
-  // AudioContext will be created on first user interaction (initSync)
   
 ```
 
@@ -187,17 +179,14 @@ mobile browsers require a user interaction before creating an AudioContext
 
     this.context = new AudioContext({ latencyHint: 'interactive' });
 
-    // Create EQ filter (highshelf for treble control)
     this.eqFilter = this.context.createBiquadFilter();
     this.eqFilter.type = 'highshelf';
-    this.eqFilter.frequency.value = 3000; // 3kHz crossover
-    this.eqFilter.gain.value = 0; // Flat by default
+    this.eqFilter.frequency.value = 3000;
+    this.eqFilter.gain.value = 0;
 
-    // Create master gain
     this.masterGain = this.context.createGain();
     this.masterGain.gain.value = this._masterVolume;
 
-    // Chain: oscillators → masterGain → eqFilter → destination
     this.masterGain.connect(this.eqFilter);
     this.eqFilter.connect(this.context.destination);
   }
@@ -232,11 +221,8 @@ voices update their
 immediately -- no click, no gap.
 
 ``` {.typescript file=_generated/lib/synth.ts}
-  // === Waveform ===
-  
   setWaveform(waveform: WaveformType): void {
     this.waveform = waveform;
-    // Update existing voices
     for (const voice of this.voices.values()) {
       voice.oscillator.type = waveform;
     }
@@ -256,8 +242,6 @@ active voice instantly by recalculating frequencies from stored grid
 coordinates.
 
 ``` {.typescript file=_generated/lib/synth.ts}
-  // === Tuning (Generator) ===
-  
   /**
    * Set the tuning generator [fifth, octave] in cents
    * This updates ALL currently playing notes in real-time!
@@ -265,10 +249,8 @@ coordinates.
   setGenerator(generator: [number, number]): void {
     this.generator = generator;
     
-    // Update baseFreq (already set to D4 Hz, no recalculation needed)
     this.recalculateBaseFreq();
-    
-    // Update all playing voices with new frequencies
+
     for (const voice of this.voices.values()) {
       const newFreq = this.getFrequency(voice.coordX, voice.coordY, voice.octaveOffset);
       voice.oscillator.frequency.value = newFreq;
@@ -323,8 +305,6 @@ the entire instrument. Every sounding voice updates immediately, just like
 `setGenerator`.
 
 ``` {.typescript file=_generated/lib/synth.ts}
-  // === D Reference Frequency ===
-
   /**
    * Set D reference frequency (default 293.66Hz — standard D at A440).
    * This updates baseFreq and all playing notes.
@@ -335,14 +315,13 @@ the entire instrument. Every sounding voice updates immediately, just like
   setD4Hz(hz: number): void {
     this._d4Hz = Math.max(100, Math.min(2000, hz));
     this.baseFreq = this._d4Hz;
-    
-    // Update all playing voices with new frequencies
+
     for (const voice of this.voices.values()) {
       const newFreq = this.getFrequency(voice.coordX, voice.coordY, voice.octaveOffset);
       voice.oscillator.frequency.value = newFreq;
     }
   }
-  
+
   getD4Hz(): number {
     return this._d4Hz;
   }
@@ -364,12 +343,9 @@ with a 10 ms time constant. This exponential ramp avoids the audible clicks
 that an instantaneous `.value =` assignment would cause.
 
 ``` {.typescript file=_generated/lib/synth.ts}
-  // === Volume ===
-  
   setMasterVolume(volume: number): void {
     this._masterVolume = Math.max(0, Math.min(1, volume));
     if (this.masterGain && this.context) {
-      // Smooth transition to avoid clicks
       this.masterGain.gain.setTargetAtTime(
         this._masterVolume,
         this.context.currentTime,
@@ -391,15 +367,12 @@ filter at 3 kHz provides a simple tone control. The UI maps `-1..+1` to
 `-12 dB..+12 dB`, giving a bass-boost to treble-boost sweep.
 
 ``` {.typescript file=_generated/lib/synth.ts}
-  // === EQ/Tone ===
-  
   /**
    * Set EQ value: -1 = bass boost, 0 = flat, +1 = treble boost
    */
   setEQ(value: number): void {
     this._eqValue = Math.max(-1, Math.min(1, value));
     if (this.eqFilter && this.context) {
-      // Map -1..+1 to -12dB..+12dB
       const gainDb = this._eqValue * 12;
       this.eqFilter.gain.setTargetAtTime(
         gainDb,
@@ -422,12 +395,9 @@ until sustain is toggled off. This mirrors the behavior of a piano sustain
 pedal and is wired to the MIDI CC64 (damper) input.
 
 ``` {.typescript file=_generated/lib/synth.ts}
-  // === Sustain ===
-  
   setSustain(enabled: boolean): void {
     this.sustain = enabled;
-    
-    // If sustain is turned off, release all sustained notes
+
     if (!enabled) {
       for (const noteId of this.sustainedVoices) {
         this.stopNote(noteId, true);
@@ -458,8 +428,6 @@ corresponds to a frequency deviation of `f * (2^(d/1200) - 1)`, which for
 small `d` approximates to `f * d / 1200`.
 
 ``` {.typescript file=_generated/lib/synth.ts}
-  // === Vibrato ===
-  
   /**
    * Initialize the shared vibrato LFO (called once on first use)
    */
@@ -504,11 +472,11 @@ disconnected.
     } else {
       for (const voice of this.voices.values()) {
         voice.vibratoGainNode.gain.setValueAtTime(0, now);
-        try { this.vibratoLFO?.disconnect(voice.vibratoGainNode); } catch { /* vibrato node may not be connected */ }
+        try { this.vibratoLFO?.disconnect(voice.vibratoGainNode); } catch { }
       }
     }
   }
-  
+
   getVibrato(): boolean {
     return this._vibratoEnabled;
   }
@@ -530,8 +498,6 @@ x-axis steps through the
 along y steps through octaves.
 
 ``` {.typescript file=_generated/lib/synth.ts}
-  // === Note Playing ===
-  
   /**
    * Calculate frequency from isomorphic coordinates.
    * ALL frequencies are relative to D-ref (baseFreq).
@@ -638,25 +604,20 @@ If sustain is active and `force` is false, the note is deferred to the
     const voice = this.voices.get(noteId);
     if (!voice) return;
     
-    // If sustain is on and not forcing, add to sustained list
     if (this.sustain && !force) {
       this.sustainedVoices.add(noteId);
       return;
     }
-    
-    // Release envelope
+
     const { gainNode, oscillator } = voice;
     const now = this.context.currentTime;
-    
+
     gainNode.gain.cancelScheduledValues(now);
     gainNode.gain.setTargetAtTime(0, now, this.releaseTime);
-    
-    // Stop oscillator after release
+
     oscillator.stop(now + this.releaseTime * 5);
-    
-    // Clean up
-    // Disconnect vibrato gain node
-    try { this.vibratoLFO?.disconnect(voice.vibratoGainNode); } catch { /* vibrato node may not be connected */ }
+
+    try { this.vibratoLFO?.disconnect(voice.vibratoGainNode); } catch { }
 
     this.voices.delete(noteId);
     this.sustainedVoices.delete(noteId);
