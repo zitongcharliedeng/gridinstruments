@@ -905,8 +905,7 @@ The page is a vertical flex layout (`#app`) with these major sections:
     <!-- Song bar — game/song controls header -->
     <div id="song-bar">
       <div id="song-bar-calibrate">
-          <button class="slider-info-btn icon-btn icon-lg" data-info="calibration" title="About calibration" style="position:static;transform:none;"><i data-lucide="info"></i></button>
-          <button id="calibrate-btn" class="overlay-btn" title="Enter calibration mode: play all notes reachable on your input devices">Calibrate playable area</button>
+          <button id="calibrate-btn" class="overlay-btn" title="Calibrate: play all reachable notes to set your playable area">Calibrate</button>
           <div id="calibration-banner" style="display:none;flex-direction:column;gap:8px;">
             <span id="calibration-warning" style="display:none;font-family:var(--font);font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:0.06em;">This will reset your current song progress.</span>
             <span id="calibration-msg" style="font-family:var(--font);font-size:11px;color:var(--fg);text-transform:uppercase;letter-spacing:0.06em;">Play all reachable notes to set your playable area, then confirm</span>
