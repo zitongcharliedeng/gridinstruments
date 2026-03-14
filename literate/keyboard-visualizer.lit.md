@@ -690,17 +690,23 @@ export class KeyboardVisualizer {
     }
     this.ctx.globalAlpha = 1;
 
-    // QWERTY overlay label (bottom-right corner of cell)
+    // QWERTY overlay label (top-left of cell, high contrast)
     const qLabel = this.qwertyLabels.get(noteId);
     if (qLabel) {
-      const qSize = Math.max(9, fontSize * 0.6);
+      const qSize = Math.max(10, fontSize * 0.5);
       this.ctx.font = `bold ${qSize}px "JetBrains Mono", monospace`;
-      this.ctx.fillStyle = '#fff';
-      this.ctx.globalAlpha = 0.85;
-      this.ctx.textAlign = 'right';
-      this.ctx.textBaseline = 'bottom';
-      this.ctx.fillText(qLabel, x + Math.abs(hv1.x) + Math.abs(hv2.x) - 2, y + Math.abs(hv1.y) + Math.abs(hv2.y) - 2);
+      // Black background pill for contrast
+      const metrics = this.ctx.measureText(qLabel);
+      const pad = 2;
+      const lx = x - Math.abs(hv1.x) - Math.abs(hv2.x) + pad + 2;
+      const ly = y - Math.abs(hv1.y) - Math.abs(hv2.y) + pad + 2;
+      this.ctx.fillStyle = 'rgba(0,0,0,0.7)';
+      this.ctx.fillRect(lx - pad, ly - pad, metrics.width + pad * 2, qSize + pad * 2);
+      this.ctx.fillStyle = '#ffff00';
       this.ctx.globalAlpha = 1;
+      this.ctx.textAlign = 'left';
+      this.ctx.textBaseline = 'top';
+      this.ctx.fillText(qLabel, lx, ly);
     }
   }
 

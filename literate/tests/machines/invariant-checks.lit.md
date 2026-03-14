@@ -561,6 +561,20 @@ export const qwertyGoldenCheck: StateInvariant = {
     await page.locator('text=QWERTY LABELS').scrollIntoViewIfNeeded();
     await page.locator('text=QWERTY LABELS').click();
     await page.waitForTimeout(500);
+    // Debug: check toggle state and label count
+    const debugInfo = await page.evaluate(() => {
+      const cb = document.getElementById('qwerty-overlay-toggle') as HTMLInputElement;
+      // Access via prototype chain to read private field
+      const canvas = document.getElementById('keyboard-canvas') as HTMLCanvasElement;
+      return {
+        toggleExists: !!cb,
+        checked: cb?.checked ?? false,
+        canvasExists: !!canvas,
+      };
+    });
+    if (!debugInfo.checked) {
+      throw new Error(`QWERTY toggle not checked after click! Debug: ${JSON.stringify(debugInfo)}`);
+    }
     // Close overlay to see grid with labels
     await page.keyboard.press('Escape');
     await page.waitForTimeout(500);
