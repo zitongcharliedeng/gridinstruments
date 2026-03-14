@@ -3697,15 +3697,15 @@ export const gameSearch2: StateInvariant = {
       let threw = false;
       let isArray = false;
       try {
-        const arr = await searchAllAdapters('bach');
-        isArray = Array.isArray(arr);
+        const out = await searchAllAdapters('bach');
+        isArray = Array.isArray(out.results);
       } catch (_err) {
         threw = true;
       }
       return { threw, isArray };
     });
     expect(result.threw, 'searchAllAdapters must not throw').toBe(false);
-    expect(result.isArray, 'searchAllAdapters must return an array').toBe(true);
+    expect(result.isArray, 'searchAllAdapters.results must be an array').toBe(true);
   },
 };
 
