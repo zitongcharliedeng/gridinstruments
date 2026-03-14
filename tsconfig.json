@@ -15,6 +15,6 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["_generated", "AGENTS.md"],
+  "include": ["_generated", "raw.d.ts"],
   "exclude": ["_generated/tests"]
 }
