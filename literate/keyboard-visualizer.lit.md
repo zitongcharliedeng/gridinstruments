@@ -108,8 +108,6 @@ to visually "pop" forward.
 
 ``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
 
-// Fraction of cell size used for inactive cells.
-// Gap = 1 - CELL_INSET appears as black "mortar" between cells.
 const CELL_INSET = 0.93;
 
 ```
@@ -151,7 +149,6 @@ characteristic leaning parallelograms.
 
 ``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
 
-  // Half-vectors for parallelogram cells (computed in generateButtons)
   private hv1 = { x: 0, y: 0 }; // half-step in coordX direction
   private hv2 = { x: 0, y: 0 }; // half-step in coordY direction
 
