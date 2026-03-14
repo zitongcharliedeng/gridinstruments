@@ -1430,7 +1430,7 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
       });
       searchInput.addEventListener('blur', () => {
         // Hide results after a short delay to allow click events to fire first
-        setTimeout(() => { if (resultsDiv) resultsDiv.style.display = 'none'; }, 150);
+        setTimeout(() => { if (resultsDiv) resultsDiv.style.display = 'none'; }, 300);
         if (searchInput.value.trim() === '') {
           const gameState = this.gameActor?.getSnapshot().value as string | undefined;
           if (!gameState || gameState === 'idle' || gameState === 'error') {
