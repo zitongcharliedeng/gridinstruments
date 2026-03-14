@@ -54,10 +54,9 @@ export class NumericSlider {
     this.badge = badge;
     this.config = config;
 
-    // ─── Range input ──────────────────────────────────────────────────────────
     const onRangeInput: EventListener = () => {
       this.updateFill();
-      // Guard: do not overwrite badge text while user is typing into it
+
       if (document.activeElement !== this.badge) {
         this.updateBadge();
       }
@@ -66,19 +65,19 @@ export class NumericSlider {
     };
     this._attach(rangeInput, 'input', onRangeInput);
 
-    // ─── Reset button ─────────────────────────────────────────────────────────
+
     const onReset: EventListener = () => {
       this.rangeInput.value = String(this.config.defaultValue);
       this.updateFill();
-      // Always update badge on reset, regardless of activeElement
+
       this.updateBadge();
-      // Re-dispatch so any external listeners on the range input also run
+
       this.rangeInput.dispatchEvent(new Event('input', { bubbles: true }));
       for (const cb of this._resetCbs) cb();
     };
     this._attach(resetBtn, 'click', onReset);
 
-    // ─── Editable badge (only when config.editable=true and badge is <input>) ─
+
     if (config.editable && badge instanceof HTMLInputElement) {
       const inputEl = badge;
 
@@ -89,7 +88,7 @@ export class NumericSlider {
       this._attach(badge, 'input', onBadgeInput);
 
       const onBadgeBlur: EventListener = () => {
-        // Revert badge if user left an invalid value
+
         if (config.parseInput) {
           const parsed = config.parseInput(inputEl.value);
           if (parsed === null) {
@@ -105,12 +104,11 @@ export class NumericSlider {
       this._attach(badge, 'focus', onBadgeFocus);
     }
 
-    // Initial render
+
     this.updateFill();
     this.updateBadge();
   }
 
-  // ─── Private helpers ────────────────────────────────────────────────────────
 
   private _attach(
     target: EventTarget,
@@ -121,7 +119,6 @@ export class NumericSlider {
     this._attached.push([target, type, listener]);
   }
 
-  // ─── Public API ─────────────────────────────────────────────────────────────
 
   getValue(): number {
     return parseFloat(this.rangeInput.value);

@@ -29,16 +29,12 @@ import { isVisionEnabled, getScreenshotHash, VisionCache } from './cost-control'
 import { assertWithVision } from './llm-vision';
 import type { VisionResult } from './cost-control';
 
-// ─── Singleton cache ─────────────────────────────────────────────────────────
-
 let cacheInstance: VisionCache | null = null;
 
 function getCache(): VisionCache {
   cacheInstance ??= new VisionCache();
   return cacheInstance;
 }
-
-// ─── Types ───────────────────────────────────────────────────────────────────
 
 export interface VisualAssertOptions {
   /** Human-readable invariant for LLM vision (required for LLM layer). */
@@ -64,8 +60,6 @@ export interface VisualAssertResult {
   passed: boolean;
 }
 
-// ─── Main assertion ──────────────────────────────────────────────────────────
-
 /**
  * Run the full visual assertion pyramid for a UI state:
  *   1. Take screenshot
@@ -79,18 +73,15 @@ export async function assertVisualState(
 ): Promise<VisualAssertResult> {
   const { page, invariant, context, goldenName, locator, maxDiffRatio = 0.05 } = opts;
 
-  // ── Layer 1: Take screenshot ────────────────────────────────────────────
   const target = locator ? page.locator(locator) : page;
   const screenshotBuffer = await target.screenshot({ type: 'png' });
 
-  // ── Layer 2: Golden comparison ──────────────────────────────────────────
   await expect(target).toHaveScreenshot(`${goldenName}.png`, {
     maxDiffPixelRatio: maxDiffRatio,
     threshold: 0.3,
   });
   const goldenPassed = true;
 
-  // ── Layer 3: LLM vision (gated + cached) ────────────────────────────────
   let visionResult: VisionResult | null = null;
 
   if (isVisionEnabled()) {
@@ -111,7 +102,6 @@ export async function assertVisualState(
     }
   }
 
-  // ── Combined result ─────────────────────────────────────────────────────
   const passed = visionResult === null || visionResult.pass;
 
   return { goldenPassed, visionResult, passed };

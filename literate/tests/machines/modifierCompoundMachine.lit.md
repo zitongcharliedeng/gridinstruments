@@ -7,8 +7,6 @@ import { setup } from 'xstate';
 import { type Page, expect } from '@playwright/test';
 import type { StateInvariant } from './types';
 
-// ─── Invariants ──────────────────────────────────────────────────────────────
-
 const ctrlPassthroughCheck: StateInvariant = {
   id: 'BH-CTRL-PASSTHROUGH-1',
   check: async (page: Page) => {
@@ -34,8 +32,6 @@ export const focusReturnCheck: StateInvariant = {
     await expect(page.locator('#vibrato-indicator')).not.toHaveClass(/active/);
   },
 };
-
-// ─── Machine ─────────────────────────────────────────────────────────────────
 
 type ModifierEvent =
   | { type: 'PRESS_SHIFT' }
@@ -102,8 +98,6 @@ export const modifierCompoundMachine = setup({
   },
 });
 
-// ─── Playwright Actions ──────────────────────────────────────────────────────
-
 export const modifierCompoundPlaywrightActions: Record<ModifierEvent['type'], (page: Page) => Promise<void>> = {
   PRESS_SHIFT: async (page) => {
     await page.evaluate(() => document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Shift', code: 'ShiftLeft', shiftKey: true, bubbles: true, cancelable: true })));
@@ -131,16 +125,12 @@ export const modifierCompoundPlaywrightActions: Record<ModifierEvent['type'], (p
   },
 };
 
-// ─── Invariants (LLM descriptions) ──────────────────────────────────────────
-
 export const modifierCompoundInvariants: Record<string, string> = {
   idle: 'No modifier keys active — vibrato and sustain both off.',
   vibratoOnly: 'Vibrato active, sustain inactive.',
   sustainOnly: 'Sustain active, vibrato inactive.',
   bothActive: 'Both vibrato and sustain active simultaneously.',
 };
-
-// ─── DOM Assertions ──────────────────────────────────────────────────────────
 
 export const modifierCompoundDomAssertions: Record<string, (page: Page) => Promise<void>> = {
   idle: async (page) => {

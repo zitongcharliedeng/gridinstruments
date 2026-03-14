@@ -19,49 +19,37 @@ Unified state assertion registry for XState graph test generation — single loo
 import type { Page } from '@playwright/test';
 
 import {
-  // Machines
   allMachines,
-  // Overlay
   overlayPlaywrightActions,
   overlayInvariants,
   overlayDomAssertions,
-  // Visualiser
   visualiserPlaywrightActions,
   visualiserInvariants,
   visualiserDomAssertions,
-  // Pedals
   pedalsPlaywrightActions,
   pedalsInvariants,
   pedalsDomAssertions,
-  // Waveform
   waveformPlaywrightActions,
   waveformInvariants,
   waveformDomAssertions,
-  // Sustain
   sustainPlaywrightActions,
   sustainInvariants,
   sustainDomAssertions,
-  // Vibrato
   vibratoPlaywrightActions,
   vibratoInvariants,
   vibratoDomAssertions,
-  // MIDI Panel
   midiPanelPlaywrightActions,
   midiPanelInvariants,
   midiPanelDomAssertions,
-  // MPE
   mpePlaywrightActions,
   mpeInvariants,
   mpeDomAssertions,
-  // Text Input Focus
   textInputFocusPlaywrightActions,
   textInputFocusInvariants,
   textInputFocusDomAssertions,
-  // Skew Label
   skewLabelPlaywrightActions,
   skewLabelInvariants,
   skewLabelDomAssertions,
-  // Slider reset machines
   tuningSliderPlaywrightActions,
   tuningSliderInvariants,
   tuningSliderDomAssertions,
@@ -74,41 +62,31 @@ import {
   zoomSliderPlaywrightActions,
   zoomSliderInvariants,
   zoomSliderDomAssertions,
-  // About Dialog
   aboutDialogPlaywrightActions,
   aboutDialogInvariants,
   aboutDialogDomAssertions,
-  // D-ref Input
   drefInputPlaywrightActions,
   drefInputInvariants,
   drefInputDomAssertions,
-  // Modifier Compound
   modifierCompoundPlaywrightActions,
   modifierCompoundInvariants,
   modifierCompoundDomAssertions,
-  // Layout Persistence
   layoutPersistencePlaywrightActions,
   layoutPersistenceInvariants,
   layoutPersistenceDomAssertions,
-  // Viewport
   viewportPlaywrightActions,
   viewportInvariants,
   viewportDomAssertions,
-  // Song Bar
   songBarPlaywrightActions,
   songBarInvariants,
   songBarDomAssertions,
 } from './uiMachine';
-
-// ─── Types ───────────────────────────────────────────────────────────────────
 
 export interface MachineAssertionKit {
   actions: Partial<Record<string, (page: Page) => Promise<void>>>;
   invariants: Partial<Record<string, string>>;
   domAssertions: Partial<Record<string, (page: Page) => Promise<void>>>;
 }
-
-// ─── Registry ────────────────────────────────────────────────────────────────
 
 const registry: Partial<Record<string, MachineAssertionKit>> = {
   overlay: {
@@ -212,8 +190,6 @@ const registry: Partial<Record<string, MachineAssertionKit>> = {
     domAssertions: songBarDomAssertions,
   },
 };
-
-// ─── Lookup API ──────────────────────────────────────────────────────────────
 
 /**
  * Get the full assertion kit for a machine by name.

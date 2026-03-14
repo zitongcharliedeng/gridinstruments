@@ -7,8 +7,6 @@ import { setup } from 'xstate';
 import { type Page, expect } from '@playwright/test';
 import type { StateInvariant } from './types';
 
-// ─── Invariants ──────────────────────────────────────────────────────────────
-
 const bracketAnnotationCheck: StateInvariant = {
   id: 'BH-BRACKET-1',
   check: async (page: Page) => {
@@ -38,8 +36,6 @@ const redBorderCheck: StateInvariant = {
     expect(borderColor).toBe('rgb(204, 51, 51)');
   },
 };
-
-// ─── Machine ─────────────────────────────────────────────────────────────────
 
 type DrefEvent =
   | { type: 'CLICK_INPUT' }
@@ -125,8 +121,6 @@ export const drefInputMachine = setup({
   },
 });
 
-// ─── Playwright Actions ──────────────────────────────────────────────────────
-
 export const drefInputPlaywrightActions: Record<DrefEvent['type'], (page: Page) => Promise<void>> = {
   CLICK_INPUT: async (page) => {
     await page.locator('#d-ref-input').click();
@@ -170,8 +164,6 @@ export const drefInputPlaywrightActions: Record<DrefEvent['type'], (page: Page) 
   },
 };
 
-// ─── Invariants (LLM descriptions) ──────────────────────────────────────────
-
 export const drefInputInvariants: Record<string, string> = {
   idle: 'D-ref input is unfocused, showing default or last valid frequency with D4 annotation.',
   focused: 'D-ref input has keyboard focus, ready for user input.',
@@ -179,8 +171,6 @@ export const drefInputInvariants: Record<string, string> = {
   invalidValue: 'D-ref input contains invalid text with red border.',
   emptyValue: 'D-ref input is empty.',
 };
-
-// ─── DOM Assertions ──────────────────────────────────────────────────────────
 
 export const drefInputDomAssertions: Record<string, (page: Page) => Promise<void>> = {
   idle: async (page) => {

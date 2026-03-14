@@ -20,8 +20,6 @@ import {
   createSliderFillModifiedInvariant,
 } from './invariant-checks';
 
-// ─── Config type ─────────────────────────────────────────────────────────────
-
 interface SliderResetConfig {
   /** Machine name used in registry keys. */
   name: string;
@@ -39,11 +37,8 @@ interface SliderResetConfig {
   badgeReadMode: 'inputValue' | 'textContent';
 }
 
-// ─── Factory ─────────────────────────────────────────────────────────────────
-
 type SliderEvent = { type: 'SET_VALUE' } | { type: 'RESET' };
 
-// eslint-disable-next-line @typescript-eslint/explicit-function-return-type -- return type is complex XState generic, inferred is correct
 function createSliderResetMachine(config: SliderResetConfig) {
   const fillDefault = createSliderFillDefaultInvariant(config.sliderId);
   const fillModified = createSliderFillModifiedInvariant(config.sliderId);
@@ -128,8 +123,6 @@ function createSliderResetMachine(config: SliderResetConfig) {
   return { machine, playwrightActions, domAssertions, invariants };
 }
 
-// ─── Instances ───────────────────────────────────────────────────────────────
-
 export const {
   machine: tuningSliderMachine,
   playwrightActions: tuningSliderPlaywrightActions,
@@ -180,18 +173,15 @@ const zoomSliderBase = createSliderResetMachine({
   sliderId: 'zoom-slider',
   badgeId: 'zoom-thumb-badge',
   resetBtnId: 'zoom-reset',
-  defaultDisplay: '0.75', // FALLBACK_ZOOM in headless; overridden dynamically below
+  defaultDisplay: '0.75',
   modifiedValue: '2.5',
   badgeReadMode: 'textContent',
 });
 
-// Override default assertion to read the actual initial badge value (DPI-dependent)
 const _origDefaultAssert = zoomSliderBase.domAssertions.default;
 zoomSliderBase.domAssertions.default = async (page: Page) => {
   const val = await page.locator('#zoom-thumb-badge').textContent();
-  // Default zoom is DPI-dependent. Accept any value that is NOT the modified value.
   expect(val).not.toBe('2.50');
-  // Ensure it's a valid number
   const num = parseFloat(val ?? '');
   expect(num, 'zoom badge should be a valid number').toBeGreaterThan(0);
   expect(num, 'zoom badge should be within slider range').toBeLessThanOrEqual(3);

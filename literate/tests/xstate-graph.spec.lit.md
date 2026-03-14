@@ -221,8 +221,6 @@ import {
      } from './machines/invariant-checks';
 import { focusReturnCheck } from './machines/modifierCompoundMachine';
 
-// ─── Types ───────────────────────────────────────────────────────────────────
-
 interface TransitionTest {
   machineName: string;
   sourceState: string;
@@ -243,8 +241,6 @@ interface AdjNode {
   transitions: Record<string, AdjTransition>;
 }
 
-// ─── Graph enumeration ───────────────────────────────────────────────────────
-
 /**
  * Compute shortest paths from initial state to every other state.
  * Returns a map: stateName → event sequence to reach it.
@@ -259,7 +255,6 @@ function computeShortestPaths(machine: AnyStateMachine): Map<string, string[]> {
   const paths = new Map<string, string[]>();
   paths.set(initialState, []);
 
-  // BFS
   const queue: string[] = [initialState];
   const visited = new Set<string>([initialState]);
 
@@ -327,15 +322,9 @@ function enumerateTransitions(
   return tests;
 }
 
-// ─── Machines that require overlay to be open first ──────────────────────────
-
 const NEEDS_OVERLAY_OPEN = new Set(['waveform', 'mpe', 'textInputFocus', 'skewLabel', 'midiPanel', 'tuningSlider', 'skewSlider', 'volumeSlider', 'zoomSlider', 'drefInput']);
 
-// ─── Machines to skip (DOM elements don't exist) ─────────────────────────────
-
 const SKIP_MACHINES = new Set<string>([]);
-
-// ─── Structural invariants: D(P) = {} — tested once, not per-state ───────────
 
 test.describe('[Structural] state-independent invariants', () => {
   test.beforeEach(async ({ page }) => {
@@ -1078,8 +1067,6 @@ test.describe('[Structural] state-independent invariants', () => {
   });
  });
 
-// ─── Test generation ─────────────────────────────────────────────────────────
-
 for (const { name: machineName, machine } of allMachines) {
   if (SKIP_MACHINES.has(machineName)) continue;
 
@@ -1101,33 +1088,26 @@ for (const { name: machineName, machine } of allMachines) {
        *   every user-reachable (state, event) pair is exercised.
        */
       test(`${t.sourceState} → ${t.eventType} → ${t.targetState}`, async ({ page }) => {
-        // ── Step 0: Open overlay if machine needs it ──────────────────
         if (NEEDS_OVERLAY_OPEN.has(machineName)) {
           await page.locator('#grid-settings-btn').click();
           await page.waitForTimeout(300);
         }
 
-        // ── Step 1: Walk to source state ──────────────────────────────
         for (const eventType of t.pathToSource) {
           const action = getAction(machineName, eventType);
           await action(page);
           await page.waitForTimeout(200);
         }
 
-        // ── Step 2: Verify we're in source state ──────────────────────
         await assertDomState(machineName, t.sourceState, page);
 
-        // ── Step 3: Fire the event ────────────────────────────────────
         const action = getAction(machineName, t.eventType);
         await action(page);
-        // Panel drags need extra time for pointer capture teardown + class toggle
         const isDrag = t.eventType.startsWith('DRAG_') || t.eventType.startsWith('DBLCLICK_');
         await page.waitForTimeout(isDrag ? 500 : 300);
 
-        // ── Step 4: Verify target state (DOM assertions) ──────────────
         await assertDomState(machineName, t.targetState, page);
 
-        // ── Step 4b: State-level invariants (Tier 2) ──────────────────
         const stateConfig = machine.config.states?.[t.targetState] as
           | (Record<string, unknown> & { meta?: StateMeta })
           | undefined;
@@ -1138,7 +1118,6 @@ for (const { name: machineName, machine } of allMachines) {
           }
         }
 
-        // ── Step 5: LLM vision verification (optional) ────────────────
         const invariant = getInvariant(machineName, t.targetState);
         if (invariant) {
           const result = await assertVisualState({

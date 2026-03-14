@@ -7,10 +7,9 @@ import { setup } from 'xstate';
 import { type Page, expect } from '@playwright/test';
 import type { StateInvariant } from './types';
 
-// State machine modeling song-bar behavior
 type SongBarEvent =
   | { type: 'SEARCH_FOCUS' }
-  | { type: 'SEARCH_BLUR' }       // blur with empty input
+  | { type: 'SEARCH_BLUR' }
   | { type: 'CALIBRATE_START' }
   | { type: 'CALIBRATE_CANCEL' }
   | { type: 'CALIBRATE_DONE' };
@@ -25,7 +24,6 @@ export const songBarMachine = setup({
       meta: {
         reason: 'No song loaded, no interaction active. Hint is visible.',
         designIntent: 'Show drop/search hint when there is nothing to display',
-        // DO NOT add invariants here — they will fail until T5 is implemented
       },
       on: {
         SEARCH_FOCUS: 'searching',
@@ -59,7 +57,6 @@ export const songBarPlaywrightActions: Record<SongBarEvent['type'], (page: Page)
     await page.locator('#midi-search-input').click();
   },
   SEARCH_BLUR: async (page) => {
-    // Blur by clicking neutral area, input must be empty
     await page.locator('#midi-search-input').fill('');
     await page.locator('body').click({ position: { x: 500, y: 400 } });
   },
@@ -76,18 +73,15 @@ export const songBarPlaywrightActions: Record<SongBarEvent['type'], (page: Page)
 
 export const songBarDomAssertions: Record<string, (page: Page) => Promise<void>> = {
   idle: async (page) => {
-    // search input visible when idle
     await expect(page.locator('#midi-search-input')).toBeVisible();
     await expect(page.locator('#game-status')).toHaveCSS('display', 'none');
     await expect(page.locator('#calibration-banner')).toHaveCSS('display', 'none');
   },
   searching: async (page) => {
-    // search input focused when searching
     await expect(page.locator('#midi-search-input')).toBeVisible();
     await expect(page.locator('#midi-search-input')).toBeFocused();
   },
   calibrating: async (page) => {
-    // calibration banner visible
     await expect(page.locator('#calibration-banner')).not.toHaveCSS('display', 'none');
   },
 };

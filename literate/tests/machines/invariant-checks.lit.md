@@ -29,7 +29,6 @@ import {
   vibratoMachine as testVibratoMachine,
 } from './uiMachine';
 
-// ── State predicates: D(P) = {M} — wired to meta.invariants in uiMachine.ts ─
 
 /** D = {overlay}. Truth changes with overlay state. Wire: overlay.visible */
 export const tooltipCheck: StateInvariant = {
@@ -200,7 +199,6 @@ export const visCap60Check: StateInvariant = {
   },
 };
 
-// ── Slider fill predicates: D(P) = {slider} — wired to slider machine states ─
 
 /** D = {slider}. Fill gradient check for slider in default (min) position. */
 export function createSliderFillDefaultInvariant(sliderId: string): StateInvariant {
@@ -234,7 +232,6 @@ export function createSliderFillModifiedInvariant(sliderId: string): StateInvari
   };
 }
 
-// ── Visual regression migration: D(P) = {overlay} — wired to overlay.visible ─
 
 /** D = {overlay}. All slider badges sit above their tracks. Wire: overlay.visible */
 export const sliderBadgePositionCheck: StateInvariant = {
@@ -296,17 +293,14 @@ export const sliderLabelPositionCheck: StateInvariant = {
 export const sliderValuesCheck: StateInvariant = {
   id: 'SM-VAL-ALL',
   check: async (page: Page) => {
-    // SM-VAL-1: tuning badge no ¢, value ≈ 700
     const tuningVal = await page.locator('#tuning-thumb-badge').inputValue();
     expect(tuningVal).not.toContain('¢');
     expect(parseFloat(tuningVal)).toBeCloseTo(700, 0);
 
-    // SM-VAL-2: volume badge ≈ -10.5 dB
     const volText = await page.locator('#volume-thumb-badge').textContent();
     if (volText === null) throw new Error('#volume-thumb-badge text is null');
     expect(parseFloat(volText)).toBeCloseTo(-10.5, 0);
 
-    // SM-VAL-3: zoom badge no 'x', value matches app's computed default zoom
     const zoomText = await page.locator('#zoom-thumb-badge').textContent();
     if (zoomText === null) throw new Error('#zoom-thumb-badge text is null');
     expect(zoomText).not.toContain('x');
@@ -316,24 +310,20 @@ export const sliderValuesCheck: StateInvariant = {
     });
     expect(parseFloat(zoomText)).toBeCloseTo(expectedZoom, 1);
 
-    // SM-VAL-4: skew badge = '0.00'
     const skewVal = await page.locator('#skew-thumb-badge').inputValue();
     expect(skewVal).toBe('0.00');
 
-    // SM-VAL-5: tuning label contains 'FIFTHS TUNING' and 'CENTS'
     const tuningText = await page.locator('#tuning-label').textContent();
     if (tuningText === null) throw new Error('#tuning-label text is null');
     expect(tuningText.toUpperCase()).toContain('FIFTHS TUNING');
     expect(tuningText.toUpperCase()).toContain('CENTS');
 
-    // SM-VAL-6: d-ref input = '293.66', label contains 'D REF'
     const drefVal = await page.locator('#d-ref-input').inputValue();
     expect(drefVal).toBe('293.66');
     const drefLabelText = await page.locator('#d-ref-label').textContent();
     if (drefLabelText === null) throw new Error('#d-ref-label text is null');
     expect(drefLabelText).toContain('D REF');
 
-    // SM-VAL-7: d-ref label contains 'D REF' and 'HZ'
     const drefGroupText = await page.locator('.d-ref-group .slider-label-overlay').textContent();
     if (drefGroupText === null) throw new Error('.d-ref-group .slider-label-overlay text is null');
     expect(drefGroupText.toUpperCase()).toContain('D REF');
@@ -366,7 +356,6 @@ export const tetBelowTrackCheck: StateInvariant = {
 export const overlayColorsCheck: StateInvariant = {
   id: 'SM-COLOR-OVERLAY',
   check: async (page: Page) => {
-    // SM-COLOR-1: .overlay-section .ctrl-label all white
     const colors = await page.locator('.overlay-section .ctrl-label').evaluateAll(
       els => els.map(el => getComputedStyle(el).color)
     );
@@ -374,13 +363,11 @@ export const overlayColorsCheck: StateInvariant = {
       expect(c).toBe('rgb(255, 255, 255)');
     }
 
-    // SM-COLOR-3: #tuning-label color is white
     const tuningColor = await page.locator('#tuning-label').evaluate(
       el => getComputedStyle(el).color
     );
     expect(tuningColor).toBe('rgb(255, 255, 255)');
 
-    // SM-DREF-WHITE-1: d-ref label is white
     const drefColor = await page.locator('.d-ref-group .slider-label-overlay').evaluate(
       el => getComputedStyle(el).color
     );
@@ -405,7 +392,6 @@ export const drefAnnotationCheck: StateInvariant = {
 export const overlayControlsCheck: StateInvariant = {
   id: 'SM-STRUCT-OVERLAY',
   check: async (page: Page) => {
-    // SM-STRUCT-2: 5 reset buttons with visible SVG
     const resetIds = ['tuning-reset', 'skew-reset', 'zoom-reset', 'volume-reset', 'd-ref-reset'];
     for (const id of resetIds) {
       const btn = page.locator(`#${id}`);
@@ -414,7 +400,6 @@ export const overlayControlsCheck: StateInvariant = {
       await expect(svg).toBeVisible();
     }
 
-    // SM-STRUCT-3 (overlay part): #grid-overlay, select, input[type=text] borderRadius = 0px
     const selectors = ['#grid-overlay', 'select', 'input[type="text"]'];
     for (const sel of selectors) {
       const els = page.locator(sel);
@@ -425,13 +410,11 @@ export const overlayControlsCheck: StateInvariant = {
       }
     }
 
-    // SM-STRUCT-4: #d-ref-input width ≈ 80px
     const drefWidth = await page.locator('#d-ref-input').evaluate(
       el => getComputedStyle(el).width
     );
     expect(parseFloat(drefWidth)).toBeCloseTo(80, -1);
 
-    // SM-TUNING-ALIGN-1: .tuning-slider-area paddingTop = '0px'
     const paddingTop = await page.locator('.tuning-slider-area').first().evaluate(
       el => getComputedStyle(el).paddingTop
     );
@@ -439,13 +422,11 @@ export const overlayControlsCheck: StateInvariant = {
   },
 };
 
-// ── Visual regression migration: D(P) = {} — structural invariants ───────────
 
 /** D = {}. App-level colors, font, and DPR scaling. Structural test, not per-state. */
 export const appLoadedCheck: StateInvariant = {
   id: 'SM-APP-LOADED',
   check: async (page: Page) => {
-    // SM-COLOR-4: title, gh-mark, gh-btn colors
     const titleColor = await page.locator('.site-title').evaluate(
       el => getComputedStyle(el).color
     );
@@ -464,19 +445,16 @@ export const appLoadedCheck: StateInvariant = {
       expect(allowedColors).toContain(c);
     }
 
-    // SM-COLOR-5: body backgroundColor = black
     const bodyBg = await page.locator('body').evaluate(
       el => getComputedStyle(el).backgroundColor
     );
     expect(bodyBg).toBe('rgb(0, 0, 0)');
 
-    // SM-FONT-1: body fontFamily contains JetBrains Mono
     const fontFamily = await page.locator('body').evaluate(
       el => getComputedStyle(el).fontFamily
     );
     expect(fontFamily).toContain('JetBrains Mono');
 
-    // SM-KS-1: canvas DPR scaling
     const result = await page.evaluate(() => {
       const el = document.getElementById('keyboard-canvas');
       if (!(el instanceof HTMLCanvasElement)) return { canvasWidth: 0, cssWidth: 0, dpr: 1, ratio: 0 };
@@ -492,7 +470,6 @@ export const appLoadedCheck: StateInvariant = {
     expect(result.cssWidth).toBeGreaterThan(0);
     expect(Math.abs(result.ratio - result.dpr)).toBeLessThan(0.1);
 
-    // SM-STRUCT-3 (structural part): #keyboard-container borderRadius = 0px
     const kbBr = await page.locator('#keyboard-container').evaluate(
       el => getComputedStyle(el).borderRadius
     );
@@ -500,7 +477,6 @@ export const appLoadedCheck: StateInvariant = {
   },
 };
 
-// ── Visual regression migration: Golden screenshot invariants ─────────────────
 
 /** D = {overlay}. Grid overlay pixel-level golden. Caller must open overlay first. */
 export const overlayGoldenCheck: StateInvariant = {
@@ -554,17 +530,13 @@ export const mobileGoldenCheck: StateInvariant = {
 export const qwertyGoldenCheck: StateInvariant = {
   id: 'GOLDEN-QWERTY',
   check: async (page: Page) => {
-    // Open overlay, enable QWERTY toggle by clicking the label text
     await page.locator('#grid-settings-btn').click();
     await page.waitForTimeout(300);
-    // Scroll down to make QWERTY LABELS visible, then click the label
     await page.locator('text=QWERTY LABELS').scrollIntoViewIfNeeded();
     await page.locator('text=QWERTY LABELS').click();
     await page.waitForTimeout(500);
-    // Debug: check toggle state and label count
     const debugInfo = await page.evaluate(() => {
       const cb = document.getElementById('qwerty-overlay-toggle') as HTMLInputElement;
-      // Access via prototype chain to read private field
       const canvas = document.getElementById('keyboard-canvas') as HTMLCanvasElement;
       return {
         toggleExists: !!cb,
@@ -575,13 +547,11 @@ export const qwertyGoldenCheck: StateInvariant = {
     if (!debugInfo.checked) {
       throw new Error(`QWERTY toggle not checked after click! Debug: ${JSON.stringify(debugInfo)}`);
     }
-    // Close overlay to see grid with labels
     await page.keyboard.press('Escape');
     await page.waitForTimeout(500);
     await expect(page.locator('#keyboard-canvas')).toHaveScreenshot('qwerty-labels.png', {
       maxDiffPixelRatio: 0.02,
     });
-    // Cleanup: uncheck by clicking label again
     await page.locator('#grid-settings-btn').click();
     await page.waitForTimeout(200);
     await page.locator('text=QWERTY LABELS').click();
@@ -611,7 +581,6 @@ export const tetNotchGoldenCheck: StateInvariant = {
   },
 };
 
-// ── Structural predicates: D(P) = {} — tested once in xstate-graph.spec.ts ──
 
 /** D = {}. DOM hierarchy never changes. Structural test, not per-state. */
 export const handleDomParent: StateInvariant = {
@@ -637,7 +606,6 @@ export const panelAriaCheck: StateInvariant = {
   },
 };
 
-// ── Migrated from contracts.spec.ts — UI behavioral invariants ───────────────
 
 /** D = {}. Scrollbar 12px width at small viewport (#62). Structural test. */
 export const scrollbarWidthCheck: StateInvariant = {
@@ -722,9 +690,6 @@ export const slimSelectThemeCheck: StateInvariant = {
 export const nativeSelectHiddenCheck: StateInvariant = {
   id: 'ISS-85-2',
   check: async (page: Page) => {
-    // slim-select v3 hides native selects with accessible hiding:
-    // opacity:0, position:absolute, width/height:1px, clip:rect(0,0,0,0), aria-hidden:true
-    // It does NOT use display:none — check aria-hidden + opacity + .ss-main sibling instead.
     const result = await page.evaluate(() => {
       const selects = ['wave-select', 'layout-select', 'mpe-output-select'];
       return selects.map(id => {
@@ -781,7 +746,6 @@ export const noWhiteBackgroundCheck: StateInvariant = {
     const whites = await page.evaluate(() => {
       const overlay = document.getElementById('grid-overlay');
       if (!overlay) return ['overlay missing'];
-      // Elements that are intentionally white by design
       const allowedWhite = (el: Element): boolean =>
         el.matches('.gi-check') ||            // checked checkbox mark
         el.matches('.slider-preset-btn.active'); // active TET preset
@@ -860,9 +824,7 @@ export const drefRangeCheck: StateInvariant = {
   },
 };
 
-// ── Migrated from contracts.spec.ts — library contract invariants ────────────
 
-// ─── Category B: Module imports via page.evaluate ─────────────────────────────
 
 /** D = {}. TUNING_MARKERS must be sorted descending for binary search. */
 export const ctMarkers1Check: StateInvariant = {
@@ -955,19 +917,16 @@ export const ctNotename3Check: StateInvariant = {
         doubleFlat: getNoteNameFromCoord(-11),
       };
     });
-    // Double accidentals use repeated ♯♯/♭♭ (JetBrains Mono lacks SMP glyphs)
     expect(result.doubleSharp).toContain('\u266F\u266F');
     expect(result.doubleFlat).toContain('\u266D\u266D');
   },
 };
 
-// ─── Category A: Pure math — no page needed ───────────────────────────────────
 
 /** D = {}. coordToMidi(0, 0) = 62 (D4). */
 export const ctMidi1Check: StateInvariant = {
   id: 'CT-MIDI-1',
   check: async (_page: Page) => {
-    // Contract: baseMidi=62, x*7 semitones per fifth, y*12 per octave
     const midi = 62 + 0 * 7 + 0 * 12;
     expect(midi).toBe(62);
   },
@@ -1048,7 +1007,6 @@ export const ctCents1Check: StateInvariant = {
   id: 'CT-CENTS-1',
   check: async (_page: Page) => {
     const fifth = 700;
-    // +0 coerces -0 to 0 (JS: -5 * 0 === -0, but musically deviation is 0)
     const deviations = [-5, -1, 0, 1, 5].map(x => x * (fifth - 700) + 0);
     for (const d of deviations) {
       expect(d).toBe(0);
@@ -1070,7 +1028,6 @@ export const ctCents2Check: StateInvariant = {
   },
 };
 
-// ─── Category C: Machine state contracts — no page needed ─────────────────────
 
 /** D = {}. Runtime overlay machine states match test machine. */
 export const ctMachine1Check: StateInvariant = {
@@ -1128,7 +1085,6 @@ export const ctMachine4Check: StateInvariant = {
   },
 };
 
-// ─── Category D: Self-contained page.evaluate ─────────────────────────────────
 
 /** D = {}. Note naming includes double sharps and flats. */
 export const bhDoubleAccidental1Check: StateInvariant = {
@@ -1157,7 +1113,6 @@ export const bhDoubleAccidental1Check: StateInvariant = {
   },
 };
 
-// ── Migrated from mpe-output.spec.ts — MPE output invariants ────────────────
 
 /** D = {}. noteOn sends correct status byte on member channel 2–16. */
 export const iscMpe1Check: StateInvariant = {
@@ -1177,7 +1132,6 @@ export const iscMpe1Check: StateInvariant = {
       mpe.noteOn('n1', 60, 0.8);
       return sent;
     });
-    // noteOn sends 4 messages: pitch-bend reset, CC74 reset, pressure reset, note-on
     expect(sent).toHaveLength(4);
     const noteOn = sent[3];
     expect(noteOn[0] & 0xF0).toBe(0x90);
@@ -1208,45 +1162,35 @@ export const iscMpe2Check: StateInvariant = {
       mpe.noteOn('n1', 60, 0.8);
       sent.length = 0;
 
-      // +24 semitones (half of default 48 bend range)
       mpe.sendPitchBend('n1', 24);
       const bend24 = [...sent[0]];
       sent.length = 0;
 
-      // Center (0 semitones)
       mpe.sendPitchBend('n1', 0);
       const bendCenter = [...sent[0]];
       sent.length = 0;
 
-      // Max up (+48 = full range)
       mpe.sendPitchBend('n1', 48);
       const bendMaxUp = [...sent[0]];
       sent.length = 0;
 
-      // Max down (-48 = full range)
       mpe.sendPitchBend('n1', -48);
       const bendMaxDown = [...sent[0]];
 
       return { bend24, bendCenter, bendMaxUp, bendMaxDown };
     });
 
-    // All pitch bend messages: status high nibble = 0xE0
     expect(result.bend24[0] & 0xF0).toBe(0xE0);
 
-    // +24 st → normalized=0.5 → uint14=round(1.5×8191.5)=12287
-    //   12287 & 0x7F = 127 (LSB),  12287>>7 & 0x7F = 95 (MSB)
     expect(result.bend24[1]).toBe(127);
     expect(result.bend24[2]).toBe(95);
 
-    // Center → uint14=8192 → lsb=0, msb=64
     expect(result.bendCenter[1]).toBe(0);
     expect(result.bendCenter[2]).toBe(64);
 
-    // Max up → uint14=16383 → lsb=127, msb=127
     expect(result.bendMaxUp[1]).toBe(127);
     expect(result.bendMaxUp[2]).toBe(127);
 
-    // Max down → uint14=0 → lsb=0, msb=0
     expect(result.bendMaxDown[1]).toBe(0);
     expect(result.bendMaxDown[2]).toBe(0);
   },
@@ -1271,7 +1215,6 @@ export const iscMpe3Check: StateInvariant = {
       mpe.noteOn('n1', 60, 0.8);
       sent.length = 0;
 
-      // Slide values
       mpe.sendSlide('n1', 0);
       const slide0 = [...sent[0]];
       sent.length = 0;
@@ -1284,7 +1227,6 @@ export const iscMpe3Check: StateInvariant = {
       const slideFull = [...sent[0]];
       sent.length = 0;
 
-      // Pressure uses the same 0–1 → 0–127 normalisation
       mpe.sendPressure('n1', 0);
       const pressure0 = [...sent[0]];
       sent.length = 0;
@@ -1295,7 +1237,6 @@ export const iscMpe3Check: StateInvariant = {
       return { slide0, slideHalf, slideFull, pressure0, pressureFull };
     });
 
-    // Slide: [CC_status, 74, value]
     expect(result.slide0[1]).toBe(74);
     expect(result.slide0[2]).toBe(0);
 
@@ -1305,7 +1246,6 @@ export const iscMpe3Check: StateInvariant = {
     expect(result.slideFull[1]).toBe(74);
     expect(result.slideFull[2]).toBe(127);
 
-    // Pressure: [0xD0|ch, value]
     expect(result.pressure0[0] & 0xF0).toBe(0xD0);
     expect(result.pressure0[1]).toBe(0);
     expect(result.pressureFull[1]).toBe(127);
@@ -1328,22 +1268,18 @@ export const iscMpe4Check: StateInvariant = {
       sent.length = 0;
       mpe.setEnabled(true);
 
-      // Allocate all 15 member channels
       const allocatedChannels: number[] = [];
       for (let i = 0; i < 15; i++) {
         const startIdx = sent.length;
         mpe.noteOn(`n${i}`, 60 + i, 0.8);
-        // noteOn produces 4 messages; note-on is the 4th
         const noteOnMsg = sent[startIdx + 3];
         allocatedChannels.push((noteOnMsg[0] & 0x0F) + 1);
       }
 
-      // 16th noteOn — all channels exhausted → no output
       const beforeOverflow = sent.length;
       mpe.noteOn('overflow', 48, 0.8);
       const overflowMessageCount = sent.length - beforeOverflow;
 
-      // Release first note, then allocate → FIFO returns channel 2
       mpe.noteOff('n0', 60);
       const beforeReuse = sent.length;
       mpe.noteOn('reuse', 72, 0.8);
@@ -1353,13 +1289,10 @@ export const iscMpe4Check: StateInvariant = {
       return { allocatedChannels, overflowMessageCount, reuseChannel };
     });
 
-    // Sequential FIFO: channels 2 through 16
     expect(result.allocatedChannels).toEqual(
       [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16],
     );
-    // Overflow: no messages sent
     expect(result.overflowMessageCount).toBe(0);
-    // Reuse: freed channel 2 returned via FIFO
     expect(result.reuseChannel).toBe(2);
   },
 };
@@ -1380,21 +1313,18 @@ export const iscMpe5Check: StateInvariant = {
       return sent;
     });
 
-    // ── Lower zone MCM on ch1 (status 0xB0) ──
     expect(sent[0]).toEqual([0xB0, 101, 0]);    // RPN MSB = 0
     expect(sent[1]).toEqual([0xB0, 100, 6]);    // RPN LSB = 6 (MCM)
     expect(sent[2]).toEqual([0xB0, 6, 15]);     // Data Entry = 15 members
     expect(sent[3]).toEqual([0xB0, 101, 127]);  // Null RPN
     expect(sent[4]).toEqual([0xB0, 100, 127]);
 
-    // ── Upper zone disable on ch16 (status 0xBF) ──
     expect(sent[5]).toEqual([0xBF, 101, 0]);
     expect(sent[6]).toEqual([0xBF, 100, 6]);
     expect(sent[7]).toEqual([0xBF, 6, 0]);      // 0 members = zone off
     expect(sent[8]).toEqual([0xBF, 101, 127]);
     expect(sent[9]).toEqual([0xBF, 100, 127]);
 
-    // ── Pitch Bend Sensitivity (RPN 0/0) on manager ch1 ──
     expect(sent[10]).toEqual([0xB0, 101, 0]);   // RPN MSB = 0
     expect(sent[11]).toEqual([0xB0, 100, 0]);   // RPN LSB = 0 (PBS)
     expect(sent[12]).toEqual([0xB0, 6, 48]);    // 48 semitones
@@ -1418,7 +1348,6 @@ export const iscAMpe1Check: StateInvariant = {
       sent.length = 0; // clear MCM (those legitimately target ch1)
       mpe.setEnabled(true);
 
-      // Exercise every per-note message type
       for (let i = 0; i < 5; i++) {
         mpe.noteOn(`n${i}`, 60 + i, 0.8);
       }
@@ -1430,10 +1359,8 @@ export const iscAMpe1Check: StateInvariant = {
       return sent.map(msg => (msg[0] & 0x0F) + 1);
     });
 
-    // No per-note message should target channel 1 (manager)
     expect(channels).not.toContain(1);
 
-    // All channels must be in member range 2–16
     for (const ch of channels) {
       expect(ch).toBeGreaterThanOrEqual(2);
       expect(ch).toBeLessThanOrEqual(16);
@@ -1441,7 +1368,6 @@ export const iscAMpe1Check: StateInvariant = {
   },
 };
 
-// ── Migrated from mpe-service.spec.ts — MPE service invariants ──────────────
 
 /** D = {}. MPEService constructor creates default settings. */
 export const iscSvc1Check: StateInvariant = {
@@ -1473,7 +1399,6 @@ export const iscSvc2Check: StateInvariant = {
       return svc.getSettings();
     });
     expect(settings.timbreCC).toBe(1);
-    // Other defaults remain unchanged
     expect(settings.masterChannel).toBe(1);
     expect(settings.pitchBendRange).toBe(48);
     expect(settings.pressureMode).toBe('channel-at');
@@ -1498,16 +1423,12 @@ export const iscSvc3Check: StateInvariant = {
       svc.noteOn('n1', 60, 0.8);
       return sent;
     });
-    // noteOn sends 4 messages: pitch-bend reset, CC74 reset, pressure reset, note-on
     expect(sent).toHaveLength(4);
     const noteOn = sent[3];
-    // Status high nibble = 0x90 (Note On)
     expect(noteOn[0] & 0xF0).toBe(0x90);
-    // Channel must be a member channel (2–16, i.e. index 1–15)
     const channel = (noteOn[0] & 0x0F) + 1;
     expect(channel).toBeGreaterThanOrEqual(2);
     expect(channel).toBeLessThanOrEqual(16);
-    // Payload
     expect(noteOn[1]).toBe(60);
     expect(noteOn[2]).toBe(Math.round(0.8 * 127));
   },
@@ -1534,13 +1455,9 @@ export const iscSvc4Check: StateInvariant = {
       svc.noteOff('n1', 60);
       return { noteOff: sent[0], noteOnChannel };
     });
-    // Status high nibble = 0x80 (Note Off)
     expect(result.noteOff[0] & 0xF0).toBe(0x80);
-    // Same channel as note-on
     expect(result.noteOff[0] & 0x0F).toBe(result.noteOnChannel);
-    // MIDI note
     expect(result.noteOff[1]).toBe(60);
-    // Release velocity
     expect(result.noteOff[2]).toBe(64);
   },
 };
@@ -1571,11 +1488,9 @@ export const iscSvc5Check: StateInvariant = {
       svc.noteOff('n1', 60);
       return updates;
     });
-    // noteOn triggers notify → 1 voice (active)
     expect(result[0].count).toBe(1);
     expect(result[0].firstState).toBe('active');
     expect(result[0].firstNote).toBe(60);
-    // noteOff triggers notify → voice still in map but state = released
     expect(result[1].count).toBe(1);
     expect(result[1].firstState).toBe('released');
   },
@@ -1598,15 +1513,12 @@ export const iscSvc6Check: StateInvariant = {
       svc.panic();
       return sent;
     });
-    // Default: 15 member channels (2–16), each gets CC123
     expect(result).toHaveLength(15);
     for (let i = 0; i < 15; i++) {
       const ch = (result[i][0] & 0x0F) + 1;
       expect(ch).toBeGreaterThanOrEqual(2);
       expect(ch).toBeLessThanOrEqual(16);
-      // CC status
       expect(result[i][0] & 0xF0).toBe(0xB0);
-      // CC123 = All Notes Off
       expect(result[i][1]).toBe(123);
       expect(result[i][2]).toBe(0);
     }
@@ -1630,23 +1542,15 @@ export const iscSvc7Check: StateInvariant = {
       const voiceUpdates: number[] = [];
       svc.subscribe((voices) => { voiceUpdates.push(voices.length); });
       svc.noteOn('n1', 60, 0.8);
-      // voiceUpdates: [1]
       svc.dispose();
-      // dispose → panic → notify([]) → voiceUpdates: [1, 0]
-      // then listeners.clear()
-      // Re-wire output to prove listener is cleared
       svc.setOutput(mock);
       sent.length = 0;
-      // _enabled still true (dispose doesn't reset it)
       svc.noteOn('n2', 62, 0.8);
       const messagesAfterReuse = sent.length;
       return { voiceUpdates, messagesAfterReuse };
     });
-    // Callback fired during noteOn and during dispose → panic
     expect(result.voiceUpdates).toEqual([1, 0]);
-    // noteOn after dispose sent messages (output re-wired, service still functional)
     expect(result.messagesAfterReuse).toBeGreaterThan(0);
-    // But no new callback — listener was cleared by dispose
     expect(result.voiceUpdates).toHaveLength(2);
   },
 };
@@ -1657,7 +1561,6 @@ export const iscSvc8Check: StateInvariant = {
   check: async (page: Page) => {
     const result = await page.evaluate(async () => {
       const { MPEService } = await import('/_generated/lib/mpe-service.ts');
-      // ── Test poly-at mode ──
       const sentPolyAt: number[][] = [];
       const mockPolyAt = {
         send(data: number[]) { sentPolyAt.push([...data]); },
@@ -1671,7 +1574,6 @@ export const iscSvc8Check: StateInvariant = {
       sentPolyAt.length = 0;
       svcPolyAt.sendPressure('n1', 0.5);
       const polyAtMsg = [...sentPolyAt[0]];
-      // ── Test cc mode ──
       const sentCC: number[][] = [];
       const mockCC = {
         send(data: number[]) { sentCC.push([...data]); },
@@ -1687,11 +1589,9 @@ export const iscSvc8Check: StateInvariant = {
       const ccMsg = [...sentCC[0]];
       return { polyAtMsg, ccMsg };
     });
-    // Poly aftertouch: status = 0xA0 | channel
     expect(result.polyAtMsg[0] & 0xF0).toBe(0xA0);
     expect(result.polyAtMsg[1]).toBe(60);                    // MIDI note
     expect(result.polyAtMsg[2]).toBe(Math.round(0.5 * 127)); // pressure value
-    // CC mode: status = 0xB0 | channel, CC11 (expression)
     expect(result.ccMsg[0] & 0xF0).toBe(0xB0);
     expect(result.ccMsg[1]).toBe(11);                        // pressureCC
     expect(result.ccMsg[2]).toBe(Math.round(0.5 * 127));     // pressure value
@@ -1712,10 +1612,8 @@ export const iscSvc9Check: StateInvariant = {
       const svc = new MPEService();
       svc.setOutput(mock);
       sent.length = 0;
-      // Enable then disable to test the gate
       svc.setEnabled(true);
       svc.setEnabled(false);
-      // setEnabled(false) calls panic → sends CC123 on all 15 channels
       sent.length = 0; // clear panic messages
       svc.noteOn('n1', 60, 0.8);
       const noteOnMessages = sent.length;
@@ -1757,25 +1655,21 @@ export const iscSvc10Check: StateInvariant = {
       sent.length = 0;
       svc.setEnabled(true);
       svc.noteOn('n1', 60, 0.8);
-      // noteOn sends: pitch bend reset, CC1 reset (custom timbre), pressure reset, note-on
       const timbreReset = [...sent[1]]; // second message = timbre reset
       sent.length = 0;
       svc.sendSlide('n1', 0.75);
       const slideMsg = [...sent[0]];
       return { timbreReset, slideMsg };
     });
-    // Timbre reset during noteOn uses CC1 instead of CC74
     expect(result.timbreReset[0] & 0xF0).toBe(0xB0);
     expect(result.timbreReset[1]).toBe(1);  // CC1 = mod wheel
     expect(result.timbreReset[2]).toBe(64); // center value
-    // Slide message uses CC1
     expect(result.slideMsg[0] & 0xF0).toBe(0xB0);
     expect(result.slideMsg[1]).toBe(1);
     expect(result.slideMsg[2]).toBe(Math.round(0.75 * 127));
   },
 };
 
-// ── Issue regression invariants ─────────────────────────────────────────────
 
 /** D = {overlay}. Skew notch at value 0 reads "DCompose / Wicki-Hayden" (#81). */
 export const iss81SkewNotchCheck: StateInvariant = {
@@ -1783,13 +1677,11 @@ export const iss81SkewNotchCheck: StateInvariant = {
   check: async (page: Page) => {
     await page.locator('#grid-settings-btn').click();
     await page.waitForTimeout(300);
-    // Verify the preset notch button text
     const notchBtn = page.locator('#skew-presets .slider-preset-btn[data-value="0"]');
     await expect(notchBtn).toBeVisible();
     const notchText = await notchBtn.textContent();
     if (!notchText) throw new Error('skew preset notch button has no text');
     expect(notchText).toContain('DCompose / Wicki-Hayden');
-    // Verify the skew-label annotation contains both names
     const labelText = await page.locator('#skew-label').textContent();
     if (!labelText) throw new Error('#skew-label has no text');
     expect(labelText).toContain('DCompose');
@@ -1807,7 +1699,6 @@ export const iss87CogNoOverlapCheck: StateInvariant = {
     if (!cogBox) throw new Error('#grid-settings-btn not visible');
     const sectionBox = await page.locator('.overlay-section').first().boundingBox();
     if (!sectionBox) throw new Error('.overlay-section not visible');
-    // Overlay section left edge must be >= cog right edge
     expect(sectionBox.x, 'overlay content must not overlap cog').toBeGreaterThanOrEqual(cogBox.x + cogBox.width);
   },
 };
@@ -1845,10 +1736,8 @@ export const iss97LayoutResetCheck: StateInvariant = {
   check: async (page: Page) => {
     await page.locator('#grid-settings-btn').click();
     await page.waitForTimeout(300);
-    // Verify #layout-reset exists
     const layoutReset = page.locator('#layout-reset');
     await expect(layoutReset).toBeVisible();
-    // Click reset and verify layout select value is 'ansi'
     await layoutReset.click();
     await page.waitForTimeout(200);
     const layoutVal = await page.locator('#layout-select').inputValue();
@@ -1871,7 +1760,6 @@ export const iss98AlignmentCheck: StateInvariant = {
       if (!box) continue;
       rights.push(Math.round(box.x + box.width));
     }
-    // All right edges within 2px tolerance
     const maxRight = Math.max(...rights);
     const minRight = Math.min(...rights);
     expect(maxRight - minRight, 'slider-track right edges must align within 2px').toBeLessThanOrEqual(2);
@@ -1882,10 +1770,8 @@ export const iss98AlignmentCheck: StateInvariant = {
 export const targetNoteApiExists: StateInvariant = {
   id: 'GAME-TGT-1',
   check: async (page: Page) => {
-    // Verify canvas exists (prerequisite for target note rendering)
     const canvas = page.locator('#keyboard-canvas');
     await expect(canvas).toBeVisible();
-    // Verify the canvas has the correct tag (not replaced by other elements)
     const tag = await canvas.evaluate((el: Element) => el.tagName.toLowerCase());
     expect(tag).toBe('canvas');
   },
@@ -1919,7 +1805,6 @@ export const canvasDropZone: StateInvariant = {
 export const iss92OverlayHeadingsCheck: StateInvariant = {
   id: 'ISS-92-1',
   check: async (page: Page) => {
-    // Open overlay first
     await page.locator('#grid-settings-btn').click();
     await page.waitForTimeout(300);
     const headings = page.locator('#grid-overlay .overlay-section-title');
@@ -1930,10 +1815,8 @@ export const iss92OverlayHeadingsCheck: StateInvariant = {
       }
     }
     expect(texts.length, 'Should have exactly 5 overlay section headings').toBe(5);
-    // Verify headings are greyish (not white)
     const firstHeading = headings.first();
     const color = await firstHeading.evaluate((el) => getComputedStyle(el).color);
-    // var(--dim) resolves to a grey — should not be rgb(255, 255, 255)
     if (color === 'rgb(255, 255, 255)') throw new Error('Category heading is white — should be greyish (var(--dim))');
   },
 };
@@ -1996,7 +1879,6 @@ export const gameCalibrationStorage: StateInvariant = {
   },
 };
 
-// ── Game integration invariants: D(P) = {} — full pipeline tests ─────────────
 
 /** D = {}. MIDI parser produces valid NoteEvent array from fixture file. */
 export const gameMidiParserIntegration: StateInvariant = {
@@ -2055,11 +1937,9 @@ export const gameMachineTransitions: StateInvariant = {
 
     const states: string[] = [actor.getSnapshot().value as string];
 
-    // idle → loading
     actor.send({ type: 'FILE_DROPPED', file: new File([], 'test.mid') });
     states.push(actor.getSnapshot().value as string);
 
-    // loading → playing
     const mockGroups: NoteGroup[] = [
       { cellIds: ['0_0', '1_0'], midiNotes: [60, 64], startMs: 0 },
       { cellIds: ['2_0'], midiNotes: [67], startMs: 500 },
@@ -2069,15 +1949,12 @@ export const gameMachineTransitions: StateInvariant = {
 
     const targetCellIds = actor.getSnapshot().context.targetCellIds;
 
-    // First note of chord — accumulates, does NOT advance yet
     actor.send({ type: 'NOTE_PRESSED', cellId: '0_0', midiNote: 60 });
     const afterFirstNote = actor.getSnapshot().context.currentGroupIndex;
 
-    // Second note of chord — completes chord, advances to group 1
     actor.send({ type: 'NOTE_PRESSED', cellId: '1_0', midiNote: 64 });
     const afterChordComplete = actor.getSnapshot().context.currentGroupIndex;
 
-    // Single-note group → complete
     actor.send({ type: 'NOTE_PRESSED', cellId: '2_0', midiNote: 67 });
     states.push(actor.getSnapshot().value as string);
 
@@ -2135,7 +2012,6 @@ export const gameFreqMatch: StateInvariant = {
       noteGroups: [{ cellIds: ['0_0'], midiNotes: [60], startMs: 0 }],
     });
 
-    // midiNote 60 matches, cellId '99_99' does NOT match cellIds — should still advance
     actor.send({ type: 'NOTE_PRESSED', cellId: '99_99', midiNote: 60 });
     const state = actor.getSnapshot().value as string;
 
@@ -2145,7 +2021,6 @@ export const gameFreqMatch: StateInvariant = {
   },
 };
 
-// ─── Game State Machine Transition Tests (GAME-SM) ───────────────────────────
 
 /**
  * D = {}. gameMachine: idle → FILE_DROPPED → loading
@@ -2308,7 +2183,6 @@ export const gameSm6CompleteNewGame: StateInvariant = {
     const actor = createActor(gameMachine);
     actor.start();
 
-    // Reach complete via a single-note song
     actor.send({ type: 'FILE_DROPPED', file: new File([], 'song.mid') });
     actor.send({ type: 'SONG_LOADED', noteGroups: [{ cellIds: ['0_0'], midiNotes: [60], startMs: 0 }] });
     actor.send({ type: 'NOTE_PRESSED', cellId: '0_0', midiNote: 60 });
@@ -2339,7 +2213,6 @@ export const gameSm7CompleteReset: StateInvariant = {
     const actor = createActor(gameMachine);
     actor.start();
 
-    // Reach complete via a single-note song
     actor.send({ type: 'FILE_DROPPED', file: new File([], 'song.mid') });
     actor.send({ type: 'SONG_LOADED', noteGroups: [{ cellIds: ['0_0'], midiNotes: [60], startMs: 0 }] });
     actor.send({ type: 'NOTE_PRESSED', cellId: '0_0', midiNote: 60 });
@@ -2412,7 +2285,6 @@ export const gameSm9PlayingReset: StateInvariant = {
       noteGroups: [{ cellIds: ['0_0', '1_0'], midiNotes: [60, 64], startMs: 0 }],
     });
 
-    // Press first note of a two-note chord so pressedMidiNotes is non-empty
     actor.send({ type: 'NOTE_PRESSED', cellId: '0_0', midiNote: 60 });
     const pressedBefore = actor.getSnapshot().context.pressedMidiNotes;
 
@@ -2452,7 +2324,6 @@ export const gameSm10WrongNoteNoop: StateInvariant = {
       ],
     });
 
-    // Send a wrong note (61 is NOT in midiNotes [60])
     actor.send({ type: 'NOTE_PRESSED', cellId: '0_0', midiNote: 61 });
     const snap = actor.getSnapshot();
 
@@ -2520,7 +2391,6 @@ export const gameFreqReject: StateInvariant = {
       noteGroups: [{ cellIds: ['0_0'], midiNotes: [60], startMs: 0 }],
     });
 
-    // cellId '0_0' matches cellIds but midiNote 61 does NOT match midiNotes
     actor.send({ type: 'NOTE_PRESSED', cellId: '0_0', midiNote: 61 });
     const state = actor.getSnapshot().value as string;
     const pressed = actor.getSnapshot().context.pressedMidiNotes;
@@ -2555,15 +2425,12 @@ export const gameChordAll: StateInvariant = {
       ],
     });
 
-    // Press 1 of 3 — should NOT advance
     actor.send({ type: 'NOTE_PRESSED', cellId: '0_0', midiNote: 60 });
     expect(actor.getSnapshot().context.currentGroupIndex, 'after 1/3 notes').toBe(0);
 
-    // Press 2 of 3 — should NOT advance
     actor.send({ type: 'NOTE_PRESSED', cellId: '1_0', midiNote: 64 });
     expect(actor.getSnapshot().context.currentGroupIndex, 'after 2/3 notes').toBe(0);
 
-    // Press 3 of 3 — should advance to group 1
     actor.send({ type: 'NOTE_PRESSED', cellId: '2_0', midiNote: 67 });
     expect(actor.getSnapshot().context.currentGroupIndex, 'after 3/3 notes').toBe(1);
 
@@ -2595,7 +2462,6 @@ export const gameChordSingle: StateInvariant = {
       ],
     });
 
-    // Each single-note group should advance immediately
     actor.send({ type: 'NOTE_PRESSED', cellId: '0_0', midiNote: 60 });
     expect(actor.getSnapshot().context.currentGroupIndex, 'after first note').toBe(1);
 
@@ -2660,12 +2526,10 @@ export const gameChordClear: StateInvariant = {
       ],
     });
 
-    // Accumulate first note
     actor.send({ type: 'NOTE_PRESSED', cellId: '0_0', midiNote: 60 });
     const afterAccumulate = actor.getSnapshot().context.pressedMidiNotes;
     expect(afterAccumulate, 'should contain accumulated note').toContain(60);
 
-    // Complete first chord — should clear pressedMidiNotes
     actor.send({ type: 'NOTE_PRESSED', cellId: '1_0', midiNote: 64 });
     const afterAdvance = actor.getSnapshot().context.pressedMidiNotes;
     expect(afterAdvance.length, 'pressedMidiNotes should be empty after advance').toBe(0);
@@ -2776,7 +2640,6 @@ export const gameCalibrationVisualDim: StateInvariant = {
     await page.locator('#calibrate-cancel').click();
     await page.waitForTimeout(300);
 
-    // Uncalibrated cells must be greyscale: R≈G≈B within ±3 tolerance
     for (const sample of after) {
       const maxDiff = Math.max(
         Math.abs(sample.r - sample.g),
@@ -2788,11 +2651,6 @@ export const gameCalibrationVisualDim: StateInvariant = {
   },
 };
 
-// ── GAME-ENG-* : pure game-engine function coverage ──────────────────────────
-// These tests exercise buildNoteGroups, transposeSong, cropToRange,
-// findOptimalTransposition, and computeMedianMidiNote directly via browser
-// import, matching the GAME-INT-2 page.evaluate pattern. No fixture fetch is
-// needed — all inputs are constructed inline.
 
 /**
  * D = {}. buildNoteGroups correctly groups simultaneous notes within CHORD_THRESHOLD_MS (20ms).
@@ -2851,7 +2709,6 @@ export const gameEngBuildNoteGroups2: StateInvariant = {
   check: async (page: Page) => {
     const result = await page.evaluate(async () => {
       const { buildNoteGroups } = await import('/_generated/lib/game-engine.ts');
-      // Two events with identical midiNote (same cellId) 5 ms apart (within 20 ms threshold)
       const events = [
         { midiNote: 60, startMs: 0, durationMs: 100, velocity: 80, channel: 0, track: 0 },
         { midiNote: 60, startMs: 5, durationMs: 100, velocity: 80, channel: 0, track: 0 },
@@ -2949,7 +2806,6 @@ export const gameEngCropToRange: StateInvariant = {
         cellId62,
       };
     });
-    // Group 0 (C4 only) → fully removed; groups 1 and 2 survive (possibly trimmed)
     expect(result.croppedCount, 'C4-only group removed; D4-only and mixed groups kept').toBe(2);
     expect(result.firstNote, 'first surviving group contains D4').toBe(62);
     expect(result.firstCellId, 'first surviving group cellId matches D4').toBe(result.cellId62);
@@ -2976,7 +2832,6 @@ export const gameEngFindOptimalTransposition: StateInvariant = {
     const result = await page.evaluate(async () => {
       const { midiToCellId, findOptimalTransposition } = await import('/_generated/lib/game-engine.ts');
       const cellId62 = midiToCellId(62);  // D4 — the only in-range cell
-      // Song: one note at C4 (MIDI 60).  Transposing by +2 → D4 → in range.
       const groups = [
         { cellIds: [midiToCellId(60)], midiNotes: [60], startMs: 0 },
       ];
@@ -3005,13 +2860,11 @@ export const gameEngComputeMedianMidiNote: StateInvariant = {
     const result = await page.evaluate(async () => {
       const { computeMedianMidiNote } = await import('/_generated/lib/game-engine.ts');
       const emptyResult = computeMedianMidiNote([]);
-      // Odd-length: [64, 60, 62] → sorted [60, 62, 64] → floor(3/2)=1 → 62
       const oddResult = computeMedianMidiNote([
         { midiNote: 64, startMs: 0,   durationMs: 100, velocity: 80, channel: 0, track: 0 },
         { midiNote: 60, startMs: 100, durationMs: 100, velocity: 80, channel: 0, track: 0 },
         { midiNote: 62, startMs: 200, durationMs: 100, velocity: 80, channel: 0, track: 0 },
       ]);
-      // Even-length: [60, 64] → sorted [60, 64] → floor(2/2)=1 → 64
       const evenResult = computeMedianMidiNote([
         { midiNote: 60, startMs: 0,   durationMs: 100, velocity: 80, channel: 0, track: 0 },
         { midiNote: 64, startMs: 100, durationMs: 100, velocity: 80, channel: 0, track: 0 },
@@ -3049,7 +2902,6 @@ export const gameEngBuildNoteGroupsEmpty: StateInvariant = {
   },
 };
 
-// ── GAME-MIDI: MIDI parser edge cases ─────────────────────────────────────────
 
 /**
  * D = {}. Type 1 (multi-track) MIDI is merged into a single NoteEvent stream.
@@ -3103,8 +2955,6 @@ export const gameMidi2: StateInvariant = {
   check: async (page: Page) => {
     const result = await page.evaluate(async () => {
       const { parseMidi } = await import('/_generated/lib/midi-parser.ts');
-      // Type 0 MIDI: note60 (full status 0x90), then note64 via running status (no status byte).
-      // Track bytes: 4 + 3 + 3 + 3 + 4 = 17 = 0x11.
       const bytes = [
         0x4D, 0x54, 0x68, 0x64,
         0x00, 0x00, 0x00, 0x06,
@@ -3154,23 +3004,16 @@ export const gameMidi3: StateInvariant = {
   check: async (page: Page) => {
     const result = await page.evaluate(async () => {
       const { parseMidi } = await import('/_generated/lib/midi-parser.ts');
-      // Type 0 MIDI: NoteOn note60 vel=64, then NoteOn note60 vel=0 (running status = NoteOff).
-      // Track length = 4 (NoteOn) + 3 (running status NoteOff) + 4 (EndOfTrack) = 11 = 0x0B bytes.
       const bytes = [
-        // MThd
         0x4D, 0x54, 0x68, 0x64,
         0x00, 0x00, 0x00, 0x06, // header length = 6
         0x00, 0x00,             // format 0
         0x00, 0x01,             // 1 track
         0x00, 0x60,             // 96 ticks/quarter
-        // MTrk
         0x4D, 0x54, 0x72, 0x6B,
         0x00, 0x00, 0x00, 0x0B, // track length = 11 bytes
-        // delta=0, NoteOn ch0 note60 (C4) vel=64
         0x00, 0x90, 0x3C, 0x40,
-        // delta=96 (0x60), running status, note60 vel=0 — acts as NoteOff
         0x60, 0x3C, 0x00,
-        // End of track
         0x00, 0xFF, 0x2F, 0x00,
       ];
       const buffer = new Uint8Array(bytes).buffer;
@@ -3204,21 +3047,15 @@ export const gameMidi4: StateInvariant = {
   check: async (page: Page) => {
     const result = await page.evaluate(async () => {
       const { parseMidi } = await import('/_generated/lib/midi-parser.ts');
-      // Type 0 MIDI: one NoteOn ch9 note36 (kick), no NoteOff — auto-closed at end-of-track.
-      // Track length = 4 (NoteOn) + 4 (EndOfTrack) = 8 = 0x08 bytes.
       const bytes = [
-        // MThd
         0x4D, 0x54, 0x68, 0x64,
         0x00, 0x00, 0x00, 0x06,
         0x00, 0x00, // format 0
         0x00, 0x01, // 1 track
         0x00, 0x60, // 96 ticks/quarter
-        // MTrk
         0x4D, 0x54, 0x72, 0x6B,
         0x00, 0x00, 0x00, 0x08, // track length = 8 bytes
-        // delta=0, NoteOn ch9 note36 (kick) vel=64
         0x00, 0x99, 0x24, 0x40,
-        // End of track — no NoteOff, parser auto-closes with end tick
         0x00, 0xFF, 0x2F, 0x00,
       ];
       const buffer = new Uint8Array(bytes).buffer;
@@ -3245,19 +3082,14 @@ export const gameMidi5: StateInvariant = {
   check: async (page: Page) => {
     const result = await page.evaluate(async () => {
       const { parseMidi } = await import('/_generated/lib/midi-parser.ts');
-      // Type 0 MIDI: valid header, one track containing only End-of-Track.
-      // Track length = 4 (EndOfTrack) = 0x04 bytes.
       const bytes = [
-        // MThd
         0x4D, 0x54, 0x68, 0x64,
         0x00, 0x00, 0x00, 0x06,
         0x00, 0x00, // format 0
         0x00, 0x01, // 1 track
         0x00, 0x60, // 96 ticks/quarter
-        // MTrk
         0x4D, 0x54, 0x72, 0x6B,
         0x00, 0x00, 0x00, 0x04, // track length = 4 bytes
-        // End of track only
         0x00, 0xFF, 0x2F, 0x00,
       ];
       const buffer = new Uint8Array(bytes).buffer;
@@ -3287,7 +3119,6 @@ export const gameMidi6: StateInvariant = {
   check: async (page: Page) => {
     const result = await page.evaluate(async () => {
       const { parseMidi } = await import('/_generated/lib/midi-parser.ts');
-      // 14 bytes of garbage — wrong magic, not 'MThd'.
       const bytes = [
         0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
         0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D,
@@ -3321,28 +3152,18 @@ export const gameMidi7: StateInvariant = {
   check: async (page: Page) => {
     const result = await page.evaluate(async () => {
       const { parseMidi } = await import('/_generated/lib/midi-parser.ts');
-      // Type 0 MIDI: kick (note36) + snare (note38), both ch9.
-      // All 4 note events share running status 0x99 (NoteOn ch9).
-      // Track length: 4 + 3 + 3 + 3 + 4 = 17 = 0x11 bytes.
       const bytes = [
-        // MThd
         0x4D, 0x54, 0x68, 0x64,
         0x00, 0x00, 0x00, 0x06,
         0x00, 0x00, // format 0
         0x00, 0x01, // 1 track
         0x00, 0x60, // 96 ticks/quarter
-        // MTrk
         0x4D, 0x54, 0x72, 0x6B,
         0x00, 0x00, 0x00, 0x11, // track length = 17 bytes
-        // delta=0, NoteOn ch9 note36 (kick) vel=64
         0x00, 0x99, 0x24, 0x40,
-        // delta=96 (0x60), running status note36 vel=0 (NoteOff kick)
         0x60, 0x24, 0x00,
-        // delta=0, running status note38 (snare) vel=80
         0x00, 0x26, 0x50,
-        // delta=96 (0x60), running status note38 vel=0 (NoteOff snare)
         0x60, 0x26, 0x00,
-        // End of track
         0x00, 0xFF, 0x2F, 0x00,
       ];
       const buffer = new Uint8Array(bytes).buffer;
@@ -3357,7 +3178,6 @@ export const gameMidi7: StateInvariant = {
   },
 };
 
-// ── GAME-INPUT: NOTE_PRESSED event shape and frequency-based matching ──────────
 
 /**
  * D = {}. gameMachine accepts NOTE_PRESSED with midiNote field and advances group on match.
@@ -3387,7 +3207,6 @@ export const gameInput1: StateInvariant = {
 
     const beforeIndex = actor.getSnapshot().context.currentGroupIndex;
 
-    // Event carries both required fields: cellId (for UI highlighting) and midiNote (for matching)
     actor.send({ type: 'NOTE_PRESSED', cellId: '0_0', midiNote: 60 });
     const snap = actor.getSnapshot();
 
@@ -3421,7 +3240,6 @@ export const gameInput2: StateInvariant = {
       noteGroups: [{ cellIds: ['0_0'], midiNotes: [60], startMs: 0 }],
     });
 
-    // midiNote 99 is NOT in the group's midiNotes [60]
     actor.send({ type: 'NOTE_PRESSED', cellId: '0_0', midiNote: 99 });
     const snap = actor.getSnapshot();
 
@@ -3459,20 +3277,16 @@ export const gameInput3: StateInvariant = {
       ],
     });
 
-    // cellId '99_99' is NOT in the group's cellIds ['0_0'],
-    // but midiNote 60 IS in midiNotes [60] — the machine must advance
     actor.send({ type: 'NOTE_PRESSED', cellId: '99_99', midiNote: 60 });
     const snap = actor.getSnapshot();
 
     actor.stop();
 
-    // Matching is frequency-based: cellId mismatch is irrelevant to correctness
     expect(snap.value, 'machine stays in playing (second group remaining)').toBe('playing');
     expect(snap.context.currentGroupIndex, 'group advances despite non-matching cellId — midiNote-based matching').toBe(1);
   },
 };
 
-// ── GAME-EDGE: Edge cases in file loading, chord accumulation, and range cropping ─
 
 /**
  * D = {}. gameMachine accepts any FILE_DROPPED regardless of file extension.
@@ -3492,11 +3306,9 @@ export const gameEdge1: StateInvariant = {
     const actor = createActor(gameMachine);
     actor.start();
 
-    // Machine accepts any FILE_DROPPED — extension validation is upstream in main.ts
     actor.send({ type: 'FILE_DROPPED', file: new File([], 'test.txt') });
     const afterDrop = actor.getSnapshot().value as string;
 
-    // main.ts detects the wrong extension and sends LOAD_FAILED
     actor.send({ type: 'LOAD_FAILED', error: 'Not a MIDI file' });
     const snap = actor.getSnapshot();
 
@@ -3521,10 +3333,8 @@ export const gameEdge2: StateInvariant = {
   id: 'GAME-EDGE-2',
   description: 'Drum-only events → buildNoteGroups returns empty; machine enters error on LOAD_FAILED',
   check: async (page: Page) => {
-    // Step 1: verify the game engine produces zero groups from drum-only events
     const engineResult = await page.evaluate(async () => {
       const { buildNoteGroups } = await import('/_generated/lib/game-engine.ts');
-      // Two channel-9 percussion events: kick (note 36) and snare (note 38)
       const drumEvents = [
         { midiNote: 36, startMs: 0,   durationMs: 100, velocity: 64, channel: 9, track: 0 },
         { midiNote: 38, startMs: 100, durationMs: 100, velocity: 64, channel: 9, track: 0 },
@@ -3535,7 +3345,6 @@ export const gameEdge2: StateInvariant = {
     expect(engineResult.isArray, 'buildNoteGroups must return an array').toBe(true);
     expect(engineResult.groupCount, 'all channel-9 events filtered → zero note groups').toBe(0);
 
-    // Step 2: machine handles LOAD_FAILED as main.ts would send for an empty noteGroups result
     const actor = createActor(gameMachine);
     actor.start();
     actor.send({ type: 'FILE_DROPPED', file: new File([], 'drums.mid') });
@@ -3565,14 +3374,12 @@ export const gameEdge3: StateInvariant = {
     const actor = createActor(gameMachine);
     actor.start();
 
-    // Two-note chord: both midiNote 60 AND 64 must be pressed to advance
     actor.send({ type: 'FILE_DROPPED', file: new File([], 'song.mid') });
     actor.send({
       type: 'SONG_LOADED',
       noteGroups: [{ cellIds: ['0_0', '1_0'], midiNotes: [60, 64], startMs: 0 }],
     });
 
-    // Press note 60 twice — second press must be silently deduplicated
     actor.send({ type: 'NOTE_PRESSED', cellId: '0_0', midiNote: 60 });
     actor.send({ type: 'NOTE_PRESSED', cellId: '0_0', midiNote: 60 });
     const snap = actor.getSnapshot();
@@ -3598,21 +3405,18 @@ export const gameEdge4: StateInvariant = {
   id: 'GAME-EDGE-4',
   description: 'cropToRange with empty Set removes all groups; machine enters error on LOAD_FAILED',
   check: async (page: Page) => {
-    // Step 1: verify cropToRange produces empty output for an empty range Set
     const engineResult = await page.evaluate(async () => {
       const { midiToCellId, cropToRange } = await import('/_generated/lib/game-engine.ts');
       const groups = [
         { cellIds: [midiToCellId(60)], midiNotes: [60], startMs: 0 },
         { cellIds: [midiToCellId(62)], midiNotes: [62], startMs: 200 },
       ];
-      // Empty range: no cells available → all groups must be removed
       const cropped = cropToRange(groups, new Set());
       return { croppedCount: cropped.length, isArray: Array.isArray(cropped) };
     });
     expect(engineResult.isArray, 'cropToRange must return an array').toBe(true);
     expect(engineResult.croppedCount, 'empty range Set → all groups removed → 0 groups').toBe(0);
 
-    // Step 2: machine handles LOAD_FAILED as main.ts sends when no groups survive crop
     const actor = createActor(gameMachine);
     actor.start();
     actor.send({ type: 'FILE_DROPPED', file: new File([], 'song.mid') });
@@ -3655,7 +3459,6 @@ export const gameEdge5: StateInvariant = {
     const actor = createActor(gameMachine);
     actor.start();
 
-    // Two-group song where the first group has exactly ONE note
     actor.send({ type: 'FILE_DROPPED', file: new File([], 'song.mid') });
     actor.send({
       type: 'SONG_LOADED',
@@ -3667,7 +3470,6 @@ export const gameEdge5: StateInvariant = {
 
     const beforeIndex = actor.getSnapshot().context.currentGroupIndex;
 
-    // Single correct press must advance the group immediately (isChordComplete fires at once)
     actor.send({ type: 'NOTE_PRESSED', cellId: '0_0', midiNote: 60 });
     const snap = actor.getSnapshot();
 
@@ -3728,7 +3530,6 @@ export const gameSearch3: StateInvariant = {
       try {
         results = await adapter.search('bach');
       } catch (_err) {
-        // Network unavailable — empty results pass the shape contract
         results = [];
       }
       return results.filter(
@@ -3752,7 +3553,6 @@ export const gameSearch4: StateInvariant = {
   description: 'typing in #midi-search-input triggers search pipeline — results div shows status',
   check: async (page: Page) => {
     await page.locator('#midi-search-input').fill('ba');
-    // Wait for 300ms debounce + async handler to start
     await page.waitForTimeout(500);
     const content = await page.locator('#midi-search-results').textContent();
     if (content === null) throw new Error('#midi-search-results textContent is null');
@@ -3813,11 +3613,6 @@ export const gameSearch6: StateInvariant = {
   },
 };
 
-// ─── Quantization Tests (GAME-QUANT-*) ──────────────────────────────────────
-// These tests verify the note quantization system that powers the difficulty
-// selector. Quantization snaps MIDI events to a beat grid, merging fast passages
-// into simpler chord sequences — the Piano Tiles principle where constant tap
-// pace reproduces original tempo.
 
 /**
  * GAME-QUANT-1: quantizeNotes with level='none' returns events unchanged.
@@ -3890,8 +3685,6 @@ export const gameQuant2: StateInvariant = {
         count: quantized.length,
       };
     });
-    // At 120 BPM, quarter grid = 0, 500, 1000, 1500...
-    // 0ms → 0, 250ms → 0 or 500, 600ms → 500, 1100ms → 1000
     for (const ms of result.starts) {
       expect(ms % 500, `startMs ${ms} should be on quarter grid (multiple of 500)`).toBe(0);
     }
@@ -3915,13 +3708,11 @@ export const gameQuant3: StateInvariant = {
   check: async (page: Page) => {
     const result = await page.evaluate(async () => {
       const { quantizeNotes } = await import('/_generated/lib/game-engine.ts');
-      // One long note: 2000ms duration at 120 BPM
       const events = [
         { midiNote: 60, startMs: 0, durationMs: 2000, velocity: 80, channel: 0, track: 0 },
       ];
       const tempoMap = [{ tickPosition: 0, microsecondsPerQuarter: 500000, bpm: 120 }];
       const timeSigMap = [{ tickPosition: 0, numerator: 4, denominatorPower: 2, ticksPerQuarter: 480 }];
-      // 1/8 grid at 120 BPM = 250ms spacing → 2000ms note should produce ~8 events
       const quantized = quantizeNotes(events, tempoMap, timeSigMap, '1/8');
       return {
         count: quantized.length,
@@ -3931,7 +3722,6 @@ export const gameQuant3: StateInvariant = {
     });
     expect(result.count, 'long note should split into multiple events').toBeGreaterThan(1);
     expect(result.allSameMidi, 'all split events should have same midiNote').toBe(true);
-    // Verify events are on the 250ms grid
     for (const ms of result.starts) {
       expect(ms % 250, `split event at ${ms} should be on 1/8 grid`).toBe(0);
     }
@@ -3955,14 +3745,12 @@ export const gameQuant4: StateInvariant = {
   check: async (page: Page) => {
     const result = await page.evaluate(async () => {
       const { quantizeNotes } = await import('/_generated/lib/game-engine.ts');
-      // Two tempo segments: 120 BPM then 60 BPM
       const events = [
         { midiNote: 60, startMs: 0, durationMs: 100, velocity: 80, channel: 0, track: 0 },
         { midiNote: 64, startMs: 400, durationMs: 100, velocity: 80, channel: 0, track: 0 },
         { midiNote: 67, startMs: 1200, durationMs: 100, velocity: 80, channel: 0, track: 0 },
         { midiNote: 72, startMs: 2500, durationMs: 100, velocity: 80, channel: 0, track: 0 },
       ];
-      // 120 BPM for first 960 ticks (= 1000ms), then 60 BPM
       const tempoMap = [
         { tickPosition: 0, microsecondsPerQuarter: 500000, bpm: 120 },
         { tickPosition: 960, microsecondsPerQuarter: 1000000, bpm: 60 },
@@ -3974,9 +3762,7 @@ export const gameQuant4: StateInvariant = {
         starts: quantized.map(e => e.startMs),
       };
     });
-    // Should have events snapped to grid points from both tempo segments
     expect(result.count).toBeGreaterThanOrEqual(2);
-    // All starts should be finite numbers (no NaN from bad tempo math)
     for (const ms of result.starts) {
       expect(Number.isFinite(ms), `startMs ${ms} should be finite`).toBe(true);
     }
@@ -4037,7 +3823,6 @@ export const gameQuant6: StateInvariant = {
   check: async (page: Page) => {
     const result = await page.evaluate(async () => {
       const { quantizeNotes } = await import('/_generated/lib/game-engine.ts');
-      // Two C4 notes very close together — both should snap to 0ms
       const events = [
         { midiNote: 60, startMs: 10, durationMs: 200, velocity: 80, channel: 0, track: 0 },
         { midiNote: 60, startMs: 20, durationMs: 200, velocity: 80, channel: 0, track: 0 },
@@ -4104,9 +3889,6 @@ export const gameQuant8: StateInvariant = {
   check: async (page: Page) => {
     const result = await page.evaluate(async () => {
       const { parseMidi } = await import('/_generated/lib/midi-parser.ts');
-      // Build a minimal Type 0 MIDI with one note but NO FF 58 time signature event.
-      // Header: MThd, length=6, format=0, tracks=1, ppq=480
-      // Track: MTrk, NoteOn C4, delta 480, NoteOff C4, delta 0, End of Track
       const bytes = [
         0x4D, 0x54, 0x68, 0x64, 0x00, 0x00, 0x00, 0x06, // MThd, length 6
         0x00, 0x00, 0x00, 0x01, 0x01, 0xE0,             // format 0, 1 track, ppq=480
@@ -4129,7 +3911,6 @@ export const gameQuant8: StateInvariant = {
       return { hasTimeSig: false, numerator: 0, denominatorPower: 0 };
     });
     expect(result.hasTimeSig, 'timeSigMap should never be empty (default 4/4 inserted)').toBe(true);
-    // Default should be 4/4: numerator=4, denominatorPower=2 (2^2=4)
     expect(result.numerator).toBe(4);
     expect(result.denominatorPower).toBe(2);
   },
@@ -4158,7 +3939,6 @@ export const gameQuant9: StateInvariant = {
         { midiNote: 67, startMs: 800, durationMs: 200, velocity: 80, channel: 0, track: 0 },
       ];
       const tempoMap = [{ tickPosition: 0, microsecondsPerQuarter: 500000, bpm: 120 }];
-      // 7/8 time: numerator=7, denominatorPower=3 (2^3=8)
       const timeSigMap = [{ tickPosition: 0, numerator: 7, denominatorPower: 3, ticksPerQuarter: 480 }];
       try {
         const quantized = quantizeNotes(events, tempoMap, timeSigMap, '1/8');
@@ -4240,7 +4020,6 @@ export const gameRestart1: StateInvariant = {
   },
 };
 
-// ─── Song-Bar State Machine structural invariants (T2) ───────────────────────
 
 export const songBarSm1: StateInvariant = {
   id: 'SONGBAR-SM-1',
@@ -4334,7 +4113,6 @@ export const mirrorHighlight1: StateInvariant = {
   },
 };
 
-// ── CANVAS-CLEAN invariants: no game UI rendered on canvas ────────────────────
 
 /**
  * D = {}. Canvas center-bottom should not have bright hint text.
@@ -4812,7 +4590,6 @@ export const PB_STYLE_1: StateInvariant = {
   description: 'Pitch bend range input has type="text" (no native spinner arrows)',
   check: async (page) => {
     const type = await page.evaluate(() => {
-      // Find any pitch-bend range input — could be #midi-pb-range or similar
       const input = document.getElementById('midi-pb-range') as HTMLInputElement | null
         ?? document.getElementById('midi-pb-range-expr') as HTMLInputElement | null;
       if (!input) throw new Error('pitch bend range input not found');
@@ -4866,7 +4643,6 @@ export const IDLE_FADE_2: StateInvariant = {
   },
 };
 
-// ─── New Feature Tests (Opus session 2026-03-13) ──────────────────────────────
 
 /** D = {}. Fullscreen button exists in top bar. */
 export const FULLSCREEN_BTN: StateInvariant = {
@@ -4910,10 +4686,6 @@ export const ALL_INFO_BTNS: StateInvariant = {
   },
 };
 
-// ═══════════════════════════════════════════════════════════════════════
-// BINDING VOW INVARIANTS — antipatterns that must NEVER exist
-// If any of these pass, the antipattern is structurally impossible.
-// ═══════════════════════════════════════════════════════════════════════
 
 export const VOW_NO_NATIVE_SELECT: StateInvariant = {
   id: 'VOW-NO-NATIVE-SELECT',
@@ -4973,11 +4745,6 @@ export const VOW_NO_BORDER_RADIUS: StateInvariant = {
   },
 };
 
-// ═══════════════════════════════════════════════════════════════════════
-// IDEAL STATE INVARIANTS — Each defines what "correct" looks like.
-// If ALL of these pass, the project is in ideal state.
-// Ralph iterates until all pass → ideal state achieved deterministically.
-// ═══════════════════════════════════════════════════════════════════════
 
 /** No duplicate element IDs anywhere in the DOM. Duplicate IDs cause silent wiring bugs. */
 export const NO_DUPLICATE_IDS: StateInvariant = {
@@ -5006,13 +4773,9 @@ export const NO_D4_IN_UI: StateInvariant = {
   description: 'No "D4" text visible in UI elements (use D-ref)',
   check: async (page: Page) => {
     const d4Text = await page.evaluate(() => {
-      // Ignore the note name "D4" that appears on grid cells — those are valid
-      // Also ignore the D-ref label note-name annotation (e.g. "D4" meaning note D octave 4)
-      // Check for "D4" as a label/title/description in non-grid UI
       const dRefLabelText = document.getElementById('d-ref-label')?.innerText ?? '';
       const overlayEl = document.getElementById('grid-overlay');
       const overlayText = overlayEl?.innerText ?? '';
-      // Strip the D-ref note annotation from overlayText before checking
       const overlayTextFiltered = overlayText.replace(dRefLabelText, '');
       const songBarText = document.getElementById('song-bar')?.innerText ?? '';
       const headerText = document.getElementById('top-bar')?.innerText ?? '';
@@ -5063,5 +4826,4 @@ export const SINGLE_FLAT_SOUND: StateInvariant = {
   },
 };
 
-// Golden screenshot tests (overlayGoldenCheck2, mobileGoldenCheck, qwertyGoldenCheck) defined above in ideal state section
 ```

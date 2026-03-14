@@ -7,8 +7,6 @@ import { setup } from 'xstate';
 import { type Page, expect } from '@playwright/test';
 import type { StateInvariant } from './types';
 
-// ─── Invariants on 'open' state (absorbs BH-AB-1, BH-AB-2, BH-AB-3) ────────
-
 const aboutContentCheck: StateInvariant = {
   id: 'BH-AB-1',
   check: async (page: Page) => {
@@ -46,8 +44,6 @@ const aboutFooterCheck: StateInvariant = {
   },
 };
 
-// ─── Machine ─────────────────────────────────────────────────────────────────
-
 type AboutEvent = { type: 'CLICK_ABOUT' } | { type: 'CLOSE' };
 
 export const aboutDialogMachine = setup({
@@ -74,8 +70,6 @@ export const aboutDialogMachine = setup({
   },
 });
 
-// ─── Playwright Actions ──────────────────────────────────────────────────────
-
 export const aboutDialogPlaywrightActions: Record<AboutEvent['type'], (page: Page) => Promise<void>> = {
   CLICK_ABOUT: async (page) => {
     await page.locator('#about-btn').click();
@@ -87,14 +81,10 @@ export const aboutDialogPlaywrightActions: Record<AboutEvent['type'], (page: Pag
   },
 };
 
-// ─── Invariants (LLM descriptions) ──────────────────────────────────────────
-
 export const aboutDialogInvariants: Record<string, string> = {
   closed: 'The about dialog is not visible. Main UI is fully interactive.',
   open: 'The about dialog is visible showing project description, credits, and links.',
 };
-
-// ─── DOM Assertions ──────────────────────────────────────────────────────────
 
 export const aboutDialogDomAssertions: Record<string, (page: Page) => Promise<void>> = {
   closed: async (page) => {

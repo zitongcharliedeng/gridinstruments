@@ -44,10 +44,6 @@ import {
   rKeyNotSustainCheck,
 } from './invariant-checks';
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// Shared helpers
-// ═══════════════════════════════════════════════════════════════════════════════
-
 async function tabUntil(page: Page, selector: string, maxTabs = 30): Promise<void> {
   for (let i = 0; i < maxTabs; i++) {
     const focused = await page.evaluate((sel) => document.activeElement?.matches(sel) ?? false, selector);
@@ -72,10 +68,6 @@ async function dragHandle(
   await page.mouse.move(cx, cy + deltaY, { steps: 5 });
   await page.mouse.up();
 }
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// 1. Overlay Machine  (2 states × 3 events = 6 pairs)
-// ═══════════════════════════════════════════════════════════════════════════════
 
 type OverlayEvent =
   | { type: 'CLICK_COG' }
@@ -136,10 +128,6 @@ export const overlayDomAssertions: Record<string, (page: Page) => Promise<void>>
     await expect(page.locator('#grid-overlay')).toBeVisible();
   },
 };
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// 2. Visualiser Machine  (3 states × 4 events = 12 pairs)
-// ═══════════════════════════════════════════════════════════════════════════════
 
 type VisualiserEvent =
   | { type: 'DRAG_VIS_EXPAND' }
@@ -235,10 +223,6 @@ export const visualiserDomAssertions: Record<string, (page: Page) => Promise<voi
     expect(box.height).toBeLessThan(4);
   },
 };
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// 3. Pedals Machine  (3 states × 4 events = 12 pairs)
-// ═══════════════════════════════════════════════════════════════════════════════
 
 type PedalsEvent =
   | { type: 'DRAG_PED_EXPAND' }
@@ -337,10 +321,6 @@ export const pedalsDomAssertions: Record<string, (page: Page) => Promise<void>> 
     expect(box.height).toBeLessThan(4);
   },
 };
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// 4. Waveform Machine  (4 states × 4 events = 16 pairs)
-// ═══════════════════════════════════════════════════════════════════════════════
 
 type WaveformEvent =
   | { type: 'SELECT_SAWTOOTH' }
@@ -442,10 +422,6 @@ export const waveformDomAssertions: Record<string, (page: Page) => Promise<void>
   },
 };
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// 5. Sustain Machine  (2 states × 4 events = 8 pairs)
-// ═══════════════════════════════════════════════════════════════════════════════
-
 type SustainEvent =
   | { type: 'PRESS_SPACE' }
   | { type: 'RELEASE_SPACE' }
@@ -516,10 +492,6 @@ export const sustainDomAssertions: Record<string, (page: Page) => Promise<void>>
   },
 };
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// 6. Vibrato Machine  (2 states × 4 events = 8 pairs)
-// ═══════════════════════════════════════════════════════════════════════════════
-
 type VibratoEvent =
   | { type: 'PRESS_SHIFT' }
   | { type: 'RELEASE_SHIFT' }
@@ -589,10 +561,6 @@ export const vibratoDomAssertions: Record<string, (page: Page) => Promise<void>>
   },
 };
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// 7. MIDI Panel Machine  (2 states × 1 event = 2 pairs)
-// ═══════════════════════════════════════════════════════════════════════════════
-
 interface MidiPanelEvent { type: 'TOGGLE_MIDI' }
 
 export const midiPanelMachine = setup({
@@ -638,10 +606,6 @@ export const midiPanelDomAssertions: Record<string, (page: Page) => Promise<void
   },
 };
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// 8. MPE Machine  (2 states × 1 event = 2 pairs)
-// ═══════════════════════════════════════════════════════════════════════════════
-
 interface MpeEvent { type: 'TOGGLE_MPE' }
 
 export const mpeMachine = setup({
@@ -686,10 +650,6 @@ export const mpeDomAssertions: Record<string, (page: Page) => Promise<void>> = {
     await expect(page.locator('#mpe-output-select')).not.toBeDisabled();
   },
 };
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// 9. Text Input Focus Machine  (2 states × 3 events = 6 pairs)
-// ═══════════════════════════════════════════════════════════════════════════════
 
 type TextInputFocusEvent =
   | { type: 'CLICK_INPUT' }
@@ -747,10 +707,6 @@ export const textInputFocusDomAssertions: Record<string, (page: Page) => Promise
     await expect(page.locator('#d-ref-input')).toBeFocused();
   },
 };
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// 10. Skew Label Machine  (2 states × 2 events = 4 pairs)
-// ═══════════════════════════════════════════════════════════════════════════════
 
 type SkewLabelEvent =
   | { type: 'SET_SKEW_MAX' }
@@ -811,10 +767,6 @@ export const skewLabelDomAssertions: Record<string, (page: Page) => Promise<void
   },
 };
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// Slider reset machines (parameterized factory)
-// ═══════════════════════════════════════════════════════════════════════════════
-
 import {
   tuningSliderMachine, tuningSliderPlaywrightActions, tuningSliderDomAssertions, tuningSliderInvariants,
   skewSliderMachine, skewSliderPlaywrightActions, skewSliderDomAssertions, skewSliderInvariants,
@@ -858,10 +810,6 @@ export {
   viewportMachine, viewportPlaywrightActions, viewportDomAssertions, viewportInvariants,
   songBarMachine, songBarPlaywrightActions, songBarDomAssertions, songBarInvariants,
 };
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// Aggregate export
-// ═══════════════════════════════════════════════════════════════════════════════
 
 export const allMachines = [
   { name: 'overlay', machine: overlayMachine },

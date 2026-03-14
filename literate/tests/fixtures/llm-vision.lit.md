@@ -18,15 +18,11 @@ LLM vision assertion via Anthropic Claude API — sends screenshots for visual i
 
 import Anthropic from '@anthropic-ai/sdk';
 
-// ─── Types ───────────────────────────────────────────────────────────────────
-
 export interface VisionAssertionResult {
   pass: boolean;
   confidence: 'high' | 'medium' | 'low';
   reason: string;
 }
-
-// ─── Client singleton ────────────────────────────────────────────────────────
 
 let client: Anthropic | null = null;
 
@@ -34,8 +30,6 @@ function getClient(): Anthropic {
   client ??= new Anthropic();
   return client;
 }
-
-// ─── Core assertion ──────────────────────────────────────────────────────────
 
 const SYSTEM_PROMPT = `You are a visual QA tester for a browser-based music synthesizer called GridInstruments. Given a screenshot and an invariant description, determine whether the invariant holds in the screenshot.
 
@@ -95,7 +89,6 @@ export async function assertWithVision(
       response.content[0].type === 'text' ? response.content[0].text : '';
     const parsed = JSON.parse(text) as VisionAssertionResult;
 
-    // Validate shape
     if (typeof parsed.pass !== 'boolean' || typeof parsed.reason !== 'string') {
       return { pass: true, confidence: 'low', reason: `LLM returned malformed JSON: ${text}` };
     }

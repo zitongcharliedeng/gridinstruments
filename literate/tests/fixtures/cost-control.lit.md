@@ -19,8 +19,6 @@ import { createHash } from 'crypto';
 import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { join } from 'path';
 
-// ─── Types ───────────────────────────────────────────────────────────────────
-
 export interface VisionResult {
   pass: boolean;
   confidence: 'high' | 'medium' | 'low';
@@ -30,8 +28,6 @@ export interface VisionResult {
 
 type CacheStore = Record<string, VisionResult>;
 
-// ─── Env gate ────────────────────────────────────────────────────────────────
-
 /**
  * Returns true only when LLM_VISION_ENABLED is explicitly "true".
  * Any other value (undefined, "1", "yes", etc.) returns false.
@@ -40,8 +36,6 @@ export function isVisionEnabled(): boolean {
   return process.env.LLM_VISION_ENABLED === 'true';
 }
 
-// ─── Screenshot hashing ──────────────────────────────────────────────────────
-
 /**
  * Compute a sha256 hex digest for a PNG screenshot buffer.
  * Deterministic: same pixels → same hash.
@@ -49,8 +43,6 @@ export function isVisionEnabled(): boolean {
 export function getScreenshotHash(buffer: Buffer): string {
   return createHash('sha256').update(buffer).digest('hex');
 }
-
-// ─── Cache manager ───────────────────────────────────────────────────────────
 
 const CACHE_FILENAME = '.vision-cache.json';
 
