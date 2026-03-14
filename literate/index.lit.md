@@ -109,6 +109,7 @@ The page is a vertical flex layout (`#app`) with these major sections:
       vertical-align: middle;
       background: none;
       border: none;
+      border-radius: 0;
       padding: 0;
       cursor: pointer;
       font-family: var(--font);
