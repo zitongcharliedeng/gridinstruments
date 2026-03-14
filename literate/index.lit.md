@@ -1048,35 +1048,34 @@ The page is a vertical flex layout (`#app`) with these major sections:
                 <div id="midi-device-list"></div>
                  <span class="overlay-section-title">EXPRESSION</span>
                  <div class="midi-panel-row" id="expr-bend-row" style="gap:6px">
+                   <button class="slider-info-btn icon-btn icon-lg" data-info="bend" style="position:static;transform:none;"><i data-lucide="info"></i></button>
                    <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;">
                      <span class="gi-checkbox"><input type="checkbox" id="expr-bend" checked><span class="gi-check"></span></span>
-                     <span style="color:#fff">Bend</span>
+                     <span style="color:#fff">Pitch Bend</span>
                    </label>
-                   <input type="text" inputmode="numeric" pattern="[0-9]*" id="midi-pb-range-expr" value="48" style="width:4ch;text-align:center;font-family:var(--font);font-size:10px;background:var(--bg);color:var(--fg);border:1px solid var(--border);padding:2px 4px;">
-                   <span style="color:var(--dim);font-size:9px;">semitones</span>
-                   <button class="slider-info-btn icon-btn icon-lg" data-info="bend" style="position:static;transform:none;"><i data-lucide="info"></i></button>
+                   <span style="color:var(--dim);font-size:10px;">±</span><input type="text" inputmode="numeric" pattern="[0-9]*" id="midi-pb-range-expr" value="48" style="width:3ch;text-align:center;font-family:var(--font);font-size:10px;background:var(--bg);color:var(--fg);border:1px solid var(--border);padding:2px 3px;"><span style="color:var(--dim);font-size:10px;">st</span>
                  </div>
                  <div class="midi-panel-row" id="expr-velocity-row" style="gap:6px">
+                   <button class="slider-info-btn icon-btn icon-lg" data-info="velocity" style="position:static;transform:none;"><i data-lucide="info"></i></button>
                    <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;">
                      <span class="gi-checkbox"><input type="checkbox" id="expr-velocity" checked><span class="gi-check"></span></span>
-                     <span style="color:#fff">Velocity</span>
+                     <span style="color:#fff">Note Velocity</span>
                    </label>
-                   <button class="slider-info-btn icon-btn icon-lg" data-info="velocity" style="position:static;transform:none;"><i data-lucide="info"></i></button>
                  </div>
                  <div class="midi-panel-row" id="expr-pressure-row" style="gap:6px">
+                   <button class="slider-info-btn icon-btn icon-lg" data-info="pressure" style="position:static;transform:none;"><i data-lucide="info"></i></button>
                    <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;">
                      <span class="gi-checkbox"><input type="checkbox" id="expr-pressure" checked><span class="gi-check"></span></span>
-                     <span style="color:#fff">Pressure</span>
+                     <span style="color:#fff">Channel Pressure</span>
                    </label>
-                   <button class="slider-info-btn icon-btn icon-lg" data-info="pressure" style="position:static;transform:none;"><i data-lucide="info"></i></button>
                  </div>
                  <div class="midi-panel-row" id="expr-timbre-row" style="gap:6px">
+                   <button class="slider-info-btn icon-btn icon-lg" data-info="timbre" style="position:static;transform:none;"><i data-lucide="info"></i></button>
                    <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;">
                      <span class="gi-checkbox"><input type="checkbox" id="expr-timbre" checked><span class="gi-check"></span></span>
-                     <span style="color:#fff">Timbre</span>
+                     <span style="color:#fff">Timbre Slide</span>
                    </label>
-                    <button id="timbre-cc-mode" style="font-family:var(--font);font-size:10px;background:var(--bg);color:var(--fg);border:1px solid var(--border);padding:2px 6px;cursor:pointer;" title="Click to cycle timbre CC" value="74">CC74</button>
-                   <button class="slider-info-btn icon-btn icon-lg" data-info="timbre" style="position:static;transform:none;"><i data-lucide="info"></i></button>
+                   <button id="timbre-cc-mode" style="font-family:var(--font);font-size:10px;background:var(--bg);color:var(--fg);border:1px solid var(--border);padding:2px 6px;cursor:pointer;" title="Click to cycle timbre CC" value="74">CC74</button>
                  </div>
                 <div class="midi-panel-row" id="mpe-output-row">
                   <span class="ctrl-label" style="color:#fff">MPE Out:</span>
