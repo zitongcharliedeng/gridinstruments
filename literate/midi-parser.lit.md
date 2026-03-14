@@ -1,12 +1,12 @@
 # MIDI Parser
 
-Inline MIDI file parser — no npm dependencies. Supports Type 0 and Type 1 MIDI files, running status, and drum channel filtering.
+An inline Standard MIDI File (SMF) parser with no npm dependencies. Supports Type 0 (single-track) and Type 1 (multi-track) files, running status byte compression, and automatic drum channel filtering.
 
-Parses the binary Standard MIDI File format: reads the MThd header, iterates MTrk chunks, decodes variable-length integers, handles meta events (tempo FF 51, time signature FF 58, end-of-track FF 2F), sysex, and all channel voice messages. Converts tick-based note events to milliseconds using the extracted tempo map.
+The [Standard MIDI File specification](https://www.midi.org/specifications/file-format-specifications/standard-midi-files/) defines a chunk-based binary format. Every file begins with an `MThd` header chunk followed by one or more `MTrk` track chunks. Within each track, events are encoded as a variable-length delta time followed by a status byte and data bytes. The parser reconstructs absolute tick positions, applies a tempo map to convert ticks to milliseconds, and returns typed note events ready for the game engine.
 
-## Types
+## Public Note Event Type
 
-Public interfaces for note events, tempo events, time signature events, and the parsed output. Internal interfaces for tempo/time-sig entries, tick-based notes, and pending (open) notes.
+A `NoteEvent` is the primary output unit — one record per sounded note, with timing already converted to milliseconds.
 
 ``` {.typescript file=_generated/lib/midi-parser.ts}
 /** Inline MIDI file parser — no npm dependencies. Type 0 + Type 1, running status, drum filter. */
@@ -19,7 +19,15 @@ export interface NoteEvent {
   channel: number;     // 0-indexed MIDI channel (channel 10 drums = channel index 9)
   track: number;       // 0-indexed track number
 }
+```
 
+## Tempo and Time Signature Event Types
+
+The MIDI spec encodes tempo as microseconds per quarter note rather than BPM. Meta event `FF 51 03 tt tt tt` carries a 24-bit value; 500 000 µs/quarter = 120 BPM. The `bpm` field is pre-computed as `60_000_000 / microsecondsPerQuarter` for convenience.
+
+Time signatures use a compact encoding: the denominator is stored as a power of two (`dd`), so `2` means `2^2 = 4` (quarter note), `3` means `2^3 = 8` (eighth note). Meta event `FF 58 04 nn dd cc bb` carries numerator, denominator power, MIDI clocks per click, and 32nd notes per quarter.
+
+``` {.typescript file=_generated/lib/midi-parser.ts}
 /** Set Tempo meta event (FF 51): defines microseconds per quarter note at a tick position. */
 export interface TempoEvent {
   tickPosition: number;
@@ -49,7 +57,13 @@ export interface ParsedMidi {
   tempoMap: TempoEvent[];
   timeSigMap: TimeSigEvent[];
 }
+```
 
+## Internal Accumulator Types
+
+These four interfaces are used only during parsing and are not exported. `TempoEntry` and `TimeSigEntry` are the raw accumulated entries before conversion to the exported forms. `TickNote` holds a fully closed note in tick coordinates. `PendingNote` tracks an open Note On waiting for its matching Note Off.
+
+``` {.typescript file=_generated/lib/midi-parser.ts}
 interface TempoEntry {
   tick: number;
   tempoUs: number;
@@ -80,9 +94,9 @@ interface PendingNote {
 
 ```
 
-## Header Parsing Utilities
+## Variable-Length Integer Decoder
 
-Variable-length integer decoding, tick-to-millisecond conversion, 24-bit read, and pending note closure.
+MIDI uses a variable-length quantity (VLQ) encoding for delta times and meta-event lengths. Each byte contributes 7 bits of value; the high bit is a continuation flag. Reading stops at the first byte where bit 7 is clear. A single byte encodes values 0–127; two bytes reach 16 383; four bytes reach the maximum of 268 435 455 ticks.
 
 ``` {.typescript file=_generated/lib/midi-parser.ts}
 /** Variable-length integer encoding used throughout MIDI binary format. */
@@ -97,7 +111,15 @@ function readVarLen(view: DataView, offset: number): { value: number; bytesRead:
   } while ((byte & 0x80) !== 0);
   return { value, bytesRead };
 }
+```
 
+## Tick-to-Millisecond Conversion and Small Helpers
+
+Tick time is converted to wall-clock milliseconds by walking the sorted tempo map. Each tempo segment contributes `deltaTicks * tempoUs / ppq / 1000` milliseconds. The default tempo of 500 000 µs/quarter (120 BPM) applies if no `FF 51` event precedes the target tick.
+
+`readUint24` reads a big-endian 24-bit integer — the wire format for tempo values. `closePending` finalises an open note by moving it from the pending map into the completed notes array.
+
+``` {.typescript file=_generated/lib/midi-parser.ts}
 /** ms = sum(deltaTicks * tempoUs / ppq / 1000) across tempo segments. */
 function tickToMs(tick: number, tempoMap: ReadonlyArray<TempoEntry>, ppq: number): number {
   let ms = 0;
@@ -135,9 +157,11 @@ function closePending(pending: Map<string, PendingNote>, key: string, endTick: n
 
 ```
 
-## Track Parsing
+## Track Parser: Setup and Delta-Time Loop
 
-Iterates all events in a single MTrk chunk: delta times, running status, meta events (tempo, time signature, end-of-track), sysex, system messages, and channel voice messages (Note On/Off, Aftertouch, CC, Program Change, Channel Pressure, Pitch Bend).
+`parseTrack` processes one `MTrk` chunk entirely within the DataView. It receives the absolute byte offset and byte length of the track data, plus the running `tempoMap` and `timeSigEntries` arrays (written to only when `collectTempo` is true — track 0 in Type 1 files is the tempo track).
+
+Running status is a MIDI bandwidth optimisation: if the current byte is a data byte (value < 128 / 0x80), the previous status byte is reused without retransmission. The parser tracks `runningStatus` across events within the track.
 
 ``` {.typescript file=_generated/lib/midi-parser.ts}
 function parseTrack(
@@ -171,7 +195,15 @@ function parseTrack(
     } else {
       offset++;
     }
+```
 
+## Track Parser: Meta Events (FF)
+
+Meta events (`0xFF`) carry non-audio information. The type byte immediately follows the `0xFF` status, then a variable-length data length, then the payload.
+
+Three meta types matter here. `FF 51` (Set Tempo) updates the tempo map — collected only from the authoritative tempo track. `FF 58` (Time Signature) updates the meter map similarly. `FF 2F` (End of Track) is mandatory at the end of every `MTrk` chunk; on encountering it the parser advances past the payload and exits the loop.
+
+``` {.typescript file=_generated/lib/midi-parser.ts}
     // 0xFF = meta event
     if (statusByte === 0xff) {
       const metaType = view.getUint8(offset);
@@ -202,7 +234,15 @@ function parseTrack(
       offset += len.value;
       continue;
     }
+```
 
+## Track Parser: SysEx, System Messages, and Channel Voice Messages
+
+SysEx messages (`0xF0` / `0xF7`) carry manufacturer-specific data and are skipped entirely — their length is variable and encoded as a VLQ after the status byte. Other system-common messages (`0xF1`–`0xF6`) have fixed data byte counts: MTC quarter frame and Song Select take one byte; Song Position Pointer takes two.
+
+Channel voice messages occupy the lower nybble of the status byte for channel (0–15) and the upper nybble for message type. Note On (`0x90`) with velocity zero is treated as Note Off per the MIDI 1.0 spec. Aftertouch (`0xA0`), Control Change (`0xB0`), and Pitch Bend (`0xE0`) each consume two data bytes; Program Change (`0xC0`) and Channel Pressure (`0xD0`) consume one. Any notes still open when the track ends are closed at the final tick.
+
+``` {.typescript file=_generated/lib/midi-parser.ts}
     // 0xF0/0xF7 = sysex
     if (statusByte === 0xf0 || statusByte === 0xf7) {
       const len = readVarLen(view, offset);
@@ -275,9 +315,13 @@ function parseTrack(
 
 ```
 
-## Event Types and Main Entry Point
+## Main Entry Point: Header Validation and Track Iteration
 
-Validates the MThd header, iterates MTrk chunks, converts tick notes to millisecond events, filters drums (channel 9), sorts by startMs, and builds the exported tempo and time signature maps.
+`parseMidi` is the single public function. It validates the four-byte `MThd` tag, reads the six-byte header payload (format, track count, division), rejects unsupported formats (Type 2; SMPTE time division), then iterates every `MTrk` chunk.
+
+The SMF header layout: bytes 0–3 are the tag `MThd`; bytes 4–7 are the 32-bit header length (always 6 for SMF 1.0); bytes 8–9 are format (0, 1, or 2); bytes 10–11 are track count; bytes 12–13 are the division word. If bit 15 of the division word is clear, the value is pulses per quarter note (PPQ / ticks per beat). If bit 15 is set, the value encodes SMPTE frames — not supported here.
+
+In Type 1 files only track 0 is authoritative for tempo and time signature data; subsequent tracks may duplicate these meta events for DAW compatibility but the parser ignores them.
 
 ``` {.typescript file=_generated/lib/midi-parser.ts}
 /**
@@ -330,7 +374,17 @@ export function parseMidi(buffer: ArrayBuffer): ParsedMidi {
     allTickNotes.push(...parseTrack(view, trackDataStart, trackLength, t, tempoMap, timeSigEntries, collectTempo));
     offset = trackDataStart + trackLength;
   }
+```
 
+## Tempo Map, Drum Filter, and Output Assembly
+
+After all tracks are parsed, the tempo and time-signature entries are sorted by tick position. If no `FF 58` event was found, 4/4 is assumed — the overwhelming default in practice.
+
+Channel 9 (General MIDI drum channel, labelled "channel 10" in 1-indexed notation) is excluded from the note events. The tick-based notes are converted to millisecond timing via the now-complete tempo map. Events are sorted by `startMs` for efficient sequential rendering.
+
+The exported tempo map adds the pre-computed `bpm` field. If no tempo events were found at all, a single 120 BPM entry is inserted at tick 0 — the MIDI default.
+
+``` {.typescript file=_generated/lib/midi-parser.ts}
   tempoMap.sort((a, b) => a.tick - b.tick);
   timeSigEntries.sort((a, b) => a.tick - b.tick);
 
