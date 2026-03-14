@@ -156,7 +156,6 @@ export class DComposeApp {
     this.setupEventListeners();
     await this.midi.init();
     await this.mpe.init();
-    // MPE expression visualization: pressure → opacity, pitch bend → hue overlay
     this.mpe.subscribe((voices) => {
       const expr = new Map<string, { pressure: number; pitchBend: number }>();
       for (const v of voices) {
@@ -169,14 +168,11 @@ export class DComposeApp {
     });
     this.setupMidiListeners();
     this.updateMidiDevicePanel(this.midi.getDevices());
-    // Chord shape graffiti overlays (dynamic — reads grid geometry from visualizer)
     const keyboardContainer = document.getElementById('keyboard-container');
     if (keyboardContainer && this.visualizer) {
       this.updateGraffiti = createChordGraffiti({ container: keyboardContainer, visualizer: this.visualizer });
     }
     this.render();
-    // Deferred graffiti update: initial createChordGraffiti runs before first render
-    // settles layout, so re-trigger after a frame to ensure buttons are positioned.
     requestAnimationFrame(() => this.updateGraffiti?.());
   }
 
