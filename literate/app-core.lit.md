@@ -446,7 +446,6 @@ export class DComposeApp {
         }
       });
 
-      // Skew badge direct input — accepts values outside slider 0-1 range
       if (skewBadge) {
         skewBadge.addEventListener('change', () => {
           const raw = parseFloat(skewBadge.value);
@@ -609,7 +608,6 @@ export class DComposeApp {
           this.tuningSlider.dispatchEvent(new Event('input'));
         }
       });
-      // Tuning badge direct input handler
       if (thumbBadge) {
         thumbBadge.addEventListener('change', () => {
           const raw = parseFloat(thumbBadge.value);
@@ -624,7 +622,6 @@ export class DComposeApp {
               updateTuningLabel(raw);
             }
           } else {
-            // Revert to current slider value
             const current = parseFloat(this.tuningSlider?.value ?? FIFTH_DEFAULT.toString());
             thumbBadge.value = current.toFixed(1);
           }
@@ -632,7 +629,6 @@ export class DComposeApp {
         thumbBadge.addEventListener('focus', () => { thumbBadge.select(); });
       }
     }
-    // Note: #fifth-custom-input was removed; #tuning-thumb-badge input handles direct value entry
 
     if (this.tuningSlider) {
       const tetPresets = TUNING_MARKERS.map(m => ({
@@ -643,7 +639,6 @@ export class DComposeApp {
       this.populateSliderPresets('tet-presets', this.tuningSlider, tetPresets);
     }
 
-     // Volume slider — DOM mutations driven by appActor subscriber
      const savedVolume = this.loadSetting('volume', '0.3');
      if (this.volumeSlider) {
        this.volumeSlider.value = savedVolume;
@@ -665,14 +660,11 @@ export class DComposeApp {
        }
      });
 
-    // Button spacing
     const spacingInput = getElementOrNull('spacing-input', HTMLInputElement);
     spacingInput?.addEventListener('input', () => {
       this.visualizer?.setButtonSpacing(parseNum(spacingInput.value, 0));
     });
 
-    // D ref — slider (D2–D6 range) + text badge (just Hz, like all other sliders)
-    // Note annotation shown in bracket inside the slider label overlay.
     const dRefInput = getElementOrNull('d-ref-input', HTMLInputElement);
     const dRefSlider = getElementOrNull('d-ref-slider', HTMLInputElement);
     const dRefLabel = getElementOrNull('d-ref-label', HTMLSpanElement);
@@ -684,11 +676,9 @@ export class DComposeApp {
     };
 
     const updateDRefDisplay = (hz: number): void => {
-      // Badge: always just the number + position it on the slider
       if (dRefInput && document.activeElement !== dRefInput) {
         dRefInput.value = hz.toFixed(2);
       }
-      // Position badge over slider thumb
       if (dRefInput && dRefSlider) {
         const min = parseFloat(dRefSlider.min);
          const max = parseFloat(dRefSlider.max);
@@ -698,7 +688,6 @@ export class DComposeApp {
          const clampedPx = clampBadgePosition(centerPx, dRefSlider, 80);
          dRefInput.style.left = `${clampedPx}px`;
        }
-       // Slider: clamp to range
       if (dRefSlider && document.activeElement !== dRefSlider) {
         const min = parseFloat(dRefSlider.min);
         const max = parseFloat(dRefSlider.max);
@@ -765,13 +754,11 @@ export class DComposeApp {
       }
     });
 
-    // Init
     const savedDref = this.loadSetting('dref', '293.66');
     if (dRefInput) dRefInput.value = savedDref;
     if (dRefSlider) dRefSlider.value = savedDref;
     updateDRefDisplay(parseFloat(savedDref));
 
-    // D-ref reset button
     const dRefReset = getElementOrNull('d-ref-reset', HTMLButtonElement);
       dRefReset?.addEventListener('click', () => {
         if (dRefInput) dRefInput.setCustomValidity('');
@@ -780,8 +767,6 @@ export class DComposeApp {
           dRefSlider.dispatchEvent(new Event('input'));
         }
       });
-    // Hover styling handled by CSS .slider-reset:hover — no JS needed.
-
 
     const pbRangeInput = getElementOrNull('midi-pb-range-expr', HTMLInputElement);
     if (pbRangeInput) {
@@ -935,13 +920,11 @@ export class DComposeApp {
     });
 
     refreshMpeOutputs();
-    // Refresh on MIDI device connection changes
     const midiAccess = this.mpe.getMidiAccess();
     if (midiAccess) {
       midiAccess.onstatechange = () => { refreshMpeOutputs(); };
     }
 
-    // Prevent space scroll
     document.addEventListener('keydown', (e) => {
       if (e.code === 'Space' && e.target === document.body) e.preventDefault();
     });
@@ -1015,7 +998,6 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
        }
      });
 
-    // QWERTY overlay toggle
     const qwertyToggle = document.getElementById('qwerty-overlay-toggle') as HTMLInputElement | null;
     if (qwertyToggle) {
       qwertyToggle.addEventListener('change', () => {
@@ -1033,13 +1015,11 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
       if (document.visibilityState === 'hidden') this.stopAllNotes();
     });
 
-    // Auto-return focus to body after using range/select controls so keyboard always works
     document.querySelectorAll<HTMLElement>('select, input[type="range"], input[type="checkbox"]').forEach(el => {
       el.addEventListener('pointerup', () => setTimeout(() => { el.blur(); }, 0));
       el.addEventListener('change', () => setTimeout(() => { el.blur(); }, 0));
     });
 
-    // Text inputs: Enter/Escape blur to restore keyboard focus
     document.querySelectorAll<HTMLInputElement>('input[type="text"]').forEach(el => {
       el.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' || e.key === 'Escape') {
@@ -1051,7 +1031,6 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
     });
 
 
-    // Grid settings overlay — XState actor
     const gridCog = getElementOrNull('grid-settings-btn', HTMLButtonElement);
     const gridOverlay = document.getElementById('grid-overlay');
     if (gridCog && gridOverlay) {
@@ -1074,7 +1053,6 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
               clickScroll: true,
             },
           });
-          // Double-rAF: first frame removes .hidden, second frame has correct offsetWidth
           requestAnimationFrame(() => requestAnimationFrame(refreshAllSliderUI));
         }
       });
@@ -1099,7 +1077,6 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
       (window as Window & { overlayActor?: unknown }).overlayActor = overlayActor;
     }
 
-    // Pedal actors — XState runtime manages indicator classList + synth state
     const sustainPedal = getElementOrNull('sustain-indicator', HTMLButtonElement);
     const vibratoPedal = getElementOrNull('vibrato-indicator', HTMLButtonElement);
 
@@ -1163,7 +1140,6 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
        if (toast) toast.style.display = 'none';
      });
 
-     // Game: file drop on canvas
     this.gameActor = createActor(gameMachine);
     this.gameActor.start();
 
@@ -1187,7 +1163,6 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
       if (calibrateBtn) calibrateBtn.disabled = state === 'playing' || state === 'loading';
 
       if (state === 'playing') {
-        // Force non-idle during game play — suppress all hints
         if (this.idleTimeout !== null) {
           clearTimeout(this.idleTimeout);
           this.idleTimeout = null;
@@ -1206,7 +1181,6 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
           } else {
             this.visualizer.setPressedTargetNotes([]);
           }
-          // Show one-time ghosting warning when large chord target vs limited rollover
           if (!this.ghostingWarningShown && currentGroup.midiNotes.length >= 4 && this.maxSimultaneousKeys < 4) {
             this.ghostingWarningShown = true;
             this.showGhostingToast();
@@ -1215,7 +1189,6 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
           this.visualizer?.setTargetNotes(ctx.targetCellIds);
           this.visualizer?.setPressedTargetNotes([]);
         }
-        // Ghost note: first cell ID → MIDI note for piano strip indicator
         const firstCellId = ctx.targetCellIds[0];
         if (firstCellId) {
           const parts = firstCellId.split('_');
@@ -1230,13 +1203,11 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
         if (statusEl) statusEl.style.display = 'flex';
         if (songBarHint) songBarHint.style.display = 'none';
 
-        // Update progress bar fill
         if (progressFill && ctx.noteGroups.length > 0) {
           const pct = (ctx.currentGroupIndex / ctx.noteGroups.length) * 100;
           progressFill.style.width = `${pct}%`;
         }
 
-        // Start elapsed timer interval (only if not already running)
         if (!this.gameElapsedInterval && ctx.startTimeMs > 0) {
           const startMs = ctx.startTimeMs;
           const updateTimer = () => {
@@ -1257,7 +1228,6 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
         if (progressFill) progressFill.style.width = '0%';
         if (elapsedTimer) elapsedTimer.textContent = '';
       } else if (state === 'complete') {
-        // Stop elapsed timer
         if (this.gameElapsedInterval !== null) {
           clearInterval(this.gameElapsedInterval);
           this.gameElapsedInterval = null;
@@ -1266,14 +1236,12 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
         this.visualizer?.setPressedTargetNotes([]);
         this.historyVisualizer?.setGhostNote(null);
         this.render();
-        // Show score overlay
         const elapsedMs = ctx.finishTimeMs - ctx.startTimeMs;
         const elapsedSec = (elapsedMs / 1000).toFixed(1);
         this.showGameScore(elapsedSec);
         if (statusEl) statusEl.style.display = 'flex';
         if (songBarHint) songBarHint.style.display = 'none';
         if (progressFill) progressFill.style.width = '100%';
-        // Show final elapsed time
         if (elapsedTimer) {
           const totalSec = Math.floor(parseFloat(elapsedSec));
           const minutes = Math.floor(totalSec / 60);
@@ -1281,7 +1249,6 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
           elapsedTimer.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
         }
       } else {
-        // idle or error — clear everything and hide status
         if (this.gameElapsedInterval !== null) {
           clearInterval(this.gameElapsedInterval);
           this.gameElapsedInterval = null;
@@ -1307,7 +1274,6 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
 
     document.body.addEventListener('dragleave', (e) => {
       e.preventDefault();
-      // Only remove if leaving the document entirely (relatedTarget is null or outside document)
       if (!e.relatedTarget || !(document.documentElement.contains(e.relatedTarget as Node))) {
         if (songBar) songBar.classList.remove('dropping');
       }
@@ -1337,7 +1303,6 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
       });
     });
 
-    // ── MIDI search wiring ──
     const searchInput = document.getElementById('midi-search-input') as HTMLInputElement | null;
     const resultsDiv = document.getElementById('midi-search-results');
     if (searchInput && resultsDiv) {
@@ -1387,7 +1352,6 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
       });
     }
 
-    // ── Search focus/blur: hide hint while search is active ──
     const songBarHintEl = document.getElementById('song-bar-hint') as HTMLElement | null;
     if (searchInput && songBarHintEl) {
       searchInput.addEventListener('focus', () => {
@@ -1418,11 +1382,8 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
       });
     }
 
-    // Initialize slider progress fills
     document.querySelectorAll<HTMLInputElement>('input[type="range"]').forEach(s => { this.updateSliderFill(s); });
   }
-
-  // ─── Keyboard input ─────────────────────────────────────────────────────
 
   private handleKeyDown(event: KeyboardEvent): void {
     const target = event.target instanceof HTMLElement ? event.target : null;
@@ -1468,7 +1429,6 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
     if (this.keyRepeat.has(code)) return;
     this.keyRepeat.add(code);
 
-    // Shift (left or right) = vibrato (hold)
     if (code === 'ShiftLeft' || code === 'ShiftRight') {
       this.vibratoActor?.send({ type: 'ACTIVATE' });
       this.synth.tryUnlock();
@@ -1476,15 +1436,12 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
       this.startMpeVibrato();
       return;
     }
-    // Space = sustain (hold)
     if (code === 'Space') {
       this.sustainActor?.send({ type: 'ACTIVATE' });
       this.synth.tryUnlock();
       if (!this.synth.isInitialized()) return;
       return;
     }
-    // Shift+=/- zoom shortcuts removed — Shift is now vibrato-only
-
     this.synth.tryUnlock();                  // synchronous, iOS-safe
 
     if (!(code in this.currentLayout.keyMap)) return;
@@ -1563,8 +1520,6 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
     this.render();
   }
 
-  // ─── Pointer input ──────────────────────────────────────────────────────
-
   private handlePointerDown(event: PointerEvent): void {
     this.pointerDown.set(event.pointerId, null);
     this.synth.tryUnlock();
@@ -1595,7 +1550,6 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
       const effectiveCoordY = currentButton.coordY + this.octaveOffset;
       const noteId = `ptr_${event.pointerId}_${effectiveCoordX}_${effectiveCoordY}`;
       this.mpe.sendPressure(noteId, event.pressure);
-      // Sub-cell offset → pitch bend (Y-axis) and slide/CC74 (X-axis)
       if (this.visualizer) {
         const { cellHv1, cellHv2 } = this.visualizer.getGridGeometry();
         const buttons = this.visualizer.getButtons();
@@ -1605,14 +1559,12 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
           const dx = (event.clientX - rect.left) - btn.x;
           const dy = (event.clientY - rect.top) - btn.y;
 
-          // Pitch axis: project onto cellHv2 (octave direction), negate so up = higher
           const pitchDirLen = Math.sqrt(cellHv2.x * cellHv2.x + cellHv2.y * cellHv2.y);
           const pitchOffset = (dx * cellHv2.x + dy * cellHv2.y) / pitchDirLen;
           const cellHeight = pitchDirLen * 2; // cellHv2 is a half-vector
           const rawSemitones = -pitchOffset / cellHeight * 2; // ±2 semitones per cell
           const semitones = Math.max(-2, Math.min(2, rawSemitones)); // Clamp to ±2 — prevents wild bends on fast gestures
 
-          // Timbre axis: project onto cellHv1 (wholetone direction), normalize 0-1
           const timbreDirLen = Math.sqrt(cellHv1.x * cellHv1.x + cellHv1.y * cellHv1.y);
           const timbreOffset = (dx * cellHv1.x + dy * cellHv1.y) / timbreDirLen;
           const normalizedX = Math.max(0, Math.min(1, (timbreOffset / timbreDirLen + 1) / 2));
@@ -1704,8 +1656,6 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
     this.render();
   }
 
-  // ─── Centralized idle/activity state ──────────────────────────────────
-
   /**
    * Reset the idle timer — called on ANY note play (keyboard, pointer, MIDI).
    * Immediately marks the app as active (not idle), suppresses hints,
@@ -1713,7 +1663,6 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
    * Does nothing during game 'playing' state (always forced non-idle).
    */
   private resetIdleTimer(): void {
-    // During game playing, stay non-idle — don't start idle timer
     const gameState = this.gameActor?.getSnapshot().value as string | undefined;
     if (gameState === 'playing') return;
 
@@ -1728,7 +1677,6 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
 
     this.idleTimeout = setTimeout(() => {
       this.idleTimeout = null;
-      // Re-check game state at timeout fire time
       const gs = this.gameActor?.getSnapshot().value as string | undefined;
       if (gs !== 'playing') {
         this.setIdleState(true);
@@ -1773,8 +1721,6 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
     }
   }
 
-  // ─── MIDI loading pipeline (shared by file drop + search) ────────────────
-
   /**
    * Shared pipeline: ArrayBuffer → parseMidi → D-ref center → calibration
    * range → buildNoteGroups → SONG_LOADED. Used by both file drop and search.
@@ -1805,7 +1751,6 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
 
       let groups = buildNoteGroups(quantizedEvents);
 
-      // Apply calibrated range: auto-transpose + crop
       const range = this.calibratedRange;
       let semitones = 0;
       if (range && range.size > 0) {
@@ -1814,7 +1759,6 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
         groups = cropToRange(groups, range);
       }
 
-      // Set D-ref AFTER transposition so it aligns with the transposed song center
       const adjustedMedianMidi = medianMidi + semitones;
       const adjustedMedianHz = 440 * Math.pow(2, (adjustedMedianMidi - 69) / 12);
       const dRefSlider = document.getElementById('d-ref-slider') as HTMLInputElement | null;
@@ -1830,16 +1774,13 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
         return;
       }
 
-      // Check tuning before auto-setting (for warning)
       const currentTuning = parseFloat(this.tuningSlider?.value ?? '700');
       const needsTuningWarning = Math.abs(currentTuning - 700) > 0.5;
-      // Auto-set tuning to 12-TET (700¢)
       if (this.tuningSlider) {
         this.tuningSlider.value = '700';
         this.tuningSlider.dispatchEvent(new Event('input'));
       }
       actor.send({ type: 'SONG_LOADED', noteGroups: groups });
-      // Show tuning warning if tuning was different
       if (needsTuningWarning) {
         this.showTuningWarning();
       }
@@ -1848,8 +1789,6 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
       actor.send({ type: 'LOAD_FAILED', error: msg });
     }
   }
-
-  // ─── Game overlays ───────────────────────────────────────────────────────
 
   private showGameScore(elapsedSec: string): void {
     const existing = document.getElementById('game-score-overlay');
@@ -1906,8 +1845,6 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
      }, 10000);
    }
 
-   // ─── MPE vibrato ─────────────────────────────────────────────────────────
-
   /** Reconstruct MPE noteIds from the activeNotes map. */
   private getMpeNoteIds(): string[] {
     const ids: string[] = [];
@@ -1944,7 +1881,6 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
       cancelAnimationFrame(this.vibratoRAF);
       this.vibratoRAF = null;
     }
-    // Reset pitch bend to 0 for all active notes
     for (const noteId of this.getMpeNoteIds()) {
       this.mpe.sendPitchBend(noteId, 0);
     }
@@ -1991,7 +1927,6 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
 
     sorted.forEach((preset, i) => {
       const ratio = (preset.value - sliderMin) / range;
-      // Skip marks outside the slider range entirely (keeps slider clean)
       if (ratio < 0 || ratio > 1) return;
       const mark = document.createElement('div');
       mark.className = 'slider-preset-mark';
@@ -2034,17 +1969,12 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
 
   }
 
-  // ─── Slider fill ─────────────────────────────────────────────────────────
-
   private updateSliderFill(slider: HTMLInputElement): void {
     applySliderFill(slider);
   }
 
-  // ─── Render ─────────────────────────────────────────────────────────────
-
   private render(): void {
     if (!this.visualizer) return;
-    // Throttle to one repaint per animation frame (avoids redundant redraws on rapid touch input)
     if (this.renderScheduled) return;
     this.renderScheduled = true;
     requestAnimationFrame(() => {
