@@ -166,7 +166,7 @@ export function pitchClassFromCoordX(coordX: number): number {
 
 /** MIDI note number from DCompose coordinates. */
 export function coordToMidiNote(coordX: number, coordY: number): number {
-  // D4 = MIDI 62, each CoF step = 7 semitones, each octave step = 12
+  // D-ref = MIDI 62 at default, each CoF step = 7 semitones, each octave step = 12
   return 62 + coordX * 7 + coordY * 12;
 }
 

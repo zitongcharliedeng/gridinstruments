@@ -35,10 +35,9 @@ export function coordToNoteName(x: number, y: number, octaveOffset = 0): string 
   }
   
   // Calculate octave
-  // D4 is at coordinate (0, 0)
-  // Each y step = 1 octave
-  // Each x step = 7 semitones (fifth)
-  const baseMidi = 62; // D4
+  // D-ref is at coordinate (0, 0) — MIDI 62 at default tuning
+  // Each y step = 1 octave, each x step = 7 semitones (fifth)
+  const baseMidi = 62; // D at default reference
   const semitones = x * 7 + y * 12 + octaveOffset * 12;
   const midi = baseMidi + semitones;
   const octave = Math.floor(midi / 12) - 1;
