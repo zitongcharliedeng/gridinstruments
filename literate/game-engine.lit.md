@@ -128,6 +128,44 @@ export function cropToRange(groups: GameNoteGroup[], availableRange: ReadonlySet
 }
 ```
 
+## Octave folding
+
+Instead of dropping out-of-range notes (`cropToRange`), `foldOctaves` tries to wrap each note into the available range by shifting it ±12 semitones (one octave at a time). This preserves the song's harmonic identity while fitting it to a narrow calibrated range. Notes that can't be folded into range after ±4 octaves are dropped.
+
+``` {.typescript file=_generated/lib/game-engine.ts}
+export function foldOctaves(groups: GameNoteGroup[], availableRange: ReadonlySet<string>): GameNoteGroup[] {
+  return groups.map(group => {
+    const foldedCellIds: string[] = [];
+    const foldedMidiNotes: number[] = [];
+    for (let i = 0; i < group.cellIds.length; i++) {
+      const cellId = group.cellIds[i];
+      const midi = group.midiNotes[i];
+      if (availableRange.has(cellId)) {
+        foldedCellIds.push(cellId);
+        foldedMidiNotes.push(midi);
+        continue;
+      }
+      let found = false;
+      for (let octShift = 1; octShift <= 4; octShift++) {
+        for (const dir of [1, -1]) {
+          const shifted = midi + dir * octShift * 12;
+          const [sx, sy] = midiToCoord(shifted);
+          const sCellId = `${sx}_${sy}`;
+          if (availableRange.has(sCellId)) {
+            foldedCellIds.push(sCellId);
+            foldedMidiNotes.push(shifted);
+            found = true;
+            break;
+          }
+        }
+        if (found) break;
+      }
+    }
+    return { startMs: group.startMs, cellIds: foldedCellIds, midiNotes: foldedMidiNotes };
+  }).filter(g => g.cellIds.length > 0);
+}
+```
+
 ## Optimal transposition search
 
 Before loading a song the engine searches ±24 semitones (two octaves in each direction) for the transposition that places the most notes within the instrument's available range. This is a brute-force linear scan — 49 candidates, each costing one `transposeSong` pass.
