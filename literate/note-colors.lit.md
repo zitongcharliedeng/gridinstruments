@@ -67,29 +67,28 @@ The conversion pipeline is: **OKLCH -> OKLAB -> LMS -> linear sRGB -> gamma sRGB
  *   F♯=149° G=179° A♭=209° A=239° B♭=269° B=299°
  */
 
-// ── OKLCH → sRGB conversion ──────────────────────────────────────────────
 
 function oklchToRgb(L: number, C: number, H: number): [number, number, number] {
   const hRad = H * Math.PI / 180;
   const a = C * Math.cos(hRad);
   const b = C * Math.sin(hRad);
 
-  // OKLAB → LMS (cube-root space)
+
   const l_ = L + 0.3963377774 * a + 0.2158037573 * b;
   const m_ = L - 0.1055613458 * a - 0.0638541728 * b;
   const s_ = L - 0.0894841775 * a - 1.2914855480 * b;
 
-  // Cube to recover LMS
+
   const l = l_ * l_ * l_;
   const m = m_ * m_ * m_;
   const s = s_ * s_ * s_;
 
-  // LMS → linear sRGB
+
   const lr = 4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s;
   const lg = -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s;
   const lb = -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s;
 
-  // Linear → sRGB gamma
+
   const gamma = (x: number): number =>
     x >= 0.0031308 ? 1.055 * Math.pow(x, 1 / 2.4) - 0.055 : 12.92 * x;
 
@@ -137,9 +136,6 @@ hue by first recovering the pitch class. Each step on the x-axis is 7 semitones
 
 ``` {.typescript file=_generated/lib/note-colors.ts}
 
-// ── Chromatic hue mapping ────────────────────────────────────────────────
-// Each semitone = 30° on the OKLCH hue wheel.
-// Adjacent grid cells (fifths apart = 7 semitones) differ by 210° = max contrast.
 
 /** OKLCH hue for a pitch class (0=C). Each semitone = 30°, anchored so D=29°. */
 function pcHue(pc: number): number {
@@ -182,7 +178,6 @@ its pitch class, look up the CoF position, then compute the grid coordinate.
 
 ``` {.typescript file=_generated/lib/note-colors.ts}
 
-// ── Circle-of-fifths lookup (used by midiToCoord) ───────────────────────
 
 /** Circle-of-fifths position for each pitch class (0=C..11=B). D=0. */
 const COF_FROM_PC: readonly number[] = [
@@ -220,7 +215,6 @@ background presence without visual clutter.
 
 ``` {.typescript file=_generated/lib/note-colors.ts}
 
-// ── Pre-computed arrays (indexed by pitch class 0=C..11=B) ───────────────
 
 /** Vivid colors: for active notes and history visualization. */
 export const NOTE_COLORS: readonly string[] = Array.from({ length: 12 }, (_, pc) =>
@@ -242,7 +236,6 @@ computing an `rgba()` string on the fly.
 
 ``` {.typescript file=_generated/lib/note-colors.ts}
 
-// ── Public API ───────────────────────────────────────────────────────────
 
 /**
  * Get vivid color for a MIDI note number.
@@ -316,7 +309,7 @@ export function cellColors(
   coordY = 0
 ): { fill: string; text: string } {
   const h = chromaticHue(coordX);
-  // Subtle octave differentiation: ±0.02 lightness per octave from center
+
   const octShift = coordY * 0.02;
   switch (state) {
     case 'active':
@@ -374,7 +367,7 @@ export function pitchClassFromCoordX(coordX: number): number {
 
 /** MIDI note number from DCompose coordinates. */
 export function coordToMidiNote(coordX: number, coordY: number): number {
-  // D-ref = MIDI 62 at default, each CoF step = 7 semitones, each octave step = 12
+
   return 62 + coordX * 7 + coordY * 12;
 }
 
