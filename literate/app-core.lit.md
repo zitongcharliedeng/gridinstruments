@@ -1037,14 +1037,18 @@ export class DComposeApp {
      //
      // Fallback to 0.75 if DPI is unavailable (screen.width or outerWidth is zero/missing).
      // Touch devices: Math.min(1.2, innerWidth / 480) — scales to viewport width.
-     // Universal default zoom: 0.85 produces readable note labels on all devices.
-     // No DPI detection — CSS pixels are consistent across devices at a given
-     // viewport width. Text height is the same everywhere for the same font-size.
-     // Touch devices get slightly larger cells scaled to viewport width.
-     this.defaultZoom = 0.85;
-     const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-     if (isTouchDevice) {
-       this.defaultZoom = Math.max(0.85, Math.min(1.2, window.innerWidth / 480));
+     const targetMm = 23;
+     const cssPxPerMm = 96 / 25.4;
+     const targetPx = targetMm * cssPxPerMm;
+     if (this.visualizer) {
+       const { cellHv1, cellHv2 } = this.visualizer.getGridGeometry();
+       const cellWidth = (Math.abs(cellHv1.x) + Math.abs(cellHv2.x)) * 2;
+       if (cellWidth > 1) {
+         this.defaultZoom = Math.max(0.5, Math.min(1.5, targetPx / cellWidth));
+       }
+     }
+     if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+       this.defaultZoom = Math.max(this.defaultZoom, Math.min(1.2, window.innerWidth / 480));
      }
      const savedZoom = this.loadSetting('zoom', this.defaultZoom.toString());
      if (this.zoomSlider) {
