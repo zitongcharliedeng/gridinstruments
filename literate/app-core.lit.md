@@ -1032,7 +1032,15 @@ The grid should feel like other finger instruments. Three reference key widths:
 
 We target **23mm** (piano white key) as the default — it's the largest common reference and produces cells where note labels are comfortably readable. Users can adjust via the zoom slider.
 
-The [CSS Values spec](https://www.w3.org/TR/css-values-3/#absolute-lengths) defines 1 CSS px = 1/96 inch. Since [1 inch = 25.4mm](https://en.wikipedia.org/wiki/Inch), the conversion from physical millimeters to CSS pixels is:
+#### Why CSS constants, not exposed DPI?
+
+Browsers expose [`window.devicePixelRatio`](https://developer.mozilla.org/en-US/docs/Web/API/Window/devicePixelRatio) and `screen.width`, but these are **device pixels**, not physical measurements. A previous approach used `screen.width / outerWidth * 96` to estimate DPI, but:
+
+- Returns 0 in headless browsers (Playwright, CI) — needs fallback
+- `devicePixelRatio` is the ratio of device px to CSS px, not physical DPI
+- Different browsers report different values for the same screen
+
+The key insight: **CSS pixels are already DPI-normalized by the browser**. The [CSS Values spec](https://www.w3.org/TR/css-values-3/#absolute-lengths) defines 1 CSS px = 1/96 inch. The browser uses `devicePixelRatio` internally to map CSS px to physical pixels. So we never need to detect DPI — the browser already did it. Since [1 inch = 25.4mm](https://en.wikipedia.org/wiki/Inch), the conversion from physical millimeters to CSS pixels is:
 
 ``` {.typescript file=_generated/app-core.ts}
      const PIANO_KEY_MM = 23;
