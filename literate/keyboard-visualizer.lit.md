@@ -1,10 +1,27 @@
 # Keyboard Visualizer
 
-DCompose/Wicki-Hayden keyboard visualizer — Canvas 2D rendering of an isomorphic grid as a tiling of parallelograms.
+Canvas 2D rendering of a
+[DCompose](https://en.xen.wiki/w/DCompose)/[Wicki-Hayden](https://en.wikipedia.org/wiki/Wicki%E2%80%93Hayden_note_layout)
+isomorphic keyboard as a tiling of parallelogram cells.
 
-Every pixel maps to exactly one cell (Voronoi = parallelogram partition). No gaps, no overlaps. `CELL_INSET` shrinks inactive cells to reveal black background as "mortar". `skewFactor` interpolates between DCompose (diagonal) and MidiMech (orthogonal) layouts.
+The fundamental invariant: **every pixel maps to exactly one cell**. The grid is
+a [Voronoi partition](https://en.wikipedia.org/wiki/Voronoi_diagram) where each
+cell is a parallelogram -- no gaps, no overlaps. Inactive cells are shrunk by
+`CELL_INSET` to reveal black background as "mortar" between keys. The
+`skewFactor` parameter interpolates between the DCompose diagonal layout and
+the MidiMech orthogonal layout.
 
-## Imports and types
+## Imports
+
+The visualizer depends on two sibling modules:
+
+- **keyboard-layouts** provides note naming (`getNoteNameFromCoord`), 12-TET
+  equivalents (`get12TETName`), and cent deviation from equal temperament
+  (`getCentDeviation`).
+- **note-colors** provides the
+  [OKLCH](https://oklch.com/)-based `cellColors` function that maps grid
+  coordinates and visual states to fill/text color pairs. See
+  [note-colors.lit.md](note-colors.lit.md) for the full color system.
 
 ``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
 /**
@@ -19,6 +36,23 @@ Every pixel maps to exactly one cell (Voronoi = parallelogram partition). No gap
 
 import { getNoteNameFromCoord, get12TETName, getCentDeviation } from './keyboard-layouts';
 import { cellColors } from './note-colors';
+```
+
+## VisualizerOptions
+
+The options interface controls canvas dimensions, the generator interval pair
+(fifth and octave sizes in
+[cents](https://en.wikipedia.org/wiki/Cent_(music))), reference pitch, zoom,
+and two layout parameters:
+
+- **skewFactor**: interpolates between DCompose (1.0, diagonal parallelograms)
+  and MidiMech (0.0, orthogonal rectangles). Values outside 0-1 are allowed for
+  extrapolation.
+- **bFact**: row-flattening shear toward
+  [Wicki-Hayden](https://en.wikipedia.org/wiki/Wicki%E2%80%93Hayden_note_layout)
+  layout. At 1.0 the wholetone direction becomes fully horizontal.
+
+``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
 
 export interface VisualizerOptions {
   width: number;
@@ -42,6 +76,17 @@ export interface VisualizerOptions {
    */
   bFact: number;
 }
+```
+
+## Button -- internal cell model
+
+Each cell on the grid is represented internally as a `Button`. The `x`/`y`
+fields are the screen-space center of the cell (in CSS pixels), while
+`coordX`/`coordY` are the lattice coordinates: `coordX` steps through the
+[circle of fifths](https://en.wikipedia.org/wiki/Circle_of_fifths) (D = 0) and
+`coordY` steps through octaves.
+
+``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
 
 interface Button {
   x: number;    // screen center X
@@ -52,6 +97,16 @@ interface Button {
   isBlackKey: boolean;
   pitchCents: number;
 }
+```
+
+## CELL_INSET -- mortar between keys
+
+Inactive cells are drawn at 93% of their full size. The remaining 7% reveals
+the black canvas background, creating the visual appearance of mortar between
+parallelogram bricks. Active, target, and target-pressed cells expand to 100%
+to visually "pop" forward.
+
+``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
 
 // Fraction of cell size used for inactive cells.
 // Gap = 1 - CELL_INSET appears as black "mortar" between cells.
@@ -59,7 +114,13 @@ const CELL_INSET = 0.93;
 
 ```
 
-## Class definition and state
+## Class definition and instance state
+
+The visualizer class owns its `<canvas>` element and 2D rendering context.
+Several `Set` and `Map` collections track which cells are in which visual
+state -- active (currently pressed), sustained (held by pedal), target (game
+mode hint), calibrated, and so on. These are populated by the application layer
+and read during each `render()` call.
 
 ``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
 export class KeyboardVisualizer {
@@ -74,17 +135,51 @@ export class KeyboardVisualizer {
   private qwertyLabels: Map<string, string> = new Map();
   private mpeExpression: Map<string, { pressure: number; pitchBend: number }> = new Map();
 
+```
+
+### Half-vectors -- parallelogram cell shape
+
+Each cell is a parallelogram defined by two **half-vectors** (`hv1`, `hv2`).
+The four corners are at center +/- hv1 +/- hv2. These vectors are recomputed
+whenever `generateButtons()` runs (on construction, resize, zoom, or skew
+change).
+
+At MidiMech (skewFactor=0), `hv1` is purely horizontal (wholetone direction)
+and `hv2` is purely vertical (fourth direction), producing upright rectangles.
+At DCompose (skewFactor=1), both vectors are diagonal, producing the
+characteristic leaning parallelograms.
+
+``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
 
   // Half-vectors for parallelogram cells (computed in generateButtons)
   private hv1 = { x: 0, y: 0 }; // half-step in coordX direction
   private hv2 = { x: 0, y: 0 }; // half-step in coordY direction
 
 
+```
+
+### CSS pixel constant
+
+The [W3C CSS specification](https://www.w3.org/TR/css-values-4/#absolute-lengths)
+defines 1 CSS pixel as exactly 1/96 of an inch. This is a spec constant, not
+a screen measurement. The `window.devicePixelRatio` property separately handles
+the mapping from CSS pixels to physical device pixels.
+
+``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
 
   // W3C CSS spec: 1 CSS px = 1/96 inch. Always 96 — this is a spec constant,
   // not a measurement. devicePixelRatio handles physical pixels separately.
   private readonly cssPxPerInch: number = 96;
 
+```
+
+### Default options and constructor
+
+The defaults produce a 900x400 grid in standard 12-TET tuning (700-cent fifth,
+1200-cent octave) with D4 at 293.66 Hz, no skew (MidiMech layout), and no
+row-flattening.
+
+``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
 
   private options: VisualizerOptions = {
     width: 900,
@@ -119,7 +214,13 @@ export class KeyboardVisualizer {
 
 ```
 
-## Canvas setup and public API
+## Canvas setup
+
+The canvas physical pixel buffer is sized to `width * devicePixelRatio` by
+`height * devicePixelRatio`, then the 2D context is scaled by `dpr` so that
+all subsequent drawing coordinates remain in CSS pixels. The CSS `width`/`height`
+style properties are intentionally left unset -- the parent container controls
+layout sizing via `width: 100%; height: 100%`.
 
 ``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
   private setupCanvas(): void {
@@ -130,6 +231,17 @@ export class KeyboardVisualizer {
     // Only canvas.width/height (physical pixel buffer) are set here.
     this.ctx.scale(dpr, dpr);
   }
+```
+
+## Public API -- generator and tuning
+
+The generator interval pair `[fifth, octave]` in cents defines the lattice
+geometry. Changing the generator recomputes all button positions and re-renders.
+For 12-TET the fifth is 700 cents; for
+[quarter-comma meantone](https://en.wikipedia.org/wiki/Quarter-comma_meantone)
+it is ~696.6 cents.
+
+``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
 
   setGenerator(generator: [number, number]): void {
     this.options.generator = generator;
@@ -145,6 +257,15 @@ export class KeyboardVisualizer {
   getGenerator(): [number, number] {
     return [this.options.generator[0], this.options.generator[1]];
   }
+```
+
+## Public API -- zoom and scale
+
+Scale controls independent X/Y stretching of the grid. Both axes are clamped to
+[0.2, 5.0]. `setZoom` is a convenience that sets both axes uniformly. Changing
+scale recomputes button positions and re-renders.
+
+``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
 
   setScale(scaleX: number, scaleY: number): void {
     this.options.scaleX = Math.max(0.2, Math.min(5.0, scaleX));
@@ -165,6 +286,15 @@ export class KeyboardVisualizer {
   getScale(): { scaleX: number; scaleY: number } {
     return { scaleX: this.options.scaleX, scaleY: this.options.scaleY };
   }
+```
+
+## Public API -- button spacing (legacy)
+
+Button spacing is a no-op. The gap between cells is entirely determined by
+`CELL_INSET`. These methods exist for API compatibility with older code that
+expected a configurable spacing parameter.
+
+``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
 
   setButtonSpacing(_spacing: number): void {
     // No-op: gap is determined by CELL_INSET, not a spacing parameter
@@ -182,6 +312,23 @@ export class KeyboardVisualizer {
       Math.abs(this.hv1.y) + Math.abs(this.hv2.y),
     );
   }
+```
+
+## Public API -- skew factor and bFact
+
+The skew factor interpolates the layout between two endpoint geometries:
+
+| skewFactor | Layout    | Cell shape            | Pitch direction |
+|------------|-----------|-----------------------|-----------------|
+| 0.0        | MidiMech  | upright rectangles    | diagonal (up-right) |
+| 1.0        | DCompose  | leaning parallelograms| vertical        |
+
+`bFact` applies a secondary row-flattening shear. At bFact=1.0 the wholetone
+direction becomes horizontal, producing a
+[Wicki-Hayden](https://en.wikipedia.org/wiki/Wicki%E2%80%93Hayden_note_layout)
+layout with DCompose cell shapes.
+
+``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
 
   /** Set the DCompose↔MidiMech skew factor. 0=MidiMech, 1=DCompose, values outside 0-1 allowed. */
   setSkewFactor(f: number): void {
@@ -204,6 +351,19 @@ export class KeyboardVisualizer {
     return this.options.bFact;
   }
 
+```
+
+## Public API -- grid geometry for external consumers
+
+The `getGridGeometry` method exposes the cell half-vectors and canvas dimensions
+so that external overlays (such as
+[chord graffiti](chord-graffiti.lit.md)) can position their drawings
+relative to the grid cells. The `getGoldenLineY` method returns the vertical
+center of the canvas, used by the
+[note history waterfall](note-history-visualizer.lit.md) to align its
+scrolling display.
+
+``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
 
   /**
    * Public grid geometry for external consumers (e.g. chord graffiti).
@@ -233,7 +393,33 @@ export class KeyboardVisualizer {
 
 ```
 
-## Geometry: spacing and button generation
+## Grid geometry -- the spacing engine
+
+The `getSpacing` method is the heart of the layout system. It computes two
+pairs of basis vectors (one for DCompose, one for MidiMech) and interpolates
+between them using the `skewFactor` parameter.
+
+### DCompose basis vectors
+
+The DCompose layout derives from
+[WickiSynth](https://github.com/nicktickn/WickiSynth) by Piers Titus van der
+Torren. Given the generator ratio `a = fifth/octave` (approximately 0.583 for
+12-TET):
+
+- **b** = sqrt(2a/3 - a^2) gives the horizontal spread for a
+  [Wicki-Hayden](https://en.wikipedia.org/wiki/Wicki%E2%80%93Hayden_note_layout)
+  hex-like tiling
+- The fifth vector leans at approximately 69 degrees from horizontal (the
+  [Striso](https://www.striso.org/) angle)
+- `dPy` is the octave step in pixels, derived from a piano white key width of
+  23.5mm
+
+### Physical key sizing
+
+The cell size targets a standard piano white key width of 23.5mm. Since
+`CELL_INSET` (0.93) shrinks the visible key from the full cell, the cell is
+inflated to ~25.3mm to compensate. The conversion uses the W3C constant of 96
+CSS pixels per inch.
 
 ``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
   private getSpacing(): {
@@ -263,6 +449,20 @@ export class KeyboardVisualizer {
     const dGenY0 = a * dPy;                       // fifth Y lean (pitch-proportional)
     const dGenX1 = 0;                              // octave = pure vertical at DCompose
     const dGenY1 = dPy;                            // octave step
+```
+
+### MidiMech basis vectors
+
+The MidiMech layout uses a simpler coordinate system where:
+
+- Fifth = 1 wholetone-cell right + 1 fourth-cell up, giving vector (mCS, mCS)
+- Octave = 1 wholetone-cell right + 2 fourth-cells up, giving vector (mCS, 2*mCS)
+
+This makes the wholetone direction (2*fifth - octave) purely horizontal and the
+fourth direction (-fifth + octave) purely vertical, producing an orthogonal
+rectangular grid.
+
+``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
     // In (fifth, octave) coordinates:
     //   Fifth  = 1 wholetone-cell right + 1 fourth-cell up  → (mCS, mCS)
     //   Octave = 1 wholetone-cell right + 2 fourth-cells up → (mCS, 2·mCS)
@@ -273,6 +473,16 @@ export class KeyboardVisualizer {
     const mGenY0 = mCS;
     const mGenX1 = mCS;
     const mGenY1 = 2 * mCS;
+```
+
+### Interpolation and row-flattening
+
+The final basis vectors are a linear interpolation between DCompose (t=0) and
+MidiMech (t=1), scaled by `scaleX`/`scaleY`. The `bFact` parameter then
+applies a secondary shear that pushes `genY0` toward `genY1/2`, making the
+wholetone direction horizontal (Wicki-Hayden-style flat rows).
+
+``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
     // ── Interpolate basis vectors (t=0 DCompose, t=1 MidiMech) ─────────
     const genX  = (dGenX  + t * (mGenX  - dGenX))  * scaleX;
     let   genY0 = (dGenY0 + t * (mGenY0 - dGenY0)) * scaleY;
@@ -282,6 +492,23 @@ export class KeyboardVisualizer {
     // genY0 → genY1/2 makes wholetone direction horizontal.
     // Honeycomb offset (fourth_X = -wholetone_X/2) follows from lattice math.
     genY0 = genY0 + bFact * (genY1 / 2 - genY0);
+```
+
+### Cell half-vectors from the reduced lattice basis
+
+The tiling vectors are derived from the interpolated basis by computing the
+[reduced basis](https://en.wikipedia.org/wiki/Lattice_reduction) of the pitch
+lattice:
+
+- **wholetone** = 2 * fifth - octave (the horizontal-ish cell axis)
+- **fourth** = -fifth + octave (the vertical-ish cell axis)
+
+These ALWAYS tile perfectly because they form a reduced basis of the lattice,
+regardless of the skew factor. At DCompose both vectors are diagonal
+(parallelograms). At MidiMech they align with the axes (rectangles). At any
+intermediate value the tiling remains valid.
+
+``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
     // ── Cell half-vectors (parallelogram shape) ─────────────────────────
     // Derive tiling vectors from the CURRENT interpolated basis vectors.
     // wholetone = 2*fifth − octave  → always the horizontal-ish cell axis
@@ -302,6 +529,25 @@ export class KeyboardVisualizer {
     return { genX, genY0, genX1, genY1, cellHv1, cellHv2 };
   }
 
+```
+
+## Button generation -- populating the grid
+
+`generateButtons` fills the `buttons` array with all cells whose centers fall
+within (or near) the visible canvas. It iterates over a grid of `(i, j)`
+coordinates where `i` is the circle-of-fifths index and `j` is the octave
+index. The iteration range scales inversely with zoom so that the visible area
+is always fully covered.
+
+Each cell's screen position is computed from the basis vectors:
+
+    screenX = centerX + i * genX + j * genX1
+    screenY = centerY - (i * genY0 + j * genY1)
+
+Cells far off-screen are culled. The array is sorted by Y coordinate (back to
+front) so that active cells render on top of their neighbors.
+
+``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
   private generateButtons(): void {
     this.buttons = [];
 
@@ -352,7 +598,17 @@ export class KeyboardVisualizer {
 
 ```
 
-## Note state setters
+## Note state setters -- active notes and MIDI lookup
+
+The application layer drives the visualizer by setting which cells are in each
+state. Note IDs use the format `"coordX_coordY"` (e.g. `"0_0"` for D4,
+`"1_0"` for A4).
+
+`getCellIdsForMidiNotes` maps MIDI note numbers back to cell IDs. Because the
+isomorphic grid has multiple positions for the same pitch (enharmonic
+equivalents at different octave offsets), this returns ALL matching cells.
+The MIDI formula is: `midi = 62 + coordX * 7 + coordY * 12` (D4 = MIDI 62,
+each fifth = 7 semitones, each octave = 12).
 
 ``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
   setActiveNotes(noteIds: string[]): void {
@@ -381,14 +637,54 @@ export class KeyboardVisualizer {
   setPressedTargetNotes(noteIds: string[]): void {
     this.pressedTargetNotes = new Set(noteIds);
   }
+```
+
+## Calibration visual feedback
+
+When an [MPE](https://www.midi.org/midi-articles/midi-polyphonic-expression-mpe)
+controller is being calibrated, only the cells within the calibrated range
+should appear in color. Cells outside the range are rendered in greyscale
+(chroma = 0 in OKLCH) to visually communicate "this key is not yet mapped."
+Setting `calibratedRange` to `null` disables the overlay and all cells render
+normally.
+
+``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
 
   setCalibratedRange(range: ReadonlySet<string> | null): void {
     this.calibratedRange = range;
   }
+```
+
+## QWERTY key label overlay
+
+When the QWERTY overlay is enabled, each cell can display a keyboard shortcut
+label (e.g. "Q", "W", "E") in its top-left corner. The labels are passed as a
+Map from note ID to key string. See the QWERTY rendering code in
+[drawCell](#rendering-a-single-cell----drawcell) for the visual treatment:
+yellow text on a semi-transparent black pill for maximum contrast.
+
+``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
 
   setQwertyLabels(labels: Map<string, string>): void {
     this.qwertyLabels = labels;
   }
+```
+
+## MPE expression state
+
+[MPE (MIDI Polyphonic Expression)](https://www.midi.org/midi-articles/midi-polyphonic-expression-mpe)
+provides per-note pressure and pitch bend data. The visualizer stores this as a
+Map from note ID to `{ pressure, pitchBend }` and uses it during rendering to
+modulate cell appearance:
+
+- **Pressure** (0-1): controls cell opacity. At pressure=0 the cell renders at
+  85% opacity; at pressure=1 it renders at 100%. This subtle dimming makes
+  light touches visually distinct from firm presses.
+- **Pitch bend** (-1 to +1): overlays the color of the target pitch. A bend of
+  +0.5 (one semitone up) blends toward the color of the note one fifth-step
+  away, providing real-time visual feedback of where the pitch is heading.
+
+``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
 
   setMPEExpression(expressions: Map<string, { pressure: number; pitchBend: number }>): void {
     this.mpeExpression = expressions;
@@ -404,7 +700,11 @@ export class KeyboardVisualizer {
 
 ```
 
-## Rendering
+## Rendering pipeline -- render()
+
+The render loop is intentionally simple: clear to black, draw every cell, then
+draw the overlay lines. The cell loop runs over the pre-sorted `buttons` array
+(back-to-front by Y) so that active cells paint over their inactive neighbors.
 
 ``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
   render(): void {
@@ -419,6 +719,24 @@ export class KeyboardVisualizer {
 
     this.drawPitchLines();
   }
+```
+
+## Pitch lines and axis overlays
+
+After all cells are drawn, `drawPitchLines` renders two labeled axis lines
+through the grid center and a set of faint vertical guide lines:
+
+1. **Pitch axis**: follows the octave direction (genX1, -genY1), passing
+   through every D cell. At DCompose this is vertical; at MidiMech it is
+   diagonal.
+2. **Circle of Fifths axis**: the iso-pitch direction, perpendicular to pitch
+   in the lattice. Computed as octave * fifthVector - fifth * octaveVector.
+3. **Origin marker**: a small white dot at the grid center (D4).
+4. **Fifth index lines**: faint lines through each column of same-fifth-index
+   cells, extending in the octave direction. Alpha fades with distance from
+   center.
+
+``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
 
   private drawPitchLines(): void {
     const { width, height } = this.options;
@@ -456,6 +774,16 @@ export class KeyboardVisualizer {
   }
 
 
+```
+
+## Fifth index lines
+
+These faint guide lines connect cells that share the same circle-of-fifths
+index (same pitch class), running in the octave direction. They help the player
+visually track octave transpositions of the same note. The alpha decreases with
+distance from the center so that edge columns are nearly invisible.
+
+``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
 
 
   private drawFifthIndexLines(
@@ -496,6 +824,17 @@ export class KeyboardVisualizer {
   }
 
 
+```
+
+## Labeled axis line with arrowhead
+
+`drawAxisLine` draws a semi-transparent white line through the canvas center in
+a given direction, with a filled arrowhead at the positive end and a rotated
+text label near the tip. The arrowhead is positioned where the line hits the
+canvas edge (with a 60px margin). The label text rotates to follow the axis
+direction but flips to remain left-to-right readable.
+
+``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
 
   /** Draw a labeled axis line through center with arrowhead at the positive end. */
   private drawAxisLine(
@@ -519,6 +858,14 @@ export class KeyboardVisualizer {
     this.ctx.moveTo(cx - nx * ext, cy - ny * ext);
     this.ctx.lineTo(cx + nx * ext, cy + ny * ext);
     this.ctx.stroke();
+```
+
+The arrowhead tip position is found by ray-casting from the center along the
+axis direction and finding the nearest canvas edge intersection, inset by a
+60px margin. The arrowhead itself is a filled isoceles triangle with an opening
+angle of 2 * PI/7 radians (approximately 51 degrees).
+
+``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
 
     // Find where positive direction hits canvas edge (with margin)
     const margin = 60;
@@ -553,6 +900,14 @@ export class KeyboardVisualizer {
     );
     this.ctx.closePath();
     this.ctx.fill();
+```
+
+The label is positioned near the arrowhead, offset perpendicularly from the
+axis by 14px. The text is rotated to follow the axis direction, but if the
+angle would make the text upside-down (outside -90 to +90 degrees), it is
+flipped by PI radians to remain readable.
+
+``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
 
     // Label near arrowhead, offset perpendicular to axis
     const labelDist = 28;
@@ -579,6 +934,28 @@ export class KeyboardVisualizer {
     this.ctx.restore();
   }
 
+```
+
+## Rendering a single cell -- drawCell
+
+`drawCell` is the most complex rendering method. It handles eight visual states
+and three overlay systems (MPE expression, note labels, QWERTY labels).
+
+### Cell state determination
+
+Each cell's visual state is determined by a priority cascade:
+
+1. **active** -- currently pressed (MIDI note-on or mouse/touch)
+2. **target-pressed** -- game mode target that has been correctly pressed
+3. **target** -- game mode target awaiting press (near-white highlight)
+4. **sustained** -- held by sustain pedal after key release
+5. **uncalibrated-white/black** -- outside MPE calibration range (greyscale)
+6. **white/black** -- default resting state (dark tinted)
+
+The `cellColors` function from the OKLCH color system returns the fill and text
+colors for the resolved state.
+
+``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
 
   private drawCell(button: Button): void {
     const { x, y, coordX, coordY, noteName, isBlackKey } = button;
@@ -599,6 +976,17 @@ export class KeyboardVisualizer {
       : isBlackKey ? 'black'
       : 'white';
     const { fill: fillColor, text: textColor } = cellColors(coordX, state);
+```
+
+### MPE pressure -- opacity modulation
+
+When MPE expression data is available for an active cell, the pressure value
+(0-1) modulates the cell's opacity. At zero pressure the cell renders at 85%
+opacity; at full pressure it renders at 100%. This creates a subtle visual
+distinction between light and firm touches without making lightly-pressed keys
+invisible.
+
+``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
 
     // MPE expression: pressure → opacity, pitch bend → hue interpolation
     const mpeExpr = this.mpeExpression.get(noteId);
@@ -607,6 +995,16 @@ export class KeyboardVisualizer {
       // Pressure: 0 = normal opacity (0.85), 1 = full opacity (1.0)
       cellAlpha = 0.85 + mpeExpr.pressure * 0.15;
     }
+```
+
+### Parallelogram drawing
+
+The cell shape is drawn as a four-vertex polygon using the half-vectors. The
+scale factor `s` is 1.0 for active/target cells (filling the full cell area) or
+`CELL_INSET` (0.93) for inactive cells (revealing mortar). The four corners are
+computed as center +/- (hv1 * s) +/- (hv2 * s).
+
+``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
 
     const { hv1, hv2 } = this;
     const s = (isActive || isTargetPressed || isTargetUnpressed) ? 1.0 : CELL_INSET;
@@ -631,6 +1029,22 @@ export class KeyboardVisualizer {
     this.ctx.globalAlpha = cellAlpha;
     this.ctx.fill();
     this.ctx.globalAlpha = 1;
+```
+
+### MPE pitch bend -- color slide
+
+When an active cell has a pitch bend value exceeding 0.01 (in semitone units),
+the cell is overlaid with the OKLCH color of the target pitch. The bend is
+quantized to whole steps (rounded to nearest `bendSteps = round(pitchBend * 2)`)
+and the target color is fetched from `cellColors(coordX + bendSteps, 'active')`.
+
+The overlay alpha is proportional to the bend magnitude (capped at 0.75), so a
+small bend produces a subtle color tint while a full-semitone bend produces a
+strong overlay. This gives the player real-time visual feedback of where
+their pitch bend is heading on the
+[circle of fifths](https://en.wikipedia.org/wiki/Circle_of_fifths) color wheel.
+
+``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
 
     // MPE pitch bend: overlay target note color
     if (mpeExpr && isActive && Math.abs(mpeExpr.pitchBend) > 0.01) {
@@ -649,6 +1063,21 @@ export class KeyboardVisualizer {
         this.ctx.globalAlpha = 1;
       }
     }
+```
+
+### Note name label
+
+Each cell displays its note name (e.g. "D", "A", "Eb") centered in the cell.
+The font size scales with the smaller cell dimension (38% of `cellMin`, clamped
+to 10-22px).
+
+When the generator is not standard 12-TET, or when a note's circle-of-fifths
+name differs from its 12-TET equivalent, a **bracket sub-label** appears below
+the main name showing the 12-TET pitch and/or cent deviation. For example, a
+note named "D" that is 6 cents sharp of 12-TET D would show `(+6c)` below.
+The sub-label renders at 60% of the main font size and 60% opacity.
+
+``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
 
     // Note label — size from full cell span, not half-vectors
     const cellW = (Math.abs(hv1.x) + Math.abs(hv2.x)) * 2;
@@ -689,6 +1118,17 @@ export class KeyboardVisualizer {
       this.ctx.fillText(noteName, x, y);
     }
     this.ctx.globalAlpha = 1;
+```
+
+### QWERTY key overlay
+
+When QWERTY labels are enabled (for beginner key discovery), each mapped cell
+shows its keyboard shortcut in the top-left corner. The label uses a
+high-contrast treatment: yellow text (#ffff00) on a semi-transparent black pill
+(rgba(0,0,0,0.7)). The pill is sized dynamically from `measureText` to fit any
+key label width.
+
+``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
 
     // QWERTY overlay label (top-left of cell, high contrast)
     const qLabel = this.qwertyLabels.get(noteId);
@@ -712,7 +1152,10 @@ export class KeyboardVisualizer {
 
 ```
 
-## Resize, static helpers, and hit detection
+## Resize
+
+`resize` updates the canvas dimensions, re-initializes the pixel buffer and 2D
+context scaling, regenerates all button positions, and re-renders.
 
 ``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
   resize(width: number, height: number): void {
@@ -726,6 +1169,33 @@ export class KeyboardVisualizer {
   static getNoteId(coordX: number, coordY: number): string {
     return `${coordX}_${coordY}`;
   }
+```
+
+## Hit detection -- Voronoi nearest-neighbor
+
+`getButtonAtPoint` maps a screen coordinate to the nearest grid cell. Because
+the grid is a parallelogram Voronoi partition, this is equivalent to solving a
+2x2 linear system to find the fractional lattice coordinates, then checking the
+nearest integer neighbors.
+
+The screen-to-lattice inversion solves:
+
+    dx = i * genX + j * genX1
+    dy = i * genY0 + j * genY1
+
+using [Cramer's rule](https://en.wikipedia.org/wiki/Cramer%27s_rule):
+
+    det = genX * genY1 - genX1 * genY0
+    i = (dx * genY1 - genX1 * dy) / det
+    j = (genX * dy - dx * genY0) / det
+
+The fractional `(i, j)` is rounded to the nearest integer, then a small
+neighborhood (radius 2 in each direction) is searched for the minimum Euclidean
+distance. A full-scan fallback handles edge cases where the restricted search
+misses. This approach is O(N) worst case but O(1) expected for well-behaved
+grids.
+
+``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
 
   /**
    * Find the button nearest to screen coordinates using the exact parallelogram
