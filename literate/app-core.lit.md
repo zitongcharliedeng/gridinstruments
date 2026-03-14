@@ -57,6 +57,7 @@ export class DComposeApp {
   private expressionBend = true;
   private expressionVelocity = true;
   private expressionPressure = true;
+  private expressionTimbre = true;
 
   private pointerDown = new Map<number, { coordX: number; coordY: number } | null>();
 
@@ -102,7 +103,7 @@ export class DComposeApp {
     zoom: 'gi_zoom', skew: 'gi_skew', bfact: 'gi_bfact', tuning: 'gi_tuning',
     volume: 'gi_volume', waveform: 'gi_waveform', dref: 'gi_dref', layout: 'gi_layout',
     midiPbRange: 'gi_midi_pb_range',
-    exprBend: 'gi_expr_bend', exprVelocity: 'gi_expr_velocity', exprPressure: 'gi_expr_pressure',
+    exprBend: 'gi_expr_bend', exprVelocity: 'gi_expr_velocity', exprPressure: 'gi_expr_pressure', exprTimbre: 'gi_expr_timbre',
     timbreCcMode: 'gi_timbre_cc_mode',
   } as const;
 
@@ -147,6 +148,7 @@ export class DComposeApp {
     this.expressionBend = this.loadSetting('exprBend', 'true') === 'true';
     this.expressionVelocity = this.loadSetting('exprVelocity', 'true') === 'true';
     this.expressionPressure = this.loadSetting('exprPressure', 'true') === 'true';
+    this.expressionTimbre = this.loadSetting('exprTimbre', 'true') === 'true';
 
     void this.init();
   }
@@ -252,7 +254,7 @@ export class DComposeApp {
     this.midi.onSlide((channel, value, deviceId) => {
       const audioNoteId = this.midiChannelVoice.get(`${deviceId}_${channel}`);
       if (audioNoteId) {
-        if (this.expressionBend) this.synth.setTimbre(audioNoteId, value);
+        if (this.expressionTimbre) this.synth.setTimbre(audioNoteId, value);
         this.mpe.sendSlide(audioNoteId, value);
       }
     });
@@ -880,20 +882,12 @@ export class DComposeApp {
       });
     }
 
-    // Flat sound toggle — disables all expression at once
-    const flatSoundCb = getElementOrNull('flat-sound-toggle', HTMLInputElement);
-    if (flatSoundCb) {
-      flatSoundCb.addEventListener('change', () => {
-        const flat = flatSoundCb.checked;
-        this.expressionBend = !flat;
-        this.expressionVelocity = !flat;
-        this.expressionPressure = !flat;
-        if (exprBendCb) exprBendCb.checked = !flat;
-        if (exprVelCb) exprVelCb.checked = !flat;
-        if (exprPressCb) exprPressCb.checked = !flat;
-        this.saveSetting('exprBend', (!flat).toString());
-        this.saveSetting('exprVelocity', (!flat).toString());
-        this.saveSetting('exprPressure', (!flat).toString());
+    const exprTimbreCb = getElementOrNull('expr-timbre', HTMLInputElement);
+    if (exprTimbreCb) {
+      exprTimbreCb.checked = this.expressionTimbre;
+      exprTimbreCb.addEventListener('change', () => {
+        this.expressionTimbre = exprTimbreCb.checked;
+        this.saveSetting('exprTimbre', exprTimbreCb.checked.toString());
       });
     }
 
