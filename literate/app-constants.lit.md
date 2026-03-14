@@ -214,8 +214,8 @@ ${srcLink('synth.lit.md', 'Source: synth.lit.md — audio synthesis and volume')
 
   dref: `
 <h2>D Reference Pitch</h2>
-<p>Sets the frequency of <strong>D4</strong> in Hz — the anchor pitch. All other notes are tuned relative to it via the circle of fifths.</p>
-<p>Default: <strong>293.66 Hz</strong> (standard D4 in A440 tuning). Type a note name (e.g., "A4") to set by name.</p>
+<p>Sets the reference frequency for the note <strong>D</strong> in Hz. This is the anchor pitch — all other notes are tuned relative to it via the circle of fifths. The grid's coordinate origin (0,0) always maps to this pitch.</p>
+<p>Default: <strong>293.66 Hz</strong> (standard concert pitch where A=440 Hz). Adjustable across octaves (D2–D6). Type a note name (e.g., "A4") to set by name instead of Hz.</p>
 ${srcLink('synth.lit.md', 'Source: synth.lit.md — reference pitch handling')}`,
 
   zoom: `

@@ -1,9 +1,11 @@
 name: Deploy to GitHub Pages
 
 on:
+  # Stable deploy: only on explicit version tags (e.g., v1.0.0)
   push:
-    branches: [main]
-  
+    tags: ['v*']
+
+  # Manual deploy (emergency or promotion)
   workflow_dispatch:
 
 # Sets permissions for GITHUB_TOKEN to deploy to Pages
@@ -24,13 +26,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
-      
+
       - name: Set up Python 3.13
         uses: actions/setup-python@v5
         with:
@@ -47,10 +49,9 @@ jobs:
           echo "Tangled files:"
           ls -la src/lib/*.ts src/machines/*.ts src/*.ts 2>/dev/null | wc -l
           echo "files generated from literate/*.lit.md"
-      
+
       - name: Install dependencies
         run: npm ci
-      
 
       - name: Build (includes TypeScript check + tangle)
         run: npm run build
@@ -68,10 +69,10 @@ jobs:
 
       - name: Run tests
         run: npx playwright test --project=firefox --workers=1
-      
+
       - name: Setup Pages
         uses: actions/configure-pages@v4
-      
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
