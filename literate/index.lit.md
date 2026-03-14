@@ -906,17 +906,6 @@ The page is a vertical flex layout (`#app`) with these major sections:
 
     <!-- Song bar — game/song controls header -->
     <div id="song-bar">
-      <div id="song-bar-calibrate">
-          <button id="calibrate-btn" class="overlay-btn" title="Calibrate: play all reachable notes to set your playable area">Calibrate</button>
-          <div id="calibration-banner" style="display:none;flex-direction:column;gap:8px;">
-            <span id="calibration-warning" style="display:none;font-family:var(--font);font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:0.06em;">This will reset your current song progress.</span>
-            <span id="calibration-msg" style="font-family:var(--font);font-size:11px;color:var(--fg);text-transform:uppercase;letter-spacing:0.06em;">Play all reachable notes to set your playable area, then confirm</span>
-            <div style="display:flex;gap:6px;">
-              <button id="calibrate-confirm" class="overlay-btn" style="flex:1;" title="Save calibrated range">Confirm</button>
-              <button id="calibrate-cancel" class="overlay-btn" style="flex:1;color:var(--dim);" title="Cancel calibration">Cancel</button>
-            </div>
-          </div>
-        </div>
       <div id="song-bar-search" style="position:relative;">
           <button class="slider-info-btn icon-btn icon-lg" data-info="search" style="position:static;transform:none;"><i data-lucide="info"></i></button>
           <span style="color:var(--dim);font-size:10px;font-family:var(--font);white-space:nowrap;">SEARCH</span>
@@ -942,6 +931,17 @@ The page is a vertical flex layout (`#app`) with these major sections:
           </div>
         </div>
       <span id="song-bar-hint" style="color:var(--dim);font-size:10px;font-family:var(--font);">Drop a .mid file or search for a song to learn</span>
+      <div id="song-bar-calibrate" style="margin-left:auto;">
+          <button id="calibrate-btn" class="overlay-btn" title="Calibrate: play all reachable notes to set your playable area">Calibrate</button>
+          <div id="calibration-banner" style="display:none;flex-direction:column;gap:8px;">
+            <span id="calibration-warning" style="display:none;font-family:var(--font);font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:0.06em;">This will reset your current song progress.</span>
+            <span id="calibration-msg" style="font-family:var(--font);font-size:11px;color:var(--fg);text-transform:uppercase;letter-spacing:0.06em;">Play all reachable notes to set your playable area, then confirm</span>
+            <div style="display:flex;gap:6px;">
+              <button id="calibrate-confirm" class="overlay-btn" style="flex:1;" title="Save calibrated range">Confirm</button>
+              <button id="calibrate-cancel" class="overlay-btn" style="flex:1;color:var(--dim);" title="Cancel calibration">Cancel</button>
+            </div>
+          </div>
+        </div>
     </div>
 
     <!-- Visualiser panel -->
@@ -1044,40 +1044,39 @@ The page is a vertical flex layout (`#app`) with these major sections:
 
             <div style="margin-top: 18px">
               <div id="midi-settings-panel">
+                 <span class="overlay-section-title">MIDI</span>
                 <div id="midi-device-list"></div>
                  <span class="overlay-section-title">EXPRESSION</span>
                  <div class="midi-panel-row" id="expr-bend-row" style="gap:6px">
-                   <button class="slider-info-btn icon-btn icon-lg" data-info="bend" style="position:static;transform:none;"><i data-lucide="info"></i></button>
-                    <input type="text" inputmode="numeric" pattern="[0-9]*" id="midi-pb-range-expr" value="48" style="width:4ch;text-align:center;font-family:var(--font);font-size:10px;background:var(--bg);color:var(--fg);border:1px solid var(--border);padding:2px 4px;">
                    <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;">
                      <span class="gi-checkbox"><input type="checkbox" id="expr-bend" checked><span class="gi-check"></span></span>
                      <span style="color:#fff">Bend</span>
                    </label>
+                   <input type="text" inputmode="numeric" pattern="[0-9]*" id="midi-pb-range-expr" value="48" style="width:4ch;text-align:center;font-family:var(--font);font-size:10px;background:var(--bg);color:var(--fg);border:1px solid var(--border);padding:2px 4px;">
+                   <span style="color:var(--dim);font-size:9px;">semitones</span>
+                   <button class="slider-info-btn icon-btn icon-lg" data-info="bend" style="position:static;transform:none;"><i data-lucide="info"></i></button>
                  </div>
                  <div class="midi-panel-row" id="expr-velocity-row" style="gap:6px">
-                   <button class="slider-info-btn icon-btn icon-lg" data-info="velocity" style="position:static;transform:none;"><i data-lucide="info"></i></button>
                    <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;">
                      <span class="gi-checkbox"><input type="checkbox" id="expr-velocity" checked><span class="gi-check"></span></span>
                      <span style="color:#fff">Velocity</span>
                    </label>
+                   <button class="slider-info-btn icon-btn icon-lg" data-info="velocity" style="position:static;transform:none;"><i data-lucide="info"></i></button>
                  </div>
                  <div class="midi-panel-row" id="expr-pressure-row" style="gap:6px">
-                   <button class="slider-info-btn icon-btn icon-lg" data-info="pressure" style="position:static;transform:none;"><i data-lucide="info"></i></button>
                    <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;">
                      <span class="gi-checkbox"><input type="checkbox" id="expr-pressure" checked><span class="gi-check"></span></span>
                      <span style="color:#fff">Pressure</span>
                    </label>
+                   <button class="slider-info-btn icon-btn icon-lg" data-info="pressure" style="position:static;transform:none;"><i data-lucide="info"></i></button>
                  </div>
                  <div class="midi-panel-row" id="expr-timbre-row" style="gap:6px">
-                   <button class="slider-info-btn icon-btn icon-lg" data-info="timbre" style="position:static;transform:none;"><i data-lucide="info"></i></button>
-                    <button id="timbre-cc-mode" style="font-family:var(--font);font-size:10px;background:var(--bg);color:var(--fg);border:1px solid var(--border);padding:2px 6px;cursor:pointer;" title="Click to cycle timbre CC" value="74">CC74</button>
-                   <span style="color:#fff;font-size:12px;">Timbre</span>
-                 </div>
-                <div class="midi-panel-row" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);">
                    <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;">
-                     <span class="gi-checkbox"><input type="checkbox" id="flat-sound-toggle"><span class="gi-check"></span></span>
-                     <span style="color:var(--dim)">Flat sound (disable all expression)</span>
+                     <span class="gi-checkbox"><input type="checkbox" id="expr-timbre" checked><span class="gi-check"></span></span>
+                     <span style="color:#fff">Timbre</span>
                    </label>
+                    <button id="timbre-cc-mode" style="font-family:var(--font);font-size:10px;background:var(--bg);color:var(--fg);border:1px solid var(--border);padding:2px 6px;cursor:pointer;" title="Click to cycle timbre CC" value="74">CC74</button>
+                   <button class="slider-info-btn icon-btn icon-lg" data-info="timbre" style="position:static;transform:none;"><i data-lucide="info"></i></button>
                  </div>
                 <div class="midi-panel-row" id="mpe-output-row">
                   <span class="ctrl-label" style="color:#fff">MPE Out:</span>
