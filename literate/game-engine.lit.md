@@ -2,50 +2,44 @@
 
 Converts `NoteEvent[]` (MIDI parser output) into `NoteGroup[]` (game machine input).
 
-Handles chord grouping, range-aware transposition/cropping, median-note calculation for D-ref centering, and quantization for Piano Tiles-style gameplay.
+Handles chord grouping, range-aware transposition and cropping, median-note calculation for D-ref centering, and quantization for Piano Tiles-style gameplay.
+
+## Imports and constants
+
+The engine depends on three modules: the MIDI parser for event types, the game machine for the `NoteGroup` shape, and `note-colors` for the Circle of Fifths coordinate mapping.
+
+`CHORD_THRESHOLD_MS` defines the simultaneity window. Two notes whose `startMs` values fall within 20 ms of each other are treated as a single chord. This matches typical human MIDI performance timing where notes intended as simultaneous arrive slightly apart.
 
 ``` {.typescript file=_generated/lib/game-engine.ts}
-/**
- * Game Engine — converts NoteEvent[] (MIDI parser) into NoteGroup[] (game machine).
- *
- * Chord grouping, range-aware transposition/cropping, and median-note
- * calculation for D-ref centering.
- */
-
 import { NoteEvent, TempoEvent, TimeSigEvent } from './midi-parser';
 import { NoteGroup } from '../machines/gameMachine';
 import { midiToCoord } from './note-colors';
 
-/**
- * Chord grouping threshold in ms.
- * Notes starting within this window of the current group start are considered simultaneous.
- */
 const CHORD_THRESHOLD_MS = 20;
 
-/** Type alias for NoteGroup used in game engine (now identical to base NoteGroup). */
 export type GameNoteGroup = NoteGroup;
+```
 
-/**
- * Convert MIDI note number to grid cell ID: "${coordX}_${coordY}"
- * Uses the canonical short-path CoF position from midiToCoord().
- */
+## MIDI note to grid cell ID
+
+The grid is a Circle of Fifths layout. Each cell is addressed by a string `"x_y"` derived from the CoF position of the note's pitch class and octave. `midiToCoord` returns the canonical shortest-path coordinates; this function simply serializes them.
+
+``` {.typescript file=_generated/lib/game-engine.ts}
 export function midiToCellId(midiNote: number): string {
   const [x, y] = midiToCoord(midiNote);
   return `${x}_${y}`;
 }
+```
 
-/**
- * Build NoteGroup[] from NoteEvent[].
- *
- * Algorithm:
- * 1. Sort events by startMs (ascending)
- * 2. Walk events; open a new group when the current event's startMs is
- *    more than CHORD_THRESHOLD_MS after the current group's startMs
- * 3. Within each group, collect unique cellIds (duplicates silently discarded)
- * 4. Skip drums (channel 9) — already filtered by parseMidi, but be safe
- *
- * Returns groups sorted by startMs.
- */
+## Chord grouping
+
+Chord grouping converts a flat sequence of `NoteEvent`s into time-grouped `NoteGroup`s. The algorithm is a single linear pass over events sorted by `startMs`.
+
+A new group opens whenever the current event starts more than `CHORD_THRESHOLD_MS` after the last group's start time. Within a group, duplicate `cellId`s are silently dropped — two notes mapping to the same grid cell (e.g. an octave pair whose pitch classes share a CoF cell) would produce only one tap.
+
+Channel 9 (General MIDI drums) is filtered defensively; `parseMidi` already excludes drums but this guard prevents malformed inputs from breaking the grouper.
+
+``` {.typescript file=_generated/lib/game-engine.ts}
 export function buildNoteGroups(events: NoteEvent[]): GameNoteGroup[] {
   const sorted = [...events]
     .filter(e => e.channel !== 9)
@@ -72,27 +66,27 @@ export function buildNoteGroups(events: NoteEvent[]): GameNoteGroup[] {
 
   return groups;
 }
+```
 
-/**
- * Compute the median MIDI note number of a NoteEvent array.
- * Returns 62 (D) if events is empty.
- * Used to auto-center D-ref on the median pitch of a song.
- */
+## Median note for D-ref centering
+
+The game grid is anchored at D (MIDI 62). To auto-center a song's pitch content on the grid, the UI computes the median MIDI note of all events and shifts the D-ref so it lands on that median. Returns 62 (D4) for an empty input.
+
+``` {.typescript file=_generated/lib/game-engine.ts}
 export function computeMedianMidiNote(events: NoteEvent[]): number {
   if (events.length === 0) return 62;
   const sorted = [...events].map(e => e.midiNote).sort((a, b) => a - b);
   return sorted[Math.floor(sorted.length / 2)];
 }
+```
 
-/**
- * Transpose all NoteGroups by a fixed number of semitones.
- * Returns new GameNoteGroup[] with recalculated cellIds.
- * Semitones must be a whole number. Negative = down, positive = up.
- *
- * Notes transposed outside MIDI range (0-127) are dropped.
- * Groups that become empty after dropping out-of-range notes are removed.
- * The original groups are not mutated.
- */
+## Transposition
+
+`transposeSong` shifts every note in every group by a fixed number of semitones. It returns a new array; the originals are not mutated.
+
+Notes that land outside the valid MIDI range (0–127) after transposition are dropped individually. Groups that become entirely empty after the cull are also removed. This means a very large transposition applied to a song with notes near the edges of the MIDI range will silently lose those notes rather than producing invalid data.
+
+``` {.typescript file=_generated/lib/game-engine.ts}
 export function transposeSong(groups: GameNoteGroup[], semitones: number): GameNoteGroup[] {
   return groups.map(group => {
     const transposedMidi = group.midiNotes.map(m => m + semitones);
@@ -108,15 +102,15 @@ export function transposeSong(groups: GameNoteGroup[], semitones: number): GameN
     return { startMs: group.startMs, cellIds: newCellIds, midiNotes: newMidiNotes };
   }).filter(g => g.cellIds.length > 0);
 }
+```
 
-/**
- * Filter NoteGroups to only include notes whose cellIds are in the available range.
- * Groups where ALL notes are out of range are removed.
- * Groups where SOME notes are out of range have those notes removed.
- * Groups that become empty are removed.
- *
- * Used after auto-transposition to crop notes outside the calibrated input range.
- */
+## Range cropping
+
+After transposition the song may still contain notes that fall outside the instrument's calibrated physical range. `cropToRange` filters each group against the set of `cellId`s that the device actually reports. Notes outside that set are removed note-by-note; groups emptied by the crop are dropped entirely.
+
+This is applied after `findOptimalTransposition` has already maximized in-range coverage, so in practice only edge notes are cropped.
+
+``` {.typescript file=_generated/lib/game-engine.ts}
 export function cropToRange(groups: GameNoteGroup[], availableRange: ReadonlySet<string>): GameNoteGroup[] {
   return groups.map(group => {
     const filtered = group.cellIds.reduce<{ cellIds: string[]; midiNotes: number[] }>(
@@ -132,18 +126,15 @@ export function cropToRange(groups: GameNoteGroup[], availableRange: ReadonlySet
     return { startMs: group.startMs, cellIds: filtered.cellIds, midiNotes: filtered.midiNotes };
   }).filter(g => g.cellIds.length > 0);
 }
+```
 
-/**
- * Find the optimal transposition (in semitones) to maximize notes within availableRange.
- * Tries transpositions from -24 to +24 semitones (2 octaves each direction).
- * Returns the semitone offset that results in the most notes within range.
- *
- * Algorithm:
- * 1. For each candidate transposition (-24 to +24):
- *    - Transpose all groups
- *    - Count how many cellIds are in availableRange
- * 2. Return the semitone value with the highest count (ties: prefer closer to 0)
- */
+## Optimal transposition search
+
+Before loading a song the engine searches ±24 semitones (two octaves in each direction) for the transposition that places the most notes within the instrument's available range. This is a brute-force linear scan — 49 candidates, each costing one `transposeSong` pass.
+
+Ties are broken by proximity to zero: a transposition of 0 semitones (no change) is preferred over ±12 when both produce the same in-range count. This keeps the song as close to its original key as possible.
+
+``` {.typescript file=_generated/lib/game-engine.ts}
 export function findOptimalTransposition(groups: GameNoteGroup[], availableRange: ReadonlySet<string>): number {
   let bestSemitones = 0;
   let bestCount = -1;
@@ -156,7 +147,6 @@ export function findOptimalTransposition(groups: GameNoteGroup[], availableRange
         if (availableRange.has(cellId)) count++;
       }
     }
-    // Prefer closer to 0 on tie
     if (count > bestCount || (count === bestCount && Math.abs(semitones) < Math.abs(bestSemitones))) {
       bestCount = count;
       bestSemitones = semitones;
@@ -165,20 +155,26 @@ export function findOptimalTransposition(groups: GameNoteGroup[], availableRange
 
   return bestSemitones;
 }
+```
 
-/**
- * Quantization level for the Piano Tiles-style game engine.
- *
- * - '1/4': quarter notes — easiest, fewest events, beginner-friendly
- * - '1/8': eighth notes — intermediate, doubles the grid density
- * - '1/16': sixteenth notes — advanced, four events per beat
- * - 'none': raw MIDI timing, no quantization applied
- *
- * Higher quantization (fewer divisions) makes the game more accessible by
- * reducing the number of events the player must hit. Long notes that span
- * multiple grid points are split into repeated events at each grid point,
- * following the Piano Tiles convention where held notes become repeated taps.
- */
+## Quantization
+
+### Level type and divisors
+
+Quantization snaps note timing to a regular beat grid, turning a performance with subtle timing imperfections into a clean sequence of equally-spaced tap targets. This is how Piano Tiles and similar games work: the song is discretized so that every note lands on a predictable grid point.
+
+Four levels are supported:
+
+| Level | Divisor | Notes per beat | Difficulty |
+|-------|---------|----------------|------------|
+| `1/4` | 1 | 1 | Beginner |
+| `1/8` | 2 | 2 | Intermediate |
+| `1/16` | 4 | 4 | Advanced |
+| `none` | — | raw timing | No quantization |
+
+The divisor is how many grid points fit in one quarter-note beat. A higher divisor = finer grid = more events to hit.
+
+``` {.typescript file=_generated/lib/game-engine.ts}
 export type QuantizationLevel = '1/4' | '1/8' | '1/16' | 'none';
 
 const QUANTIZE_DIVISOR: Record<Exclude<QuantizationLevel, 'none'>, number> = {
@@ -186,19 +182,46 @@ const QUANTIZE_DIVISOR: Record<Exclude<QuantizationLevel, 'none'>, number> = {
   '1/8': 2,
   '1/16': 4,
 };
+```
 
-/**
- * Build a beat grid of positions in ms from the tempo map at a given quantization level.
- *
- * For each tempo segment, computes evenly spaced grid points:
- *   gridSpacingMs = (60000 / bpm) / divisor
- *
- * The grid extends up to `endMs` (the last note's end position).
- * Handles tempo changes mid-song: each tempo segment produces grid points
- * at its own spacing. Odd meters (e.g. 7/8, 5/4) are handled correctly
- * because the grid spacing is purely BPM-based — the time signature only
- * affects how humans group beats, not the quantization grid itself.
- */
+### Tick position to milliseconds
+
+MIDI stores timing in ticks. Converting a tick position to wall-clock milliseconds requires walking the tempo map: each tempo segment contributes `(ticks_in_segment × µs_per_quarter) / ppq / 1000` milliseconds.
+
+`ppq` (pulses per quarter note) comes from the file header. The default of 480 matches the most common MIDI resolution.
+
+``` {.typescript file=_generated/lib/game-engine.ts}
+function tickPositionToMs(tempoMap: TempoEvent[], tickPosition: number, ppq: number): number {
+  if (tempoMap.length === 0) return 0;
+  let ms = 0;
+  let prevTick = 0;
+  let usPerQuarter = 500000;
+
+  for (const entry of tempoMap) {
+    if (entry.tickPosition >= tickPosition) break;
+    ms += ((entry.tickPosition - prevTick) * usPerQuarter) / ppq / 1000;
+    prevTick = entry.tickPosition;
+    usPerQuarter = entry.microsecondsPerQuarter;
+  }
+
+  ms += ((tickPosition - prevTick) * usPerQuarter) / ppq / 1000;
+  return ms;
+}
+```
+
+### Beat grid construction
+
+The beat grid is the set of valid snap targets. For each tempo segment the grid spacing in milliseconds is:
+
+```
+gridSpacingMs = (60000 / bpm) / divisor
+```
+
+A song with a single tempo at 120 BPM quantized to `1/8` produces grid points every 250 ms. Tempo changes produce segments with different spacings; each segment's grid starts at the segment boundary and ends just past the next boundary. The grid intentionally extends slightly beyond `endMs` so that notes near the very end of the song have a valid snap target.
+
+Odd meters (5/4, 7/8, etc.) are handled automatically because the grid is purely BPM-based. The time signature determines how humans hear groupings of beats but does not affect the millisecond spacing between grid points.
+
+``` {.typescript file=_generated/lib/game-engine.ts}
 function buildBeatGrid(
   tempoMap: TempoEvent[],
   timeSigMap: TimeSigEvent[],
@@ -230,37 +253,19 @@ function buildBeatGrid(
 
   return grid;
 }
+```
 
-function tickPositionToMs(tempoMap: TempoEvent[], tickPosition: number, ppq: number): number {
-  if (tempoMap.length === 0) return 0;
-  let ms = 0;
-  let prevTick = 0;
-  let usPerQuarter = 500000;
+### Quantize notes
 
-  for (const entry of tempoMap) {
-    if (entry.tickPosition >= tickPosition) break;
-    ms += ((entry.tickPosition - prevTick) * usPerQuarter) / ppq / 1000;
-    prevTick = entry.tickPosition;
-    usPerQuarter = entry.microsecondsPerQuarter;
-  }
+`quantizeNotes` is the main entry point for the Piano Tiles-style discretization. It combines beat grid construction, snapping, long-note splitting, deduplication, and sorting into a single pipeline.
 
-  ms += ((tickPosition - prevTick) * usPerQuarter) / ppq / 1000;
-  return ms;
-}
+**Snapping** uses binary search over the grid array to find the nearest grid point to each note's `startMs`. This is O(log N) per note where N is the number of grid points.
 
-/**
- * Quantize note events to a beat grid for Piano Tiles-style gameplay.
- *
- * Algorithm:
- * 1. Build beat grid from tempo map at the given quantization level
- * 2. Snap each note's startMs to the nearest grid point
- * 3. Long note splitting: if a note's duration spans multiple grid points,
- *    split it into repeated NoteEvents at each grid point (Piano Tiles
- *    convention — sustained notes become repeated taps)
- * 4. Deduplicate: if two notes snap to the same grid point AND have the
- *    same midiNote, keep only one (prevents double-hits from close notes)
- * 5. Sort output by snapped startMs
- */
+**Long-note splitting** handles sustained notes (notes whose duration spans multiple grid intervals). A note spanning three grid points is replaced by three shorter notes, one at each grid point. This follows the Piano Tiles convention where a held note becomes a series of repeated taps rather than a single prolonged event. Each split note receives an equal share of the original duration.
+
+**Deduplication** removes double-hits: if two notes snap to the same grid point and have the same `midiNote` (common when a melody note and a chord note are near-simultaneous and share the same pitch), only the first is kept. The key is `"startMs_midiNote"` rounded to two decimal places to absorb floating-point noise.
+
+``` {.typescript file=_generated/lib/game-engine.ts}
 export function quantizeNotes(
   events: NoteEvent[],
   tempoMap: TempoEvent[],
@@ -300,7 +305,6 @@ export function quantizeNotes(
     const snappedStart = snapToGrid(event.startMs);
     const noteEndMs = event.startMs + event.durationMs;
 
-    // Long note splitting: find all grid points within the note's duration
     const gridPointsInNote: number[] = [];
     for (const gp of grid) {
       if (gp >= snappedStart && gp < noteEndMs) {
@@ -325,7 +329,6 @@ export function quantizeNotes(
     }
   }
 
-  // Deduplicate: same grid point + same midiNote → keep first
   const seen = new Set<string>();
   const deduped: NoteEvent[] = [];
   for (const event of result) {
