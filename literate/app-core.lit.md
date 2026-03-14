@@ -1018,11 +1018,18 @@ export class DComposeApp {
     });
 
 
-     const { cellHv1, cellHv2 } = this.visualizer!.getGridGeometry();
-     const cellWidth = (Math.abs(cellHv1.x) + Math.abs(cellHv2.x)) * 2;
-     this.defaultZoom = Math.max(0.5, Math.min(1.5, (23 * 96 / 25.4) / cellWidth));
+     const PIANO_KEY_MM = 23;
+     const CSS_PX_PER_MM = 96 / 25.4;
+     const pianoKeyPx = PIANO_KEY_MM * CSS_PX_PER_MM;
+
+     const geometry = this.visualizer!.getGridGeometry();
+     const gridCellWidthPx =
+       (Math.abs(geometry.cellHv1.x) + Math.abs(geometry.cellHv2.x)) * 2;
+
+     this.defaultZoom = pianoKeyPx / gridCellWidthPx;
+
      if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
-       this.defaultZoom = Math.max(this.defaultZoom, Math.min(1.2, window.innerWidth / 480));
+       this.defaultZoom = Math.max(this.defaultZoom, window.innerWidth / 480);
      }
      const savedZoom = this.loadSetting('zoom', this.defaultZoom.toString());
      if (this.zoomSlider) {
