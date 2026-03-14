@@ -999,8 +999,8 @@ The page is a vertical flex layout (`#app`) with these major sections:
              <div class="slider-track">
                <span class="slider-label-overlay" id="d-ref-label">D REF (Hz)</span>
               <input type="range" id="d-ref-slider" min="73.42" max="1174.66" step="0.01" value="293.66" title="Reference pitch slider (D2–D6)">
-              <input type="text" class="badge-input" id="d-ref-input" value="293.66" style="width:80px; text-transform:none;" title="Edit reference pitch in Hz or note name (default: D4 = 293.66)">
-              <button id="d-ref-reset" class="slider-reset icon-btn icon-md" title="Reset to D4 (293.66 Hz)"><i data-lucide="rotate-cw"></i></button>
+              <input type="text" class="badge-input" id="d-ref-input" value="293.66" style="width:80px; text-transform:none;" title="Edit D-ref pitch in Hz or note name (default: 293.66 Hz)">
+              <button id="d-ref-reset" class="slider-reset icon-btn icon-md" title="Reset D-ref to default (293.66 Hz)"><i data-lucide="rotate-cw"></i></button>
             </div>
           </div>
            </div>

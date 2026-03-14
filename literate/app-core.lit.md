@@ -31,7 +31,7 @@ import { createActor } from 'xstate';
 import { OverlayScrollbars, ClickScrollPlugin } from 'overlayscrollbars';
 import SlimSelect from 'slim-select';
 
-import { isWaveformType, parseNum, formatSliderAnnotation, noteNameToHz, hzToNoteAnnotation } from './app-helpers';
+import { isWaveformType, parseNum, formatSliderAnnotation, noteNameToHz } from './app-helpers';
 import { getElement, getElementOrNull, setupCyclingButton } from './app-dom';
 import { thumbCenterPx, clampBadgePosition, applySliderFill, refreshAllSliderUI } from './app-slider';
 import { SHEAR_PRESETS, TUNING_LABEL_PRESETS } from './app-constants';
@@ -740,13 +740,10 @@ export class DComposeApp {
     const dRefSlider = getElementOrNull('d-ref-slider', HTMLInputElement);
     const dRefLabel = getElementOrNull('d-ref-label', HTMLSpanElement);
 
-    /** Update slider label overlay with nearest note annotation in brackets */
+    /** Update slider label overlay — show D-ref frequency, no "D4" note name */
     const updateDRefLabel = (hz: number): void => {
       if (!dRefLabel) return;
-      const annotation = hzToNoteAnnotation(hz, 293.66);
-      dRefLabel.innerHTML = annotation
-        ? `D REF (Hz) <span style="color:#88ff88">${annotation}</span>`
-        : 'D REF (Hz)';
+      dRefLabel.textContent = `D REF (${hz.toFixed(1)} Hz)`;
     };
 
     const updateDRefDisplay = (hz: number): void => {
