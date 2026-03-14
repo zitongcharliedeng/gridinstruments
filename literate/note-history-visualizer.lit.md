@@ -457,8 +457,8 @@ export class NoteHistoryVisualizer {
 
   /**
    * Convert MIDI note to D-relative octave notation.
-   * D-ref = MIDI 62 (D4). Octave offset = floor((midi - 62) / 12).
-   * Octave 0 (D4–C#5): just the note name, e.g. "E", "F#"
+   * D-ref = MIDI 62 at default. Octave offset = floor((midi - 62) / 12).
+   * Octave 0 (D-ref to C# above): just the note name, e.g. "E", "F#"
    * Octave +1 (D5–C#6): note name + "'", e.g. "E'"
    * Octave +2 (D6–C#7): note name + "''", e.g. "E''"
    * Octave -1 (D3–C#4): note name + ",", e.g. "E,"

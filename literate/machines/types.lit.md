@@ -110,7 +110,7 @@ export interface AppContext {
   draggingGoldenLine: boolean;
   /** Y coordinate where the golden line drag started (canvas-local px) */
   goldenLineDragStartY: number;
-  /** D4 reference frequency in Hz at the start of the golden line drag */
+  /** D-ref frequency in Hz at the start of the golden line drag */
   goldenLineDragStartHz: number;
   /** Current octave shift offset applied to all keyboard notes */
   octaveOffset: number;
@@ -334,7 +334,7 @@ export interface MpeSelectOutputEvent {
 }
 
 /**
- * Emitted when the user begins dragging the golden (D4 reference) line.
+ * Emitted when the user begins dragging the golden (D-ref) line.
  */
 export interface GoldenLineDragStartEvent {
   type: 'GOLDEN_LINE_DRAG_START';
