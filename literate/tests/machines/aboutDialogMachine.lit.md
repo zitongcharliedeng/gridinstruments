@@ -1,3 +1,8 @@
+# About Dialog Machine
+
+XState machine modeling the about dialog — closed and open states with content, links, and footer invariants.
+
+``` {.typescript file=_generated/tests/machines/aboutDialogMachine.ts}
 import { setup } from 'xstate';
 import { type Page, expect } from '@playwright/test';
 import type { StateInvariant } from './types';
@@ -99,3 +104,4 @@ export const aboutDialogDomAssertions: Record<string, (page: Page) => Promise<vo
     await expect(page.locator('#about-dialog')).toBeVisible();
   },
 };
+```

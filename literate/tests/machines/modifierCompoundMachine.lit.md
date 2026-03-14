@@ -1,3 +1,8 @@
+# Modifier Compound Machine
+
+XState machine modeling compound modifier key states — idle, vibratoOnly, sustainOnly, and bothActive — with focus return and Ctrl passthrough invariants.
+
+``` {.typescript file=_generated/tests/machines/modifierCompoundMachine.ts}
 import { setup } from 'xstate';
 import { type Page, expect } from '@playwright/test';
 import type { StateInvariant } from './types';
@@ -155,3 +160,4 @@ export const modifierCompoundDomAssertions: Record<string, (page: Page) => Promi
     await expect(page.locator('#sustain-indicator')).toHaveClass(/active/);
   },
 };
+```

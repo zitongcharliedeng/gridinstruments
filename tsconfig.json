@@ -15,5 +15,6 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["_generated"]
+  "include": ["_generated"],
+  "exclude": ["_generated/tests"]
 }

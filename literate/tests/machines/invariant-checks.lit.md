@@ -1,3 +1,8 @@
+# Invariant Checks
+
+Structural invariants for XState graph-based test generation — DOM checks, golden screenshots, slider fill assertions, MPE protocol checks, game engine tests, and more.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 /**
  * Invariant predicates for XState model-based tests.
  *
@@ -10,10 +15,10 @@
 import type { Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 import type { StateInvariant } from './types';
-import { overlayMachine } from '../../_generated/machines/overlayMachine';
-import { pedalMachine } from '../../_generated/machines/pedalMachines';
-import { panelMachine } from '../../_generated/machines/panelMachine';
-import { gameMachine, type NoteGroup } from '../../_generated/machines/gameMachine';
+import { overlayMachine } from '../../machines/overlayMachine';
+import { pedalMachine } from '../../machines/pedalMachines';
+import { panelMachine } from '../../machines/panelMachine';
+import { gameMachine, type NoteGroup } from '../../machines/gameMachine';
 import { createActor } from 'xstate';
 import {
   overlayMachine as testOverlayMachine,
@@ -5027,3 +5032,4 @@ export const SINGLE_FLAT_SOUND: StateInvariant = {
 };
 
 // Golden screenshot tests (overlayGoldenCheck2, mobileGoldenCheck, qwertyGoldenCheck) defined above in ideal state section
+```

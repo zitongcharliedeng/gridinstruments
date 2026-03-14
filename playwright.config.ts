@@ -1,6 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 export default defineConfig({
-  testDir: './tests',
+  testDir: './_generated/tests',
+  snapshotDir: './tests',
   testMatch: ['**/xstate-graph.spec.ts'],
   timeout: 60_000,
   retries: 1,

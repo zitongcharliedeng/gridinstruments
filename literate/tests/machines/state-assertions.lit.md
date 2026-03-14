@@ -1,3 +1,8 @@
+# State Assertions
+
+Unified state assertion registry for XState graph test generation — single lookup interface for DOM assertions, LLM invariants, and Playwright actions for any (machine, state) or (machine, event) pair.
+
+``` {.typescript file=_generated/tests/machines/state-assertions.ts}
 /**
  * Unified state assertion registry for XState graph test generation.
  *
@@ -263,3 +268,4 @@ export function getInvariant(
 
 /** Re-export the machine list for the graph spec. */
 export { allMachines };
+```

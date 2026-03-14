@@ -1,3 +1,8 @@
+# Visual Assert
+
+Unified visual assertion fixture — three-layer verification pyramid: DOM assertions, golden screenshots, and LLM vision fallback.
+
+``` {.typescript file=_generated/tests/fixtures/visual-assert.ts}
 /**
  * Unified visual assertion fixture: golden screenshots + LLM vision fallback.
  *
@@ -111,3 +116,4 @@ export async function assertVisualState(
 
   return { goldenPassed, visionResult, passed };
 }
+```

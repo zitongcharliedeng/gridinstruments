@@ -1,3 +1,8 @@
+# Cost Control
+
+Cost control utilities for LLM vision assertions — env gating, screenshot hashing, and result caching to prevent redundant API calls.
+
+``` {.typescript file=_generated/tests/fixtures/cost-control.ts}
 /**
  * Cost control utilities for LLM vision assertions.
  *
@@ -93,3 +98,4 @@ export class VisionCache {
     return Object.keys(this.store).length;
   }
 }
+```

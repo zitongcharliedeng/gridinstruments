@@ -1,3 +1,8 @@
+# Layout Persistence Machine
+
+XState machine modeling panel layout persistence — pristine, customized, reloaded, insaneRestored, and reset states with localStorage-backed height persistence.
+
+``` {.typescript file=_generated/tests/machines/layoutPersistenceMachine.ts}
 import { setup } from 'xstate';
 import { type Page, expect } from '@playwright/test';
 import type { StateInvariant } from './types';
@@ -166,3 +171,4 @@ export const layoutPersistenceDomAssertions: Record<string, (page: Page) => Prom
     expect(Math.abs(box.height - 120)).toBeLessThanOrEqual(10);
   },
 };
+```

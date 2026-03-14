@@ -1,3 +1,8 @@
+# Test Types
+
+Shared type definitions for XState graph-based test generation — state invariants, state metadata, and transition documentation.
+
+``` {.typescript file=_generated/tests/machines/types.ts}
 import type { Page } from '@playwright/test';
 
 export interface StateInvariant {
@@ -18,3 +23,4 @@ export interface TransitionDocMeta {
   designIntent: string;
   issueRef?: string;
 }
+```

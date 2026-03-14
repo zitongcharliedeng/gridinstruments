@@ -1,3 +1,8 @@
+# UI Machine
+
+Ten independent XState v5 machines modelling user-visible UI state transitions — overlay, visualiser, pedals, waveform, sustain, vibrato, midiPanel, mpe, textInputFocus, and skewLabel — plus slider reset, about dialog, D-ref input, modifier compound, layout persistence, viewport, and song bar machines.
+
+``` {.typescript file=_generated/tests/machines/uiMachine.ts}
 /**
  * UI state machines for model-based test generation.
  *
@@ -879,3 +884,4 @@ export const allMachines = [
   { name: 'viewport', machine: viewportMachine },
   { name: 'songBar', machine: songBarMachine },
 ] as const;
+```

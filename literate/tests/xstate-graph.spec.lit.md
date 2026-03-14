@@ -1,3 +1,8 @@
+# XState Graph Spec
+
+Model-based test suite — enumerates all (state, event) pairs from 10+ XState UI machines via adjacency map traversal, generating Playwright tests for each transition plus structural invariant checks.
+
+``` {.typescript file=_generated/tests/xstate-graph.spec.ts}
 /**
  * XState Graph-Generated Test Suite
  *
@@ -1144,3 +1149,4 @@ for (const { name: machineName, machine } of allMachines) {
     }
   });
 }
+```

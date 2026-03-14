@@ -1,3 +1,8 @@
+# D-ref Input Machine
+
+XState machine modeling the D-reference frequency input — idle, focused, validValue, invalidValue, and emptyValue states with bracket annotation and red border invariants.
+
+``` {.typescript file=_generated/tests/machines/drefInputMachine.ts}
 import { setup } from 'xstate';
 import { type Page, expect } from '@playwright/test';
 import type { StateInvariant } from './types';
@@ -203,3 +208,4 @@ export const drefInputDomAssertions: Record<string, (page: Page) => Promise<void
     expect(val).toBe('');
   },
 };
+```

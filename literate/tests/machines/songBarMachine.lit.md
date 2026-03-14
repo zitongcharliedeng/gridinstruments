@@ -1,3 +1,8 @@
+# Song Bar Machine
+
+XState machine modeling song-bar behavior — idle, searching, and calibrating states with hint visibility and calibration banner invariants.
+
+``` {.typescript file=_generated/tests/machines/songBarMachine.ts}
 import { setup } from 'xstate';
 import { type Page, expect } from '@playwright/test';
 import type { StateInvariant } from './types';
@@ -92,3 +97,4 @@ export const songBarInvariants: Record<string, string> = {
   searching: 'Search input focused. Hint hidden.',
   calibrating: 'Calibration banner visible.',
 };
+```

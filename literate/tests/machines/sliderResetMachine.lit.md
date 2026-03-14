@@ -1,3 +1,8 @@
+# Slider Reset Machine
+
+Parameterized slider reset machine factory — produces tuning, skew, volume, and zoom instances that each model the 2-state (default/modified) lifecycle with SET_VALUE and RESET events.
+
+``` {.typescript file=_generated/tests/machines/sliderResetMachine.ts}
 /**
  * Parameterized slider reset machine factory.
  *
@@ -198,3 +203,4 @@ export const {
   domAssertions: zoomSliderDomAssertions,
   invariants: zoomSliderInvariants,
 } = zoomSliderBase;
+```

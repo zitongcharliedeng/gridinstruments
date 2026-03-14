@@ -1,3 +1,8 @@
+# Viewport Machine
+
+XState machine modeling responsive viewport states — desktop 1280, tablet 768, mobile 390, and mobile 375 — with canvas resize and overflow invariants.
+
+``` {.typescript file=_generated/tests/machines/viewportMachine.ts}
 import { setup } from 'xstate';
 import { type Page, expect } from '@playwright/test';
 import type { StateInvariant } from './types';
@@ -170,3 +175,4 @@ export const viewportDomAssertions: Record<string, (page: Page) => Promise<void>
     await expect(page.locator('#grid-settings-btn')).toBeVisible();
   },
 };
+```

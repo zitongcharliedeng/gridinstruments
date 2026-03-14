@@ -29,7 +29,7 @@ except Exception as e:
 fi
 
 # Step 2: Tangle from .lit.md source (no-op if no .lit.md files exist)
-if ls literate/*.lit.md &>/dev/null 2>&1; then
+if ls literate/*.lit.md literate/**/*.lit.md &>/dev/null 2>&1; then
   echo "[tangle] Tangling from literate source..."
   entangled tangle --force
 else
