@@ -1043,13 +1043,6 @@ The page is a vertical flex layout (`#app`) with these major sections:
             <div style="margin-top: 18px">
               <div id="midi-settings-panel">
                 <div id="midi-device-list"></div>
-                <div class="midi-panel-row">
-                  <span class="ctrl-label" style="color:#fff">Pitch Bend Range:</span>
-                  <label style="display:inline-flex;align-items:center;gap:4px;font-size:12px;">
-                    <input type="text" inputmode="numeric" pattern="[0-9]*" id="midi-pb-range" value="48" style="width:4ch;text-align:center;font-family:var(--font);font-size:10px;background:var(--bg);color:var(--fg);border:1px solid var(--border);padding:2px 4px;">
-                    <span style="color:var(--dim)">semitones</span>
-                   </label>
-                 </div>
                  <span class="overlay-section-title">EXPRESSION</span>
                  <div class="midi-panel-row" id="expr-bend-row" style="gap:6px">
                    <button class="slider-info-btn icon-btn icon-lg" data-info="bend" style="position:static;transform:none;"><i data-lucide="info"></i></button>

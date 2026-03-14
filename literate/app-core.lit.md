@@ -809,7 +809,7 @@ export class DComposeApp {
     // Hover styling handled by CSS .slider-reset:hover — no JS needed.
 
 
-    const pbRangeInput = getElementOrNull('midi-pb-range', HTMLInputElement);
+    const pbRangeInput = getElementOrNull('midi-pb-range-expr', HTMLInputElement);
     if (pbRangeInput) {
       pbRangeInput.value = this.midiPitchBendRange.toString();
       pbRangeInput.addEventListener('change', () => {
