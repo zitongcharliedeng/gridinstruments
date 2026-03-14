@@ -240,10 +240,9 @@ export class Synth {
   
   /**
    * Recalculate base frequency (currently unused - will be updated in TASK 12)
-   * Kept for future when we implement proper frequency calculations
+   * Sets baseFreq to the current D4 reference — all note frequencies derive from this.
    */
   private recalculateBaseFreq(): void {
-    // TODO: Update this in TASK 12 to properly handle D4-based calculations
     this.baseFreq = this._d4Hz;
   }
   
