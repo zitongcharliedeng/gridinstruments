@@ -390,20 +390,31 @@ const adapters: MidiSearchAdapter[] = [
   new MidishareMidiAdapter(),
 ];
 
+export type SearchResult = {
+  results: MidiSearchResult[];
+  errors: string[];
+};
+
 /**
  * Search all registered adapters in parallel.
- * Failed adapters log a warning and contribute an empty array — never throws.
+ * Failed adapters are reported in `errors` — never throws.
  * Results from all adapters are merged into a single flat array.
  */
-export async function searchAllAdapters(query: string): Promise<MidiSearchResult[]> {
-  const results = await Promise.allSettled(
+export async function searchAllAdapters(query: string): Promise<SearchResult> {
+  const errors: string[] = [];
+  const settled = await Promise.allSettled(
     adapters.map(adapter =>
       adapter.search(query).catch((err: unknown): MidiSearchResult[] => {
-        console.warn(`[midi-search] ${adapter.id} failed:`, err);
+        const msg = err instanceof Error ? err.message : String(err);
+        const short = msg.includes('403') ? `${adapter.name}: rate limited (60/hr)` :
+                      msg.includes('404') ? `${adapter.name}: not found` :
+                      `${adapter.name}: ${msg.slice(0, 60)}`;
+        errors.push(short);
         return [];
       }),
     ),
   );
-  return results.flatMap(r => r.status === 'fulfilled' ? r.value : []);
+  const results = settled.flatMap(r => r.status === 'fulfilled' ? r.value : []);
+  return { results, errors };
 }
 ```

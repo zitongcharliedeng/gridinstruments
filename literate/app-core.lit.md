@@ -1385,9 +1385,10 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
           resultsDiv.style.display = 'block';
           resultsDiv.innerHTML = '<div class="search-status">Searching\u2026</div>';
           try {
-            const results = await searchAllAdapters(query);
+            const { results, errors } = await searchAllAdapters(query);
             if (results.length === 0) {
-              resultsDiv.innerHTML = '<div class="search-status">No results — sources may be rate-limited (try again later) or query too specific</div>';
+              const errMsg = errors.length > 0 ? errors.join('; ') : 'no matches';
+              resultsDiv.innerHTML = `<div class="search-status">No results — ${errMsg}</div>`;
               return;
             }
             resultsDiv.innerHTML = '';
