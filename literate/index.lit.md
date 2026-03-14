@@ -732,10 +732,8 @@ The page is a vertical flex layout (`#app`) with these major sections:
     dialog::backdrop { background: rgba(0,0,0,0.7); }
     #info-dialog {
       /* showModal() handles centering + backdrop — no position: fixed needed */
-      border-radius: 12px;
     }
     #about-dialog {
-      border-radius: 12px;
     }
      dialog button {
        position: absolute; top: 8px; right: 12px;
