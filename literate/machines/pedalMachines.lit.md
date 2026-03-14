@@ -1,12 +1,22 @@
 # Pedal Machines
 
-XState machine for a sustain/vibrato pedal with active and inactive states.
+A two-state machine representing a sustain or vibrato pedal. The pedal is either `inactive` or `active`, controlled by explicit `ACTIVATE` and `DEACTIVATE` events rather than a toggle, so the parent machine can map both MIDI CC 64 on/off and UI button press/release without ambiguity.
+
+## Types
+
+Two asymmetric events: `ACTIVATE` moves to `active`, `DEACTIVATE` returns to `inactive`. Using separate events (rather than a single toggle) avoids state-sync bugs when multiple input sources can activate the pedal concurrently.
 
 ``` {.typescript file=_generated/machines/pedalMachines.ts}
 import { setup } from 'xstate';
 
 type PedalEvent = { type: 'ACTIVATE' } | { type: 'DEACTIVATE' };
+```
 
+## Machine
+
+The machine starts `inactive`. `ACTIVATE` is only accepted in `inactive`; `DEACTIVATE` is only accepted in `active`. Sending the wrong event for the current state is silently ignored by XState.
+
+``` {.typescript file=_generated/machines/pedalMachines.ts}
 export const pedalMachine = setup({
   types: { events: {} as PedalEvent },
 }).createMachine({

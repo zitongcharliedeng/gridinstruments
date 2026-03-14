@@ -1,20 +1,13 @@
 # Slider Configs
 
-Per-slider component configurations for NumericSlider — default values, badge formatters, and input parsers for tuning, skew, volume, zoom, and D-reference frequency sliders.
+Per-slider component configurations for `NumericSlider`. Each config provides the `defaultValue`, badge/label formatters, and (for editable badges) a `parseInput` function. Range, step, and initial value are read from the HTML element by `NumericSlider` at runtime.
+
+## D-ref note-name-to-Hz helper
+
+The D-ref slider accepts either a plain Hz number or a note name (e.g. `A4`, `C5`). This local helper converts note names to Hz. It is duplicated from the module-level helper in `main.ts` (which is not exported) and must stay in sync with it.
 
 ``` {.typescript file=_generated/machines/sliderConfigs.ts}
-/**
- * Per-slider component configs for NumericSlider.
- *
- * Each config provides the defaultValue, badge/label formatters, and (for
- * editable badges) a parseInput function. Range, step, and initial value
- * are read from the HTML element by NumericSlider at runtime.
- */
 import type { SliderComponentConfig } from '../components/NumericSlider';
-
-// ─── D-ref note-name-to-Hz helper ────────────────────────────────────────────
-// Duplicated from the module-level helper in main.ts (not exported there).
-// Must stay in sync with noteNameToHz in main.ts.
 
 const NOTE_SEMITONES: Partial<Record<string, number>> = {
   C: 0, 'C#': 1, Db: 1, D: 2, 'D#': 3, Eb: 3, E: 4, F: 5,
@@ -28,13 +21,16 @@ function noteNameToHz(input: string): number | null {
   const semitone = NOTE_SEMITONES[noteKey];
   if (semitone === undefined) return null;
   const octave = parseInt(m[2], 10);
-  // Default D-ref = 293.66 Hz (standard A440); D = semitone 2
-  const semitonesFromD4 = (octave - 4) * 12 + (semitone - 2); // variable name kept for compat
+  const semitonesFromD4 = (octave - 4) * 12 + (semitone - 2);
   return 293.66 * Math.pow(2, semitonesFromD4 / 12);
 }
+```
 
-// ─── Tuning (683–722 ¢, FIFTH_DEFAULT = 700) ─────────────────────────────────
+## Tuning and skew configs
 
+Tuning covers the range 683–722 cents, defaulting to 700 (equal temperament fifth). Skew maps 0 (MidiMech) to 1 (DCompose); its `parseInput` accepts values outside 0–1 so microtonal presets can be typed in directly.
+
+``` {.typescript file=_generated/machines/sliderConfigs.ts}
 export const TUNING_SLIDER_CONFIG: SliderComponentConfig = {
   name: 'tuning',
   defaultValue: 700,
@@ -47,8 +43,6 @@ export const TUNING_SLIDER_CONFIG: SliderComponentConfig = {
   },
 };
 
-// ─── Skew (0 = MidiMech, 1 = DCompose; badge accepts values outside 0–1) ─────
-
 export const SKEW_SLIDER_CONFIG: SliderComponentConfig = {
   name: 'skew',
   defaultValue: 0,
@@ -59,9 +53,13 @@ export const SKEW_SLIDER_CONFIG: SliderComponentConfig = {
     return isFinite(n) ? n : null;
   },
 };
+```
 
-// ─── Volume (0–1 linear gain; badge displays dB) ──────────────────────────────
+## Volume and zoom configs
 
+Volume stores a 0–1 linear gain but the badge displays dB, with −∞ shown when gain is zero. Zoom is not editable; its `defaultValue` of 1.0 may be overridden per touch device in `main.ts` before the slider is constructed.
+
+``` {.typescript file=_generated/machines/sliderConfigs.ts}
 export const VOLUME_SLIDER_CONFIG: SliderComponentConfig = {
   name: 'volume',
   defaultValue: 0.3,
@@ -69,17 +67,19 @@ export const VOLUME_SLIDER_CONFIG: SliderComponentConfig = {
   editable: false,
 };
 
-// ─── Zoom (0.2–3×; defaultValue overridden per touch device in main.ts) ───────
-
 export const ZOOM_SLIDER_CONFIG: SliderComponentConfig = {
   name: 'zoom',
   defaultValue: 1.0,
   formatBadge: (v) => v.toFixed(2),
   editable: false,
 };
+```
 
-// ─── D-ref (73.42–1174.66 Hz; default 293.66 Hz at A440) ─────────────────────
+## D-ref config
 
+The D-ref slider controls the reference frequency for the D note (default 293.66 Hz at A440). Its `parseInput` tries a note-name parse first, then falls back to a plain Hz number, accepting any value in the audible 20–20000 Hz range.
+
+``` {.typescript file=_generated/machines/sliderConfigs.ts}
 export const DREF_SLIDER_CONFIG: SliderComponentConfig = {
   name: 'dref',
   defaultValue: 293.66,
@@ -88,10 +88,8 @@ export const DREF_SLIDER_CONFIG: SliderComponentConfig = {
   parseInput: (raw) => {
     const trimmed = raw.trim();
     if (!trimmed) return null;
-    // Note name first (e.g. "A4" → 440 Hz, "C5" → 523.25 Hz)
     const fromNote = noteNameToHz(trimmed);
     if (fromNote !== null) return fromNote;
-    // Plain Hz number
     const hz = parseFloat(trimmed);
     return isFinite(hz) && hz >= 20 && hz <= 20000 ? hz : null;
   },

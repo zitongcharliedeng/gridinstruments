@@ -1,12 +1,22 @@
 # MPE Machine
 
-XState machine for toggling MPE (MIDI Polyphonic Expression) mode on and off.
+A minimal two-state machine that tracks whether MIDI Polyphonic Expression (MPE) mode is active. A single `TOGGLE` event alternates between `disabled` and `enabled`.
+
+## Types
+
+The event union contains only `TOGGLE`. MPE state is fully represented by the active state node — no context fields are needed.
 
 ``` {.typescript file=_generated/machines/mpeMachine.ts}
 import { setup } from 'xstate';
 
 interface MpeEvent { type: 'TOGGLE' }
+```
 
+## Machine
+
+The machine starts in `disabled`. Each `TOGGLE` crosses to the opposite state. Parent machines can read the current state to decide whether to apply MPE channel routing.
+
+``` {.typescript file=_generated/machines/mpeMachine.ts}
 export const mpeMachine = setup({
   types: {
     events: {} as MpeEvent,

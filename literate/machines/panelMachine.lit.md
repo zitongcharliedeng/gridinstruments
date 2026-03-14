@@ -1,6 +1,12 @@
 # Panel Machine
 
-XState machine for resizable, collapsible panels with drag-handle support.
+A resizable, collapsible panel machine. Panels can be dragged by a handle, toggled open/closed, double-clicked to restore default height, and stepped with keyboard shortcuts. Height is clamped to a dynamic maximum of 60% of the viewport so panels never overflow the screen on small displays.
+
+## Types and helpers
+
+`PanelEvent` covers all six interaction kinds. `PanelContext` stores the current height together with the bounds and drag-start snapshot needed for live resize. `PanelInput` is supplied once at machine creation time and seeds the initial context.
+
+`clampPanelHeight` is exported so that callers (e.g. persistence restore) can apply the same bounds logic before feeding a value into the machine.
 
 ``` {.typescript file=_generated/machines/panelMachine.ts}
 import { setup, assign } from 'xstate';
@@ -36,17 +42,31 @@ export function clampPanelHeight(h: number, min: number, max: number): number {
   const dynamicMax = Math.min(max, Math.floor(window.innerHeight * 0.6));
   return Math.max(min, Math.min(dynamicMax, h));
 }
+```
 
+## Guards
+
+`isInitCollapsed` checks whether the starting height is zero, directing the initial routing transition. `belowThreshold` collapses the panel automatically when a drag ends near the minimum — providing a snap-to-close affordance without requiring pixel-perfect precision.
+
+``` {.typescript file=_generated/machines/panelMachine.ts}
+const guards = {
+  isInitCollapsed: ({ context }: { context: PanelContext }) => context.height <= 0,
+  belowThreshold: ({ context }: { context: PanelContext }) => context.height <= context.minHeight + 10,
+};
+```
+
+## States: routing and idle
+
+`routing` is an entry trampoline — its `always` transitions immediately redirect to either `collapsed` or `idle` based on the initial height. The `idle` state handles the full interaction set: drag-start captures the y-anchor and current height, `TOGGLE` collapses, `DBLCLICK` restores the default height, and `RESIZE_STEP` moves height by ±10 px.
+
+``` {.typescript file=_generated/machines/panelMachine.ts}
 export const panelMachine = setup({
   types: {
     context: {} as PanelContext,
     events: {} as PanelEvent,
     input: {} as PanelInput,
   },
-  guards: {
-    isInitCollapsed: ({ context }) => context.height <= 0,
-    belowThreshold: ({ context }) => context.height <= context.minHeight + 10,
-  },
+  guards,
 }).createMachine({
   id: 'panel',
   context: ({ input }) => ({
@@ -92,6 +112,13 @@ export const panelMachine = setup({
         },
       },
     },
+```
+
+## States: collapsed and dragging
+
+`collapsed` re-enables drag (starting from `minHeight` rather than zero) and responds to `TOGGLE` and `DBLCLICK` by restoring the default height. During `dragging`, `DRAG_MOVE` recomputes height from the delta — respecting `dirUp` so the same machine works for both bottom-anchored and top-anchored panels. When the drag ends, `belowThreshold` sends the panel to `collapsed`; otherwise it returns to `idle`.
+
+``` {.typescript file=_generated/machines/panelMachine.ts}
     collapsed: {
       on: {
         DRAG_START: {

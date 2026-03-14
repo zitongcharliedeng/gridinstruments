@@ -1,6 +1,16 @@
 # Waveform Machine
 
-XState machine for selecting the active synthesizer waveform type.
+A stateless-style machine that tracks the currently selected synthesizer waveform. Rather than modelling each waveform as a state node (which would require one transition per pair), the active waveform is stored in context and updated by a single `SELECT` event.
+
+## Types and imports
+
+The context holds `active: WaveformType`. The event carries the target waveform. Input lets the parent machine supply an initial waveform at spawn time.
+
+## Machine
+
+`setActive` is defined inline in `setup()` so XState v5 can infer the full action types. Extracting it to a separate variable loses the generic context and breaks type inference. `assertEvent` narrows the event union at runtime.
+
+The machine has no state nodes — it uses a root-level `on` handler so `SELECT` is accepted in any state. Context is initialised from `input.initial` so the parent can set the startup waveform declaratively.
 
 ``` {.typescript file=_generated/machines/waveformMachine.ts}
 import { setup, assign, assertEvent } from 'xstate';

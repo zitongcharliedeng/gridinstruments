@@ -1,23 +1,14 @@
 # inputActors
 
-Input handling actors (keyboard, touch, mouse) for GridInstruments state machines.
+XState v5 `fromCallback` actors that translate raw DOM events into typed AppMachine events. These actors own no note logic — they purely bridge the DOM to the state machine event bus.
+
+Dual-cleanup pattern is used throughout per XState `fromCallback` bug #5433: both `receive((e) => { ... })` and the returned teardown function remove the same listeners so cleanup is guaranteed whether the actor is stopped normally or via an explicit `CLEANUP` message.
+
+## Shared types
+
+The internal `CleanupEvent` is sent by a parent machine to request early teardown. It is not part of the public AppEvent union.
 
 ``` {.typescript file=_generated/machines/inputActors.ts}
-/**
- * DCompose Input Actors
- *
- * XState v5 fromCallback actors that translate raw DOM events into typed
- * AppMachine events. These actors do NOT handle note logic — they purely
- * bridge the DOM to the state machine event bus.
- *
- * Dual-cleanup pattern per XState fromCallback bug #5433:
- *   receive((e) => { if (e.type === 'CLEANUP') removeListeners(); })
- *   return () => removeListeners();
- *
- * These actors are exported but NOT yet invoked by appMachine.ts.
- * Invocation happens in Task 10.
- */
-
 import { fromCallback } from 'xstate';
 import type {
   KeyDownEvent,
@@ -29,21 +20,14 @@ import type {
   WindowBlurEvent,
 } from './types';
 
-// ─── Internal cleanup event ──────────────────────────────────────────────────
-
-/** Sent to an actor to request manual listener teardown (dual-cleanup pattern). */
 interface CleanupEvent { type: 'CLEANUP' }
+```
 
-// ─── keyboardListener ────────────────────────────────────────────────────────
+## keyboardListener
 
-/**
- * Listens for keydown/keyup on `document` and sends KEY_DOWN/KEY_UP events
- * to the parent machine.
- *
- * Filters:
- *   - Repeated keys (`e.repeat === true`)
- *   - Events originating in HTMLInputElement or HTMLSelectElement
- */
+Listens for `keydown`/`keyup` on `document` and sends `KEY_DOWN`/`KEY_UP` events. Repeated keys (`e.repeat === true`) and events originating in `HTMLInputElement` or `HTMLSelectElement` are filtered out so text fields are not intercepted.
+
+``` {.typescript file=_generated/machines/inputActors.ts}
 export const keyboardListener = fromCallback<CleanupEvent>(
   ({ sendBack, receive }) => {
     const onKeyDown = (e: KeyboardEvent): void => {
@@ -68,7 +52,6 @@ export const keyboardListener = fromCallback<CleanupEvent>(
     document.addEventListener('keydown', onKeyDown);
     document.addEventListener('keyup', onKeyUp);
 
-    // Dual cleanup: receive() for manual CLEANUP + return function as backup
     receive((_event) => {
       document.removeEventListener('keydown', onKeyDown);
       document.removeEventListener('keyup', onKeyUp);
@@ -80,38 +63,26 @@ export const keyboardListener = fromCallback<CleanupEvent>(
     };
   },
 );
+```
 
-// ─── pointerListener ─────────────────────────────────────────────────────────
+## pointerListener
 
-/** Input required by pointerListener. */
+Attaches pointer event listeners to the provided canvas. `POINTER_MOVE` is throttled: it is only forwarded when the pointer crosses an approximate cell boundary (>3 px displacement) or pressure changes by more than 0.05. This prevents the >30 Hz XState event flood anti-pattern.
+
+`pointerleave` and `pointercancel` are both mapped to `POINTER_UP` so the machine always receives a clean terminal event for every active pointer.
+
+``` {.typescript file=_generated/machines/inputActors.ts}
 export interface PointerListenerInput {
-  /** The keyboard canvas to attach pointer listeners to. */
   canvas: HTMLCanvasElement;
 }
 
-/** Pixel displacement threshold — approximate cell-boundary detection. */
 const POSITION_THRESHOLD = 3;
-/** Pressure delta threshold for re-sending POINTER_MOVE. */
 const PRESSURE_THRESHOLD = 0.05;
 
-/**
- * Attaches pointer event listeners to the provided canvas and sends
- * POINTER_DOWN, POINTER_MOVE (throttled), and POINTER_UP events to the
- * parent machine.
- *
- * Raw pointermove events are NOT forwarded verbatim. POINTER_MOVE is only
- * sent when the pointer crosses an approximate cell boundary (>3 px
- * displacement) OR pressure changes by more than 0.05 — preventing the
- * >30 Hz XState event flood anti-pattern.
- *
- * pointerleave and pointercancel are mapped to POINTER_UP so the machine
- * always receives a clean terminal event for every active pointer.
- */
 export const pointerListener = fromCallback<CleanupEvent, PointerListenerInput>(
   ({ sendBack, receive, input }) => {
     const { canvas } = input;
 
-    /** Per-pointer last-sent state for move throttling. */
     const lastSent = new Map<number, { x: number; y: number; pressure: number }>();
 
     const getCanvasCoords = (e: PointerEvent): { x: number; y: number } => {
@@ -138,7 +109,7 @@ export const pointerListener = fromCallback<CleanupEvent, PointerListenerInput>(
 
     const onPointerMove = (e: PointerEvent): void => {
       const last = lastSent.get(e.pointerId);
-      if (!last) return; // no active pointer down — ignore hover
+      if (!last) return;
 
       const { x, y } = getCanvasCoords(e);
       const dx = Math.abs(x - last.x);
@@ -194,7 +165,6 @@ export const pointerListener = fromCallback<CleanupEvent, PointerListenerInput>(
       canvas.removeEventListener('pointercancel', onPointerCancel);
     };
 
-    // Dual cleanup: receive() for manual CLEANUP + return function as backup
     receive((_event) => {
       removeListeners();
       lastSent.clear();
@@ -206,16 +176,13 @@ export const pointerListener = fromCallback<CleanupEvent, PointerListenerInput>(
     };
   },
 );
+```
 
-// ─── windowListener ───────────────────────────────────────────────────────────
+## windowListener
 
-/**
- * Listens for window resize and blur events and sends WINDOW_RESIZE and
- * WINDOW_BLUR events to the parent machine.
- *
- * WINDOW_BLUR is used to stop all active notes when the application loses
- * focus (e.g., Alt+Tab).
- */
+Listens for `resize` and `blur` on the global `window`. `WINDOW_BLUR` is used to stop all active notes when the application loses focus (e.g. Alt+Tab), preventing stuck notes.
+
+``` {.typescript file=_generated/machines/inputActors.ts}
 export const windowListener = fromCallback<CleanupEvent>(
   ({ sendBack, receive }) => {
     const onResize = (): void => {
@@ -235,7 +202,6 @@ export const windowListener = fromCallback<CleanupEvent>(
     window.addEventListener('resize', onResize);
     window.addEventListener('blur', onBlur);
 
-    // Dual cleanup: receive() for manual CLEANUP + return function as backup
     receive((_event) => {
       window.removeEventListener('resize', onResize);
       window.removeEventListener('blur', onBlur);
