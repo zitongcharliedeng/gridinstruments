@@ -180,13 +180,8 @@ The channel mode controls how multi-channel MIDI data is routed. In `omni` and `
     const velocity = data.length > 2 ? data[2] : 0;
 
     if (this.channelMode === 'omni') {
-      // All channels pass through
     } else if (this.channelMode === 'chPerNote') {
-      // Pass through as-is — consumer uses channel as note slot identity
-      // (no filtering here; caller responsible for MPE-style tracking)
     } else {
-      // Channel N = keyboard row N (1–4 for ZXCV/ASDF/QWER/digits rows)
-      // Notes outside channel 1–4 are ignored in chPerRow mode
       if (channel < 1 || channel > 4) return;
     }
 

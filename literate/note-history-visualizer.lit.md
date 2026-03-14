@@ -167,7 +167,6 @@ Four small methods let the host application tune the display. Time window and no
   }
 
   setMidiStatus(_status: 'unavailable' | 'no-devices' | 'connected', _deviceName = ''): void {
-    // No-op: MIDI status is shown in the MIDI settings panel only
   }
 
   clearAll(): void {

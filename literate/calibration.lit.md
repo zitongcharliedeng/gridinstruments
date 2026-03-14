@@ -39,7 +39,6 @@ export function saveCalibratedRange(cellIds: ReadonlySet<string>): void {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify([...cellIds]));
   } catch {
-    // storage full or private mode — silently ignore
   }
 }
 ```
