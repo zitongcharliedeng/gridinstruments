@@ -1,7 +1,21 @@
 id: no-ts-comments
-message: "Use literate prose instead of code comments. End the code block, write markdown, resume with a new code block targeting the same file."
+message: |
+  Use literate prose instead of code comments. End the code block, write markdown, resume:
+
+  ``` {.typescript file=_generated/example.ts}
+  const a = computeValue();
+  ```
+
+  Explain WHY `a` is computed this way, with [MDN links](https://developer.mozilla.org) etc.
+
+  ``` {.typescript file=_generated/example.ts}
+  const b = a * KNOWN_CONSTANT;
+  ```
+
+  Entangled concatenates all blocks targeting the same file in document order.
+  See: https://entangled.github.io/entangled/#multiple-code-blocks
 severity: error
-note: "Entangled concatenates multiple ``` {.typescript file=...} blocks in document order. Split your code, add prose (with MDN links, tables, images), then resume. See literate/app-core.lit.md 'Default Zoom' section for the pattern."
+note: "Entangled v2 supports multiple code blocks per output file (concatenated in order). This is the core literate programming pattern — interleave prose and code."
 language: TypeScript
 rule:
   kind: comment
