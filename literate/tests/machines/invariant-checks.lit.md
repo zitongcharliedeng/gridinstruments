@@ -554,13 +554,12 @@ export const mobileGoldenCheck: StateInvariant = {
 export const qwertyGoldenCheck: StateInvariant = {
   id: 'GOLDEN-QWERTY',
   check: async (page: Page) => {
-    // Open overlay, enable QWERTY toggle via evaluate (Playwright .check() may not fire change on gi-checkbox)
+    // Open overlay, enable QWERTY toggle by clicking the label text
     await page.locator('#grid-settings-btn').click();
     await page.waitForTimeout(300);
-    await page.evaluate(() => {
-      const cb = document.getElementById('qwerty-overlay-toggle') as HTMLInputElement;
-      if (cb && !cb.checked) { cb.checked = true; cb.dispatchEvent(new Event('change', { bubbles: true })); }
-    });
+    // Scroll down to make QWERTY LABELS visible, then click the label
+    await page.locator('text=QWERTY LABELS').scrollIntoViewIfNeeded();
+    await page.locator('text=QWERTY LABELS').click();
     await page.waitForTimeout(500);
     // Close overlay to see grid with labels
     await page.keyboard.press('Escape');
@@ -568,13 +567,10 @@ export const qwertyGoldenCheck: StateInvariant = {
     await expect(page.locator('#keyboard-canvas')).toHaveScreenshot('qwerty-labels.png', {
       maxDiffPixelRatio: 0.02,
     });
-    // Cleanup: uncheck
+    // Cleanup: uncheck by clicking label again
     await page.locator('#grid-settings-btn').click();
     await page.waitForTimeout(200);
-    await page.evaluate(() => {
-      const cb = document.getElementById('qwerty-overlay-toggle') as HTMLInputElement;
-      if (cb?.checked) { cb.checked = false; cb.dispatchEvent(new Event('change', { bubbles: true })); }
-    });
+    await page.locator('text=QWERTY LABELS').click();
     await page.keyboard.press('Escape');
   },
 };
