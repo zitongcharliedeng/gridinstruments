@@ -2,7 +2,7 @@
 
 XState machine for resizable, collapsible panels with drag-handle support.
 
-``` {.typescript file=src/machines/panelMachine.ts}
+``` {.typescript file=_generated/machines/panelMachine.ts}
 import { setup, assign } from 'xstate';
 
 type PanelEvent =

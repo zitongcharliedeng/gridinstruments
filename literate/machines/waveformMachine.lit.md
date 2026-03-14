@@ -2,7 +2,7 @@
 
 XState machine for selecting the active synthesizer waveform type.
 
-``` {.typescript file=src/machines/waveformMachine.ts}
+``` {.typescript file=_generated/machines/waveformMachine.ts}
 import { setup, assign, assertEvent } from 'xstate';
 import type { WaveformType } from '../lib/synth';
 

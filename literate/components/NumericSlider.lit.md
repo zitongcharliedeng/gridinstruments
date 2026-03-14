@@ -2,7 +2,7 @@
 
 Reusable UI component wrapping an existing slider DOM structure. Handles value get/set, badge positioning, fill gradient (Firefox workaround), reset button, and editable vs non-editable badges. Does not create new DOM elements — all elements are passed in via constructor.
 
-``` {.typescript file=src/components/NumericSlider.ts}
+``` {.typescript file=_generated/components/NumericSlider.ts}
 /**
  * NumericSlider — Reusable UI component wrapping an existing slider DOM structure.
  *

@@ -96,16 +96,16 @@ The `flake.nix` devshell provides the correct nixpkgs Firefox matching the npm `
 | `tests/machines/uiMachine.ts` | UI state machine definitions + DOM assertions |
 | `tests/machines/types.ts` | `StateInvariant` interface |
 | `index.html` | UI structure, all CSS inline in `<style>` block |
-| `src/main.ts` | App wiring — event listeners, DOM bindings |
-| `src/lib/keyboard-visualizer.ts` | Canvas keyboard grid — geometry, rendering, hit detection |
-| `src/lib/note-colors.ts` | OKLCH color system for notes |
-| `src/lib/keyboard-layouts.ts` | Isomorphic coordinate formulas, note naming |
-| `src/lib/synth.ts` | Web Audio synth, tuning markers |
-| `src/lib/note-history-visualizer.ts` | Staff + waterfall + chord panel |
-| `src/lib/midi-input.ts` | Web MIDI device management |
-| `src/lib/chord-detector.ts` | Chord name detection |
-| `src/lib/mpe-service.ts` | MPE service |
-| `src/lib/chord-graffiti.ts` | Yellow chord shape hints (roughjs SVG overlay) |
+| `_generated/main.ts` | App wiring — event listeners, DOM bindings |
+| `_generated/lib/keyboard-visualizer.ts` | Canvas keyboard grid — geometry, rendering, hit detection |
+| `_generated/lib/note-colors.ts` | OKLCH color system for notes |
+| `_generated/lib/keyboard-layouts.ts` | Isomorphic coordinate formulas, note naming |
+| `_generated/lib/synth.ts` | Web Audio synth, tuning markers |
+| `_generated/lib/note-history-visualizer.ts` | Staff + waterfall + chord panel |
+| `_generated/lib/midi-input.ts` | Web MIDI device management |
+| `_generated/lib/chord-detector.ts` | Chord name detection |
+| `_generated/lib/mpe-service.ts` | MPE service |
+| `_generated/lib/chord-graffiti.ts` | Yellow chord shape hints (roughjs SVG overlay) |
 
 ### Testing
 
@@ -125,7 +125,7 @@ All new tests must be `StateInvariant` objects in the invariant-checks file, wir
 - **Shift** = vibrato (hold), **Space** = sustain (hold), **R** is a note key
 - **Ctrl** passes through to browser (no synth shortcuts)
 - Modifiers are hold-on, off-by-default (not toggle)
-- **No new npm dependencies** beyond `xstate` and `effect` (Effect-TS, for `src/services/` only — see Literate Programming section below)
+- **No new npm dependencies** beyond `xstate` and `effect` (Effect-TS, for `_generated/services/` only — see Literate Programming section below)
 - **No scroll on the site** — overflow must be hidden at page level
 - **Drag handles** live on the inner border of panels — never touch the grid-area element or keyboard-canvas
 - **Never close GitHub issues** — only label "ready for review"
@@ -153,7 +153,7 @@ All new tests must be `StateInvariant` objects in the invariant-checks file, wir
 The codebase uses [Entangled](https://entangled.github.io/) for literate programming:
 
 - **Source of truth**: `literate/*.lit.md` files (Markdown with embedded TypeScript code blocks)
-- **Generated output**: `src/*.ts` files — these are BUILD ARTIFACTS (like `node_modules/` or `dist/`)
+- **Generated output**: `_generated/*.ts` files — these are BUILD ARTIFACTS (like `node_modules/` or `dist/`)
 - **Generated files are**:
   - Gitignored — not in git, cannot be committed
   - chmod 444 — read-only, OS blocks edits (Claude Code `Edit`/`Write` → EACCES error)
@@ -174,7 +174,7 @@ The codebase uses [Entangled](https://entangled.github.io/) for literate program
 4. `nix develop --command npx playwright test` — test (auto-tangles via pretest hook)
 
 **Effect-TS** (`effect` npm package):
-- Allowed ONLY in `src/services/` directory
+- Allowed ONLY in `_generated/services/` directory
 - Banned from: synth hot path, render loop, pure math, state machines
 - Purpose: typed browser API DI (AudioContext, MIDI, Canvas)
 - Python tool: `entangled-cli==2.4.2` (installed via Python venv in Nix devshell, see `requirements.txt`)

@@ -11,9 +11,9 @@ export default tseslint.config(
   ...tseslint.configs.strictTypeChecked,
   ...tseslint.configs.stylisticTypeChecked,
 
-  // Project-wide settings for src/
+  // Project-wide settings for _generated/
   {
-    files: ['src/**/*.ts'],
+    files: ['_generated/**/*.ts'],
     languageOptions: {
       parserOptions: {
         projectService: true,

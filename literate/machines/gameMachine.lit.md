@@ -2,7 +2,7 @@
 
 Game/tutorial state machine for GridInstruments.
 
-``` {.typescript file=src/machines/gameMachine.ts}
+``` {.typescript file=_generated/machines/gameMachine.ts}
 /**
  * Game Lifecycle State Machine — XState v5
  *

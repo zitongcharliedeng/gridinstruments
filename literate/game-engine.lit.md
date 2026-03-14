@@ -4,7 +4,7 @@ Converts `NoteEvent[]` (MIDI parser output) into `NoteGroup[]` (game machine inp
 
 Handles chord grouping, range-aware transposition/cropping, median-note calculation for D-ref centering, and quantization for Piano Tiles-style gameplay.
 
-``` {.typescript file=src/lib/game-engine.ts}
+``` {.typescript file=_generated/lib/game-engine.ts}
 /**
  * Game Engine — converts NoteEvent[] (MIDI parser) into NoteGroup[] (game machine).
  *

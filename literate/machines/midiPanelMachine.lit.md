@@ -2,7 +2,7 @@
 
 XState machine for toggling the MIDI device panel between open and closed states.
 
-``` {.typescript file=src/machines/midiPanelMachine.ts}
+``` {.typescript file=_generated/machines/midiPanelMachine.ts}
 import { setup } from 'xstate';
 
 interface MidiPanelEvent { type: 'TOGGLE_MIDI' }

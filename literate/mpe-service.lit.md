@@ -4,7 +4,7 @@ MPE (MIDI Polyphonic Expression) service — configurable MPE output with voice 
 
 Standalone service wrapping the Web MIDI API with configurable MPE zone (lower or upper zone, flexible member channel count), per-note pitch bend, pressure, and timbre (slide) with configurable CC/mode, voice state tracking with listener subscription for real-time UI updates, and a FIFO channel allocator.
 
-``` {.typescript file=src/lib/mpe-service.ts}
+``` {.typescript file=_generated/lib/mpe-service.ts}
 /**
  * MPE (MIDI Polyphonic Expression) Service — configurable MPE output with voice tracking.
  *

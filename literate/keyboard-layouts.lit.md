@@ -14,7 +14,7 @@ Circle-of-fifths spelling with ♯/♭ glyphs. Frequency and MIDI conversion uti
 
 Multiple keyboard form factors (ANSI, ISO, 60%/65%/75%) are built by filtering the full key map based on which keys are physically present.
 
-``` {.typescript file=src/lib/keyboard-layouts.ts}
+``` {.typescript file=_generated/lib/keyboard-layouts.ts}
 /**
  * PHYSICAL POSITION Keyboard to Isomorphic Coordinate Mapping
  *

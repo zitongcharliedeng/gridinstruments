@@ -6,14 +6,14 @@ rule:
     - pattern: new AudioContext($OPTS)
     - pattern: navigator.requestMIDIAccess($$$)
 files:
-  - "src/**/*.ts"
+  - "_generated/**/*.ts"
 ignores:
-  - "src/lib/synth.ts"
-  - "src/lib/midi-input.ts"
-  - "src/lib/mpe-output.ts"
-  - "src/lib/mpe-service.ts"
-  - "src/main.ts"
-  - "src/services/**/*.ts"
+  - "_generated/lib/synth.ts"
+  - "_generated/lib/midi-input.ts"
+  - "_generated/lib/mpe-output.ts"
+  - "_generated/lib/mpe-service.ts"
+  - "_generated/main.ts"
+  - "_generated/services/**/*.ts"
 severity: warning
-message: "Direct browser API usage should be wrapped in Effect services (src/services/). This warning will become an error in Wave 8."
+message: "Direct browser API usage should be wrapped in Effect services (_generated/services/). This warning will become an error in Wave 8."
 note: "See AGENTS.md for Effect-TS service layer guidance."

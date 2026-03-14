@@ -6,7 +6,7 @@ Every pixel maps to exactly one cell (Voronoi = parallelogram partition). No gap
 
 ## Imports and types
 
-``` {.typescript file=src/lib/keyboard-visualizer.ts}
+``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
 /**
  * DCompose/Wicki-Hayden Keyboard Visualizer
  *
@@ -61,7 +61,7 @@ const CELL_INSET = 0.93;
 
 ## Class definition and state
 
-``` {.typescript file=src/lib/keyboard-visualizer.ts}
+``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
 export class KeyboardVisualizer {
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
@@ -121,7 +121,7 @@ export class KeyboardVisualizer {
 
 ## Canvas setup and public API
 
-``` {.typescript file=src/lib/keyboard-visualizer.ts}
+``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
   private setupCanvas(): void {
     const dpr = window.devicePixelRatio > 0 ? window.devicePixelRatio : 1;
     this.canvas.width = this.options.width * dpr;
@@ -235,7 +235,7 @@ export class KeyboardVisualizer {
 
 ## Geometry: spacing and button generation
 
-``` {.typescript file=src/lib/keyboard-visualizer.ts}
+``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
   private getSpacing(): {
     genX: number; genY0: number; genX1: number; genY1: number;
     cellHv1: { x: number; y: number }; cellHv2: { x: number; y: number };
@@ -354,7 +354,7 @@ export class KeyboardVisualizer {
 
 ## Note state setters
 
-``` {.typescript file=src/lib/keyboard-visualizer.ts}
+``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
   setActiveNotes(noteIds: string[]): void {
     this.activeNotes = new Set(noteIds);
   }
@@ -406,7 +406,7 @@ export class KeyboardVisualizer {
 
 ## Rendering
 
-``` {.typescript file=src/lib/keyboard-visualizer.ts}
+``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
   render(): void {
     const { width, height } = this.options;
 
@@ -708,7 +708,7 @@ export class KeyboardVisualizer {
 
 ## Resize, static helpers, and hit detection
 
-``` {.typescript file=src/lib/keyboard-visualizer.ts}
+``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
   resize(width: number, height: number): void {
     this.options.width = width;
     this.options.height = height;

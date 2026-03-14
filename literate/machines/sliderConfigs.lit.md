@@ -2,7 +2,7 @@
 
 Per-slider component configurations for NumericSlider — default values, badge formatters, and input parsers for tuning, skew, volume, zoom, and D-reference frequency sliders.
 
-``` {.typescript file=src/machines/sliderConfigs.ts}
+``` {.typescript file=_generated/machines/sliderConfigs.ts}
 /**
  * Per-slider component configs for NumericSlider.
  *

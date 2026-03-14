@@ -2,7 +2,7 @@
 
 XState machine for toggling a settings overlay panel between hidden and visible states.
 
-``` {.typescript file=src/machines/overlayMachine.ts}
+``` {.typescript file=_generated/machines/overlayMachine.ts}
 import { setup } from 'xstate';
 
 type OverlayEvent =

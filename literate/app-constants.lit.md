@@ -2,7 +2,7 @@
 
 Static constants, presets, and slider info HTML for the DCompose app.
 
-``` {.typescript file=src/app-constants.ts}
+``` {.typescript file=_generated/app-constants.ts}
 /**
  * Static constants, presets, and slider info HTML for the DCompose app.
  */

@@ -2,7 +2,7 @@
 
 DCompose Web entry point — wires together MIDI, synth, keyboard, history visualizer, and XState actors.
 
-``` {.typescript file=src/main.ts}
+``` {.typescript file=_generated/main.ts}
 /**
  * DCompose Web — Entry Point
  *

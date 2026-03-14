@@ -46,7 +46,7 @@ These tools actually extract code from prose documents. This is the only tier th
 
 **Why it won**:
 
-- **Bidirectional sync (stitch)**: The decisive feature. Edit `src/lib/keyboard-visualizer.ts` in VS Code with full LSP support, run `entangled stitch`, and the `.lit.md` updates. No other tool in this evaluation offers this.
+- **Bidirectional sync (stitch)**: The decisive feature. Edit `_generated/lib/keyboard-visualizer.ts` in VS Code with full LSP support, run `entangled stitch`, and the `.lit.md` updates. No other tool in this evaluation offers this.
 - **Language-agnostic**: Works with any language. TypeScript support requires adding `[[languages]]` config, which is two lines in `entangled.toml`.
 - **VSCode extension**: Real-time sync between `.lit.md` and `.ts` files in the editor. The extension watches both sides.
 - **Institutional backing**: Developed and maintained by the Netherlands eScience Center. Used in actual scientific software projects. Not a weekend project.
@@ -141,7 +141,7 @@ These tools are excellent for data science and interactive computation. They're 
 
 **What it does**: TypeScript Jupyter kernel. Run TypeScript interactively in Jupyter notebooks.
 
-**Rejection reason**: Jupyter notebook model is incompatible with producing importable ES module source files. Jupyter notebooks are JSON files (`.ipynb`) with cell outputs embedded. They're not source files. `tslab` is useful for data science with TypeScript but cannot produce the `src/lib/keyboard-visualizer.ts` that Vite imports. It also requires Jupyter and the Python ecosystem, adding a Python dependency to a project that currently has none.
+**Rejection reason**: Jupyter notebook model is incompatible with producing importable ES module source files. Jupyter notebooks are JSON files (`.ipynb`) with cell outputs embedded. They're not source files. `tslab` is useful for data science with TypeScript but cannot produce the `_generated/lib/keyboard-visualizer.ts` that Vite imports. It also requires Jupyter and the Python ecosystem, adding a Python dependency to a project that currently has none.
 
 ### Deno Jupyter
 

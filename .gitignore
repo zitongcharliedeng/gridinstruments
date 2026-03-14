@@ -60,43 +60,5 @@ tests/.vision-cache.json
 # These are build artifacts, like node_modules/ or dist/
 # Source of truth: literate/*.lit.md
 # Regenerate: bash scripts/tangle.sh
-# Files are added here as each module is migrated to literate:
-src/lib/note-colors.ts
-src/lib/calibration.ts
-src/lib/midi-parser.ts
-src/lib/synth.ts
-src/components/NumericSlider.ts
-src/lib/mpe-service.ts
-src/lib/midi-input.ts
-src/lib/mpe-output.ts
-src/lib/chord-detector.ts
-src/lib/keyboard-layouts.ts
-src/lib/midi-search.ts
-src/machines/sliderConfigs.ts
-src/lib/chord-graffiti.ts
-src/lib/game-engine.ts
-src/lib/note-history-visualizer.ts
-src/lib/keyboard-visualizer.ts
-src/machines/types.ts
-src/machines/appMachine.ts
-src/machines/inputActors.ts
-src/machines/gameMachine.ts
-src/machines/midiActor.ts
-
-src/machines/panelMachine.ts
-src/machines/overlayMachine.ts
-src/machines/dialogMachine.ts
-src/machines/waveformMachine.ts
-src/machines/midiPanelMachine.ts
-src/machines/mpeMachine.ts
-src/machines/pedalMachines.ts
-
-src/main.ts
-src/app-constants.ts
-src/app-helpers.ts
-src/app-dom.ts
-src/app-slider.ts
-src/app-panels.ts
-src/app-actor-wiring.ts
-src/app-core.ts
-src/services/index.ts
+# The entire _generated/ directory is tangled output:
+_generated/

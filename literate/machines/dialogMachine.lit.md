@@ -2,7 +2,7 @@
 
 XState machine for managing a modal dialog with open/close states and content context.
 
-``` {.typescript file=src/machines/dialogMachine.ts}
+``` {.typescript file=_generated/machines/dialogMachine.ts}
 import { setup, assign } from 'xstate';
 
 type DialogEvent =

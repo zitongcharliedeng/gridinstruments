@@ -204,6 +204,13 @@ import {
        HISTORY_TIME_SLIDER,
        HISTORY_RANGE_BTNS,
        ALL_INFO_BTNS,
+       NO_DUPLICATE_IDS,
+       NO_D4_IN_UI,
+       MIDI_SETTINGS_GROUPED,
+       SINGLE_FLAT_SOUND,
+       overlayGoldenCheck2,
+       mobileGoldenCheck,
+       qwertyGoldenCheck,
      } from './machines/invariant-checks';
 import { focusReturnCheck } from './machines/modifierCompoundMachine';
 
@@ -1005,6 +1012,34 @@ test.describe('[Structural] state-independent invariants', () => {
 
   test('IDLE-FADE-2: #song-bar-hint is visible (opacity > 0) on page load when idle', async ({ page }) => {
     await IDLE_FADE_2.check(page);
+  });
+
+  test('IDEAL-NO-DUP-IDS: Zero duplicate element IDs', async ({ page }) => {
+    await NO_DUPLICATE_IDS.check(page);
+  });
+
+  test('IDEAL-NO-D4: No D4 text in UI', async ({ page }) => {
+    await NO_D4_IN_UI.check(page);
+  });
+
+  test('IDEAL-MIDI-GROUPED: MIDI settings has EXPRESSION subtitle', async ({ page }) => {
+    await MIDI_SETTINGS_GROUPED.check(page);
+  });
+
+  test('IDEAL-SINGLE-FLAT: Exactly one flat-sound-toggle', async ({ page }) => {
+    await SINGLE_FLAT_SOUND.check(page);
+  });
+
+  test('GOLDEN-OVERLAY-2: Overlay screenshot golden', async ({ page }) => {
+    await overlayGoldenCheck2.check(page);
+  });
+
+  test('GOLDEN-MOBILE: Mobile viewport golden', async ({ page }) => {
+    await mobileGoldenCheck.check(page);
+  });
+
+  test('GOLDEN-QWERTY: QWERTY labels golden', async ({ page }) => {
+    await qwertyGoldenCheck.check(page);
   });
 
   test('UI-FULLSCREEN-1: Fullscreen button exists', async ({ page }) => {

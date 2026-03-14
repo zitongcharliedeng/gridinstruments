@@ -2,7 +2,7 @@
 
 MIDI device actor for GridInstruments state machines.
 
-``` {.typescript file=src/machines/midiActor.ts}
+``` {.typescript file=_generated/machines/midiActor.ts}
 /**
  * MIDI input actor — bridges MidiInput callbacks into XState events.
  *

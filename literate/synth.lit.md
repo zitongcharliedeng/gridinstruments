@@ -20,7 +20,7 @@ A single shared LFO drives vibrato for all voices. Per-voice `vibratoGainNode` n
 
 `playNote` creates an oscillator + lowpass timbre filter + gain node per voice. `stopNote` applies a release envelope then schedules oscillator stop. `setGenerator` updates all playing voices in real-time — no restart needed.
 
-``` {.typescript file=src/lib/synth.ts}
+``` {.typescript file=_generated/lib/synth.ts}
 /**
  * Low-latency Web Audio API Synthesizer
  * 

@@ -6,7 +6,7 @@ Pipeline: `adapter.search(query)` → `adapter.fetch(result)` → `parseMidi(buf
 
 Adapters use module-level in-memory caching for GitHub tree responses. No localStorage, no IndexedDB — memory only, reset on page refresh.
 
-``` {.typescript file=src/lib/midi-search.ts}
+``` {.typescript file=_generated/lib/midi-search.ts}
 /**
  * MIDI search adapters — discoverable MIDI libraries for the game feature.
  *

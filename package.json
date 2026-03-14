@@ -10,7 +10,7 @@
     "pretest": "npm run tangle",
     "dev": "npm run tangle && vite",
     "preview": "vite preview",
-    "lint": "eslint src/ tests/",
+    "lint": "eslint _generated/ tests/",
     "lint:ast": "ast-grep scan",
     "test": "playwright test",
     "test:update": "playwright test --update-snapshots"

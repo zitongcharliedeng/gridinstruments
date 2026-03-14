@@ -2,7 +2,7 @@
 
 XState machine for toggling MPE (MIDI Polyphonic Expression) mode on and off.
 
-``` {.typescript file=src/machines/mpeMachine.ts}
+``` {.typescript file=_generated/machines/mpeMachine.ts}
 import { setup } from 'xstate';
 
 interface MpeEvent { type: 'TOGGLE' }

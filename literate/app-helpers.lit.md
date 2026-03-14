@@ -2,7 +2,7 @@
 
 Pure utility functions — Markdown rendering, type guards, numeric parsing, slider annotation formatting, and D-reference note/Hz conversion.
 
-``` {.typescript file=src/app-helpers.ts}
+``` {.typescript file=_generated/app-helpers.ts}
 /**
  * Pure utility functions — no DOM dependencies (except type guards).
  */

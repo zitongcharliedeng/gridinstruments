@@ -2,7 +2,7 @@
 
 Chord name detection from active MIDI notes using Tonal.js — converts grid coordinates to note names and detects chord symbols.
 
-``` {.typescript file=src/lib/chord-detector.ts}
+``` {.typescript file=_generated/lib/chord-detector.ts}
 /**
  * Chord Detection using Tonal.js
  * 

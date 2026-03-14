@@ -4,7 +4,7 @@ MPE (MIDI Polyphonic Expression) output — sends MPE messages to external MIDI 
 
 Lower zone only: manager channel = 1, member channels = 2–16 (15 voices). FIFO channel allocator — oldest freed channel is reused first.
 
-``` {.typescript file=src/lib/mpe-output.ts}
+``` {.typescript file=_generated/lib/mpe-output.ts}
 /**
  * MPE (MIDI Polyphonic Expression) output — sends MPE messages to external MIDI outputs.
  *

@@ -2,7 +2,7 @@
 
 Slider UI helpers — thumb positioning, fill gradients, badge clamping, and info dialog wiring.
 
-``` {.typescript file=src/app-slider.ts}
+``` {.typescript file=_generated/app-slider.ts}
 /**
  * Slider UI helpers — thumb positioning, fill gradients, and info dialogs.
  */

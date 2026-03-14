@@ -2,7 +2,7 @@
 
 Top-level application state machine for GridInstruments.
 
-``` {.typescript file=src/machines/appMachine.ts}
+``` {.typescript file=_generated/machines/appMachine.ts}
 /**
  * DCompose AppMachine — Root XState v5 Machine
  *

@@ -2,13 +2,13 @@
 
 Effect-TS service layer for browser API dependency injection.
 
-Typed tags for AudioContext, Web MIDI, and Canvas 2D, plus their concrete `*Live` implementations. Effect-TS is confined to `src/services/` — banned from the synth hot path, render loop, pure math, and state machines.
+Typed tags for AudioContext, Web MIDI, and Canvas 2D, plus their concrete `*Live` implementations. Effect-TS is confined to `_generated/services/` — banned from the synth hot path, render loop, pure math, and state machines.
 
 ## Interfaces
 
 Service contracts — consumers depend only on these tags.
 
-``` {.typescript file=src/services/index.ts}
+``` {.typescript file=_generated/services/index.ts}
 /**
  * Service layer — Effect-TS service interfaces and Live implementations
  * for browser APIs.
@@ -23,7 +23,7 @@ Service contracts — consumers depend only on these tags.
  *   - MidiServiceLive: wraps navigator.requestMIDIAccess
  *   - CanvasServiceLive: wraps canvas.getContext('2d') with DPR-aware resize
  *
- * Effect-TS is ONLY used in src/services/ — never in synth, render, or math code.
+ * Effect-TS is ONLY used in _generated/services/ — never in synth, render, or math code.
  */
 
 import { Context, Effect, Layer } from 'effect';
@@ -85,7 +85,7 @@ of Effect-returning functions — no effectful setup is needed at layer construc
 Wraps the Web Audio API. `createContext` instantiates a fresh `AudioContext`;
 the other methods delegate to its promise-based lifecycle methods.
 
-``` {.typescript file=src/services/index.ts}
+``` {.typescript file=_generated/services/index.ts}
 
 // ── Live implementations ─────────────────────────────────────────────────
 
@@ -126,7 +126,7 @@ export const AudioServiceLive = Layer.succeed(
 Wraps `navigator.requestMIDIAccess` and iterates the `inputs`/`outputs` maps.
 Sysex is disabled by default — callers needing SysEx can provide a custom layer.
 
-``` {.typescript file=src/services/index.ts}
+``` {.typescript file=_generated/services/index.ts}
 
 /** Concrete MidiService backed by the Web MIDI API. */
 export const MidiServiceLive = Layer.succeed(
@@ -160,7 +160,7 @@ export const MidiServiceLive = Layer.succeed(
 `resizeToDisplaySize` matches the canvas backing store to its CSS display size,
 accounting for `devicePixelRatio`. Returns `true` if dimensions changed.
 
-``` {.typescript file=src/services/index.ts}
+``` {.typescript file=_generated/services/index.ts}
 
 /** Concrete CanvasService backed by the Canvas 2D API. */
 export const CanvasServiceLive = Layer.succeed(

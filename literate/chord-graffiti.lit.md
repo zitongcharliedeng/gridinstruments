@@ -4,7 +4,7 @@ Yellow chord shape hints rendered as a roughjs SVG overlay on the keyboard canva
 
 Draws a major chord triangle in the top-left corner and a minor chord triangle in the bottom-right corner, with hand-drawn style annotations.
 
-``` {.typescript file=src/lib/chord-graffiti.ts}
+``` {.typescript file=_generated/lib/chord-graffiti.ts}
 import rough from 'roughjs';
 import type { KeyboardVisualizer } from './keyboard-visualizer';
 

@@ -2,7 +2,7 @@
 
 localStorage-backed calibration — saves and loads the set of reachable cell IDs for the isomorphic grid keyboard.
 
-``` {.typescript file=src/lib/calibration.ts}
+``` {.typescript file=_generated/lib/calibration.ts}
 /**
  * Calibration — saves and loads the set of reachable cell IDs.
  * localStorage key: 'gi_calibrated_range'

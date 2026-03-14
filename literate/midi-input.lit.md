@@ -7,7 +7,7 @@ Channel modes:
 - `chPerNote` — MPE style: channel = note slot identity
 - `chPerRow` — channel N maps to keyboard row N (Striso / Axis-64 style)
 
-``` {.typescript file=src/lib/midi-input.ts}
+``` {.typescript file=_generated/lib/midi-input.ts}
 /**
  * Web MIDI API input handler — with per-device management and channel modes.
  *

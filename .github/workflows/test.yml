@@ -31,7 +31,7 @@ jobs:
       - name: Verify tangle output
         run: |
           echo "Tangled files:"
-          ls -la src/lib/*.ts src/machines/*.ts src/*.ts 2>/dev/null | wc -l
+          ls -la _generated/lib/*.ts _generated/machines/*.ts _generated/*.ts 2>/dev/null | wc -l
           echo "files generated from literate/*.lit.md"
 
       - run: npm ci

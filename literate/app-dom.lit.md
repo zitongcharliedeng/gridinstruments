@@ -2,7 +2,7 @@
 
 DOM query helpers and element factory functions — safe element lookup with type narrowing, select-at-slot creation, and cycling button setup.
 
-``` {.typescript file=src/app-dom.ts}
+``` {.typescript file=_generated/app-dom.ts}
 /**
  * DOM query helpers and element factory functions.
  */

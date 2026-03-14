@@ -4,7 +4,7 @@ Pure TypeScript types for all XState machine events and context. Zero runtime co
 
 Re-exports `WaveformType` and `KeyboardLayout` from their canonical locations to avoid duplication.
 
-``` {.typescript file=src/machines/types.ts}
+``` {.typescript file=_generated/machines/types.ts}
 /**
  * DCompose XState Machine Types
  *

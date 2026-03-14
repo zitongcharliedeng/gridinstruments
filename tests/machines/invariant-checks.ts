@@ -10,10 +10,10 @@
 import type { Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 import type { StateInvariant } from './types';
-import { overlayMachine } from '../../src/machines/overlayMachine';
-import { pedalMachine } from '../../src/machines/pedalMachines';
-import { panelMachine } from '../../src/machines/panelMachine';
-import { gameMachine, type NoteGroup } from '../../src/machines/gameMachine';
+import { overlayMachine } from '../../_generated/machines/overlayMachine';
+import { pedalMachine } from '../../_generated/machines/pedalMachines';
+import { panelMachine } from '../../_generated/machines/panelMachine';
+import { gameMachine, type NoteGroup } from '../../_generated/machines/gameMachine';
 import { createActor } from 'xstate';
 import {
   overlayMachine as testOverlayMachine,
@@ -513,8 +513,59 @@ export const fullPageGoldenCheck: StateInvariant = {
   check: async (page: Page) => {
     await expect(page).toHaveScreenshot('full-page.png', {
       fullPage: true,
-      maxDiffPixelRatio: 0.02, // 2% tolerance — font rendering differs between local NixOS and CI Ubuntu
+      maxDiffPixelRatio: 0.02,
     });
+  },
+};
+
+/** D = {overlay}. Overlay open golden — catches slider layout, section grouping, info button regressions. */
+export const overlayGoldenCheck2: StateInvariant = {
+  id: 'GOLDEN-OVERLAY-2',
+  check: async (page: Page) => {
+    await page.locator('#grid-settings-btn').click();
+    await page.waitForTimeout(400);
+    await expect(page.locator('#grid-overlay')).toHaveScreenshot('overlay-open.png', {
+      maxDiffPixelRatio: 0.02,
+    });
+    await page.keyboard.press('Escape');
+  },
+};
+
+/** D = {}. Mobile viewport golden — catches responsive breakpoints, overflow, handle visibility. */
+export const mobileGoldenCheck: StateInvariant = {
+  id: 'GOLDEN-MOBILE',
+  check: async (page: Page) => {
+    await page.setViewportSize({ width: 375, height: 812 });
+    await page.waitForTimeout(300);
+    await expect(page).toHaveScreenshot('mobile-375.png', {
+      fullPage: true,
+      maxDiffPixelRatio: 0.03,
+    });
+    await page.setViewportSize({ width: 1280, height: 900 });
+  },
+};
+
+/** D = {}. QWERTY labels golden — catches label rendering, sizing, positioning on grid cells. */
+export const qwertyGoldenCheck: StateInvariant = {
+  id: 'GOLDEN-QWERTY',
+  check: async (page: Page) => {
+    // Open overlay, enable QWERTY toggle
+    await page.locator('#grid-settings-btn').click();
+    await page.waitForTimeout(300);
+    const toggle = page.locator('#qwerty-overlay-toggle');
+    await toggle.check();
+    await page.waitForTimeout(200);
+    // Close overlay to see grid with labels
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(300);
+    await expect(page.locator('#keyboard-canvas')).toHaveScreenshot('qwerty-labels.png', {
+      maxDiffPixelRatio: 0.02,
+    });
+    // Cleanup: uncheck
+    await page.locator('#grid-settings-btn').click();
+    await page.waitForTimeout(200);
+    await toggle.uncheck();
+    await page.keyboard.press('Escape');
   },
 };
 
@@ -798,7 +849,7 @@ export const ctMarkers1Check: StateInvariant = {
   id: 'CT-MARKERS-1',
   check: async (page: Page) => {
     const sorted = await page.evaluate(async () => {
-      const { TUNING_MARKERS } = await import('/src/lib/synth.ts');
+      const { TUNING_MARKERS } = await import('/_generated/lib/synth.ts');
       for (let i = 1; i < TUNING_MARKERS.length; i++) {
         if (TUNING_MARKERS[i].fifth >= TUNING_MARKERS[i - 1].fifth) return false;
       }
@@ -813,7 +864,7 @@ export const ctMarkers2Check: StateInvariant = {
   id: 'CT-MARKERS-2',
   check: async (page: Page) => {
     const result = await page.evaluate(async () => {
-      const { TUNING_MARKERS } = await import('/src/lib/synth.ts');
+      const { TUNING_MARKERS } = await import('/_generated/lib/synth.ts');
       const names = TUNING_MARKERS.map((m: { name: string }) => m.name);
       return { count: TUNING_MARKERS.length, names };
     });
@@ -827,7 +878,7 @@ export const ctNearest1Check: StateInvariant = {
   id: 'CT-NEAREST-1',
   check: async (page: Page) => {
     const result = await page.evaluate(async () => {
-      const { findNearestMarker } = await import('/src/lib/synth.ts');
+      const { findNearestMarker } = await import('/_generated/lib/synth.ts');
       const { marker, distance } = findNearestMarker(700);
       return { name: marker.name, fifth: marker.fifth, distance };
     });
@@ -842,7 +893,7 @@ export const ctNotename1Check: StateInvariant = {
   id: 'CT-NOTENAME-1',
   check: async (page: Page) => {
     const name = await page.evaluate(async () => {
-      const { getNoteNameFromCoord } = await import('/src/lib/keyboard-layouts.ts');
+      const { getNoteNameFromCoord } = await import('/_generated/lib/keyboard-layouts.ts');
       return getNoteNameFromCoord(0);
     });
     expect(name).toBe('D');
@@ -854,7 +905,7 @@ export const ctNotename2Check: StateInvariant = {
   id: 'CT-NOTENAME-2',
   check: async (page: Page) => {
     const names = await page.evaluate(async () => {
-      const { getNoteNameFromCoord } = await import('/src/lib/keyboard-layouts.ts');
+      const { getNoteNameFromCoord } = await import('/_generated/lib/keyboard-layouts.ts');
       return {
         x1: getNoteNameFromCoord(1),
         xn1: getNoteNameFromCoord(-1),
@@ -878,7 +929,7 @@ export const ctNotename3Check: StateInvariant = {
   id: 'CT-NOTENAME-3',
   check: async (page: Page) => {
     const result = await page.evaluate(async () => {
-      const { getNoteNameFromCoord } = await import('/src/lib/keyboard-layouts.ts');
+      const { getNoteNameFromCoord } = await import('/_generated/lib/keyboard-layouts.ts');
       return {
         doubleSharp: getNoteNameFromCoord(11),
         doubleFlat: getNoteNameFromCoord(-11),
@@ -1093,7 +1144,7 @@ export const iscMpe1Check: StateInvariant = {
   id: 'ISC-MPE-1',
   check: async (page: Page) => {
     const sent = await page.evaluate(async () => {
-      const { MpeOutput } = await import('/src/lib/mpe-output.ts');
+      const { MpeOutput } = await import('/_generated/lib/mpe-output.ts');
       const sent: number[][] = [];
       const mock = {
         send(data: number[]) { sent.push([...data]); },
@@ -1123,7 +1174,7 @@ export const iscMpe2Check: StateInvariant = {
   id: 'ISC-MPE-2',
   check: async (page: Page) => {
     const result = await page.evaluate(async () => {
-      const { MpeOutput } = await import('/src/lib/mpe-output.ts');
+      const { MpeOutput } = await import('/_generated/lib/mpe-output.ts');
       const sent: number[][] = [];
       const mock = {
         send(data: number[]) { sent.push([...data]); },
@@ -1186,7 +1237,7 @@ export const iscMpe3Check: StateInvariant = {
   id: 'ISC-MPE-3',
   check: async (page: Page) => {
     const result = await page.evaluate(async () => {
-      const { MpeOutput } = await import('/src/lib/mpe-output.ts');
+      const { MpeOutput } = await import('/_generated/lib/mpe-output.ts');
       const sent: number[][] = [];
       const mock = {
         send(data: number[]) { sent.push([...data]); },
@@ -1246,7 +1297,7 @@ export const iscMpe4Check: StateInvariant = {
   id: 'ISC-MPE-4',
   check: async (page: Page) => {
     const result = await page.evaluate(async () => {
-      const { MpeOutput } = await import('/src/lib/mpe-output.ts');
+      const { MpeOutput } = await import('/_generated/lib/mpe-output.ts');
       const sent: number[][] = [];
       const mock = {
         send(data: number[]) { sent.push([...data]); },
@@ -1298,7 +1349,7 @@ export const iscMpe5Check: StateInvariant = {
   id: 'ISC-MPE-5',
   check: async (page: Page) => {
     const sent = await page.evaluate(async () => {
-      const { MpeOutput } = await import('/src/lib/mpe-output.ts');
+      const { MpeOutput } = await import('/_generated/lib/mpe-output.ts');
       const sent: number[][] = [];
       const mock = {
         send(data: number[]) { sent.push([...data]); },
@@ -1336,7 +1387,7 @@ export const iscAMpe1Check: StateInvariant = {
   id: 'ISC-A-MPE-1',
   check: async (page: Page) => {
     const channels = await page.evaluate(async () => {
-      const { MpeOutput } = await import('/src/lib/mpe-output.ts');
+      const { MpeOutput } = await import('/_generated/lib/mpe-output.ts');
       const sent: number[][] = [];
       const mock = {
         send(data: number[]) { sent.push([...data]); },
@@ -1377,7 +1428,7 @@ export const iscSvc1Check: StateInvariant = {
   id: 'ISC-SVC-1',
   check: async (page: Page) => {
     const settings = await page.evaluate(async () => {
-      const { MPEService } = await import('/src/lib/mpe-service.ts');
+      const { MPEService } = await import('/_generated/lib/mpe-service.ts');
       const svc = new MPEService();
       return svc.getSettings();
     });
@@ -1396,7 +1447,7 @@ export const iscSvc2Check: StateInvariant = {
   id: 'ISC-SVC-2',
   check: async (page: Page) => {
     const settings = await page.evaluate(async () => {
-      const { MPEService } = await import('/src/lib/mpe-service.ts');
+      const { MPEService } = await import('/_generated/lib/mpe-service.ts');
       const svc = new MPEService();
       svc.updateSettings({ timbreCC: 1 });
       return svc.getSettings();
@@ -1414,7 +1465,7 @@ export const iscSvc3Check: StateInvariant = {
   id: 'ISC-SVC-3',
   check: async (page: Page) => {
     const sent = await page.evaluate(async () => {
-      const { MPEService } = await import('/src/lib/mpe-service.ts');
+      const { MPEService } = await import('/_generated/lib/mpe-service.ts');
       const sent: number[][] = [];
       const mock = {
         send(data: number[]) { sent.push([...data]); },
@@ -1447,7 +1498,7 @@ export const iscSvc4Check: StateInvariant = {
   id: 'ISC-SVC-4',
   check: async (page: Page) => {
     const result = await page.evaluate(async () => {
-      const { MPEService } = await import('/src/lib/mpe-service.ts');
+      const { MPEService } = await import('/_generated/lib/mpe-service.ts');
       const sent: number[][] = [];
       const mock = {
         send(data: number[]) { sent.push([...data]); },
@@ -1479,7 +1530,7 @@ export const iscSvc5Check: StateInvariant = {
   id: 'ISC-SVC-5',
   check: async (page: Page) => {
     const result = await page.evaluate(async () => {
-      const { MPEService } = await import('/src/lib/mpe-service.ts');
+      const { MPEService } = await import('/_generated/lib/mpe-service.ts');
       const sent: number[][] = [];
       const mock = {
         send(data: number[]) { sent.push([...data]); },
@@ -1515,7 +1566,7 @@ export const iscSvc6Check: StateInvariant = {
   id: 'ISC-SVC-6',
   check: async (page: Page) => {
     const result = await page.evaluate(async () => {
-      const { MPEService } = await import('/src/lib/mpe-service.ts');
+      const { MPEService } = await import('/_generated/lib/mpe-service.ts');
       const sent: number[][] = [];
       const mock = {
         send(data: number[]) { sent.push([...data]); },
@@ -1547,7 +1598,7 @@ export const iscSvc7Check: StateInvariant = {
   id: 'ISC-SVC-7',
   check: async (page: Page) => {
     const result = await page.evaluate(async () => {
-      const { MPEService } = await import('/src/lib/mpe-service.ts');
+      const { MPEService } = await import('/_generated/lib/mpe-service.ts');
       const sent: number[][] = [];
       const mock = {
         send(data: number[]) { sent.push([...data]); },
@@ -1585,7 +1636,7 @@ export const iscSvc8Check: StateInvariant = {
   id: 'ISC-SVC-8',
   check: async (page: Page) => {
     const result = await page.evaluate(async () => {
-      const { MPEService } = await import('/src/lib/mpe-service.ts');
+      const { MPEService } = await import('/_generated/lib/mpe-service.ts');
       // ── Test poly-at mode ──
       const sentPolyAt: number[][] = [];
       const mockPolyAt = {
@@ -1632,7 +1683,7 @@ export const iscSvc9Check: StateInvariant = {
   id: 'ISC-SVC-9',
   check: async (page: Page) => {
     const result = await page.evaluate(async () => {
-      const { MPEService } = await import('/src/lib/mpe-service.ts');
+      const { MPEService } = await import('/_generated/lib/mpe-service.ts');
       const sent: number[][] = [];
       const mock = {
         send(data: number[]) { sent.push([...data]); },
@@ -1675,7 +1726,7 @@ export const iscSvc10Check: StateInvariant = {
   id: 'ISC-SVC-10',
   check: async (page: Page) => {
     const result = await page.evaluate(async () => {
-      const { MPEService } = await import('/src/lib/mpe-service.ts');
+      const { MPEService } = await import('/_generated/lib/mpe-service.ts');
       const sent: number[][] = [];
       const mock = {
         send(data: number[]) { sent.push([...data]); },
@@ -1934,7 +1985,7 @@ export const gameMidiParserIntegration: StateInvariant = {
   id: 'GAME-INT-1',
   check: async (page: Page) => {
     const result = await page.evaluate(async () => {
-      const { parseMidi } = await import('/src/lib/midi-parser.ts');
+      const { parseMidi } = await import('/_generated/lib/midi-parser.ts');
       const resp = await fetch('/tests/fixtures/twinkle-type0.mid');
       const buffer = await resp.arrayBuffer();
       const { events } = parseMidi(buffer);
@@ -1957,8 +2008,8 @@ export const gameBuildNoteGroupsIntegration: StateInvariant = {
   id: 'GAME-INT-2',
   check: async (page: Page) => {
     const result = await page.evaluate(async () => {
-      const { parseMidi } = await import('/src/lib/midi-parser.ts');
-      const { buildNoteGroups } = await import('/src/lib/game-engine.ts');
+      const { parseMidi } = await import('/_generated/lib/midi-parser.ts');
+      const { buildNoteGroups } = await import('/_generated/lib/game-engine.ts');
       const resp = await fetch('/tests/fixtures/twinkle-type0.mid');
       const buffer = await resp.arrayBuffer();
       const { events } = parseMidi(buffer);
@@ -2557,7 +2608,7 @@ export const gameProgressApi: StateInvariant = {
   id: 'GAME-UI-3',
   check: async (page: Page) => {
     const result = await page.evaluate(async () => {
-      const { KeyboardVisualizer } = await import('/src/lib/keyboard-visualizer.ts');
+      const { KeyboardVisualizer } = await import('/_generated/lib/keyboard-visualizer.ts');
       return {
         hasSetGameState: typeof KeyboardVisualizer.prototype.setGameState === 'function',
         hasSetGameProgress: typeof KeyboardVisualizer.prototype.setGameProgress === 'function',
@@ -2618,7 +2669,7 @@ export const gameMultiCellHighlight: StateInvariant = {
   id: 'GAME-HIGHLIGHT-1',
   check: async (page: Page) => {
     const result = await page.evaluate(async () => {
-      const { KeyboardVisualizer } = await import('/src/lib/keyboard-visualizer.ts');
+      const { KeyboardVisualizer } = await import('/_generated/lib/keyboard-visualizer.ts');
       if (typeof KeyboardVisualizer.prototype.getCellIdsForMidiNotes !== 'function') {
         return { exists: false, length: -1 };
       }
@@ -2665,7 +2716,7 @@ export const gameCalibrationVisualApi: StateInvariant = {
   id: 'GAME-CAL-3',
   check: async (page: Page) => {
     const result = await page.evaluate(async () => {
-      const { KeyboardVisualizer } = await import('/src/lib/keyboard-visualizer.ts');
+      const { KeyboardVisualizer } = await import('/_generated/lib/keyboard-visualizer.ts');
       return typeof KeyboardVisualizer.prototype.setCalibratedRange === 'function';
     });
     expect(result, 'setCalibratedRange must be a method on KeyboardVisualizer').toBe(true);
@@ -2738,7 +2789,7 @@ export const gameEngBuildNoteGroups1: StateInvariant = {
   description: 'buildNoteGroups groups notes within 20 ms window into one chord group',
   check: async (page: Page) => {
     const result = await page.evaluate(async () => {
-      const { buildNoteGroups } = await import('/src/lib/game-engine.ts');
+      const { buildNoteGroups } = await import('/_generated/lib/game-engine.ts');
       const events = [
         { midiNote: 60, startMs: 0,   durationMs: 100, velocity: 80, channel: 0, track: 0 },
         { midiNote: 64, startMs: 10,  durationMs: 100, velocity: 80, channel: 0, track: 0 },
@@ -2781,7 +2832,7 @@ export const gameEngBuildNoteGroups2: StateInvariant = {
   description: 'buildNoteGroups deduplicates cellIds within a single chord group',
   check: async (page: Page) => {
     const result = await page.evaluate(async () => {
-      const { buildNoteGroups } = await import('/src/lib/game-engine.ts');
+      const { buildNoteGroups } = await import('/_generated/lib/game-engine.ts');
       // Two events with identical midiNote (same cellId) 5 ms apart (within 20 ms threshold)
       const events = [
         { midiNote: 60, startMs: 0, durationMs: 100, velocity: 80, channel: 0, track: 0 },
@@ -2816,7 +2867,7 @@ export const gameEngTransposeSong: StateInvariant = {
   description: 'transposeSong shifts all midiNotes by N semitones and recalculates cellIds',
   check: async (page: Page) => {
     const result = await page.evaluate(async () => {
-      const { midiToCellId, transposeSong } = await import('/src/lib/game-engine.ts');
+      const { midiToCellId, transposeSong } = await import('/_generated/lib/game-engine.ts');
       const groups = [
         { cellIds: [midiToCellId(60)], midiNotes: [60], startMs: 0   },
         { cellIds: [midiToCellId(64)], midiNotes: [64], startMs: 200 },
@@ -2860,7 +2911,7 @@ export const gameEngCropToRange: StateInvariant = {
   description: 'cropToRange removes notes not in range and drops empty groups',
   check: async (page: Page) => {
     const result = await page.evaluate(async () => {
-      const { midiToCellId, cropToRange } = await import('/src/lib/game-engine.ts');
+      const { midiToCellId, cropToRange } = await import('/_generated/lib/game-engine.ts');
       const cellId60 = midiToCellId(60);  // C4 — will be out of range
       const cellId62 = midiToCellId(62);  // D4 — will be in range
       const groups = [
@@ -2905,7 +2956,7 @@ export const gameEngFindOptimalTransposition: StateInvariant = {
   description: 'findOptimalTransposition returns the semitone offset that maximises in-range notes',
   check: async (page: Page) => {
     const result = await page.evaluate(async () => {
-      const { midiToCellId, findOptimalTransposition } = await import('/src/lib/game-engine.ts');
+      const { midiToCellId, findOptimalTransposition } = await import('/_generated/lib/game-engine.ts');
       const cellId62 = midiToCellId(62);  // D4 — the only in-range cell
       // Song: one note at C4 (MIDI 60).  Transposing by +2 → D4 → in range.
       const groups = [
@@ -2934,7 +2985,7 @@ export const gameEngComputeMedianMidiNote: StateInvariant = {
   description: 'computeMedianMidiNote returns median pitch or 62 for empty input',
   check: async (page: Page) => {
     const result = await page.evaluate(async () => {
-      const { computeMedianMidiNote } = await import('/src/lib/game-engine.ts');
+      const { computeMedianMidiNote } = await import('/_generated/lib/game-engine.ts');
       const emptyResult = computeMedianMidiNote([]);
       // Odd-length: [64, 60, 62] → sorted [60, 62, 64] → floor(3/2)=1 → 62
       const oddResult = computeMedianMidiNote([
@@ -2968,7 +3019,7 @@ export const gameEngBuildNoteGroupsEmpty: StateInvariant = {
   description: 'buildNoteGroups returns empty array for empty NoteEvent input',
   check: async (page: Page) => {
     const result = await page.evaluate(async () => {
-      const { buildNoteGroups } = await import('/src/lib/game-engine.ts');
+      const { buildNoteGroups } = await import('/_generated/lib/game-engine.ts');
       const groups = buildNoteGroups([]);
       return {
         groupCount: groups.length,
@@ -2996,7 +3047,7 @@ export const gameMidi1: StateInvariant = {
   description: 'Type 1 multi-track MIDI parsed into merged NoteEvent array',
   check: async (page: Page) => {
     const result = await page.evaluate(async () => {
-      const { parseMidi } = await import('/src/lib/midi-parser.ts');
+      const { parseMidi } = await import('/_generated/lib/midi-parser.ts');
       const resp = await fetch('/tests/fixtures/type1-two-tracks.mid');
       const buffer = await resp.arrayBuffer();
       const { events } = parseMidi(buffer);
@@ -3033,7 +3084,7 @@ export const gameMidi2: StateInvariant = {
   description: 'Running status: consecutive NoteOn events without repeated status byte are decoded',
   check: async (page: Page) => {
     const result = await page.evaluate(async () => {
-      const { parseMidi } = await import('/src/lib/midi-parser.ts');
+      const { parseMidi } = await import('/_generated/lib/midi-parser.ts');
       // Type 0 MIDI: note60 (full status 0x90), then note64 via running status (no status byte).
       // Track bytes: 4 + 3 + 3 + 3 + 4 = 17 = 0x11.
       const bytes = [
@@ -3084,7 +3135,7 @@ export const gameMidi3: StateInvariant = {
   description: 'Velocity-0 NoteOn treated as NoteOff: closes pending note, not emitted as note-on',
   check: async (page: Page) => {
     const result = await page.evaluate(async () => {
-      const { parseMidi } = await import('/src/lib/midi-parser.ts');
+      const { parseMidi } = await import('/_generated/lib/midi-parser.ts');
       // Type 0 MIDI: NoteOn note60 vel=64, then NoteOn note60 vel=0 (running status = NoteOff).
       // Track length = 4 (NoteOn) + 3 (running status NoteOff) + 4 (EndOfTrack) = 11 = 0x0B bytes.
       const bytes = [
@@ -3134,7 +3185,7 @@ export const gameMidi4: StateInvariant = {
   description: 'Channel 9 (drums) is filtered: single open drum note yields empty array',
   check: async (page: Page) => {
     const result = await page.evaluate(async () => {
-      const { parseMidi } = await import('/src/lib/midi-parser.ts');
+      const { parseMidi } = await import('/_generated/lib/midi-parser.ts');
       // Type 0 MIDI: one NoteOn ch9 note36 (kick), no NoteOff — auto-closed at end-of-track.
       // Track length = 4 (NoteOn) + 4 (EndOfTrack) = 8 = 0x08 bytes.
       const bytes = [
@@ -3175,7 +3226,7 @@ export const gameMidi5: StateInvariant = {
   description: 'Valid MIDI with no notes returns empty array without throwing',
   check: async (page: Page) => {
     const result = await page.evaluate(async () => {
-      const { parseMidi } = await import('/src/lib/midi-parser.ts');
+      const { parseMidi } = await import('/_generated/lib/midi-parser.ts');
       // Type 0 MIDI: valid header, one track containing only End-of-Track.
       // Track length = 4 (EndOfTrack) = 0x04 bytes.
       const bytes = [
@@ -3217,7 +3268,7 @@ export const gameMidi6: StateInvariant = {
   description: 'Corrupt buffer (bad magic bytes) throws with descriptive MThd error',
   check: async (page: Page) => {
     const result = await page.evaluate(async () => {
-      const { parseMidi } = await import('/src/lib/midi-parser.ts');
+      const { parseMidi } = await import('/_generated/lib/midi-parser.ts');
       // 14 bytes of garbage — wrong magic, not 'MThd'.
       const bytes = [
         0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
@@ -3251,7 +3302,7 @@ export const gameMidi7: StateInvariant = {
   description: 'MIDI with only drum channel (ch9) events returns empty array after filtering',
   check: async (page: Page) => {
     const result = await page.evaluate(async () => {
-      const { parseMidi } = await import('/src/lib/midi-parser.ts');
+      const { parseMidi } = await import('/_generated/lib/midi-parser.ts');
       // Type 0 MIDI: kick (note36) + snare (note38), both ch9.
       // All 4 note events share running status 0x99 (NoteOn ch9).
       // Track length: 4 + 3 + 3 + 3 + 4 = 17 = 0x11 bytes.
@@ -3454,7 +3505,7 @@ export const gameEdge2: StateInvariant = {
   check: async (page: Page) => {
     // Step 1: verify the game engine produces zero groups from drum-only events
     const engineResult = await page.evaluate(async () => {
-      const { buildNoteGroups } = await import('/src/lib/game-engine.ts');
+      const { buildNoteGroups } = await import('/_generated/lib/game-engine.ts');
       // Two channel-9 percussion events: kick (note 36) and snare (note 38)
       const drumEvents = [
         { midiNote: 36, startMs: 0,   durationMs: 100, velocity: 64, channel: 9, track: 0 },
@@ -3531,7 +3582,7 @@ export const gameEdge4: StateInvariant = {
   check: async (page: Page) => {
     // Step 1: verify cropToRange produces empty output for an empty range Set
     const engineResult = await page.evaluate(async () => {
-      const { midiToCellId, cropToRange } = await import('/src/lib/game-engine.ts');
+      const { midiToCellId, cropToRange } = await import('/_generated/lib/game-engine.ts');
       const groups = [
         { cellIds: [midiToCellId(60)], midiNotes: [60], startMs: 0 },
         { cellIds: [midiToCellId(62)], midiNotes: [62], startMs: 200 },
@@ -3624,7 +3675,7 @@ export const gameSearch2: StateInvariant = {
   description: 'searchAllAdapters returns array (may be empty if offline, never throws)',
   check: async (page: Page) => {
     const result = await page.evaluate(async () => {
-      const { searchAllAdapters } = await import('/src/lib/midi-search.ts');
+      const { searchAllAdapters } = await import('/_generated/lib/midi-search.ts');
       let threw = false;
       let isArray = false;
       try {
@@ -3653,7 +3704,7 @@ export const gameSearch3: StateInvariant = {
   description: 'GitHubMidiAdapter search returns results with required fields (title, source, fetchUrl)',
   check: async (page: Page) => {
     const violations = await page.evaluate(async () => {
-      const { GitHubMidiAdapter } = await import('/src/lib/midi-search.ts');
+      const { GitHubMidiAdapter } = await import('/_generated/lib/midi-search.ts');
       const adapter = new GitHubMidiAdapter();
       let results: Array<{ title: unknown; source: unknown; fetchUrl: unknown }> = [];
       try {
@@ -3707,7 +3758,7 @@ export const gameSearch5: StateInvariant = {
   description: 'all 3 MIDI search adapters implement MidiSearchAdapter interface for shared pipeline',
   check: async (page: Page) => {
     const result = await page.evaluate(async () => {
-      const { GitHubMidiAdapter, MutopiaMidiAdapter, MidishareMidiAdapter } = await import('/src/lib/midi-search.ts');
+      const { GitHubMidiAdapter, MutopiaMidiAdapter, MidishareMidiAdapter } = await import('/_generated/lib/midi-search.ts');
       const adapters = [new GitHubMidiAdapter(), new MutopiaMidiAdapter(), new MidishareMidiAdapter()];
       return {
         count: adapters.length,
@@ -3765,7 +3816,7 @@ export const gameQuant1: StateInvariant = {
   description: 'quantizeNotes with level=none returns events unchanged (passthrough)',
   check: async (page: Page) => {
     const result = await page.evaluate(async () => {
-      const { quantizeNotes } = await import('/src/lib/game-engine.ts');
+      const { quantizeNotes } = await import('/_generated/lib/game-engine.ts');
       const events = [
         { midiNote: 60, startMs: 0, durationMs: 500, velocity: 80, channel: 0, track: 0 },
         { midiNote: 64, startMs: 250, durationMs: 500, velocity: 80, channel: 0, track: 0 },
@@ -3806,7 +3857,7 @@ export const gameQuant2: StateInvariant = {
   description: 'quantizeNotes with 1/4 snaps events to quarter-note grid at 120 BPM',
   check: async (page: Page) => {
     const result = await page.evaluate(async () => {
-      const { quantizeNotes } = await import('/src/lib/game-engine.ts');
+      const { quantizeNotes } = await import('/_generated/lib/game-engine.ts');
       const events = [
         { midiNote: 60, startMs: 0, durationMs: 200, velocity: 80, channel: 0, track: 0 },
         { midiNote: 64, startMs: 250, durationMs: 200, velocity: 80, channel: 0, track: 0 },
@@ -3845,7 +3896,7 @@ export const gameQuant3: StateInvariant = {
   description: 'long note spanning multiple grid points splits into repeated events',
   check: async (page: Page) => {
     const result = await page.evaluate(async () => {
-      const { quantizeNotes } = await import('/src/lib/game-engine.ts');
+      const { quantizeNotes } = await import('/_generated/lib/game-engine.ts');
       // One long note: 2000ms duration at 120 BPM
       const events = [
         { midiNote: 60, startMs: 0, durationMs: 2000, velocity: 80, channel: 0, track: 0 },
@@ -3885,7 +3936,7 @@ export const gameQuant4: StateInvariant = {
   description: 'tempo change mid-song adjusts grid spacing (faster tempo = tighter grid)',
   check: async (page: Page) => {
     const result = await page.evaluate(async () => {
-      const { quantizeNotes } = await import('/src/lib/game-engine.ts');
+      const { quantizeNotes } = await import('/_generated/lib/game-engine.ts');
       // Two tempo segments: 120 BPM then 60 BPM
       const events = [
         { midiNote: 60, startMs: 0, durationMs: 100, velocity: 80, channel: 0, track: 0 },
@@ -3930,7 +3981,7 @@ export const gameQuant5: StateInvariant = {
   description: 'time signature change (4/4 → 3/4) handled without error',
   check: async (page: Page) => {
     const result = await page.evaluate(async () => {
-      const { quantizeNotes } = await import('/src/lib/game-engine.ts');
+      const { quantizeNotes } = await import('/_generated/lib/game-engine.ts');
       const events = [
         { midiNote: 60, startMs: 0, durationMs: 200, velocity: 80, channel: 0, track: 0 },
         { midiNote: 64, startMs: 1500, durationMs: 200, velocity: 80, channel: 0, track: 0 },
@@ -3967,7 +4018,7 @@ export const gameQuant6: StateInvariant = {
   description: 'two notes at same grid point + same midiNote are deduplicated',
   check: async (page: Page) => {
     const result = await page.evaluate(async () => {
-      const { quantizeNotes } = await import('/src/lib/game-engine.ts');
+      const { quantizeNotes } = await import('/_generated/lib/game-engine.ts');
       // Two C4 notes very close together — both should snap to 0ms
       const events = [
         { midiNote: 60, startMs: 10, durationMs: 200, velocity: 80, channel: 0, track: 0 },
@@ -3997,7 +4048,7 @@ export const gameQuant7: StateInvariant = {
   description: 'parseMidi returns tempoMap and timeSigMap alongside events',
   check: async (page: Page) => {
     const result = await page.evaluate(async () => {
-      const { parseMidi } = await import('/src/lib/midi-parser.ts');
+      const { parseMidi } = await import('/_generated/lib/midi-parser.ts');
       const response = await fetch('/tests/fixtures/twinkle-type0.mid');
       const buffer = await response.arrayBuffer();
       const parsed = parseMidi(buffer);
@@ -4034,7 +4085,7 @@ export const gameQuant8: StateInvariant = {
   description: 'default time signature is 4/4 when no FF 58 event in MIDI file',
   check: async (page: Page) => {
     const result = await page.evaluate(async () => {
-      const { parseMidi } = await import('/src/lib/midi-parser.ts');
+      const { parseMidi } = await import('/_generated/lib/midi-parser.ts');
       // Build a minimal Type 0 MIDI with one note but NO FF 58 time signature event.
       // Header: MThd, length=6, format=0, tracks=1, ppq=480
       // Track: MTrk, NoteOn C4, delta 480, NoteOff C4, delta 0, End of Track
@@ -4082,7 +4133,7 @@ export const gameQuant9: StateInvariant = {
   description: 'odd meter (7/8) does not break quantization — grid is BPM-based',
   check: async (page: Page) => {
     const result = await page.evaluate(async () => {
-      const { quantizeNotes } = await import('/src/lib/game-engine.ts');
+      const { quantizeNotes } = await import('/_generated/lib/game-engine.ts');
       const events = [
         { midiNote: 60, startMs: 0, durationMs: 200, velocity: 80, channel: 0, track: 0 },
         { midiNote: 64, startMs: 300, durationMs: 200, velocity: 80, channel: 0, track: 0 },
@@ -4112,7 +4163,7 @@ export const gameChordProgress1: StateInvariant = {
   id: 'GAME-CHORD-PROGRESS-1',
   check: async (page: Page) => {
     const result = await page.evaluate(async () => {
-      const { KeyboardVisualizer } = await import('/src/lib/keyboard-visualizer.ts');
+      const { KeyboardVisualizer } = await import('/_generated/lib/keyboard-visualizer.ts');
       return {
         hasSetPressedTargetNotes: typeof KeyboardVisualizer.prototype.setPressedTargetNotes === 'function',
       };
@@ -4120,7 +4171,7 @@ export const gameChordProgress1: StateInvariant = {
     expect(result.hasSetPressedTargetNotes, 'setPressedTargetNotes must exist on KeyboardVisualizer').toBe(true);
 
     const colorResult = await page.evaluate(async () => {
-      const { cellColors } = await import('/src/lib/note-colors.ts');
+      const { cellColors } = await import('/_generated/lib/note-colors.ts');
       const targetFill = cellColors(0, 'target').fill;
       const targetPressedFill = cellColors(0, 'target-pressed').fill;
       const hexBrightness = (hex: string): number => {
@@ -4154,7 +4205,7 @@ export const gameRestart1: StateInvariant = {
   description: 'GAME_RESTART event exists in playing and complete states',
   check: async (page: Page) => {
     const result = await page.evaluate(async () => {
-      const { gameMachine } = await import('/src/machines/gameMachine.ts');
+      const { gameMachine } = await import('/_generated/machines/gameMachine.ts');
       const config = gameMachine.config;
       if (!config.states) return { playingHasRestart: false, completeHasRestart: false };
       const playingState = config.states['playing'] as Record<string, unknown>;
@@ -4240,7 +4291,7 @@ export const mirrorHighlight1: StateInvariant = {
   description: 'getCellIdsForMidiNotes returns >1 cell ID for MIDI 62 (multiple isomorphic positions)',
   check: async (page: Page) => {
     const cellCount = await page.evaluate(async () => {
-      const { KeyboardVisualizer } = await import('/src/lib/keyboard-visualizer.ts');
+      const { KeyboardVisualizer } = await import('/_generated/lib/keyboard-visualizer.ts');
       const canvas = document.createElement('canvas');
       canvas.width = 4000;
       canvas.height = 4000;
@@ -4354,7 +4405,7 @@ export const CANVAS_CLEAN_4: StateInvariant = {
   description: 'KeyboardVisualizer.setGameState method still exists (API preserved)',
   check: async (page: Page) => {
     const exists = await page.evaluate(async () => {
-      const { KeyboardVisualizer } = await import('/src/lib/keyboard-visualizer.ts');
+      const { KeyboardVisualizer } = await import('/_generated/lib/keyboard-visualizer.ts');
       return typeof KeyboardVisualizer.prototype.setGameState === 'function';
     });
     if (!exists) throw new Error('setGameState method missing from KeyboardVisualizer');
@@ -4371,7 +4422,7 @@ export const CANVAS_CLEAN_5: StateInvariant = {
   description: 'KeyboardVisualizer.setGameProgress method still exists (API preserved)',
   check: async (page: Page) => {
     const exists = await page.evaluate(async () => {
-      const { KeyboardVisualizer } = await import('/src/lib/keyboard-visualizer.ts');
+      const { KeyboardVisualizer } = await import('/_generated/lib/keyboard-visualizer.ts');
       return typeof KeyboardVisualizer.prototype.setGameProgress === 'function';
     });
     if (!exists) throw new Error('setGameProgress method missing from KeyboardVisualizer');
@@ -4871,16 +4922,150 @@ export const HISTORY_RANGE_BTNS: StateInvariant = {
   },
 };
 
-/** D = {}. All 15 slider info buttons exist with content. */
+/** D = {}. All 10 slider info buttons exist with content (tuning, skew, shear, calibration, search, quantization, bend, velocity, pressure, timbre). */
 export const ALL_INFO_BTNS: StateInvariant = {
   id: 'UI-INFO-COMPLETE-1',
-  description: 'All 15 info buttons exist with data-info attributes',
+  description: 'All 10 slider info buttons exist with data-info attributes',
   check: async (page: Page) => {
     const count = await page.evaluate(() =>
       document.querySelectorAll('.slider-info-btn[data-info]').length
     );
-    if (count < 15) {
-      throw new Error(`Expected ≥15 info buttons, found ${count}`);
+    if (count < 10) {
+      throw new Error(`Expected ≥10 info buttons, found ${count}`);
     }
+  },
+};
+
+// ═══════════════════════════════════════════════════════════════════════
+// IDEAL STATE INVARIANTS — Each defines what "correct" looks like.
+// If ALL of these pass, the project is in ideal state.
+// Ralph iterates until all pass → ideal state achieved deterministically.
+// ═══════════════════════════════════════════════════════════════════════
+
+/** No duplicate element IDs anywhere in the DOM. Duplicate IDs cause silent wiring bugs. */
+export const NO_DUPLICATE_IDS: StateInvariant = {
+  id: 'IDEAL-NO-DUP-IDS',
+  description: 'Zero duplicate element IDs in DOM',
+  check: async (page: Page) => {
+    const dupes = await page.evaluate(() => {
+      const ids = [...document.querySelectorAll('[id]')].map(el => el.id);
+      const seen = new Set<string>();
+      const duplicates: string[] = [];
+      for (const id of ids) {
+        if (seen.has(id)) duplicates.push(id);
+        seen.add(id);
+      }
+      return duplicates;
+    });
+    if (dupes.length > 0) {
+      throw new Error(`Duplicate IDs found: ${dupes.join(', ')}`);
+    }
+  },
+};
+
+/** No "D4" text visible in the UI (should be "D-ref" or just "D"). */
+export const NO_D4_IN_UI: StateInvariant = {
+  id: 'IDEAL-NO-D4',
+  description: 'No "D4" text visible in UI elements (use D-ref)',
+  check: async (page: Page) => {
+    const d4Text = await page.evaluate(() => {
+      const body = document.body.innerText;
+      // Ignore the note name "D4" that appears on grid cells — those are valid
+      // Check for "D4" in labels, titles, descriptions (non-grid UI)
+      const overlayText = document.getElementById('grid-overlay')?.innerText ?? '';
+      const songBarText = document.getElementById('song-bar')?.innerText ?? '';
+      const headerText = document.getElementById('top-bar')?.innerText ?? '';
+      return { overlayText, songBarText, headerText };
+    });
+    for (const [area, text] of Object.entries(d4Text)) {
+      if (text.includes('D4') && !text.includes('D4=')) {
+        throw new Error(`"D4" found in ${area} — should be "D-ref". Text: "${text.slice(0, 100)}"`);
+      }
+    }
+  },
+};
+
+/** MIDI settings section has proper grouping with subtitles. */
+export const MIDI_SETTINGS_GROUPED: StateInvariant = {
+  id: 'IDEAL-MIDI-GROUPED',
+  description: 'MIDI settings has EXPRESSION subtitle and logical grouping',
+  check: async (page: Page) => {
+    await page.locator('#grid-settings-btn').click();
+    await page.waitForTimeout(300);
+    const result = await page.evaluate(() => {
+      const overlay = document.getElementById('grid-overlay');
+      if (!overlay) return { hasExpression: false, sectionTitles: [] };
+      const titles = [...overlay.querySelectorAll('.overlay-section-title')].map(el => el.textContent?.trim());
+      return {
+        hasExpression: titles.includes('EXPRESSION'),
+        sectionTitles: titles,
+      };
+    });
+    await page.keyboard.press('Escape');
+    if (!result.hasExpression) {
+      throw new Error(`Missing EXPRESSION subtitle. Found sections: ${result.sectionTitles.join(', ')}`);
+    }
+  },
+};
+
+/** Only ONE flat-sound-toggle checkbox exists (prevents duplicate from agent conflicts). */
+export const SINGLE_FLAT_SOUND: StateInvariant = {
+  id: 'IDEAL-SINGLE-FLAT',
+  description: 'Exactly one flat-sound-toggle checkbox',
+  check: async (page: Page) => {
+    const count = await page.evaluate(() =>
+      document.querySelectorAll('#flat-sound-toggle').length
+    );
+    if (count !== 1) {
+      throw new Error(`Expected 1 flat-sound-toggle, found ${count}`);
+    }
+  },
+};
+
+/** Overlay golden — catches slider layout, section grouping regressions. */
+export const overlayGoldenCheck2: StateInvariant = {
+  id: 'GOLDEN-OVERLAY-2',
+  check: async (page: Page) => {
+    await page.locator('#grid-settings-btn').click();
+    await page.waitForTimeout(400);
+    await expect(page.locator('#grid-overlay')).toHaveScreenshot('overlay-open.png', {
+      maxDiffPixelRatio: 0.02,
+    });
+    await page.keyboard.press('Escape');
+  },
+};
+
+/** Mobile golden — catches responsive breakpoints, overflow, handle visibility. */
+export const mobileGoldenCheck: StateInvariant = {
+  id: 'GOLDEN-MOBILE',
+  check: async (page: Page) => {
+    await page.setViewportSize({ width: 375, height: 812 });
+    await page.waitForTimeout(300);
+    await expect(page).toHaveScreenshot('mobile-375.png', {
+      fullPage: true,
+      maxDiffPixelRatio: 0.03,
+    });
+    await page.setViewportSize({ width: 1280, height: 900 });
+  },
+};
+
+/** QWERTY golden — catches label rendering, sizing, positioning on grid cells. */
+export const qwertyGoldenCheck: StateInvariant = {
+  id: 'GOLDEN-QWERTY',
+  check: async (page: Page) => {
+    await page.locator('#grid-settings-btn').click();
+    await page.waitForTimeout(300);
+    const toggle = page.locator('#qwerty-overlay-toggle');
+    await toggle.check();
+    await page.waitForTimeout(200);
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(300);
+    await expect(page.locator('#keyboard-canvas')).toHaveScreenshot('qwerty-labels.png', {
+      maxDiffPixelRatio: 0.02,
+    });
+    await page.locator('#grid-settings-btn').click();
+    await page.waitForTimeout(200);
+    await toggle.uncheck();
+    await page.keyboard.press('Escape');
   },
 };

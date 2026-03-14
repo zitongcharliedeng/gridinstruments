@@ -8,7 +8,7 @@ Parses the binary Standard MIDI File format: reads the MThd header, iterates MTr
 
 Public interfaces for note events, tempo events, time signature events, and the parsed output. Internal interfaces for tempo/time-sig entries, tick-based notes, and pending (open) notes.
 
-``` {.typescript file=src/lib/midi-parser.ts}
+``` {.typescript file=_generated/lib/midi-parser.ts}
 /** Inline MIDI file parser — no npm dependencies. Type 0 + Type 1, running status, drum filter. */
 
 export interface NoteEvent {
@@ -84,7 +84,7 @@ interface PendingNote {
 
 Variable-length integer decoding, tick-to-millisecond conversion, 24-bit read, and pending note closure.
 
-``` {.typescript file=src/lib/midi-parser.ts}
+``` {.typescript file=_generated/lib/midi-parser.ts}
 /** Variable-length integer encoding used throughout MIDI binary format. */
 function readVarLen(view: DataView, offset: number): { value: number; bytesRead: number } {
   let value = 0;
@@ -139,7 +139,7 @@ function closePending(pending: Map<string, PendingNote>, key: string, endTick: n
 
 Iterates all events in a single MTrk chunk: delta times, running status, meta events (tempo, time signature, end-of-track), sysex, system messages, and channel voice messages (Note On/Off, Aftertouch, CC, Program Change, Channel Pressure, Pitch Bend).
 
-``` {.typescript file=src/lib/midi-parser.ts}
+``` {.typescript file=_generated/lib/midi-parser.ts}
 function parseTrack(
   view: DataView,
   trackStart: number,
@@ -279,7 +279,7 @@ function parseTrack(
 
 Validates the MThd header, iterates MTrk chunks, converts tick notes to millisecond events, filters drums (channel 9), sorts by startMs, and builds the exported tempo and time signature maps.
 
-``` {.typescript file=src/lib/midi-parser.ts}
+``` {.typescript file=_generated/lib/midi-parser.ts}
 /**
  * Parse a Standard MIDI File (Type 0 or Type 1) from an ArrayBuffer.
  * Returns ParsedMidi with events sorted by startMs, plus tempo and time signature maps.

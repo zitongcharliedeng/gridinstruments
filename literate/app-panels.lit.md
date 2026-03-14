@@ -2,7 +2,7 @@
 
 Panel resize handle setup — drag-to-resize for visualiser and pedals panels using XState panel machine actors.
 
-``` {.typescript file=src/app-panels.ts}
+``` {.typescript file=_generated/app-panels.ts}
 /**
  * Panel resize handle setup — drag-to-resize for visualiser and pedals panels.
  */

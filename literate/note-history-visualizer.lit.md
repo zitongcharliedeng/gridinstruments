@@ -4,7 +4,7 @@ Three-panel canvas strip rendered at 60fps: piano keys strip (left), Synthesia-s
 
 ## Imports and Utilities
 
-``` {.typescript file=src/lib/note-history-visualizer.ts}
+``` {.typescript file=_generated/lib/note-history-visualizer.ts}
 /**
  * Note History Visualizer — Top Panel
  *
