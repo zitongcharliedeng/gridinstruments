@@ -104,8 +104,8 @@ export class Synth {
   
   // Tuning parameters (can be changed live!)
   private generator: [number, number] = [700, 1200]; // [fifth, octave] in cents
-  private baseFreq = 293.66; // D4 base frequency
-  private _d4Hz = 293.66; // D4 reference frequency
+  private baseFreq = 293.66; // D-ref base frequency (default: standard D at A440)
+  private _d4Hz = 293.66; // D reference frequency — adjustable, not locked to octave 4
   
   // Envelope parameters
   private attackTime = 0.01;
@@ -215,13 +215,14 @@ export class Synth {
     }
   }
   
-  // === D4 Reference Frequency ===
-  
+  // === D Reference Frequency ===
+
   /**
-   * Set D4 reference frequency (default 293.66Hz)
-   * This updates baseFreq and all playing notes
-   * 
-   * D4 is the center note of the DCompose layout (coordinate [0,0])
+   * Set D reference frequency (default 293.66Hz — standard D at A440).
+   * This updates baseFreq and all playing notes.
+   *
+   * D-ref is the center note of the DCompose layout (coordinate [0,0]).
+   * Not locked to any specific octave — adjustable across the full range.
    */
   setD4Hz(hz: number): void {
     this._d4Hz = Math.max(100, Math.min(2000, hz));
@@ -239,8 +240,7 @@ export class Synth {
   }
   
   /**
-   * Recalculate base frequency (currently unused - will be updated in TASK 12)
-   * Sets baseFreq to the current D4 reference — all note frequencies derive from this.
+   * Sets baseFreq to the current D-ref frequency — all note frequencies derive from this.
    */
   private recalculateBaseFreq(): void {
     this.baseFreq = this._d4Hz;
@@ -353,11 +353,10 @@ export class Synth {
   // === Note Playing ===
   
   /**
-   * Calculate frequency from isomorphic coordinates
-   * ALL frequencies are relative to D4 (baseFreq = _d4Hz)
-   * - Doubling D4 Hz = up 1 octave (multiply by 2)
-   * - Halving D4 Hz = down 1 octave (divide by 2)
-   * - Formula: freq = D4 * 2^(cents/1200)
+   * Calculate frequency from isomorphic coordinates.
+   * ALL frequencies are relative to D-ref (baseFreq).
+   * - Formula: freq = D-ref * 2^(cents/1200)
+   * - Coordinate (0,0) = D-ref frequency exactly
    */
   private getFrequency(x: number, y: number, octaveOffset = 0): number {
     const cents = y * this.generator[1] + x * this.generator[0] + octaveOffset * 1200;
