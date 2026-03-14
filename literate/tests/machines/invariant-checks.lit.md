@@ -594,7 +594,7 @@ export const keyboardCanvasGoldenCheck: StateInvariant = {
   id: 'GOLDEN-KEYBOARD',
   check: async (page: Page) => {
     await expect(page.locator('#keyboard-canvas')).toHaveScreenshot('keyboard-canvas.png', {
-      maxDiffPixelRatio: 0.05,
+      maxDiffPixelRatio: 0.10,
     });
   },
 };

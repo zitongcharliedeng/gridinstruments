@@ -46,7 +46,6 @@ interface Voice {
 
 ```
 
-
 ## Tuning Markers
 
 Reference points for the continuous fifth-size slider. The slider itself is
@@ -68,9 +67,6 @@ systems:
 | `tet19` | 694.74 | [19-TET](https://en.xen.wiki/w/19edo) | 19 equal divisions |
 | `tet7` | 685.71 | [7-TET](https://en.xen.wiki/w/7edo) | Thai, Mandinka balafon |
 
-`findNearestMarker` performs a linear scan to snap a continuous slider value to
-the closest named tuning. This drives the UI label that appears on the slider.
-
 ``` {.typescript file=_generated/lib/synth.ts}
 /**
  * Reference tuning markers for the continuous slider
@@ -88,6 +84,17 @@ export const TUNING_MARKERS: { id: string; name: string; fifth: number; descript
   { id: 'tet7', name: '7', fifth: 685.71, description: '7-TET · Thai, Mandinka balafon' },
 ];
 
+```
+
+### Slider Range and Nearest-Marker Lookup
+
+The slider range `[683, 722]` is chosen to tightly cover all presets from
+7-TET (685.71 cents) to 5-TET (720 cents) with a small margin on each side.
+
+`findNearestMarker` performs a linear scan to snap a continuous slider value to
+the closest named tuning. This drives the UI label that appears on the slider.
+
+``` {.typescript file=_generated/lib/synth.ts}
 // Slider range — tightly covers all TET presets (7-TET=685.71¢ to 5-TET=720¢)
 export const FIFTH_MIN = 683;  // Just below 7-TET (685.71¢)
 export const FIFTH_MAX = 722;  // Just above 5-TET (720¢)
@@ -114,22 +121,13 @@ export function findNearestMarker(fifthCents: number): { marker: typeof TUNING_M
 
 ```
 
-
-## Synth Class -- State and Audio Graph Initialization
+## Synth Class -- State Fields
 
 The `Synth` class manages an
 [AudioContext](https://developer.mozilla.org/en-US/docs/Web/API/AudioContext),
 a master gain node, a highshelf EQ
 [BiquadFilterNode](https://developer.mozilla.org/en-US/docs/Web/API/BiquadFilterNode),
 and a `Map<string, Voice>` of active voices.
-
-The audio signal chain is:
-
-    oscillators --> per-voice gain --> masterGain --> eqFilter --> destination
-
-Initialization is deferred to the first user gesture (`initSync`) because
-mobile browsers require a user interaction before creating an AudioContext
-([autoplay policy](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API/Best_practices#autoplay_policy)).
 
 The tuning state is a two-element generator `[fifth, octave]` in
 [cents](https://en.wikipedia.org/wiki/Cent_(music)). The default `[700, 1200]`
@@ -169,6 +167,21 @@ export class Synth {
   
   // AudioContext will be created on first user interaction (initSync)
   
+```
+
+### Audio Graph Initialization
+
+The audio signal chain is:
+
+    oscillators --> per-voice gain --> masterGain --> eqFilter --> destination
+
+Initialization is deferred to the first user gesture (`initSync`) because
+mobile browsers require a user interaction before creating an AudioContext
+([autoplay policy](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API/Best_practices#autoplay_policy)).
+`tryUnlock` provides a synchronous entry point safe for iOS Safari, while
+`init` is the async variant.
+
+``` {.typescript file=_generated/lib/synth.ts}
   private initSync(): void {
     if (this.context) return;
 
@@ -211,7 +224,6 @@ export class Synth {
   
 ```
 
-
 ## Waveform Selection
 
 The waveform can be changed at any time. When set, all currently sounding
@@ -236,17 +248,12 @@ immediately -- no click, no gap.
   
 ```
 
-
 ## Live Tuning -- Generator Control
 
 The [regular temperament](https://en.xen.wiki/w/Regular_temperament) generator
 is the pair `[fifth, octave]` measured in cents. Changing it re-tunes every
 active voice instantly by recalculating frequencies from stored grid
 coordinates.
-
-`setFifth` is a convenience wrapper that keeps the octave at 1200 cents
-(standard 2:1 ratio) and only varies the fifth. `setTuningMarker` jumps to a
-named preset from the `TUNING_MARKERS` table above.
 
 ``` {.typescript file=_generated/lib/synth.ts}
   // === Tuning (Generator) ===
@@ -272,6 +279,15 @@ named preset from the `TUNING_MARKERS` table above.
     return [this.generator[0], this.generator[1]];
   }
   
+```
+
+### Fifth Shortcuts
+
+`setFifth` is a convenience wrapper that keeps the octave at 1200 cents
+(standard 2:1 ratio) and only varies the fifth. `setTuningMarker` jumps to a
+named preset from the `TUNING_MARKERS` table above.
+
+``` {.typescript file=_generated/lib/synth.ts}
   /**
    * Set just the fifth size (keeping octave at 1200)
    */
@@ -294,7 +310,6 @@ named preset from the `TUNING_MARKERS` table above.
   }
   
 ```
-
 
 ## D Reference Frequency
 
@@ -341,7 +356,6 @@ the entire instrument. Every sounding voice updates immediately, just like
   
 ```
 
-
 ## Volume Control
 
 Master volume is applied via
@@ -369,7 +383,6 @@ that an instantaneous `.value =` assignment would cause.
   }
   
 ```
-
 
 ## EQ / Tone Shaping
 
@@ -402,7 +415,6 @@ filter at 3 kHz provides a simple tone control. The UI maps `-1..+1` to
   
 ```
 
-
 ## Sustain Pedal
 
 When sustain is on, `stopNote` defers the release -- the voice keeps sounding
@@ -430,7 +442,6 @@ pedal and is wired to the MIDI CC64 (damper) input.
   
   
 ```
-
 
 ## Vibrato -- Shared LFO
 
@@ -461,6 +472,16 @@ small `d` approximates to `f * d / 1200`.
     this.vibratoLFO.start();
   }
   
+```
+
+### Vibrato Enable / Disable
+
+When enabled, the shared LFO connects to each voice's frequency
+[AudioParam](https://developer.mozilla.org/en-US/docs/Web/API/AudioParam)
+through a per-voice gain node. When disabled, gain is zeroed and the LFO is
+disconnected.
+
+``` {.typescript file=_generated/lib/synth.ts}
   /**
    * Enable/disable vibrato (pitch modulation) on ALL currently-playing voices in real-time.
    * When enabled: connects shared LFO → per-voice gain → oscillator.frequency for every voice.
@@ -494,7 +515,6 @@ small `d` approximates to `f * d / 1200`.
   
 ```
 
-
 ## Frequency Calculation from Isomorphic Coordinates
 
 All note frequencies derive from the
@@ -524,7 +544,6 @@ along y steps through octaves.
   }
   
 ```
-
 
 ## Note On -- Voice Creation
 
@@ -597,7 +616,6 @@ input through a per-voice gain node.
   
 ```
 
-
 ## Note Off -- Release Envelope
 
 `stopNote` applies a release envelope: gain ramps to zero via `setTargetAtTime`
@@ -646,24 +664,12 @@ If sustain is active and `force` is false, the note is deferred to the
   
 ```
 
-
-## MPE Expression -- Pitch Bend, Timbre, Pressure
+## MPE Expression -- Pitch Bend
 
 [MIDI Polyphonic Expression](https://www.midi.org/midi-articles/midi-polyphonic-expression-mpe)
-(MPE) provides per-note control over pitch bend, timbre (CC74 / slide), and
-pressure (channel aftertouch). Each method targets a single voice by `noteId`.
-
-**Pitch bend** shifts the oscillator frequency by a given number of semitones
-(can be fractional) using the standard equal-temperament formula
-`bentFreq = baseFreq * 2^(semitones/12)`.
-
-**Timbre** controls the lowpass filter cutoff via the same `500 * 36^v`
-exponential curve used in `playNote`, giving CC74 slide a consistent brightness
-range.
-
-**Pressure** controls per-voice gain with a square-root curve (`value^0.5`),
-matching the velocity response so that MPE pressure feels continuous with the
-initial strike velocity.
+(MPE) provides per-note control dimensions. `setPitchBend` shifts the
+oscillator frequency by a given number of semitones (can be fractional) using
+the standard equal-temperament formula `bentFreq = baseFreq * 2^(semitones/12)`.
 
 ``` {.typescript file=_generated/lib/synth.ts}
   /**
@@ -680,6 +686,15 @@ initial strike velocity.
     voice.oscillator.frequency.setTargetAtTime(bentFreq, this.context.currentTime, 0.005);
   }
 
+```
+
+### MPE Timbre (CC74 / Slide)
+
+Timbre controls the lowpass filter cutoff via the same `500 * 36^v`
+exponential curve used in `playNote`, giving CC74 slide a consistent brightness
+range from 500 Hz to 18 000 Hz.
+
+``` {.typescript file=_generated/lib/synth.ts}
   /**
    * Update timbre (lowpass filter cutoff) for a specific voice.
    * Maps 0→1 to 500Hz→18000Hz via exponential curve.
@@ -694,6 +709,15 @@ initial strike velocity.
     voice.timbreFilter.frequency.setTargetAtTime(cutoff, this.context.currentTime, 0.01);
   }
 
+```
+
+### MPE Pressure (Channel Aftertouch)
+
+Pressure controls per-voice gain with a square-root curve (`value^0.5`),
+matching the velocity response so that MPE pressure feels continuous with the
+initial strike velocity.
+
+``` {.typescript file=_generated/lib/synth.ts}
   /**
    * Update gain for a specific voice from aftertouch/pressure.
    * Uses sqrt curve so light pressure → noticeable volume.
@@ -708,11 +732,7 @@ initial strike velocity.
     voice.gainNode.gain.setTargetAtTime(gain, this.context.currentTime, 0.01);
   }
 
-  /**
-   * Stop all notes
-   */
 ```
-
 
 ## Lifecycle -- Stop All, Query, Dispose
 
@@ -720,6 +740,9 @@ Utility methods for panic (stop all voices), introspection (active note list,
 voice count), and teardown (close the AudioContext).
 
 ``` {.typescript file=_generated/lib/synth.ts}
+  /**
+   * Stop all notes
+   */
   stopAll(): void {
     for (const noteId of this.voices.keys()) {
       this.stopNote(noteId, true);
