@@ -198,18 +198,13 @@ The page is a vertical flex layout (`#app`) with these major sections:
 
     /* ── Song bar ─────────────────────────────────────────────── */
     #song-bar {
-      display: flex;
+      display: inline-flex;
       align-items: center;
       gap: 8px;
-      padding: 2px 8px;
-      flex-shrink: 0;
-      border-bottom: 1px solid var(--border);
-      background: rgba(255,255,255,0.02);
+      padding: 2px 0;
       font-size: 11px;
-      min-height: 28px;
-      z-index: 2;
-      position: relative;
       flex-wrap: wrap;
+      margin-left: auto;
     }
     #song-bar-calibrate,
     #song-bar-search,
@@ -903,10 +898,8 @@ The page is a vertical flex layout (`#app`) with these major sections:
         <button id="fullscreen-btn" class="icon-btn icon-md" title="Toggle fullscreen" onclick="document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen().catch(()=>{})"><i data-lucide="maximize"></i></button>
         <button id="reset-layout" title="Reset Page Layout — restores default panel sizes and positions (does not reset grid presets or tuning)"><span class="icon"><i data-lucide="rotate-ccw"></i></span> Reset Page</button>
       </div>
-    </header>
-
-    <!-- Song bar — game/song controls header -->
-    <div id="song-bar">
+      <!-- Song/game controls — right side of header, wraps on narrow -->
+      <div id="song-bar">
       <div id="song-bar-search" style="position:relative;">
           <button class="slider-info-btn icon-btn icon-lg" data-info="search" style="position:static;transform:none;"><i data-lucide="info"></i></button>
           <span style="color:var(--dim);font-size:10px;font-family:var(--font);white-space:nowrap;">SEARCH</span>
@@ -944,6 +937,7 @@ The page is a vertical flex layout (`#app`) with these major sections:
           </div>
         </div>
     </div>
+    </header>
 
     <!-- Visualiser panel -->
     <div id="visualiser-panel">
