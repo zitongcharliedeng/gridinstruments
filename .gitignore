@@ -31,6 +31,8 @@ npm-debug.log*
 *.tsbuildinfo
 
 # Tool directories — session state is ephemeral, plans/drafts are tracked
+.omc/
+.opencode-session-archive-*.jsonl
 .sisyphus/boulder.json
 .sisyphus/notepads/
 .sisyphus/notepads/**
