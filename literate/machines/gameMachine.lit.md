@@ -1,69 +1,59 @@
-# gameMachine
+# Game Machine
 
-Game/tutorial state machine for GridInstruments.
+Game/tutorial state machine for GridInstruments. Manages the MIDI play-along game lifecycle:
+`idle → loading → playing → complete`, with an `error` branch on load failure.
+
+`NOTE_PRESSED` in `playing` uses frequency-based (`midiNote`) matching: a correct note that
+completes the current chord group advances to the next group, or transitions to `complete` if
+it was the last group. Wrong notes are silently ignored.
+
+## Imports
 
 ``` {.typescript file=_generated/machines/gameMachine.ts}
-/**
- * Game Lifecycle State Machine — XState v5
- *
- * Manages the MIDI play-along game lifecycle:
- *   idle -> loading -> playing -> complete
- *                  \-> error (on load failure)
- *
- * NOTE_PRESSED in `playing` uses frequency-based (midiNote) matching:
- *   - correct note + chord complete + last group  -> `complete`
- *   - correct note + chord complete + more groups -> advance, stay in `playing`
- *   - correct note + chord incomplete             -> accumulate, stay in `playing`
- *   - wrong note                                  -> no-op
- */
-
 import { setup, assign, assertEvent, and } from 'xstate';
+```
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+## Types
 
-/** A single note in game coordinates, ready for grid display. */
+A single note in game coordinates, ready for grid display.
+
+``` {.typescript file=_generated/machines/gameMachine.ts}
 export interface GameNote {
-  /** "${coordX}_${coordY}" — for KeyboardVisualizer */
   cellId: string;
-  /** Original MIDI note (for reference/transposition) */
   midiNote: number;
-  /** Note start time in milliseconds */
   startMs: number;
-  /** Note duration in milliseconds */
   durationMs: number;
 }
+```
 
-/** A chord group — one or more simultaneous notes that glow together. */
+A chord group — one or more simultaneous notes that glow together on the grid.
+
+``` {.typescript file=_generated/machines/gameMachine.ts}
 export interface NoteGroup {
-  /** All cell IDs in this chord group (for visual highlighting on the grid) */
   cellIds: string[];
-  /** MIDI note numbers — press ALL to advance to the next group */
   midiNotes: number[];
-  /** Group start time in milliseconds */
   startMs: number;
 }
+```
 
-/** Context for the game machine. */
+The full context for the game machine.
+
+``` {.typescript file=_generated/machines/gameMachine.ts}
 export interface GameContext {
-  /** Processed from NoteEvent[] by game engine */
   noteGroups: NoteGroup[];
-  /** Index of the currently-glowing group */
   currentGroupIndex: number;
-  /** cellIds of current group (what glows white) */
   targetCellIds: string[];
-  /** MIDI notes pressed so far in the current chord group */
   pressedMidiNotes: number[];
-  /** Game start timestamp (Date.now()) */
   startTimeMs: number;
-  /** Game finish timestamp (Date.now()) */
   finishTimeMs: number;
-  /** Load error message if any */
   error: string | null;
-  /** User dismissed tuning warning */
   tuningWarnAcknowledged: boolean;
 }
+```
 
-/** Events the game machine accepts. */
+The discriminated union of all events the game machine accepts.
+
+``` {.typescript file=_generated/machines/gameMachine.ts}
 export type GameEvent =
   | { type: 'FILE_DROPPED'; file: File }
   | { type: 'SONG_LOADED'; noteGroups: NoteGroup[] }
@@ -72,9 +62,16 @@ export type GameEvent =
   | { type: 'GAME_RESET' }
   | { type: 'GAME_RESTART' }
   | { type: 'TUNING_WARN_ACK' };
+```
 
-// ─── Machine ──────────────────────────────────────────────────────────────────
+## Machine
 
+The machine is created with `setup()` to keep actions and guards typed separately from the
+state configuration.
+
+### Actions
+
+``` {.typescript file=_generated/machines/gameMachine.ts}
 export const gameMachine = setup({
   types: {
     context: {} as GameContext,
@@ -132,6 +129,15 @@ export const gameMachine = setup({
     })),
     ackTuningWarn: assign(() => ({ tuningWarnAcknowledged: true })),
   },
+```
+
+### Guards
+
+`isCorrectNote` checks the current group's `midiNotes` array. `isChordComplete` checks whether
+adding the new note would satisfy all notes in the group. `isLastGroup` checks if advancing
+would exhaust the groups array.
+
+``` {.typescript file=_generated/machines/gameMachine.ts}
   guards: {
     isCorrectNote: ({ context, event }) => {
       assertEvent(event, 'NOTE_PRESSED');
@@ -147,6 +153,11 @@ export const gameMachine = setup({
     isLastGroup: ({ context }) =>
       context.currentGroupIndex + 1 >= context.noteGroups.length,
   },
+```
+
+### States
+
+``` {.typescript file=_generated/machines/gameMachine.ts}
 }).createMachine({
   id: 'game',
   context: {

@@ -1,80 +1,81 @@
 # Main Entry Point
 
-DCompose Web entry point — wires together MIDI, synth, keyboard, history visualizer, and XState actors.
+DCompose Web entry point — wires together MIDI, synth, keyboard, history visualizer, and
+XState actors.
+
+## Imports
+
+CSS side-effect imports come first so Vite can tree-shake them correctly.
 
 ``` {.typescript file=_generated/main.ts}
-/**
- * DCompose Web — Entry Point
- *
- * Wires together:
- * - Web MIDI input (MidiInput) with per-device management
- * - MPE output (MpeOutput) for external synthesizers
- * - Isomorphic keyboard (KeyboardVisualizer) with skew slider
- * - Note history + waterfall + chord panel (NoteHistoryVisualizer)
- * - Keyboard layout dropdown (isomorphic-qwerty variants)
- * - Web Audio synth (Synth)
- *
- * TODO — Future Features:
- *
- * 1. GHOST OVERLAY / SONG LEARNING MODE
- *    - Link user's videos and covers as ghost overlay on the keyboard grid
- *    - Notes play as semi-transparent falling blocks (like Guitar Hero / Synthesia)
- *    - For non-MIDI conversions: audio-to-note analysis or manual charting
- *    - Each linked song is confirmed human-playable (played by the author)
- *    - Could also accept MIDI files for direct overlay
- *
- * 2. FULLSCREEN GRID MODE
- *    - Option to expand keyboard grid to fill entire viewport (100vh)
- *    - Hide controls strip, history panel, title bar — maximum play surface
- *    - Essential for touchscreen tablet performance use
- *    - Toggle via button or keyboard shortcut (e.g. F11 or double-tap)
- *
- * 3. CHORD VISUALIZER OVERLAY (FULLSCREEN)
- *    - In fullscreen grid mode, optionally overlay the chord visualizer component
- *    - Render with low opacity ("dryly") so it doesn't obscure the keys
- *    - Shows detected chord names / shapes without leaving fullscreen
- */
-
-// CSS side-effect imports
 import 'overlayscrollbars/overlayscrollbars.css';
 import 'slim-select/styles';
 import './ui-overrides.css';
+```
 
-// Content imports
+Content and external imports.
+
+``` {.typescript file=_generated/main.ts}
 import agentsText from '../AGENTS.md?raw';
 
-// External
 import { createActor } from 'xstate';
+```
 
-// Machines
+Internal machine and app module imports.
+
+``` {.typescript file=_generated/main.ts}
 import { dialogMachine } from './machines/dialogMachine';
 
-// App modules
 import { renderMarkdown } from './app-helpers';
 import { createSelectAtSlot, setupCyclingButton } from './app-dom';
 import { setupInfoDialogs } from './app-slider';
 import { DComposeApp } from './app-core';
 import { setupPanelHandles } from './app-panels';
 import { setupAppActor } from './app-actor-wiring';
+```
 
+## DOMContentLoaded
+
+Everything runs inside a `DOMContentLoaded` listener so the DOM is guaranteed to be ready
+before any element lookups occur.
+
+### Layout persistence guards
+
+Purge saved panel heights that exceed 60 % of the current viewport — prevents a restored
+layout from making panels unresizably tall on a smaller screen.
+
+``` {.typescript file=_generated/main.ts}
 document.addEventListener('DOMContentLoaded', () => {
   if (parseInt(localStorage.getItem('gi_visualiser_h') ?? '0', 10) > window.innerHeight * 0.6) localStorage.removeItem('gi_visualiser_h');
   if (parseInt(localStorage.getItem('gi_pedals_h') ?? '0', 10) > window.innerHeight * 0.6) localStorage.removeItem('gi_pedals_h');
+```
 
+### Reset layout button
+
+Clears all `gi_*` localStorage keys and reloads the page.
+
+``` {.typescript file=_generated/main.ts}
   document.getElementById('reset-layout')?.addEventListener('click', () => {
     Object.keys(localStorage).filter(k => k.startsWith('gi_')).forEach(k => { localStorage.removeItem(k); });
     location.reload();
   });
+```
 
-  // Panel resize handles
+### Panel resize handles and zoom prevention
+
+``` {.typescript file=_generated/main.ts}
   setupPanelHandles();
 
-  // Prevent pinch zoom
   document.addEventListener('wheel', (e) => { if (e.ctrlKey) e.preventDefault(); }, { passive: false });
   document.addEventListener('gesturestart', (e) => { e.preventDefault(); });
   document.addEventListener('gesturechange', (e) => { e.preventDefault(); });
+```
 
-  // Escape closes overlay
+### Escape closes overlay
+
+Delegates to the overlay actor if it is in the `visible` state.
+
+``` {.typescript file=_generated/main.ts}
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
       const actor = (window as Window & { overlayActor?: { send: (e: { type: string }) => void; getSnapshot: () => { matches: (s: string) => boolean } } }).overlayActor;
@@ -83,8 +84,14 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
   });
+```
 
-  // About dialog — XState actor
+### About dialog
+
+Uses the `dialogMachine` XState actor. The `AGENTS.md` file is imported as raw text and
+rendered to HTML once at startup.
+
+``` {.typescript file=_generated/main.ts}
   const aboutBtn = document.getElementById('about-btn');
   const aboutDialog = document.getElementById('about-dialog');
   const aboutClose = document.getElementById('about-close');
@@ -110,10 +117,20 @@ document.addEventListener('DOMContentLoaded', () => {
       if (e.target === aboutDialog) aboutDialogActor.send({ type: 'CLOSE' });
     });
   }
+```
 
+### Info dialogs
+
+``` {.typescript file=_generated/main.ts}
   setupInfoDialogs();
+```
 
-  // ─── Create <select> elements in JS (banned in HTML by ast-grep rule) ─────
+### Dynamic `<select>` elements
+
+`<select>` elements are created in JS rather than HTML to satisfy the ast-grep
+`no-raw-select-in-html` rule.
+
+``` {.typescript file=_generated/main.ts}
   createSelectAtSlot('wave-select-slot', 'wave-select', [
     { value: 'sawtooth', text: 'SAW' },
     { value: 'sine', text: 'SIN' },
@@ -128,16 +145,22 @@ document.addEventListener('DOMContentLoaded', () => {
   createSelectAtSlot('mpe-output-select-slot', 'mpe-output-select', [
     { value: '', text: 'No MIDI outputs' },
   ], { style: 'min-width:120px;', disabled: '' });
+```
 
-  // ─── Set up quantization cycling button ──────────────────────────────────
+### Quantization cycling button
+
+``` {.typescript file=_generated/main.ts}
   setupCyclingButton('quantization-level', [
     { value: 'none', label: 'None' },
     { value: '1/4', label: '1/4' },
     { value: '1/8', label: '1/8' },
     { value: '1/16', label: '1/16' },
   ], 'none', () => { /* value read on-demand by loadMidiFromBuffer */ });
+```
 
-  // ─── Create app and wire XState actor ─────────────────────────────────────
+### App creation and actor wiring
+
+``` {.typescript file=_generated/main.ts}
   const app = new DComposeApp();
   setupAppActor(app);
 });

@@ -2,15 +2,21 @@
 
 Static constants, presets, and slider info HTML for the DCompose app.
 
-``` {.typescript file=_generated/app-constants.ts}
-/**
- * Static constants, presets, and slider info HTML for the DCompose app.
- */
+## Imports and preset types
 
+``` {.typescript file=_generated/app-constants.ts}
 import { TUNING_MARKERS } from './lib/synth';
 
 export interface SliderPresetPoint { value: number; label: string }
+```
 
+## Preset arrays
+
+`SKEW_PRESETS` and `SHEAR_PRESETS` name the two endpoints of their respective continuous
+parameters. `TUNING_LABEL_PRESETS` is derived from `TUNING_MARKERS` so the tuning slider
+tick labels stay in sync with the synth's marker table.
+
+``` {.typescript file=_generated/app-constants.ts}
 export const SKEW_PRESETS: SliderPresetPoint[] = [
   { value: 0, label: 'DCompose / Wicki-Hayden' },
   { value: 1, label: 'MidiMech' },
@@ -22,16 +28,36 @@ export const SHEAR_PRESETS: SliderPresetPoint[] = [
 ];
 
 export const TUNING_LABEL_PRESETS: SliderPresetPoint[] = TUNING_MARKERS.map(m => ({ value: m.fifth, label: m.name }));
+```
 
+## Tuning table rows
+
+Built once at module load time from `TUNING_MARKERS` sorted by fifth size.
+
+``` {.typescript file=_generated/app-constants.ts}
 const tuningTableRows = TUNING_MARKERS
   .slice().sort((a, b) => a.fifth - b.fifth)
   .map(m => `<tr><td><strong>${m.fifth % 1 === 0 ? m.fifth : `~${String(m.fifth)}`}¢</strong></td><td>${m.description}</td></tr>`)
   .join('\n');
+```
 
+## Source link helper
+
+Generates a small footer link pointing to the literate source file on GitHub.
+
+``` {.typescript file=_generated/app-constants.ts}
 const SRC = 'https://github.com/zitongcharliedeng/gridinstruments/blob/main/literate';
 const srcLink = (file: string, label = 'Source') =>
   `<p style="margin-top:16px;padding-top:8px;border-top:1px solid #222;font-size:10px;"><a href="${SRC}/${file}" target="_blank" rel="noopener" style="color:var(--dim);">📄 ${label}</a></p>`;
+```
 
+## SLIDER_INFO
+
+HTML content for each slider's info popover. Keyed by the slider name (or feature slug).
+
+### Tuning
+
+``` {.typescript file=_generated/app-constants.ts}
 export const SLIDER_INFO: Record<string, string> = {
   tuning: `
 <h2>Fifths Tuning</h2>
@@ -54,7 +80,11 @@ ${tuningTableRows}
 <li><a href="https://www.youtube.com/watch?v=IT9CPoe5LnM" target="_blank" rel="noopener">Microtonal Music</a> — Beyond 12 equal divisions</li>
 </ul>
 ${srcLink('synth.lit.md', 'Source: synth.lit.md — tuning system implementation')}`,
+```
 
+### Skew
+
+``` {.typescript file=_generated/app-constants.ts}
   skew: `
 <h2>Mech Skew</h2>
 <p>Continuously interpolates the lattice basis vectors between two named keyboard layouts:</p>
@@ -77,7 +107,11 @@ ${srcLink('synth.lit.md', 'Source: synth.lit.md — tuning system implementation
 <li><a href="https://www.youtube.com/watch?v=MdVhYGjMPbo" target="_blank" rel="noopener">Isomorphic Keyboards Explained</a> — Layout theory</li>
 </ul>
 ${srcLink('note-colors.lit.md', 'Source: note-colors.lit.md — skew interpolation math')}`,
+```
 
+### Search
+
+``` {.typescript file=_generated/app-constants.ts}
   search: `
 <h2>Song Search</h2>
 <p>Search for MIDI files across online libraries. Results stream in as you type — no account or download needed.</p>
@@ -95,7 +129,11 @@ ${srcLink('note-colors.lit.md', 'Source: note-colors.lit.md — skew interpolati
 <li>Adjust <strong>Quant</strong> level to simplify complex passages for beginners</li>
 </ul>
 ${srcLink('midi-search.lit.md', 'Source: midi-search.lit.md — search adapters and API integration')}`,
+```
 
+### Quantization
+
+``` {.typescript file=_generated/app-constants.ts}
   quantization: `
 <h2>Quantization</h2>
 <p>Snaps note timings to a beat grid, simplifying complex passages into a <a href="https://en.wikipedia.org/wiki/Piano_Tiles" target="_blank" rel="noopener">Piano Tiles</a>-style game.</p>
@@ -110,7 +148,11 @@ ${srcLink('midi-search.lit.md', 'Source: midi-search.lit.md — search adapters 
 <p>Notes snap to the nearest grid point. Long notes that span multiple grid points are split into repeated taps — so a half note at 1/8 quantization becomes 4 consecutive taps. This means playing at a constant pace naturally reproduces the original tempo.</p>
 <p>The grid adapts to <a href="https://en.wikipedia.org/wiki/Time_signature" target="_blank" rel="noopener">time signature</a> changes and <a href="https://en.wikipedia.org/wiki/Tempo" target="_blank" rel="noopener">tempo map</a> variations within the song.</p>
 ${srcLink('game-engine.lit.md', 'Source: game-engine.lit.md — quantization algorithm')}`,
+```
 
+### Calibration
+
+``` {.typescript file=_generated/app-constants.ts}
   calibration: `
 <h2>Calibrate Playable Area</h2>
 <p>Defines which notes your input device can physically reach. After calibration, unreachable cells are greyed out and the game auto-transposes songs to fit your range.</p>
@@ -128,7 +170,11 @@ ${srcLink('game-engine.lit.md', 'Source: game-engine.lit.md — quantization alg
 </ul>
 <p>Re-calibrate any time if you switch input devices or want to expand your range.</p>
 ${srcLink('calibration.lit.md', 'Source: calibration.lit.md — range storage and persistence')}`,
+```
 
+### Bend
+
+``` {.typescript file=_generated/app-constants.ts}
   bend: `
 <h2>Pitch Bend</h2>
 <p>Controls the pitch bend range — how far a MIDI pitch bend wheel or <a href="https://www.midi.org/midi-articles/midi-polyphonic-expression-mpe" target="_blank" rel="noopener">MPE</a> finger slide changes the pitch.</p>
@@ -141,7 +187,11 @@ ${srcLink('calibration.lit.md', 'Source: calibration.lit.md — range storage an
 <li><a href="https://www.youtube.com/watch?v=gRGDJJRYYoE" target="_blank" rel="noopener">What is MPE?</a> — MIDI Polyphonic Expression explained</li>
 </ul>
 ${srcLink('mpe-service.lit.md', 'Source: mpe-service.lit.md — MPE pitch bend handling')}`,
+```
 
+### Velocity
+
+``` {.typescript file=_generated/app-constants.ts}
   velocity: `
 <h2>Velocity</h2>
 <p>Note-on velocity measures how hard each note is struck, controlling initial volume and timbre brightness.</p>
@@ -153,7 +203,11 @@ ${srcLink('mpe-service.lit.md', 'Source: mpe-service.lit.md — MPE pitch bend h
 </ul>
 <p>The grid visualizes velocity as cell brightness — harder strikes produce brighter cells.</p>
 ${srcLink('keyboard-visualizer.lit.md', 'Source: keyboard-visualizer.lit.md — velocity visualization')}`,
+```
 
+### Pressure
+
+``` {.typescript file=_generated/app-constants.ts}
   pressure: `
 <h2>Pressure (Aftertouch)</h2>
 <p>Continuous force applied <em>after</em> the initial note strike. Used for expressive swells, filter sweeps, and vibrato depth.</p>
@@ -164,7 +218,11 @@ ${srcLink('keyboard-visualizer.lit.md', 'Source: keyboard-visualizer.lit.md — 
 </table>
 <p>The grid visualizes pressure as cell opacity — more pressure makes cells more opaque.</p>
 ${srcLink('mpe-service.lit.md', 'Source: mpe-service.lit.md — pressure/aftertouch handling')}`,
+```
 
+### Timbre
+
+``` {.typescript file=_generated/app-constants.ts}
   timbre: `
 <h2>Timbre (CC74)</h2>
 <p>Controls brightness/timbre via <a href="https://www.midi.org/specifications-old/item/table-3-control-change-messages-data-bytes-2" target="_blank" rel="noopener">MIDI CC74</a>. In MPE, this is the standard "slide" dimension — typically mapped to the Y-axis on surfaces like the <a href="https://www.rogerlinndesign.com/linnstrument" target="_blank" rel="noopener">LinnStrument</a>.</p>
@@ -176,7 +234,11 @@ ${srcLink('mpe-service.lit.md', 'Source: mpe-service.lit.md — pressure/afterto
 </table>
 <p>The grid visualizes timbre as a color shift on the cell.</p>
 ${srcLink('mpe-service.lit.md', 'Source: mpe-service.lit.md — timbre CC routing')}`,
+```
 
+### Shear
+
+``` {.typescript file=_generated/app-constants.ts}
   shear: `
 <h2>Wicked Shear</h2>
 <p>A pure <a href="https://en.wikipedia.org/wiki/Shear_mapping" target="_blank" rel="noopener">shear mapping</a> that flattens the lattice rows toward horizontal:</p>
@@ -205,24 +267,40 @@ ${srcLink('mpe-service.lit.md', 'Source: mpe-service.lit.md — timbre CC routin
 <li><a href="https://www.toverlamp.org/static/wickisynth/wickisynth_lowlatency.html" target="_blank" rel="noopener">WickiSynth</a> by Piers Titus van der Torren</li>
 </ul>
 ${srcLink('note-colors.lit.md', 'Source: note-colors.lit.md — coordinate system and shear math')}`,
+```
 
+### Volume
+
+``` {.typescript file=_generated/app-constants.ts}
   volume: `
 <h2>Volume</h2>
 <p>Master output volume in <a href="https://en.wikipedia.org/wiki/Decibel" target="_blank" rel="noopener">decibels</a> (dB). Controls the gain of the synthesizer output.</p>
 <p>Range: 0 (silent) to 1 (maximum). Default: 0.3 (~-10.5 dB).</p>
 ${srcLink('synth.lit.md', 'Source: synth.lit.md — audio synthesis and volume')}`,
+```
 
+### D Reference
+
+``` {.typescript file=_generated/app-constants.ts}
   dref: `
 <h2>D Reference Pitch</h2>
 <p>Sets the reference frequency for the note <strong>D</strong> in Hz. This is the anchor pitch — all other notes are tuned relative to it via the circle of fifths. The grid's coordinate origin (0,0) always maps to this pitch.</p>
 <p>Default: <strong>293.66 Hz</strong> (standard concert pitch where A=440 Hz). Adjustable across octaves (D2–D6). Type a note name (e.g., "A4") to set by name instead of Hz.</p>
 ${srcLink('synth.lit.md', 'Source: synth.lit.md — reference pitch handling')}`,
+```
 
+### Zoom
+
+``` {.typescript file=_generated/app-constants.ts}
   zoom: `
 <h2>Zoom</h2>
 <p>Scales grid cell size. The default is DPI-calibrated to approximate standard keyboard key width (~15mm). Reset returns to this default.</p>
 ${srcLink('keyboard-visualizer.lit.md', 'Source: keyboard-visualizer.lit.md — grid rendering')}`,
+```
 
+### Waveform
+
+``` {.typescript file=_generated/app-constants.ts}
   wave: `
 <h2>Waveform</h2>
 <table>
@@ -232,7 +310,11 @@ ${srcLink('keyboard-visualizer.lit.md', 'Source: keyboard-visualizer.lit.md — 
 <tr><td><strong>Sine</strong></td><td>Pure tone — fundamental only</td></tr>
 </table>
 ${srcLink('synth.lit.md', 'Source: synth.lit.md — oscillator waveforms')}`,
+```
 
+### Layout
+
+``` {.typescript file=_generated/app-constants.ts}
   layout: `
 <h2>Keyboard Layout</h2>
 <table>

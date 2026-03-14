@@ -2,11 +2,9 @@
 
 App-level XState actor creation, slider subscribers, and DOM-to-actor event wiring.
 
-``` {.typescript file=_generated/app-actor-wiring.ts}
-/**
- * App-level XState actor creation, slider subscribers, and DOM↔actor event wiring.
- */
+## Imports
 
+``` {.typescript file=_generated/app-actor-wiring.ts}
 import { createActor } from 'xstate';
 import { appMachine } from './machines/appMachine';
 import { getElementOrNull } from './app-dom';
@@ -14,13 +12,32 @@ import { thumbCenterPx, clampBadgePosition, applySliderFill } from './app-slider
 import { formatSliderAnnotation, isWaveformType } from './app-helpers';
 import { SKEW_PRESETS } from './app-constants';
 import type { DComposeApp } from './app-core';
+```
 
+## Actor setup
+
+`setupAppActor` creates and starts the XState `appActor`, wires slider subscribers, and
+attaches DOM event listeners. It receives the `DComposeApp` instance so that the debug
+exposure at the bottom can delegate property lookups back to the app object.
+
+``` {.typescript file=_generated/app-actor-wiring.ts}
 export function setupAppActor(app: DComposeApp): void {
   const appActor = createActor(appMachine, {
     input: { initialVolume: -10.5, defaultZoom: (app as unknown as { defaultZoom: number }).defaultZoom, touchDevice: 'ontouchstart' in window },
   });
+```
 
-  // ─── Skew slider: appActor subscriber drives badge, label & fill ──────────
+## Slider subscribers
+
+Each slider gets its own `appActor.subscribe` call that compares the incoming value against a
+cached previous value to avoid unnecessary DOM writes.
+
+### Skew slider
+
+The skew badge is an `<input>` (editable), so its position is computed from the slider ratio,
+and the label includes an annotated preset name when near a named landmark.
+
+``` {.typescript file=_generated/app-actor-wiring.ts}
   const _skewSlider = getElementOrNull('skew-slider', HTMLInputElement);
   const _skewBadge = getElementOrNull('skew-thumb-badge', HTMLInputElement);
   const _skewLabel = getElementOrNull('skew-label', HTMLSpanElement);
@@ -51,8 +68,11 @@ export function setupAppActor(app: DComposeApp): void {
       applySliderFill(_skewSlider);
     }
    });
+```
 
-  // ─── Volume slider: appActor subscriber drives badge & fill ──────────────────
+### Volume slider
+
+``` {.typescript file=_generated/app-actor-wiring.ts}
   const _volumeSlider = getElementOrNull('volume-slider', HTMLInputElement);
   const _volumeBadge = getElementOrNull('volume-thumb-badge', HTMLSpanElement);
   let _prevVolumeValue = NaN;
@@ -77,8 +97,11 @@ export function setupAppActor(app: DComposeApp): void {
       applySliderFill(_volumeSlider);
     }
   });
+```
 
-  // ─── Zoom slider: appActor subscriber drives badge & fill ────────────────────
+### Zoom slider
+
+``` {.typescript file=_generated/app-actor-wiring.ts}
   const _zoomSlider = getElementOrNull('zoom-slider', HTMLInputElement);
   const _zoomBadge = getElementOrNull('zoom-thumb-badge', HTMLSpanElement);
   let _prevZoomValue = NaN;
@@ -103,7 +126,16 @@ export function setupAppActor(app: DComposeApp): void {
       applySliderFill(_zoomSlider);
     }
   });
+```
 
+## Actor start and initial sync
+
+Starting the actor triggers the initial snapshot, which runs all subscribers once with the
+default context values. The three `SLIDER_INPUT` sends immediately after that sync the actor
+context with whatever values the HTML sliders were initialised to (e.g. from a `value`
+attribute or a previous `localStorage` restoration).
+
+``` {.typescript file=_generated/app-actor-wiring.ts}
    appActor.start();
 
    if (_skewSlider) {
@@ -117,8 +149,14 @@ export function setupAppActor(app: DComposeApp): void {
    if (_zoomSlider) {
      appActor.send({ type: 'SLIDER_INPUT', slider: 'zoom', value: parseFloat(_zoomSlider.value) });
    }
+```
 
-  // ─── Wire DOM → appActor (dual-write: DComposeApp handles services) ───────
+## DOM → actor event wiring
+
+These listeners dual-write: `DComposeApp` also receives slider changes via its own DOM
+listeners, keeping the services layer in sync independently of XState.
+
+``` {.typescript file=_generated/app-actor-wiring.ts}
   if (_skewSlider) {
     _skewSlider.addEventListener('input', () => {
       appActor.send({ type: 'SLIDER_INPUT', slider: 'skew', value: parseFloat(_skewSlider.value) });
@@ -168,7 +206,13 @@ export function setupAppActor(app: DComposeApp): void {
       appActor.send({ type: 'SET_LAYOUT', layoutId: _layoutSelect.value });
     });
   }
-  // Expose for debugging and Playwright verification
+```
+
+## Debug exposure
+
+Attached to `window.dcomposeApp` for Playwright verification and browser console inspection.
+
+``` {.typescript file=_generated/app-actor-wiring.ts}
   (window as Window & { dcomposeApp?: unknown }).dcomposeApp = {
     actor: appActor,
     getSnapshot: () => appActor.getSnapshot(),

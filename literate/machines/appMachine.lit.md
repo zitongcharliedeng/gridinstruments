@@ -1,22 +1,23 @@
-# appMachine
+# App Machine
 
-Top-level application state machine for GridInstruments.
+Top-level application state machine for GridInstruments. Manages slider state (value,
+badgeText, labelText, editing) and handles `SLIDER_INPUT`, `SLIDER_RESET`, and
+`SLIDER_BADGE_EDIT` events from `NumericSlider` component instances wired in `main.ts`.
+
+## Imports
 
 ``` {.typescript file=_generated/machines/appMachine.ts}
-/**
- * DCompose AppMachine — Root XState v5 Machine
- *
- * Manages slider state (value, badgeText, labelText, editing) and handles
- * SLIDER_INPUT / SLIDER_RESET / SLIDER_BADGE_EDIT events from NumericSlider
- * component instances wired in main.ts.
- */
-
 import { setup, fromPromise, assign, assertEvent } from 'xstate';
 import type { AppContext, AppEvent, SliderName, SliderState } from './types';
 import type { Synth } from '../lib/synth';
+```
 
-// ─── Per-slider format helpers ────────────────────────────────────────────────
+## Per-slider format helpers
 
+`formatBadge` produces the compact string shown in the thumb badge; `formatLabel` produces
+the longer track label, which may include unit annotations or named landmarks.
+
+``` {.typescript file=_generated/machines/appMachine.ts}
 function formatBadge(slider: SliderName, v: number): string {
   switch (slider) {
     case 'tuning': return v.toFixed(1);
@@ -36,7 +37,12 @@ function formatLabel(slider: SliderName, v: number): string {
     case 'dref':   return `D REF ${v.toFixed(2)} Hz`;
   }
 }
+```
 
+Default numeric values for each slider, used by `SLIDER_RESET` when no dynamic default is
+available (zoom uses `context.defaultZoom` instead).
+
+``` {.typescript file=_generated/machines/appMachine.ts}
 const SLIDER_DEFAULTS: Record<SliderName, number> = {
   tuning: 700,
   skew:   0,
@@ -44,9 +50,16 @@ const SLIDER_DEFAULTS: Record<SliderName, number> = {
   zoom:   1.0,
   dref:   293.66,
 };
+```
 
-// ─── Machine ──────────────────────────────────────────────────────────────────
+## Machine
 
+### Setup — actors and actions
+
+The `initAudio` actor resolves the Web Audio context. It is defined here so the type system
+knows about it, even though it is not yet invoked by a state transition.
+
+``` {.typescript file=_generated/machines/appMachine.ts}
 export const appMachine = setup({
   types: {
     context: {} as AppContext,
@@ -54,10 +67,6 @@ export const appMachine = setup({
     input: {} as { initialVolume: number; defaultZoom: number; touchDevice: boolean },
   },
   actors: {
-    /**
-     * Resolves the Web Audio context — will be invoked in a future task.
-     * Defined here so the type system knows about it.
-     */
     initAudio: fromPromise(async ({ input }: { input: { synth: Synth } }) => {
       if (!input.synth.isInitialized()) await input.synth.init();
     }),
@@ -92,8 +101,6 @@ export const appMachine = setup({
 
     handleSliderBadgeEdit: assign(({ context, event }) => {
       assertEvent(event, 'SLIDER_BADGE_EDIT');
-      // rawValue is always a numeric string at this point (note names were
-      // converted to Hz before sending, see main.ts onBadgeEdit callbacks).
       const parsed = parseFloat(event.rawValue);
       if (!isFinite(parsed)) return {};
       const newSliders = { ...context.sliders };
@@ -139,6 +146,14 @@ export const appMachine = setup({
       sustainActive: false,
     })),
   },
+```
+
+### Initial context
+
+Context is initialised from the `input` object passed at actor creation time. Volume and zoom
+use the caller-supplied values; all other sliders start at their compile-time defaults.
+
+``` {.typescript file=_generated/machines/appMachine.ts}
 }).createMachine({
   id: 'dcompose',
   context: ({ input }) => ({
@@ -167,6 +182,14 @@ export const appMachine = setup({
     audioReady: false,
     defaultZoom: input.defaultZoom,
   }),
+```
+
+### States
+
+Both `uninitialized` and `audioReady` accept the same set of events. The `AUDIO_READY`
+transition moves the machine from `uninitialized` to `audioReady` and is a one-way door.
+
+``` {.typescript file=_generated/machines/appMachine.ts}
   initial: 'uninitialized',
   states: {
     uninitialized: {
