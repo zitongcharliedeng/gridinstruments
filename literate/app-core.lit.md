@@ -1037,22 +1037,14 @@ export class DComposeApp {
      //
      // Fallback to 0.75 if DPI is unavailable (screen.width or outerWidth is zero/missing).
      // Touch devices: Math.min(1.2, innerWidth / 480) — scales to viewport width.
-     const PIANO_KEY_MM = 23.5;   // visible key width at zoom=1.0 (W3C CSS px units)
-     const TARGET_KEY_MM = 20;    // target physical key width — larger than QWERTY cap for readability
-     const FALLBACK_ZOOM = 0.85;
+     // Universal default zoom: 0.85 produces readable note labels on all devices.
+     // No DPI detection — CSS pixels are consistent across devices at a given
+     // viewport width. Text height is the same everywhere for the same font-size.
+     // Touch devices get slightly larger cells scaled to viewport width.
+     this.defaultZoom = 0.85;
      const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
      if (isTouchDevice) {
-       this.defaultZoom = Math.min(1.2, window.innerWidth / 480);
-     } else {
-       const screenW = window.screen.width;
-       const outerW = window.outerWidth;
-       if (screenW > 0 && outerW > 0) {
-         const dpi = screenW / outerW * 96;
-         const zoom = TARGET_KEY_MM * dpi / (PIANO_KEY_MM * 96);
-         this.defaultZoom = Math.max(0.7, Math.min(2.0, zoom));
-       } else {
-         this.defaultZoom = FALLBACK_ZOOM;
-       }
+       this.defaultZoom = Math.max(0.85, Math.min(1.2, window.innerWidth / 480));
      }
      const savedZoom = this.loadSetting('zoom', this.defaultZoom.toString());
      if (this.zoomSlider) {
