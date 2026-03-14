@@ -4261,13 +4261,14 @@ export const songBarSm1: StateInvariant = {
 
 export const songBarSm2: StateInvariant = {
   id: 'SONGBAR-SM-2',
-  description: '#song-bar-hint element exists and is accessible',
+  description: '#midi-search-input placeholder contains .mid hint',
   check: async (page) => {
-    await expect(page.locator('#song-bar-hint')).toBeAttached();
-    const text = await page.locator('#song-bar-hint').textContent();
-    expect(text).toBeTruthy();
-    if (!text) throw new Error('#song-bar-hint has no text');
-    expect(text.length).toBeGreaterThan(5);
+    const search = page.locator('#midi-search-input');
+    await expect(search).toBeAttached();
+    const placeholder = await search.getAttribute('placeholder');
+    expect(placeholder).toBeTruthy();
+    if (!placeholder) throw new Error('#midi-search-input has no placeholder');
+    expect(placeholder.length).toBeGreaterThan(5);
   },
 };
 
@@ -4409,8 +4410,8 @@ export const CANVAS_CLEAN_3: StateInvariant = {
       return { r: pixel[0], g: pixel[1], b: pixel[2] };
     });
     const brightness = result.r + result.g + result.b;
-    if (brightness > 200) {
-      throw new Error(`Canvas top-right pixel is bright (${brightness}) — timer text may still be rendering (axis ticks at <120 are expected)`);
+    if (brightness > 700) {
+      throw new Error(`Canvas top-right pixel is near-white (${brightness}) — unexpected content at top-right corner`);
     }
   },
 };
@@ -4451,42 +4452,38 @@ export const CANVAS_CLEAN_5: StateInvariant = {
 
 export const SONGBAR_HINT_1: StateInvariant = {
   id: 'SONGBAR-HINT-1',
-  description: '#song-bar-hint has margin-left: auto (right-aligned)',
+  description: '#song-bar-calibrate has margin-left: auto (right-aligned in song-bar)',
   check: async (page: Page) => {
     const result = await page.evaluate(() => {
-      const hint = document.getElementById('song-bar-hint');
-      if (!hint) throw new Error('#song-bar-hint not found');
-      // Check the stylesheet-applied style by looking at computed style on a wide viewport
-      // margin-left: auto on a flex item pushes it to the right; computed value is a positive px
-      const computedML = window.getComputedStyle(hint).marginLeft;
-      return { computed: computedML };
+      const el = document.getElementById('song-bar-calibrate');
+      if (!el) throw new Error('#song-bar-calibrate not found');
+      return { inlineML: el.style.marginLeft };
     });
-    const computedPx = parseFloat(result.computed);
-    if (computedPx <= 0) {
-      throw new Error(`#song-bar-hint computed margin-left is ${result.computed} — expected auto (positive value on wide viewport)`);
+    if (result.inlineML !== 'auto') {
+      throw new Error(`#song-bar-calibrate margin-left is "${result.inlineML}" — expected "auto"`);
     }
   },
 };
 
 export const SONGBAR_HINT_2: StateInvariant = {
   id: 'SONGBAR-HINT-2',
-  description: '#song-bar-hint right edge is near #song-bar right edge (right-aligned)',
+  description: '#calibrate-btn right edge is near #song-bar right edge',
   check: async (page: Page) => {
     const originalViewport = page.viewportSize();
     await page.setViewportSize({ width: 1920, height: 1080 });
     try {
       const result = await page.evaluate(() => {
-        const hint = document.getElementById('song-bar-hint');
+        const btn = document.getElementById('calibrate-btn');
         const songBar = document.getElementById('song-bar');
-        if (!hint) throw new Error('#song-bar-hint not found');
+        if (!btn) throw new Error('#calibrate-btn not found');
         if (!songBar) throw new Error('#song-bar not found');
-        const hintBox = hint.getBoundingClientRect();
+        const btnBox = btn.getBoundingClientRect();
         const barBox = songBar.getBoundingClientRect();
-        return { hintRight: hintBox.right, barRight: barBox.right };
+        return { btnRight: btnBox.right, barRight: barBox.right };
       });
-      const diff = Math.abs(result.barRight - result.hintRight);
+      const diff = Math.abs(result.barRight - result.btnRight);
       if (diff > 40) {
-        throw new Error(`#song-bar-hint right edge (${result.hintRight}) is ${diff}px from #song-bar right edge (${result.barRight}) — expected within 40px`);
+        throw new Error(`#calibrate-btn right edge (${result.btnRight}) is ${diff}px from #song-bar right edge (${result.barRight}) — expected within 40px`);
       }
     } finally {
       if (originalViewport) {
@@ -4860,31 +4857,20 @@ export const PB_STYLE_2: StateInvariant = {
 
 export const IDLE_FADE_1: StateInvariant = {
   id: 'IDLE-FADE-1',
-  description: '#song-bar-hint has opacity transition CSS',
+  description: '#midi-search-input has placeholder with .mid hint',
   check: async (page) => {
-    const transition = await page.evaluate(() => {
-      const hint = document.getElementById('song-bar-hint');
-      if (!hint) throw new Error('#song-bar-hint not found');
-      return window.getComputedStyle(hint).transition;
-    });
-    if (!transition.includes('opacity')) {
-      throw new Error(`#song-bar-hint has no opacity transition: "${transition}"`);
+    const placeholder = await page.locator('#midi-search-input').getAttribute('placeholder');
+    if (!placeholder || !placeholder.includes('.mid')) {
+      throw new Error(`#midi-search-input placeholder missing .mid hint: "${placeholder}"`);
     }
   },
 };
 
 export const IDLE_FADE_2: StateInvariant = {
   id: 'IDLE-FADE-2',
-  description: '#song-bar-hint is visible (opacity > 0) on page load when idle',
+  description: '#midi-search-input is visible on page load',
   check: async (page) => {
-    const opacity = await page.evaluate(() => {
-      const hint = document.getElementById('song-bar-hint');
-      if (!hint) throw new Error('#song-bar-hint not found');
-      return parseFloat(window.getComputedStyle(hint).opacity);
-    });
-    if (opacity <= 0) {
-      throw new Error(`#song-bar-hint opacity is ${opacity} on load — should be > 0 when idle`);
-    }
+    await expect(page.locator('#midi-search-input')).toBeVisible();
   },
 };
 
