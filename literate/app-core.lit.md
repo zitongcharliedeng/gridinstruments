@@ -1018,10 +1018,26 @@ export class DComposeApp {
     });
 
 
-     const PIANO_KEY_MM = 23;
-     const CSS_PX_PER_MM = 96 / 25.4;
-     const pianoKeyPx = PIANO_KEY_MM * CSS_PX_PER_MM;
+```
 
+### Default Zoom — matching grid cells to piano key width
+
+The grid should feel like a real keyboard. A standard piano white key is **23mm** wide ([reference](https://en.wikipedia.org/wiki/Musical_keyboard#Size)). We target this physical width for grid cells.
+
+The [CSS Values spec](https://www.w3.org/TR/css-values-3/#absolute-lengths) defines **1 CSS px = 1/96 inch**. Since 1 inch = 25.4mm, the conversion from millimeters to CSS pixels is:
+
+``` {.typescript file=_generated/app-core.ts}
+     const PIANO_KEY_MM = 23;
+     const CSS_PX_PER_INCH = 96;
+     const MM_PER_INCH = 25.4;
+     const pianoKeyPx = PIANO_KEY_MM * CSS_PX_PER_INCH / MM_PER_INCH;
+```
+
+This conversion is **universal** — every browser on every device maps CSS pixels to physical size through [devicePixelRatio](https://developer.mozilla.org/en-US/docs/Web/API/Window/devicePixelRatio). We never need to detect DPI because the browser already did it for us. Text at `font-size: 16px` is the same physical size on a 96 DPI laptop and a 400 DPI phone.
+
+The grid's cell width at zoom=1.0 comes from the lattice geometry — specifically the **half-vectors** `cellHv1` (wholetone direction) and `cellHv2` (octave direction). These change with the skew and shear sliders, so we measure them live:
+
+``` {.typescript file=_generated/app-core.ts}
      if (!this.visualizer) throw new Error('visualizer must be initialized before zoom');
      const geometry = this.visualizer.getGridGeometry();
      const gridCellWidthPx =
