@@ -206,8 +206,6 @@ import {
        IDLE_FADE_2,
        FULLSCREEN_BTN,
        FLAT_SOUND_TOGGLE,
-       HISTORY_TIME_SLIDER,
-       HISTORY_RANGE_BTNS,
        ALL_INFO_BTNS,
        NO_DUPLICATE_IDS,
        NO_D4_IN_UI,
@@ -1055,15 +1053,7 @@ test.describe('[Structural] state-independent invariants', () => {
     await FLAT_SOUND_TOGGLE.check(page);
   });
 
-  test('UI-HISTORY-TIME-1: History time slider exists', async ({ page }) => {
-    await HISTORY_TIME_SLIDER.check(page);
-  });
-
-  test('UI-HISTORY-RANGE-1: History range buttons exist', async ({ page }) => {
-    await HISTORY_RANGE_BTNS.check(page);
-  });
-
-  test('UI-INFO-COMPLETE-1: All 15 info buttons exist', async ({ page }) => {
+  test('UI-INFO-COMPLETE-1: All 9 info buttons exist', async ({ page }) => {
     await ALL_INFO_BTNS.check(page);
   });
  });

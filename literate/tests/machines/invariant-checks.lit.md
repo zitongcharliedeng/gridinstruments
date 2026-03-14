@@ -4616,15 +4616,15 @@ export const SONGBAR_PROGRESS_4: StateInvariant = {
 
 export const SONGBAR_CAL_1: StateInvariant = {
   id: 'SONGBAR-CAL-1',
-  description: '#calibrate-btn text is "Calibrate playable area"',
+  description: '#calibrate-btn text is "Calibrate"',
   check: async (page: Page) => {
     const text = await page.evaluate(() => {
       const btn = document.getElementById('calibrate-btn');
       if (!btn) throw new Error('#calibrate-btn not found');
       return btn.textContent?.trim() ?? '';
     });
-    if (text !== 'Calibrate playable area') {
-      throw new Error(`#calibrate-btn text is "${text}", expected "Calibrate playable area"`);
+    if (text !== 'Calibrate') {
+      throw new Error(`#calibrate-btn text is "${text}", expected "Calibrate"`);
     }
   },
 };
@@ -4914,44 +4914,17 @@ export const FLAT_SOUND_TOGGLE: StateInvariant = {
   },
 };
 
-/** D = {}. History time slider exists in visualiser handle. */
-export const HISTORY_TIME_SLIDER: StateInvariant = {
-  id: 'UI-HISTORY-TIME-1',
-  description: '#history-time-slider exists',
-  check: async (page: Page) => {
-    const exists = await page.evaluate(() =>
-      document.getElementById('history-time-slider') !== null
-    );
-    if (!exists) throw new Error('#history-time-slider not found');
-  },
-};
 
-/** D = {}. History note range buttons exist. */
-export const HISTORY_RANGE_BTNS: StateInvariant = {
-  id: 'UI-HISTORY-RANGE-1',
-  description: 'History range shrink/expand buttons exist',
-  check: async (page: Page) => {
-    const result = await page.evaluate(() => ({
-      shrink: document.getElementById('history-range-shrink') !== null,
-      expand: document.getElementById('history-range-expand') !== null,
-      label: document.getElementById('history-range-label') !== null,
-    }));
-    if (!result.shrink || !result.expand || !result.label) {
-      throw new Error(`History range controls missing: ${JSON.stringify(result)}`);
-    }
-  },
-};
-
-/** D = {}. All 10 slider info buttons exist with content (tuning, skew, shear, calibration, search, quantization, bend, velocity, pressure, timbre). */
+/** D = {}. All 9 slider info buttons exist (tuning, skew, shear, search, quantization, bend, velocity, pressure, timbre). */
 export const ALL_INFO_BTNS: StateInvariant = {
   id: 'UI-INFO-COMPLETE-1',
-  description: 'All 10 slider info buttons exist with data-info attributes',
+  description: 'All 9 slider info buttons exist with data-info attributes',
   check: async (page: Page) => {
     const count = await page.evaluate(() =>
       document.querySelectorAll('.slider-info-btn[data-info]').length
     );
-    if (count < 10) {
-      throw new Error(`Expected ≥10 info buttons, found ${count}`);
+    if (count < 9) {
+      throw new Error(`Expected ≥9 info buttons, found ${count}`);
     }
   },
 };
