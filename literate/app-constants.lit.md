@@ -325,5 +325,14 @@ ${srcLink('synth.lit.md', 'Source: synth.lit.md — oscillator waveforms')}`,
 </table>
 <p>Auto-detected via Keyboard API on Chrome/Edge. Falls back to ANSI.</p>
 ${srcLink('keyboard-layouts.lit.md', 'Source: keyboard-layouts.lit.md — layout definitions')}`,
+  calibrate: `
+<h2>Calibrate Playable Area</h2>
+<p>Set which notes your controller can reach. Press <strong>Calibrate</strong>, then play every reachable note on your MIDI controller or keyboard. The app records the range and uses it to:</p>
+<ul>
+<li>Auto-transpose songs to fit your playable area</li>
+<li>Grey out unreachable cells so you can focus on what you can play</li>
+<li>Optimize game mode note placement</li>
+</ul>
+<p>The calibrated range is saved in localStorage and persists across sessions. Reset by clearing and re-calibrating.</p>`,
 };
 ```
