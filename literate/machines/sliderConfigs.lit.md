@@ -62,7 +62,7 @@ Volume stores a 0–1 linear gain but the badge displays dB, with −∞ shown w
 ``` {.typescript file=_generated/machines/sliderConfigs.ts}
 export const VOLUME_SLIDER_CONFIG: SliderComponentConfig = {
   name: 'volume',
-  defaultValue: 0.3,
+  defaultValue: 0.5,
   formatBadge: (v) => (v <= 0 ? '-\u221E' : (20 * Math.log10(v)).toFixed(1)),
   editable: false,
 };
