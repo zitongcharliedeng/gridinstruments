@@ -1020,11 +1020,19 @@ export class DComposeApp {
 
 ```
 
-### Default Zoom — matching grid cells to piano key width
+### Default Zoom — matching grid cells to finger instrument key widths
 
-The grid should feel like a real keyboard. A standard piano white key is **23mm** wide ([reference](https://en.wikipedia.org/wiki/Musical_keyboard#Size)). We target this physical width for grid cells.
+The grid should feel like other finger instruments. Three reference key widths:
 
-The [CSS Values spec](https://www.w3.org/TR/css-values-3/#absolute-lengths) defines **1 CSS px = 1/96 inch**. Since 1 inch = 25.4mm, the conversion from millimeters to CSS pixels is:
+| Instrument | Key width | Source |
+|-----------|----------|--------|
+| QWERTY keyboard key + padding | ~19mm | [Cherry MX keycap](https://deskthority.net/wiki/Cherry_MX) |
+| Piano white key | ~23mm | [Musical keyboard](https://en.wikipedia.org/wiki/Musical_keyboard#Size) |
+| [LinnStrument](https://www.rogerlinndesign.com/linnstrument) pad | ~17mm | Roger Linn Design |
+
+We target **23mm** (piano white key) as the default — it's the largest common reference and produces cells where note labels are comfortably readable. Users can adjust via the zoom slider.
+
+The [CSS Values spec](https://www.w3.org/TR/css-values-3/#absolute-lengths) defines 1 CSS px = 1/96 inch. Since [1 inch = 25.4mm](https://en.wikipedia.org/wiki/Inch), the conversion from physical millimeters to CSS pixels is:
 
 ``` {.typescript file=_generated/app-core.ts}
      const PIANO_KEY_MM = 23;

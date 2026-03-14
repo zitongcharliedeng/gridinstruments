@@ -1,7 +1,7 @@
 id: no-ts-comments
-message: "Use literate prose instead of code comments. Rationale belongs in .lit.md markdown, not // comments."
+message: "Use literate prose instead of code comments. End the code block, write markdown, resume with a new code block targeting the same file."
 severity: error
-note: "In literate programming, explanatory text goes in markdown prose between code blocks. Code comments are redundant."
+note: "Entangled concatenates multiple ``` {.typescript file=...} blocks in document order. Split your code, add prose (with MDN links, tables, images), then resume. See literate/app-core.lit.md 'Default Zoom' section for the pattern."
 language: TypeScript
 rule:
   kind: comment
