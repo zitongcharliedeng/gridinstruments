@@ -2,17 +2,20 @@
 
 Slider UI helpers — thumb positioning, fill gradients, badge clamping, and info dialog wiring.
 
-``` {.typescript file=_generated/app-slider.ts}
-/**
- * Slider UI helpers — thumb positioning, fill gradients, and info dialogs.
- */
+## Imports
 
+``` {.typescript file=_generated/app-slider.ts}
 import { parseNum } from './app-helpers';
 import { SLIDER_INFO } from './app-constants';
 import { createActor } from 'xstate';
 import { dialogMachine } from './machines/dialogMachine';
+```
 
-/** Thumb center px offset — source of truth for fill, badge & notch alignment. */
+## Thumb Center Calculation
+
+`thumbCenterPx` computes the pixel offset of the thumb center given a normalised ratio (0–1) and the slider element. The thumb is 3 px wide; the track's effective travel is `offsetWidth - thumbW`, so the center sits at `ratio * travel + thumbW/2`.
+
+``` {.typescript file=_generated/app-slider.ts}
 export function thumbCenterPx(ratio: number, slider: HTMLInputElement): number {
   const thumbW = 3;
   const trackW = slider.offsetWidth;
@@ -20,19 +23,26 @@ export function thumbCenterPx(ratio: number, slider: HTMLInputElement): number {
     ? ratio * (trackW - thumbW) + thumbW / 2
     : 0;
 }
+```
 
-/** Clamp badge position to stay within slider bounds.
- * Badge has transform: translateX(-50%), so we clamp the center position
- * to ensure the badge doesn't extend beyond the slider edges.
- */
+## Badge Position Clamping
+
+Badges use `transform: translateX(-50%)`, so their left offset equals the thumb center. `clampBadgePosition` keeps the badge fully inside the slider by constraining the center to `[halfBadgeW, trackW - halfBadgeW]`.
+
+``` {.typescript file=_generated/app-slider.ts}
 export function clampBadgePosition(centerPx: number, slider: HTMLInputElement, badgeWidth = 50): number {
   const trackW = slider.offsetWidth;
   if (trackW <= 0) return centerPx;
   const halfBadgeW = badgeWidth / 2;
   return Math.max(halfBadgeW, Math.min(trackW - halfBadgeW, centerPx));
 }
+```
 
-/** Apply fill gradient to a range input (module-level for use in actor subscribers). */
+## Slider Fill Gradient
+
+`applySliderFill` paints a `linear-gradient` on the range input so the filled portion uses `--fg` and the empty portion uses `#000`. The fill percentage is derived from the thumb center rather than the raw value ratio so it aligns pixel-perfectly with the thumb.
+
+``` {.typescript file=_generated/app-slider.ts}
 export function applySliderFill(slider: HTMLInputElement): void {
   const min = parseNum(slider.min, 0);
   const max = parseNum(slider.max, 100);
@@ -47,11 +57,13 @@ export function applySliderFill(slider: HTMLInputElement): void {
     slider.style.background = `linear-gradient(to right, var(--fg) ${pct.toFixed(2)}%, #000 ${pct.toFixed(2)}%)`;
   }
 }
+```
 
-/** Re-trigger slider fill gradients and badge positions for all overlay sliders.
- * Called when overlay becomes visible — offsetWidth returns 0 when display:none,
- * so fills and badge positions computed while hidden are incorrect.
- */
+## Bulk Slider Refresh
+
+`refreshAllSliderUI` recalculates fills and badge positions for every overlay slider. It must be called when the overlay becomes visible because `offsetWidth` returns 0 while `display: none`, making any earlier fill calculations incorrect.
+
+``` {.typescript file=_generated/app-slider.ts}
 export function refreshAllSliderUI(): void {
   const sliderBadgePairs: [string, string | null, number][] = [
     ['skew-slider', 'skew-thumb-badge', 50],
@@ -79,7 +91,13 @@ export function refreshAllSliderUI(): void {
     }
   }
 }
+```
 
+## Info Dialogs
+
+`setupInfoDialogs` wires each `.slider-info-btn` to an XState `dialogMachine` actor. Clicking a button sends `OPEN` with the matching HTML content from `SLIDER_INFO`. Clicking close, or clicking the backdrop, sends `CLOSE`.
+
+``` {.typescript file=_generated/app-slider.ts}
 export function setupInfoDialogs(): void {
   const dialog = document.getElementById('info-dialog');
   const closeBtn = document.getElementById('info-close');
@@ -97,7 +115,6 @@ export function setupInfoDialogs(): void {
   });
   infoDialogActor.start();
 
-  // Wire all slider info buttons to open the dialog modal
   document.querySelectorAll<HTMLButtonElement>('.slider-info-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();

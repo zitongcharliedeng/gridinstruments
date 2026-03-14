@@ -2,54 +2,65 @@
 
 Pure utility functions — Markdown rendering, type guards, numeric parsing, slider annotation formatting, and D-reference note/Hz conversion.
 
-``` {.typescript file=_generated/app-helpers.ts}
-/**
- * Pure utility functions — no DOM dependencies (except type guards).
- */
+## Imports
 
+``` {.typescript file=_generated/app-helpers.ts}
 import type { WaveformType } from './lib/synth';
 import type { SliderPresetPoint } from './app-constants';
+```
 
-/** Converts a restricted subset of Markdown to HTML for the About dialog. */
+## Markdown Renderer
+
+`renderMarkdown` converts a restricted Markdown subset to HTML for the About dialog. It strips the H1 title, image/badge lines, and everything from `## Development` onward, then converts headings, tables, inline formatting, links, and lists.
+
+Tables are handled before inline formatting to avoid confusing pipe characters with other syntax.
+
+``` {.typescript file=_generated/app-helpers.ts}
 export function renderMarkdown(md: string): string {
-  // Drop H1 title, image/badge lines, and the ## Development section
   const withoutDev = md
-    .replace(/^# .+\n/m, '')                          // remove H1 title
-    .replace(/^\[?!\[.*$/gm, '')                      // remove image/badge lines (![...] and [![...])
-    .split(/^## Development$/m)[0];                    // cut at Development section
+    .replace(/^# .+\n/m, '')
+    .replace(/^\[?!\[.*$/gm, '')
+    .split(/^## Development$/m)[0];
 
   return withoutDev
     .replace(/^## (.+)$/gm, '<h2>$1</h2>')
     .replace(/^### (.+)$/gm, '<h3>$1</h3>')
-    // Tables — before inline formatting (avoid pipe/bracket confusion)
     .replace(/^\|(.+)\|$/gm, (_: string, row: string) =>
       '<tr>' + row.split('|').map((c: string) => `<td>${c.trim()}</td>`).join('') + '</tr>')
-    .replace(/<tr>(<td>[-:\s]+<\/td>)+<\/tr>\n?/g, '')  // remove separator rows
+    .replace(/<tr>(<td>[-:\s]+<\/td>)+<\/tr>\n?/g, '')
     .replace(/((?:<tr>.*<\/tr>\n?)+)/g, '<table>$1</table>')
-    // Inline formatting
     .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
     .replace(/\*([^*\n]+)\*/g, '<em>$1</em>')
     .replace(/`([^`]+)`/g, '<code>$1</code>')
     .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>')
-    // Lists
     .replace(/^- (.+)$/gm, '<li>$1</li>')
     .replace(/(<li>[\s\S]+?<\/li>)(?!\n<li>)/g, '$1</ul>')
     .replace(/<li>/g, (m: string, offset: number, str: string) => str.lastIndexOf('<li>', offset) < str.lastIndexOf('</ul>', offset) ? '<ul><li>' : m)
     .replace(/\n{2,}/g, '\n')
     .trim();
 }
+```
 
-// Type guard for WaveformType
+## Type Guards and Numeric Parsing
+
+`isWaveformType` narrows `unknown` to `WaveformType`. `parseNum` wraps `parseFloat` with a fallback for `NaN` — used everywhere slider attribute strings are read.
+
+``` {.typescript file=_generated/app-helpers.ts}
 export function isWaveformType(value: unknown): value is WaveformType {
   return typeof value === 'string' && ['sine', 'square', 'sawtooth', 'triangle'].includes(value);
 }
 
-/** Parse a numeric string with a fallback for NaN. */
 export function parseNum(s: string, fallback: number): number {
   const n = parseFloat(s);
   return Number.isFinite(n) ? n : fallback;
 }
+```
 
+## Slider Annotation Formatter
+
+`formatSliderAnnotation` displays the value as an offset from the nearest named preset. When the distance is below the display threshold (half the last displayed digit) it shows the preset label directly. Otherwise it shows `"label ±N.NNunit"` with a Unicode minus sign for negative offsets.
+
+``` {.typescript file=_generated/app-helpers.ts}
 export function formatSliderAnnotation(
   value: number,
   presets: SliderPresetPoint[],
@@ -62,7 +73,6 @@ export function formatSliderAnnotation(
     const d = Math.abs(value - p.value);
     if (d < minDist) { minDist = d; nearest = p; }
   }
-  // Threshold = half the last displayed digit (e.g. precision=2 → 0.005)
   const threshold = 0.5 * Math.pow(10, -precision);
   if (minDist < threshold) return nearest.label;
   const offset = value - nearest.value;
@@ -70,9 +80,13 @@ export function formatSliderAnnotation(
   const sign = offset > 0 ? '+' : '\u2212';
   return `${nearest.label} ${sign}${rounded.toFixed(precision)}${unit}`;
 }
+```
 
-// ─── D ref helper functions ────────────────────────────────────────────────
+## D Reference Helpers
 
+The D-reference pitch is the frequency anchor for the entire grid. `noteNameToHz` parses a note name like `"A4"` and returns its frequency relative to D4 = 293.66 Hz using semitone arithmetic. `hzToNoteAnnotation` does the inverse — given a frequency and the current D4 reference, it returns a display string like `"A4"` or `"G#4 +12¢"`.
+
+``` {.typescript file=_generated/app-helpers.ts}
 const NOTE_SEMITONES: Record<string, number> = {
   C: 0, 'C#': 1, Db: 1, D: 2, 'D#': 3, Eb: 3, E: 4, F: 5,
   'F#': 6, Gb: 6, G: 7, 'G#': 8, Ab: 8, A: 9, 'A#': 10, Bb: 10, B: 11,
@@ -85,7 +99,6 @@ export function noteNameToHz(input: string): number | null {
   if (!(noteKey in NOTE_SEMITONES)) return null;
   const semitone = NOTE_SEMITONES[noteKey];
   const octave = parseInt(m[2], 10);
-  // D4 = 293.66Hz, D = semitone 2
   const semitonesFromD4 = (octave - 4) * 12 + (semitone - 2);
   return 293.66 * Math.pow(2, semitonesFromD4 / 12);
 }

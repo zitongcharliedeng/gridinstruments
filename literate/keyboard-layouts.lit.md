@@ -14,82 +14,65 @@ Circle-of-fifths spelling with ♯/♭ glyphs. Frequency and MIDI conversion uti
 
 Multiple keyboard form factors (ANSI, ISO, 60%/65%/75%) are built by filtering the full key map based on which keys are physically present.
 
-``` {.typescript file=_generated/lib/keyboard-layouts.ts}
-/**
- * PHYSICAL POSITION Keyboard to Isomorphic Coordinate Mapping
- *
- * Uses isomorphic-qwerty library coordinates to dynamically generate
- * DCompose/Wicki-Hayden grid positions for every key code the library knows.
- *
- * The DCompose/Wicki-Hayden layout:
- * - Moving right increases pitch by a fifth (700 cents)
- * - Moving up increases pitch by an octave (1200 cents)
- * - D is the central note (coordinate [0, 0]) at KeyH physical position
- *
- * Formula (derived from the existing hardcoded map, verified to match):
- *   ex = iqX + rowStagger[iqY]
- *   dcompX = 2 * ex - iqY - 8
- *   dcompY = -ex + 5
- *
- * Row stagger (physical keyboard offset): ZXCV row (iqY=3) is staggered +1
- * relative to the rows above it on standard keyboards.
- */
+## Imports and Types
 
+``` {.typescript file=_generated/lib/keyboard-layouts.ts}
 import { COORDS_BY_CODE } from 'isomorphic-qwerty';
 
-export type KeyCoordinate = [number, number]; // [x, y] where x=fifths from D, y=octave offset
+export type KeyCoordinate = [number, number];
 
 export interface KeyboardLayout {
   id: string;
   name: string;
-  /** Whether this layout has the ISO extra key (IntlBackslash between LShift and Z) */
   hasIntlBackslash: boolean;
-  /** Whether this layout has a right-side Backslash key (ANSI) */
   hasBackslash: boolean;
-  /** Whether to include numpad keys */
   hasNumpad: boolean;
-  /** Extra keys to explicitly EXCLUDE from note map (layout-specific) */
   excludeKeys?: Set<string>;
   keyMap: Record<string, KeyCoordinate>;
 }
+```
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Row stagger: physical keyboard stagger offsets per isomorphic-qwerty row
-// iqY=0 → digits row, 1 → QWER, 2 → ASDF, 3 → ZXCV
-// The ZXCV row is physically staggered half a unit to the right relative to the
-// rows above, which we represent as +1 in the ex calculation.
-// ─────────────────────────────────────────────────────────────────────────────
+## Row Stagger and Coordinate Transform
+
+Physical keyboard rows are staggered: the ZXCV row (iqY=3) sits half a unit to the right of the ASDF row. `ROW_STAGGER` encodes this offset per row index. `iqToDCompose` applies the derived formula:
+
+```
+ex = iqX + rowStagger[iqY]
+dcompX = 2 * ex - iqY - 12
+dcompY = -ex + 7
+```
+
+``` {.typescript file=_generated/lib/keyboard-layouts.ts}
 const ROW_STAGGER: Record<number, number> = { 0: 0, 1: 1, 2: 2, 3: 3 };
 
 function iqToDCompose(iqX: number, iqY: number): KeyCoordinate {
   const ex = iqX + (ROW_STAGGER[iqY] ?? 0);
   return [2 * ex - iqY - 12, -ex + 7];
 }
+```
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Build the full key map from isomorphic-qwerty COORDS_BY_CODE
-// Only layer z=1 (main keyboard) and z=3 (numpad) are used as notes.
-// ─────────────────────────────────────────────────────────────────────────────
+## Building Layer Maps
 
-/** All layer-1 (main keyboard) note mappings */
+All layer-1 (main keyboard, z=1) and layer-3 (numpad, z=3) entries from `COORDS_BY_CODE` are transformed and stored in separate maps for later layout filtering.
+
+``` {.typescript file=_generated/lib/keyboard-layouts.ts}
 const LAYER1_KEY_MAP: Record<string, KeyCoordinate> = {};
-/** All layer-3 (numpad) note mappings */
 const NUMPAD_KEY_MAP: Record<string, KeyCoordinate> = {};
 
 for (const [code, [iqX, iqY, iqZ]] of COORDS_BY_CODE) {
   if (iqZ === 1) {
     LAYER1_KEY_MAP[code] = iqToDCompose(iqX, iqY);
   } else if (iqZ === 3) {
-    // Numpad: treat as an extension of the grid
-    // iqY for numpad goes 0-4 (rows), iqX 0-3 (cols)
-    // Map numpad similarly — keep layer separation via row offset
     NUMPAD_KEY_MAP[code] = iqToDCompose(iqX, iqY);
   }
 }
+```
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Keys that are NEVER notes regardless of layout (modifiers / system)
-// ─────────────────────────────────────────────────────────────────────────────
+## Non-Note Keys
+
+`MODIFIER_ROW_KEYS` lists every key that is never a note regardless of layout — modifiers, function keys, navigation cluster, and special keys. `SPECIAL_KEYS` names the sustain and vibrato bindings.
+
+``` {.typescript file=_generated/lib/keyboard-layouts.ts}
 export const MODIFIER_ROW_KEYS = new Set([
   'ControlLeft', 'ControlRight',
   'AltLeft', 'AltRight',
@@ -116,11 +99,13 @@ export const SPECIAL_KEYS = {
   SUSTAIN_RIGHT: 'AltRight',
   VIBRATO: 'Space',
 };
+```
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Build per-layout key maps
-// ─────────────────────────────────────────────────────────────────────────────
+## Per-Layout Key Map Builder
 
+`buildKeyMap` filters `LAYER1_KEY_MAP` (and optionally `NUMPAD_KEY_MAP`) by removing modifier keys, layout-specific exclusions, and keys absent from the physical form factor (IntlBackslash for ISO layouts, Backslash for ANSI).
+
+``` {.typescript file=_generated/lib/keyboard-layouts.ts}
 function buildKeyMap(opts: {
   hasIntlBackslash: boolean;
   hasBackslash: boolean;
@@ -147,12 +132,13 @@ function buildKeyMap(opts: {
 
   return map;
 }
+```
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Layout variants
-// ─────────────────────────────────────────────────────────────────────────────
+## Layout Variants
 
-// Keys absent on 60% keyboards (no top function row, no numpad, no nav cluster)
+Compact form factors exclude keys that are physically absent. 60% keyboards have no function row, navigation cluster, or numpad. 65% adds arrow keys and a few nav keys. 75% restores the function row but keeps a compact footprint.
+
+``` {.typescript file=_generated/lib/keyboard-layouts.ts}
 const SIXTY_PCT_EXCLUDE = new Set([
   'F1','F2','F3','F4','F5','F6','F7','F8','F9','F10','F11','F12',
   'PrintScreen','ScrollLock','Pause',
@@ -160,13 +146,11 @@ const SIXTY_PCT_EXCLUDE = new Set([
   'ArrowLeft','ArrowRight','ArrowUp','ArrowDown',
 ]);
 
-// 65% adds arrow keys + a few nav keys but still no F-row
 const SIXTY_FIVE_PCT_EXCLUDE = new Set([
   'F1','F2','F3','F4','F5','F6','F7','F8','F9','F10','F11','F12',
   'PrintScreen','ScrollLock','Pause',
 ]);
 
-// 75% adds F-row on the top but remains compact
 const SEVENTY_FIVE_PCT_EXCLUDE = new Set([
   'PrintScreen','ScrollLock','Pause',
 ]);
@@ -179,13 +163,10 @@ const LAYOUTS_RAW: {
   hasNumpad: boolean;
   excludeKeys?: Set<string>;
 }[] = [
-  // Full-size ANSI (standard US — has Backslash, no IntlBackslash)
   { id: 'ansi',       name: 'ANSI (US QWERTY)',        hasIntlBackslash: false, hasBackslash: true,  hasNumpad: false },
   { id: 'ansi-np',    name: 'ANSI + Numpad',            hasIntlBackslash: false, hasBackslash: true,  hasNumpad: true  },
-  // ISO (UK/EU — has IntlBackslash between LShift and Z, also has Backslash)
   { id: 'iso',        name: 'ISO (UK/EU QWERTY)',       hasIntlBackslash: true,  hasBackslash: true,  hasNumpad: false },
   { id: 'iso-np',     name: 'ISO + Numpad',             hasIntlBackslash: true,  hasBackslash: true,  hasNumpad: true  },
-  // Compact form factors (ANSI-based)
   { id: '75pct',      name: '75% (no nav cluster)',     hasIntlBackslash: false, hasBackslash: true,  hasNumpad: false, excludeKeys: SEVENTY_FIVE_PCT_EXCLUDE },
   { id: '65pct',      name: '65% (no F-row)',           hasIntlBackslash: false, hasBackslash: true,  hasNumpad: false, excludeKeys: SIXTY_FIVE_PCT_EXCLUDE },
   { id: '60pct',      name: '60% (compact)',            hasIntlBackslash: false, hasBackslash: true,  hasNumpad: false, excludeKeys: SIXTY_PCT_EXCLUDE },
@@ -204,18 +185,13 @@ export const layouts: Record<string, KeyboardLayout> = Object.fromEntries(
 export function getLayout(id: string): KeyboardLayout {
   return layouts[id] ?? KEYBOARD_VARIANTS[0];
 }
+```
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Utility functions (unchanged API surface)
-// ─────────────────────────────────────────────────────────────────────────────
+## Note Naming Utilities
 
-/**
- * Get note name from coordinate using circle-of-fifths spelling.
- * Returns proper enharmonic names using ♯ and ♭ glyphs.
- * When a note would require double-sharps/flats, uses repeated ♯/♭ glyphs (♯♯, ♭♭).
- * x = position in circle of fifths (0 = D)
- */
-// Natural notes in order of fifths: F(-3) C(-2) G(-1) D(0) A(1) E(2) B(3)
+`getNoteNameFromCoord` returns the circle-of-fifths spelling for a given x coordinate, using ♯/♭ glyphs. Double-sharp (𝄪) and double-flat (𝄫) SMP codepoints are avoided because JetBrains Mono lacks them — repeated ♯♯/♭♭ are used instead.
+
+``` {.typescript file=_generated/lib/keyboard-layouts.ts}
 const FIFTHS_NATURALS = ['F', 'C', 'G', 'D', 'A', 'E', 'B'];
 export function getNoteNameFromCoord(x: number): string {
   const baseIndex = ((x + 3) % 7 + 7) % 7;
@@ -227,23 +203,23 @@ export function getNoteNameFromCoord(x: number): string {
 }
 
 function buildSharps(n: number): string {
-  // Use ♯♯ instead of 𝄪 (U+1D12A) — JetBrains Mono lacks the SMP double-sharp glyph
   let s = '';
   for (let i = 0; i < n; i++) s += '\u266F';
   return s;
 }
 
 function buildFlats(n: number): string {
-  // Use ♭♭ instead of 𝄫 (U+1D12B) — JetBrains Mono lacks the SMP double-flat glyph
   let s = '';
   for (let i = 0; i < n; i++) s += '\u266D';
   return s;
 }
+```
 
-/**
- * Get the 12-TET equivalent name for a circle-of-fifths position.
- * Used for bracket notation and isBlackKey determination.
- */
+## 12-TET and Cent Deviation Utilities
+
+`get12TETName` maps a circle-of-fifths position to its closest 12-TET pitch class name — used for bracket notation and black-key detection. `getCentDeviation` gives the deviation from 12-TET in cents for a given fifth size.
+
+``` {.typescript file=_generated/lib/keyboard-layouts.ts}
 const PITCH_CLASS_12TET = ['C', 'C\u266F', 'D', 'E\u266D', 'E', 'F', 'F\u266F', 'G', 'A\u266D', 'A', 'B\u266D', 'B'];
 
 export function get12TETName(x: number): string {
@@ -251,26 +227,20 @@ export function get12TETName(x: number): string {
   return PITCH_CLASS_12TET[pc];
 }
 
-/**
- * Cent deviation from 12-TET for a given circle-of-fifths position.
- * Positive = sharper than 12-TET, negative = flatter.
- * Assumes pure octaves (1200¢).
- */
 export function getCentDeviation(x: number, fifth: number): number {
   return x * (fifth - 700);
 }
+```
 
-/**
- * Convert coordinate to MIDI note number
- * D-ref (MIDI 62 at default) is at coordinate [0, 0]
- */
+## Coordinate to MIDI and Frequency
+
+`coordToMidi` converts a grid position to a MIDI note number, anchored at D4 = MIDI 62. `coordToFrequency` converts to Hz using a configurable generator interval pair (default: 700¢ fifth, 1200¢ octave) and base frequency.
+
+``` {.typescript file=_generated/lib/keyboard-layouts.ts}
 export function coordToMidi(x: number, y: number, octaveOffset = 0): number {
   return 62 + x * 7 + y * 12 + octaveOffset * 12;
 }
 
-/**
- * Convert coordinate to frequency in Hz (12-TET by default)
- */
 export function coordToFrequency(
   x: number,
   y: number,
@@ -281,7 +251,13 @@ export function coordToFrequency(
   const cents = y * generator[1] + x * generator[0] + octaveOffset * 1200;
   return baseFreq * Math.pow(2, cents / 1200);
 }
+```
 
+## Key Mapping Queries and Display Labels
+
+`getAllMappedKeys` and `isKeyMapped` query the default (ANSI) layout. `codeToLabel` converts a W3C key code to a short display string for the QWERTY overlay — letter keys become single uppercase letters, digit keys become the digit character, and punctuation keys use their printed symbol.
+
+``` {.typescript file=_generated/lib/keyboard-layouts.ts}
 export function getAllMappedKeys(): string[] {
   return Object.keys(KEYBOARD_VARIANTS[0].keyMap);
 }
@@ -290,16 +266,9 @@ export function isKeyMapped(code: string): boolean {
   return code in KEYBOARD_VARIANTS[0].keyMap;
 }
 
-/**
- * Convert a W3C key code to a short display label for the QWERTY overlay.
- * Returns '' for keys that should not be shown (modifiers, function keys, etc.).
- */
 export function codeToLabel(code: string): string {
-  // Letter keys: KeyA → A, KeyB → B, ...
   if (/^Key[A-Z]$/.test(code)) return code.slice(3);
-  // Digit keys: Digit0 → 0, Digit1 → 1, ...
   if (/^Digit[0-9]$/.test(code)) return code.slice(5);
-  // Numpad keys
   if (/^Numpad[0-9]$/.test(code)) return 'N' + code.slice(6);
   switch (code) {
     case 'Backquote':       return '`';
@@ -323,6 +292,5 @@ export function codeToLabel(code: string): string {
   }
 }
 
-// Legacy export for code that imports 'standardLayout' by name
 export const standardLayout: KeyboardLayout = KEYBOARD_VARIANTS[0];
 ```

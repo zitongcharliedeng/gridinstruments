@@ -2,15 +2,11 @@
 
 DOM query helpers and element factory functions — safe element lookup with type narrowing, select-at-slot creation, and cycling button setup.
 
-``` {.typescript file=_generated/app-dom.ts}
-/**
- * DOM query helpers and element factory functions.
- */
+## Typed Element Getters
 
-/**
- * Helper to safely get a DOM element with type narrowing.
- * Throws if element not found or is not an instance of the expected type.
- */
+`getElement` throws if the element is missing or the wrong type — fail-fast for required elements. `getElementOrNull` returns `null` instead of throwing — useful for optional elements where absence is a valid state.
+
+``` {.typescript file=_generated/app-dom.ts}
 export function getElement<T extends HTMLElement>(id: string, type: new() => T): T {
   const el = document.getElementById(id);
   if (!(el instanceof type)) {
@@ -19,22 +15,19 @@ export function getElement<T extends HTMLElement>(id: string, type: new() => T):
   return el;
 }
 
-/**
- * Helper to safely get an optional DOM element with type narrowing.
- * Returns null if element not found or is not an instance of the expected type.
- */
 export function getElementOrNull<T extends HTMLElement>(id: string, type: new() => T): T | null {
   const el = document.getElementById(id);
   if (el === null) return null;
   if (!(el instanceof type)) return null;
   return el;
 }
+```
 
-/**
- * Creates a <select> element and replaces a placeholder slot in the DOM.
- * Used so SlimSelect-wrapped selects are created in JS (not HTML source),
- * keeping the HTML free of native <select> tags (enforced by ast-grep).
- */
+## Select at Slot
+
+`createSelectAtSlot` creates a `<select>` element and replaces a placeholder `<div>` slot in the DOM. SlimSelect-wrapped selects are created in JavaScript rather than in HTML source so that a lint rule can enforce the absence of native `<select>` tags in the HTML file.
+
+``` {.typescript file=_generated/app-dom.ts}
 export function createSelectAtSlot(
   slotId: string,
   selectId: string,
@@ -59,11 +52,13 @@ export function createSelectAtSlot(
   slot.replaceWith(select);
   return select;
 }
+```
 
-/**
- * Sets up a cycling button that rotates through values on click.
- * Returns the button element or null if not found.
- */
+## Cycling Button
+
+`setupCyclingButton` turns a button into a value cycler — each click advances to the next option and calls `onChange`. The current value is stored as `btn.value` so external code can read it without maintaining separate state.
+
+``` {.typescript file=_generated/app-dom.ts}
 export function setupCyclingButton(
   btnId: string,
   options: { value: string; label: string }[],

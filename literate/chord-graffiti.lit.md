@@ -4,35 +4,42 @@ Yellow chord shape hints rendered as a roughjs SVG overlay on the keyboard canva
 
 Draws a major chord triangle in the top-left corner and a minor chord triangle in the bottom-right corner, with hand-drawn style annotations.
 
+## Imports and Shape Constants
+
+The overlay depends on `roughjs` for hand-drawn polygon rendering and on `KeyboardVisualizer` for reading the current grid geometry and button positions.
+
+Chord shapes are expressed in fifth/octave grid coordinates `(fifth steps, octave steps)`. Root position gives the cleanest triangle geometry: the major triad points "up" (▲) and the minor triad points "down" (▽).
+
 ``` {.typescript file=_generated/lib/chord-graffiti.ts}
 import rough from 'roughjs';
 import type { KeyboardVisualizer } from './keyboard-visualizer';
+```
 
-// Chord shapes in fifth/octave grid coordinates (fifth steps, octave steps).
-// coordX = fifth steps, coordY = octave steps.
-// Root position shapes (cleanest ▲/▽ geometry):
-// Major (D, F#, A): root(0,0) + M3(4,-2) + P5(1,0)  — triangle pointing "up" ▲
-// Minor (D, F, A):  root(0,0) + m3(-3,2)  + P5(1,0)  — triangle pointing "down" ▽
+``` {.typescript file=_generated/lib/chord-graffiti.ts}
 const MAJOR_SHAPE: [number, number][] = [[0, 0], [4, -2], [1, 0]];
 const MINOR_SHAPE: [number, number][] = [[0, 0], [-3, 2], [1, 0]];
 
-// Minor chord hint text (from FEATURES.md spec)
 const MINOR_HINT = "it's a reflection of a major chord, neat huh?";
+```
 
+## Configuration Interfaces
+
+`GraffitiConfig` wires the overlay to the DOM and the visualizer. `ButtonLike` is the minimal slice of a button object needed for position arithmetic — x/y in pixels, coordX/coordY in grid space.
+
+``` {.typescript file=_generated/lib/chord-graffiti.ts}
 interface GraffitiConfig {
-  /** Keyboard container element (parent of the canvas) */
   container: HTMLElement;
-  /** KeyboardVisualizer instance for reading grid geometry */
   visualizer: KeyboardVisualizer;
 }
 
 interface ButtonLike { x: number; y: number; coordX: number; coordY: number }
+```
 
-/**
- * Create dynamic chord graffiti overlays on the keyboard canvas.
- * Positions in top-left (major) and bottom-right (minor) corners.
- * Returns an update function to call when skew/tuning/zoom changes.
- */
+## Public Factory
+
+`createChordGraffiti` inserts an absolutely-positioned SVG into the container, then returns an `update` function to call whenever the grid geometry changes (skew, tuning, zoom).
+
+``` {.typescript file=_generated/lib/chord-graffiti.ts}
 export function createChordGraffiti(config: GraffitiConfig): () => void {
   const { container, visualizer } = config;
 
@@ -69,7 +76,13 @@ export function createChordGraffiti(config: GraffitiConfig): () => void {
   update();
   return update;
 }
+```
 
+## SVG Element Creation
+
+The overlay SVG sits at position `0,0` with `pointer-events: none` so it never blocks touch or mouse input on the keyboard beneath it.
+
+``` {.typescript file=_generated/lib/chord-graffiti.ts}
 function createSvgElement(): SVGSVGElement {
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   svg.classList.add('graffiti-overlay');
@@ -80,7 +93,13 @@ function createSvgElement(): SVGSVGElement {
   svg.style.overflow = 'visible';
   return svg;
 }
+```
 
+## Corner Root Finder
+
+`findCornerRoot` scans every button as a candidate root, checks that all shape offsets land on visible buttons with a 20 px margin, and picks the one whose centroid is closest to the target corner. Returns `null` if no valid root exists (e.g. when the grid is too small to show a complete chord).
+
+``` {.typescript file=_generated/lib/chord-graffiti.ts}
 type Corner = 'top-left' | 'bottom-right';
 
 function findCornerRoot(
@@ -130,7 +149,13 @@ function findCornerRoot(
 
   return bestRoot;
 }
+```
 
+## Chord Renderer
+
+`renderChord` draws the roughjs polygon triangle and up to two text labels. The optional `hint` line appears 14 px below the main label at reduced size and opacity.
+
+``` {.typescript file=_generated/lib/chord-graffiti.ts}
 function renderChord(
   svg: SVGSVGElement,
   shape: [number, number][],

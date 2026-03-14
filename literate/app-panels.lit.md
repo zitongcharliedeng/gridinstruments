@@ -2,14 +2,20 @@
 
 Panel resize handle setup — drag-to-resize for visualiser and pedals panels using XState panel machine actors.
 
-``` {.typescript file=_generated/app-panels.ts}
-/**
- * Panel resize handle setup — drag-to-resize for visualiser and pedals panels.
- */
+## Imports
 
+``` {.typescript file=_generated/app-panels.ts}
 import { createActor } from 'xstate';
 import { panelMachine, clampPanelHeight } from './machines/panelMachine';
+```
 
+## Panel Handle Setup
+
+`setupPanelHandles` queries every `.panel-resize-handle` element and wires it to a dedicated `panelMachine` actor. Each handle's `data-*` attributes carry the configuration: target panel ID, height bounds, storage keys for persistence, and drag direction.
+
+The actor subscriber updates DOM state on every transition — toggling the `collapsed` class, setting inline height, and persisting to `localStorage`. Height is not written during drag (only on `idle` after dragging ends) to avoid excessive storage writes.
+
+``` {.typescript file=_generated/app-panels.ts}
 export function setupPanelHandles(): void {
   document.querySelectorAll<HTMLElement>('.panel-resize-handle').forEach(handle => {
     const targetId = handle.dataset.target;
@@ -69,7 +75,13 @@ export function setupPanelHandles(): void {
       prevState = state;
     });
     actor.start();
+```
 
+## Pointer and Keyboard Event Wiring
+
+Pointer capture ensures drag events continue even when the pointer leaves the handle. Arrow keys resize in steps; Enter/Space toggle collapsed state.
+
+``` {.typescript file=_generated/app-panels.ts}
     handle.addEventListener('pointerdown', (e: PointerEvent) => {
       e.preventDefault();
       try { handle.setPointerCapture(e.pointerId); } catch { /* synthetic events in tests may lack active pointer registration */ }
