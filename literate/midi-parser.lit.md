@@ -19,6 +19,7 @@ export interface NoteEvent {
   channel: number;     // 0-indexed MIDI channel (channel 10 drums = channel index 9)
   track: number;       // 0-indexed track number
 }
+
 ```
 
 ## Tempo and Time Signature Event Types
@@ -57,6 +58,7 @@ export interface ParsedMidi {
   tempoMap: TempoEvent[];
   timeSigMap: TimeSigEvent[];
 }
+
 ```
 
 ## Internal Accumulator Types
@@ -111,6 +113,7 @@ function readVarLen(view: DataView, offset: number): { value: number; bytesRead:
   } while ((byte & 0x80) !== 0);
   return { value, bytesRead };
 }
+
 ```
 
 ## Tick-to-Millisecond Conversion and Small Helpers
@@ -195,6 +198,7 @@ function parseTrack(
     } else {
       offset++;
     }
+
 ```
 
 ## Track Parser: Meta Events (FF)
@@ -234,6 +238,7 @@ Three meta types matter here. `FF 51` (Set Tempo) updates the tempo map — coll
       offset += len.value;
       continue;
     }
+
 ```
 
 ## Track Parser: SysEx, System Messages, and Channel Voice Messages
@@ -374,6 +379,7 @@ export function parseMidi(buffer: ArrayBuffer): ParsedMidi {
     allTickNotes.push(...parseTrack(view, trackDataStart, trackLength, t, tempoMap, timeSigEntries, collectTempo));
     offset = trackDataStart + trackLength;
   }
+
 ```
 
 ## Tempo Map, Drum Filter, and Output Assembly

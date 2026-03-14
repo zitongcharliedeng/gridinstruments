@@ -1,30 +1,46 @@
 # Note History Visualizer
 
-Three-panel canvas strip rendered at 60fps: piano keys strip (left), Synthesia-style note roll (center), chord + note list panel (right).
+Three-panel canvas strip rendered at 60fps. The layout from left to right:
 
-## Imports and Utilities
+```
+┌──────────────────────────────────────────────────────────────────────────┐
+│  Chord Panel (25%)  │  Piano Keys (52px)  │  Note Roll (remaining)       │
+└──────────────────────────────────────────────────────────────────────────┘
+```
+
+- **Chord panel** (left): Large chord name, alternate voicings, and active note list in D-relative octave notation.
+- **Piano strip** (center): Vertical keyboard strip with active key highlights and ghost note indicator for game mode.
+- **Note roll** (right): Synthesia-style piano roll — notes emit from the piano keys and scroll rightward (left = now, right = past).
+
+## Imports and Types
+
+The visualizer imports `noteColor` for per-pitch-class OKLCH colors and `detectChord` for Tonal.js-backed chord detection. Two interfaces describe the note lifecycle: `ActiveNote` for held notes (no end time yet) and `HistoryNote` for released notes (with an end time for fade-out).
 
 ``` {.typescript file=_generated/lib/note-history-visualizer.ts}
-/**
- * Note History Visualizer — Top Panel
- *
- * Three-panel canvas strip rendered at 60fps:
- *
- *   ┌──────────────────────────────────────────────────────────────────────────┐
- *   │  Piano Keys (52px)  │  Note Roll (scroll left→right)  │  Chord + MIDI (25%)│
- *   └──────────────────────────────────────────────────────────────────────────┘
- *
- * Left panel: Vertical piano keyboard strip — active keys highlighted.
- * Center: Synthesia-style piano roll — notes emitted from piano keys, scroll rightward (left=now, right=past).
- * Right: Large chord name, note list, MIDI device status.
- */
-
 import { noteColor } from './note-colors';
 import { detectChord } from './chord-detector';
 
-/**
- * Word-wrap helper: splits text into lines that fit within maxWidth
- */
+interface ActiveNote {
+  coordX: number;
+  coordY: number;
+  midiNote: number;
+  startTime: number; // performance.now()
+}
+
+interface HistoryNote {
+  coordX: number;
+  coordY: number;
+  midiNote: number;
+  startTime: number;
+  endTime: number;
+}
+```
+
+## Word-wrap Helper
+
+The idle state renders a multi-line hint message. `wrapText` splits a string into lines that each fit within `maxWidth` canvas pixels, using the current canvas font for measurement.
+
+``` {.typescript file=_generated/lib/note-history-visualizer.ts}
 function wrapText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string[] {
   const words = text.split(' ');
   const lines: string[] = [];
@@ -41,56 +57,51 @@ function wrapText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number)
   if (current) lines.push(current);
   return lines;
 }
+```
 
-interface ActiveNote {
-  coordX: number;
-  coordY: number;
-  midiNote: number;
-  startTime: number; // performance.now()
-}
+## Class Declaration and Fields
 
-interface HistoryNote {
-  coordX: number;
-  coordY: number;
-  midiNote: number;
-  startTime: number;
-  endTime: number;
-}
+The class holds canvas state, note collections, display parameters, and idle animation state. Key constants:
 
+- `PIANO_W = 52` — fixed pixel width of the piano key strip.
+- `BLACK_KEYS = [1, 3, 6, 8, 10]` — pitch classes that are black keys.
+- `historyWindowMs` — how far back the roll displays (default 3 seconds, adjustable 1–10s).
+- `idleAlpha` / `idleTarget` — lerped opacity for the "Play some notes" hint text.
+- `ghostNote` — the next expected MIDI note in game mode, shown as a faint outline on the piano strip.
+
+``` {.typescript file=_generated/lib/note-history-visualizer.ts}
 export class NoteHistoryVisualizer {
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
   private width = 900;
   private height = 220;
 
-  // State
   private activeNotes = new Map<string, ActiveNote>();
   private history: HistoryNote[] = [];
 
-  // History display window (adjustable via setTimeWindow)
   private historyWindowMs = 3000;
-  // Trim history older than this (always window + 1s buffer)
   private maxHistoryAgeMs = 4000;
 
-  // MIDI range for piano roll (adjustable via setNoteRange)
   private midiMin = 36;
   private midiMax = 96;
 
-  // Piano strip width in logical pixels
   private readonly PIANO_W = 52;
-
-  // Black key pitch classes
   private readonly BLACK_KEYS = [1, 3, 6, 8, 10];
 
   private animFrame: number | null = null;
 
   private idleAlpha = 0;
-  private idleTarget = 1; // 1 = idle (show text), 0 = active (hide text)
-  private readonly IDLE_LERP_SPEED = 0.04; // per-frame lerp factor for smooth transitions
+  private idleTarget = 1;
+  private readonly IDLE_LERP_SPEED = 0.04;
 
-  // Game mode: the next expected MIDI note (ghost note indicator).
   private ghostNote: number | null = null;
+```
 
+## Constructor and Resize
+
+The constructor grabs the 2D context and sizes the canvas to its current DOM dimensions (falling back to 900×220 if it has not yet been laid out). `resize` applies device pixel ratio scaling so the canvas is crisp on HiDPI displays.
+
+``` {.typescript file=_generated/lib/note-history-visualizer.ts}
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
     const ctx = canvas.getContext('2d');
@@ -107,31 +118,38 @@ export class NoteHistoryVisualizer {
     this.canvas.height = height * dpr;
     this.ctx.scale(dpr, dpr);
   }
+```
 
-  /** Set the visible time window in seconds (e.g., 1–10). */
+## Public Configuration API
+
+Four small methods let the host application tune the display. Time window and note range changes take effect on the next render frame with no re-initialization.
+
+``` {.typescript file=_generated/lib/note-history-visualizer.ts}
   setTimeWindow(seconds: number): void {
     const clamped = Math.max(1, Math.min(10, seconds));
     this.historyWindowMs = clamped * 1000;
     this.maxHistoryAgeMs = this.historyWindowMs + 1000;
   }
 
-  /** Get the current time window in seconds. */
   getTimeWindow(): number {
     return this.historyWindowMs / 1000;
   }
 
-  /** Set the visible MIDI note range (e.g., 24–108). */
   setNoteRange(min: number, max: number): void {
     this.midiMin = Math.max(0, Math.min(127, min));
     this.midiMax = Math.max(this.midiMin + 12, Math.min(127, max));
   }
 
-  /** Get the current MIDI note range. */
   getNoteRange(): { min: number; max: number } {
     return { min: this.midiMin, max: this.midiMax };
   }
+```
 
-  /** Call when a note starts (from keyboard or MIDI) */
+## Note Lifecycle and Idle State API
+
+`noteOn` / `noteOff` move notes between `activeNotes` and `history`. `clearAll` flushes all active notes to history (used on focus loss or stop-all). The idle helpers manage the "Play some notes" overlay: `setIdleState(true)` fades it in, `setIdleState(false)` snaps alpha to 0 immediately for responsiveness. Ghost note methods control the game-mode next-note indicator on the piano strip.
+
+``` {.typescript file=_generated/lib/note-history-visualizer.ts}
   noteOn(coordX: number, coordY: number, midiNote: number): void {
     this.idleAlpha = 0;
     this.idleTarget = 0;
@@ -139,7 +157,6 @@ export class NoteHistoryVisualizer {
     this.activeNotes.set(key, { coordX, coordY, midiNote, startTime: performance.now() });
   }
 
-  /** Call when a note ends */
   noteOff(coordX: number, coordY: number): void {
     const key = `${coordX}_${coordY}`;
     const note = this.activeNotes.get(key);
@@ -149,12 +166,10 @@ export class NoteHistoryVisualizer {
     }
   }
 
-  /** Update MIDI connection status */
   setMidiStatus(_status: 'unavailable' | 'no-devices' | 'connected', _deviceName = ''): void {
     // No-op: MIDI status is shown in the MIDI settings panel only
   }
 
-  /** Clear all active notes (e.g. on blur / stop-all) */
   clearAll(): void {
     const now = performance.now();
     for (const note of this.activeNotes.values()) {
@@ -165,36 +180,32 @@ export class NoteHistoryVisualizer {
     this.idleTarget = 0;
   }
 
-  /** Reset idle alpha — call when game starts playing to suppress hints */
   resetIdleAlpha(): void {
     this.idleAlpha = 0;
     this.idleTarget = 0;
   }
 
-  /**
-   * Set idle state from centralized app idle timer.
-   * When idle=true, the "Play some notes" text fades in smoothly.
-   * When idle=false, it fades out smoothly.
-   */
   setIdleState(idle: boolean): void {
     this.idleTarget = idle ? 1 : 0;
     if (!idle) {
-      // When going active, immediately snap alpha to 0 for responsiveness
       this.idleAlpha = 0;
     }
   }
 
-  /** Set the ghost note — the next expected note in game mode. Shown as faint glow on piano strip. */
   setGhostNote(midiNote: number | null): void {
     this.ghostNote = midiNote;
   }
 
-  /** Clear ghost note indicator (convenience alias for setGhostNote(null)). */
   clearGhostNote(): void {
     this.ghostNote = null;
   }
+```
 
-  /** Start the 60fps render loop */
+## Render Loop
+
+The `requestAnimationFrame` loop calls `render()` at up to 60fps. `start()` is idempotent — calling it when already running is a no-op.
+
+``` {.typescript file=_generated/lib/note-history-visualizer.ts}
   start(): void {
     if (this.animFrame !== null) return;
     const loop = (): void => {
@@ -204,18 +215,22 @@ export class NoteHistoryVisualizer {
     this.animFrame = requestAnimationFrame(loop);
   }
 
-  /** Stop the render loop */
   stop(): void {
     if (this.animFrame !== null) {
       cancelAnimationFrame(this.animFrame);
       this.animFrame = null;
     }
   }
+```
 
+## Main Render Method
+
+Each frame: trim stale history, clear the canvas, and either show the idle overlay (when no notes exist) or draw all three panels. The idle text fades in/out via per-frame lerp toward `idleTarget`. When notes are present the three panels render in left-to-right order with a 1px divider between the chord panel and the roll.
+
+``` {.typescript file=_generated/lib/note-history-visualizer.ts}
   private render(): void {
     const now = performance.now();
 
-    // Trim old history
     this.history = this.history.filter(n => now - n.endTime < this.maxHistoryAgeMs);
 
     const { width, height } = this;
@@ -226,9 +241,7 @@ export class NoteHistoryVisualizer {
     this.ctx.fillStyle = '#0d0d0d';
     this.ctx.fillRect(0, 0, width, height);
 
-    // Empty state — single centered message across full canvas
     if (this.history.length === 0 && this.activeNotes.size === 0) {
-      // Lerp idleAlpha toward idleTarget for smooth fade in/out
       if (this.idleAlpha < this.idleTarget) {
         this.idleAlpha = Math.min(this.idleTarget, this.idleAlpha + this.IDLE_LERP_SPEED);
       } else if (this.idleAlpha > this.idleTarget) {
@@ -260,7 +273,6 @@ export class NoteHistoryVisualizer {
     this.drawNoteRoll(chordW + pianoW, rollW, height, now);
     this.drawPianoKeys(chordW, pianoW, height, now);
 
-    // Divider between chord panel and roll
     this.ctx.strokeStyle = '#2a2a2a';
     this.ctx.lineWidth = 1;
     this.ctx.beginPath();
@@ -268,28 +280,28 @@ export class NoteHistoryVisualizer {
     this.ctx.lineTo(chordW, height);
     this.ctx.stroke();
   }
+```
 
-  // ─── LEFT: Piano Keys Strip ───────────────────────────────────────────────
+## Piano Keys Strip
 
+The piano strip draws white keys at full width then black keys on top at 60% width, mimicking a real keyboard cross-section. Active notes get a bright fill overlay; ghost notes get a white outline. C notes are labelled in D-relative octave notation (e.g. "C'" for the octave above D-ref). A thin vertical line on the right edge marks the "now" boundary where notes enter the roll.
+
+``` {.typescript file=_generated/lib/note-history-visualizer.ts}
   private drawPianoKeys(x: number, w: number, h: number, _now: number): void {
     const ctx = this.ctx;
-    const midiRange = this.midiMax - this.midiMin + 1; // 61 notes
+    const midiRange = this.midiMax - this.midiMin + 1;
     const noteH = h / midiRange;
 
     const isBlackKey = (midi: number): boolean => this.BLACK_KEYS.includes(((midi % 12) + 12) % 12);
-
     const midiToY = (midi: number): number => h - (midi - this.midiMin + 1) * noteH;
 
-    // Collect active midi notes set
     const activeMidis = new Set<number>();
     for (const n of this.activeNotes.values()) activeMidis.add(n.midiNote);
 
-    // Ghost note: next expected note in game mode (only when not also active)
     const ghostMidi = (this.ghostNote !== null && !activeMidis.has(this.ghostNote))
       ? this.ghostNote
       : null;
 
-    // Draw white keys first (full width)
     for (let midi = this.midiMin; midi <= this.midiMax; midi++) {
       if (isBlackKey(midi)) continue;
       const ky = midiToY(midi);
@@ -297,7 +309,6 @@ export class NoteHistoryVisualizer {
       ctx.fillStyle = '#222222';
       ctx.fillRect(x, ky, w, noteH);
 
-      // Border between white keys
       ctx.strokeStyle = '#333333';
       ctx.lineWidth = 0.5;
       ctx.beginPath();
@@ -305,7 +316,6 @@ export class NoteHistoryVisualizer {
       ctx.lineTo(x + w, ky);
       ctx.stroke();
 
-      // Active highlight
       if (activeMidis.has(midi)) {
         ctx.fillStyle = '#ffffff33';
         ctx.fillRect(x, ky, w, noteH);
@@ -317,7 +327,6 @@ export class NoteHistoryVisualizer {
       }
     }
 
-    // Draw black keys on top (narrower)
     for (let midi = this.midiMin; midi <= this.midiMax; midi++) {
       if (!isBlackKey(midi)) continue;
       const ky = midiToY(midi);
@@ -326,12 +335,10 @@ export class NoteHistoryVisualizer {
       ctx.fillStyle = '#111111';
       ctx.fillRect(x, ky, bw, noteH);
 
-      // Border
       ctx.strokeStyle = '#1a1a1a';
       ctx.lineWidth = 0.5;
       ctx.strokeRect(x, ky, bw, noteH);
 
-      // Active highlight
       if (activeMidis.has(midi)) {
         ctx.fillStyle = '#ffffff44';
         ctx.fillRect(x, ky, bw, noteH);
@@ -343,19 +350,17 @@ export class NoteHistoryVisualizer {
       }
     }
 
-    // Octave labels (C notes) — D-relative octave notation
     ctx.font = `bold ${Math.max(6, noteH * 0.75)}px 'JetBrains Mono', monospace`;
     ctx.fillStyle = '#666666';
     ctx.textAlign = 'right';
     ctx.textBaseline = 'middle';
     for (let midi = this.midiMin; midi <= this.midiMax; midi++) {
       const pc = ((midi % 12) + 12) % 12;
-      if (pc !== 0) continue; // Only C notes
+      if (pc !== 0) continue;
       const ky = midiToY(midi) + noteH / 2;
       ctx.fillText(this.midiToDRelativeNoteName(midi), x + w - 2, ky);
     }
 
-    // "Now" boundary — thin white line on right edge of piano strip
     ctx.strokeStyle = '#ffffff55';
     ctx.lineWidth = 1;
     ctx.beginPath();
@@ -363,9 +368,15 @@ export class NoteHistoryVisualizer {
     ctx.lineTo(x + w, h);
     ctx.stroke();
   }
+```
 
-  // ─── CENTER: Note Roll (left=now, right=past) ─────────────────────────────
+## Note Roll
 
+The roll maps time to horizontal position: `t = now` is the left edge (piano boundary) and `t = now - window` is the right edge. Released notes fade out linearly with age. Active notes are anchored to the left edge and grow rightward; notes wide enough to show a label get their name printed inside the bar.
+
+Background stripes alternate between a slightly darker shade for black-key rows, and horizontal lines mark octave boundaries at each C note.
+
+``` {.typescript file=_generated/lib/note-history-visualizer.ts}
   private drawNoteRoll(x: number, w: number, h: number, now: number): void {
     const ctx = this.ctx;
 
@@ -373,21 +384,15 @@ export class NoteHistoryVisualizer {
     const noteH = h / midiRange;
 
     const isBlackKey = (midi: number): boolean => this.BLACK_KEYS.includes(((midi % 12) + 12) % 12);
-
     const midiToY = (midi: number): number => h - (midi - this.midiMin + 1) * noteH;
-
-    // Time-to-x mapping: t=now → x=rollX (piano edge), t=now-WINDOW → x=rollX+rollW
-    // LEFT = now, RIGHT = past
     const timeToX = (t: number): number => x + (now - t) / this.historyWindowMs * w;
 
-    // Background stripes per semitone
     for (let midi = this.midiMin; midi <= this.midiMax; midi++) {
       const ky = midiToY(midi);
       ctx.fillStyle = isBlackKey(midi) ? '#0a0808' : '#0d0d0d';
       ctx.fillRect(x, ky, w, noteH);
     }
 
-    // Subtle octave lines at each C note
     ctx.strokeStyle = '#1a1a1a';
     ctx.lineWidth = 1;
     for (let midi = this.midiMin; midi <= this.midiMax; midi++) {
@@ -402,35 +407,30 @@ export class NoteHistoryVisualizer {
 
     if (this.history.length === 0 && this.activeNotes.size === 0) return;
 
-    // Draw released notes
     for (const note of this.history) {
       const age = now - note.endTime;
       if (age > this.historyWindowMs) continue;
       const alpha = Math.max(0, 1 - age / this.historyWindowMs);
 
-      // t_start < t_end, so timeToX(t_start) > timeToX(t_end)
-      const xRight = timeToX(note.endTime);   // end time (more recent) → closer to piano
-      const xLeft = timeToX(note.startTime);  // start time (older) → further right
+      const xRight = timeToX(note.endTime);
+      const xLeft = timeToX(note.startTime);
       const barW = Math.max(2, xLeft - xRight);
       const ny = midiToY(note.midiNote);
 
-      // Skip if entirely off the right edge
       if (xRight > x + w) continue;
 
       ctx.fillStyle = noteColor(note.midiNote, alpha * 0.65);
       ctx.fillRect(xRight, ny, barW, Math.max(2, noteH - 1));
     }
 
-    // Draw active notes (bar attached to piano left edge, growing rightward)
     for (const note of this.activeNotes.values()) {
-      const xStart = timeToX(note.startTime); // older start → further right
+      const xStart = timeToX(note.startTime);
       const barW = Math.max(4, xStart - x);
       const ny = midiToY(note.midiNote);
 
       ctx.fillStyle = noteColor(note.midiNote, 1.0);
       ctx.fillRect(x, ny, barW, Math.max(2, noteH - 1));
 
-      // Note name inside bar (if wide enough)
       if (barW > 20) {
         const noteName = this.midiToNoteName(note.midiNote);
         ctx.fillStyle = '#ffffffcc';
@@ -441,7 +441,6 @@ export class NoteHistoryVisualizer {
       }
     }
 
-    // "Now" line at the piano-roll junction (x = rollX)
     ctx.strokeStyle = '#ffffff22';
     ctx.lineWidth = 2;
     ctx.beginPath();
@@ -449,21 +448,18 @@ export class NoteHistoryVisualizer {
     ctx.lineTo(x, h);
     ctx.stroke();
   }
+```
 
+## Note Name Helpers
+
+Two private name formatters. `midiToNoteName` returns a plain pitch class name (e.g. "F#"). `midiToDRelativeNoteName` returns the same name decorated with apostrophes or commas to indicate octave relative to D4 (MIDI 62): `'` suffixes for octaves above D-ref, `,` suffixes for octaves below.
+
+``` {.typescript file=_generated/lib/note-history-visualizer.ts}
   private midiToNoteName(midi: number): string {
     const names = ['C','C#','D','Eb','E','F','F#','G','Ab','A','Bb','B'];
     return names[((midi % 12) + 12) % 12];
   }
 
-  /**
-   * Convert MIDI note to D-relative octave notation.
-   * D-ref = MIDI 62 at default. Octave offset = floor((midi - 62) / 12).
-   * Octave 0 (D-ref to C# above): just the note name, e.g. "E", "F#"
-   * Octave +1 (D5–C#6): note name + "'", e.g. "E'"
-   * Octave +2 (D6–C#7): note name + "''", e.g. "E''"
-   * Octave -1 (D3–C#4): note name + ",", e.g. "E,"
-   * Octave -2 (D2–C#3): note name + ",,", e.g. "E,,"
-   */
   private midiToDRelativeNoteName(midi: number): string {
     const names = ['C','C#','D','Eb','E','F','F#','G','Ab','A','Bb','B'];
     const noteName = names[((midi % 12) + 12) % 12];
@@ -472,24 +468,27 @@ export class NoteHistoryVisualizer {
     if (dOctave > 0) return noteName + "'".repeat(dOctave);
     return noteName + ','.repeat(-dOctave);
   }
+```
 
+## Chord Panel
+
+The chord panel occupies the leftmost 25% of the canvas. When notes are active, Tonal.js detection yields a primary chord name rendered in the note's color and up to two alternate voicings in grey below it. Active notes are listed below in D-relative octave notation, sorted highest to lowest, colored per pitch class.
+
+``` {.typescript file=_generated/lib/note-history-visualizer.ts}
   private drawChordPanel(x: number, w: number, h: number, _now: number): void {
     const ctx = this.ctx;
     const pad = 12;
 
-    // Collect active note coords for chord detection
     const activeCoords: [number, number, number][] = [];
     for (const n of this.activeNotes.values()) {
       activeCoords.push([n.coordX, n.coordY, 0]);
     }
 
-    // Large chord name
     const chords = detectChord(activeCoords);
     const chordText = chords.length > 0 ? chords[0] : '';
 
     const chordY = h * 0.22;
     if (chordText) {
-      // Gradient: pick first note color
       const firstNote = [...this.activeNotes.values()][0];
       const chordColor = noteColor(firstNote.midiNote, 1);
 
@@ -499,7 +498,6 @@ export class NoteHistoryVisualizer {
       ctx.fillStyle = chordColor;
       ctx.fillText(chordText, x + pad, chordY);
 
-      // Alternate chord names
       if (chords.length > 1) {
         ctx.font = `${Math.min(14, w * 0.1)}px 'JetBrains Mono', monospace`;
         ctx.fillStyle = '#888888';
@@ -513,7 +511,6 @@ export class NoteHistoryVisualizer {
       ctx.fillText('—', x + pad, chordY);
     }
 
-    // Active note names (sorted by pitch, stacked vertically) — D-relative octave notation
     const noteNames: string[] = [];
     const sortedNotes = [...this.activeNotes.values()].sort((a, b) => b.midiNote - a.midiNote);
     for (const n of sortedNotes) {

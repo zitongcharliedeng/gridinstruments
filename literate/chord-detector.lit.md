@@ -2,106 +2,100 @@
 
 Chord name detection from active MIDI notes using Tonal.js — converts grid coordinates to note names and detects chord symbols.
 
+## Imports
+
+Tonal.js provides two namespaces used here: `Chord` for detection and `Note` for MIDI-to-name conversion and pitch sorting.
+
 ``` {.typescript file=_generated/lib/chord-detector.ts}
-/**
- * Chord Detection using Tonal.js
- * 
- * Detects chord names from a set of active MIDI notes
- */
-
 import { Chord, Note } from 'tonal';
+```
 
-/**
- * Convert coordinate to note name with octave
- * @param x Circle of fifths position
- * @param y Octave offset
- * @param octaveOffset Global octave offset
- */
+## Coordinate to Note Name
+
+`coordToNoteName` maps an isomorphic grid coordinate `(x, y)` to a note name with octave (e.g. `"D4"`). The x-axis steps through the circle of fifths — D is the origin (index 3 in the base array), and each step is 7 semitones. Accidentals accumulate when `x` carries outside the 7-note base range. The octave is derived from the absolute MIDI number produced by the coordinate, anchored at D4 = MIDI 62.
+
+``` {.typescript file=_generated/lib/chord-detector.ts}
 export function coordToNoteName(x: number, y: number, octaveOffset = 0): string {
-  // Circle of fifths note names (D at index 3)
   const noteNamesBase = ['F', 'C', 'G', 'D', 'A', 'E', 'B'];
-  
-  // Calculate note name: D (x=0) → index 3
+
   const noteIndex = (((x + 3) % 7) + 7) % 7;
   const accidentalCount = Math.floor((x + 3) / 7);
-  
+
   let noteName = noteNamesBase[noteIndex];
-  
-  // Add accidentals
+
   if (accidentalCount > 0) {
     noteName += '#'.repeat(Math.min(accidentalCount, 2));
   } else if (accidentalCount < 0) {
     noteName += 'b'.repeat(Math.min(-accidentalCount, 2));
   }
-  
-  // Calculate octave
-  // D-ref is at coordinate (0, 0) — MIDI 62 at default tuning
-  // Each y step = 1 octave, each x step = 7 semitones (fifth)
+
   const baseMidi = 62; // D at default reference
   const semitones = x * 7 + y * 12 + octaveOffset * 12;
   const midi = baseMidi + semitones;
   const octave = Math.floor(midi / 12) - 1;
-  
+
   return noteName + String(octave);
 }
+```
 
-/**
- * Convert MIDI note number to note name
- */
+## MIDI Note Number to Note Name
+
+A thin wrapper around `Note.fromMidi` from Tonal.js, returning an empty string when the conversion yields nothing (Tonal returns `null` for out-of-range values).
+
+``` {.typescript file=_generated/lib/chord-detector.ts}
 export function midiToNoteName(midi: number): string {
   const noteName = Note.fromMidi(midi);
   return noteName || '';
 }
+```
 
-/**
- * Detect chord from a set of note coordinates
- * @param coords Array of [x, y, octaveOffset] coordinates
- * @returns Detected chord names or empty array
- */
+## Chord Detection
+
+`detectChord` takes an array of `[x, y, octaveOffset]` grid coordinates, converts each to a pitch-class name (ignoring octave), deduplicates, and passes the set to `Chord.detect`. The `assumePerfectFifth` option lets Tonal name power chords and incomplete triads. The trailing `M` major-chord suffix is stripped for cleaner display (e.g. `"DM"` → `"D"`).
+
+``` {.typescript file=_generated/lib/chord-detector.ts}
 export function detectChord(coords: [number, number, number][]): string[] {
   if (coords.length < 2) return [];
-  
-  // Convert coords to note names (without octave for chord detection)
+
   const noteNames = coords.map(([x, _y, _oct]) => {
     const noteNamesBase = ['F', 'C', 'G', 'D', 'A', 'E', 'B'];
     const noteIndex = (((x + 3) % 7) + 7) % 7; // D (x=0) → index 3
     const accidentalCount = Math.floor((x + 3) / 7);
-    
+
     let noteName = noteNamesBase[noteIndex];
-    
+
     if (accidentalCount > 0) {
       noteName += '#'.repeat(Math.min(accidentalCount, 2));
     } else if (accidentalCount < 0) {
       noteName += 'b'.repeat(Math.min(-accidentalCount, 2));
     }
-    
+
     return noteName;
   });
-  
-  // Remove duplicates (same note different octaves)
+
   const uniqueNotes = [...new Set(noteNames)];
-  
+
   if (uniqueNotes.length < 2) return [];
-  
+
   try {
-    // Use Tonal.js to detect chord
     const detected = Chord.detect(uniqueNotes, { assumePerfectFifth: true });
-    
-    // Clean up chord names (remove 'M' for major)
+
     return detected.map(chord => chord.replace(/M($|(?=\/))/g, ''));
   } catch {
     return [];
   }
 }
+```
 
-/**
- * Get list of note names from coordinates
- */
+## Active Note Names (Sorted by Pitch)
+
+`getActiveNoteNames` converts coordinates to full note names with octave and sorts them by MIDI pitch number ascending. Used by any display that wants an ordered list of sounding notes.
+
+``` {.typescript file=_generated/lib/chord-detector.ts}
 export function getActiveNoteNames(coords: [number, number, number][]): string[] {
   return coords
     .map(([x, y, oct]) => coordToNoteName(x, y, oct))
     .sort((a, b) => {
-      // Sort by pitch (MIDI note number)
       const midiA = Note.midi(a) ?? 0;
       const midiB = Note.midi(b) ?? 0;
       return midiA - midiB;

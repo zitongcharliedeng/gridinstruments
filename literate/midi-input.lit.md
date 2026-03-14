@@ -7,18 +7,11 @@ Channel modes:
 - `chPerNote` — MPE style: channel = note slot identity
 - `chPerRow` — channel N maps to keyboard row N (Striso / Axis-64 style)
 
-``` {.typescript file=_generated/lib/midi-input.ts}
-/**
- * Web MIDI API input handler — with per-device management and channel modes.
- *
- * Channel modes:
- *   omni       — listen to all channels, note identity = (note number)  [default]
- *   chPerNote  — MPE style: channel = note slot, note identity = channel
- *                (allows per-note pitch bend / expression)
- *   chPerRow   — channel N maps to keyboard row N on the isomorphic grid
- *                (Striso / Axis-64 style — each physical row sends on a different channel)
- */
+## Exported Types
 
+Four exported types form the public contract. `MidiNoteCallback` carries the note number, velocity, 1-indexed channel, and source device ID. `MidiExpressionCallback` is used for pitch bend, CC74 slide, and channel pressure — all normalized to a common range. `MidiChannelMode` is a string union of the three supported routing strategies.
+
+``` {.typescript file=_generated/lib/midi-input.ts}
 export type MidiNoteCallback = (note: number, velocity: number, channel: number, deviceId: string) => void;
 export type MidiStatusCallback = (devices: MidiDeviceInfo[]) => void;
 export type MidiExpressionCallback = (channel: number, value: number, deviceId: string) => void;
@@ -32,14 +25,18 @@ export interface MidiDeviceInfo {
   enabled: boolean;
   connected: boolean;
 }
+```
 
+## Class Declaration and Fields
+
+`MidiInput` wraps a single `MIDIAccess` handle. Each physical input port is stored in the `inputs` map keyed by port ID, paired with the user-facing `enabled` flag. Six callback arrays cover the full expression surface: note on/off, device status, pitch bend, CC74 slide, and channel pressure.
+
+``` {.typescript file=_generated/lib/midi-input.ts}
 export class MidiInput {
   private access: MIDIAccess | null = null;
 
-  // Map of MIDIInput id → the raw input + our enabled flag
   private inputs = new Map<string, { input: MIDIInput; enabled: boolean }>();
 
-  // Callbacks
   private noteOnCallbacks: MidiNoteCallback[] = [];
   private noteOffCallbacks: MidiNoteCallback[] = [];
   private statusCallbacks: MidiStatusCallback[] = [];
@@ -47,10 +44,8 @@ export class MidiInput {
   private slideCallbacks: MidiExpressionCallback[] = [];
   private pressureCallbacks: MidiExpressionCallback[] = [];
 
-  // Settings
   private channelMode: MidiChannelMode = 'omni';
 
-  // Public status
   private _available = false;
 
   get isAvailable(): boolean { return this._available; }
@@ -67,9 +62,13 @@ export class MidiInput {
       .map(d => d.input.name ?? 'Unknown')
       .join(', ');
   }
+```
 
-  // ─── Init ──────────────────────────────────────────────────────────────────
+## Initialization
 
+`init` requests MIDI access with `sysex: false`. If the browser does not support the Web MIDI API, or the user denies permission, `_available` is set to false and status callbacks are notified. On success, `onstatechange` is wired to `rescan` so hot-plug events (USB connect/disconnect) are handled automatically.
+
+``` {.typescript file=_generated/lib/midi-input.ts}
   async init(): Promise<void> {
     if (!('requestMIDIAccess' in navigator)) {
       this._available = false;
@@ -86,13 +85,18 @@ export class MidiInput {
       this.notifyStatus();
     }
   }
+```
 
+## Device Rescan
+
+`rescan` reconciles the live `MIDIAccess.inputs` map with the internal `inputs` map. Disappeared devices have their listeners removed and are deleted. Newly appeared devices get a message handler and default to enabled. Existing devices have their listeners re-attached (the browser may have torn them down on a USB reconnect), preserving the user's enabled/disabled choice.
+
+``` {.typescript file=_generated/lib/midi-input.ts}
   private rescan(): void {
     if (!this.access) return;
 
     const currentIds = new Set(this.access.inputs.keys());
 
-    // Detach listeners from disappeared devices
     for (const [id, { input }] of this.inputs) {
       if (!currentIds.has(id)) {
         input.onmidimessage = null;
@@ -100,14 +104,11 @@ export class MidiInput {
       }
     }
 
-    // Attach listeners to newly appeared devices (preserve enabled state)
     for (const [id, input] of this.access.inputs) {
       if (!this.inputs.has(id)) {
-        // New device: enabled by default
         input.onmidimessage = (e) => { this.handleMessage(id, e); };
         this.inputs.set(id, { input, enabled: true });
       } else {
-        // Existing device: re-attach listener in case it was disrupted
         const entry = this.inputs.get(id);
         if (!entry) continue;
         entry.input.onmidimessage = entry.enabled
@@ -118,10 +119,13 @@ export class MidiInput {
 
     this.notifyStatus();
   }
+```
 
-  // ─── Per-device enable/disable ────────────────────────────────────────────
+## Per-Device Enable/Disable
 
-  /** Toggle a specific device on or off (to prevent loopback doubling etc.) */
+`setDeviceEnabled` lets the user mute individual devices — useful when a software MIDI loopback would otherwise double-trigger notes. `getDevices` returns a snapshot of all known devices for rendering a settings UI.
+
+``` {.typescript file=_generated/lib/midi-input.ts}
   setDeviceEnabled(id: string, enabled: boolean): void {
     const entry = this.inputs.get(id);
     if (!entry) return;
@@ -132,7 +136,6 @@ export class MidiInput {
     this.notifyStatus();
   }
 
-  /** Get list of all known devices with their current state */
   getDevices(): MidiDeviceInfo[] {
     return [...this.inputs.entries()].map(([id, { input, enabled }]) => ({
       id,
@@ -142,9 +145,13 @@ export class MidiInput {
       connected: input.state === 'connected',
     }));
   }
+```
 
-  // ─── Channel mode ─────────────────────────────────────────────────────────
+## Channel Mode
 
+The channel mode controls how multi-channel MIDI data is routed. In `omni` and `chPerNote` modes all channels pass through; the distinction is semantic — callers use the channel field differently. In `chPerRow` mode only channels 1–4 are passed, mapping to the four physical keyboard rows.
+
+``` {.typescript file=_generated/lib/midi-input.ts}
   setChannelMode(mode: MidiChannelMode): void {
     this.channelMode = mode;
   }
@@ -152,9 +159,13 @@ export class MidiInput {
   getChannelMode(): MidiChannelMode {
     return this.channelMode;
   }
+```
 
-  // ─── Message handling ─────────────────────────────────────────────────────
+## Message Handling
 
+`handleMessage` decodes the raw MIDI status byte into type and channel, applies channel-mode filtering, then dispatches to the appropriate callback arrays. Pitch bend uses the standard 14-bit encoding (LSB in byte 1, MSB in byte 2) normalized to −1…+1. CC74 (slide/timbre) and channel pressure (0xD0) are normalized to 0…1. Note-on with velocity 0 is treated as note-off per the MIDI spec.
+
+``` {.typescript file=_generated/lib/midi-input.ts}
   private handleMessage(deviceId: string, event: MIDIMessageEvent): void {
     const entry = this.inputs.get(deviceId);
     if (!entry?.enabled) return;
@@ -168,7 +179,6 @@ export class MidiInput {
     const note = data[1];
     const velocity = data.length > 2 ? data[2] : 0;
 
-    // Channel mode filtering
     if (this.channelMode === 'omni') {
       // All channels pass through
     } else if (this.channelMode === 'chPerNote') {
@@ -185,27 +195,27 @@ export class MidiInput {
     } else if (type === 0x80 || (type === 0x90 && velocity === 0)) {
       for (const cb of this.noteOffCallbacks) cb(note, velocity, channel, deviceId);
     } else if (type === 0xE0) {
-      // Pitch bend: 14-bit value from LSB (data[1]) and MSB (data[2])
       const raw = (data[2] << 7) | data[1];
       const normalized = raw / 8191.5 - 1; // range -1..+1
       for (const cb of this.pitchBendCallbacks) cb(channel, normalized, deviceId);
     } else if (type === 0xB0 && note === 74) {
-      // CC74 (slide / timbre)
       const normalized = velocity / 127;
       for (const cb of this.slideCallbacks) cb(channel, normalized, deviceId);
     } else if (type === 0xD0) {
-      // Channel pressure (aftertouch)
       const normalized = data[1] / 127;
       for (const cb of this.pressureCallbacks) cb(channel, normalized, deviceId);
     }
   }
+```
 
-  // ─── Callbacks ────────────────────────────────────────────────────────────
+## Callback Registration and Teardown
 
+Registration methods follow a simple push-onto-array pattern. Removal uses `filter` identity comparison, which requires callers to hold a stable function reference. `dispose` detaches all `onmidimessage` handlers and clears the inputs map — call this when the component unmounts to prevent leaks.
+
+``` {.typescript file=_generated/lib/midi-input.ts}
   onNoteOn(cb: MidiNoteCallback): void { this.noteOnCallbacks.push(cb); }
   onNoteOff(cb: MidiNoteCallback): void { this.noteOffCallbacks.push(cb); }
 
-  /** Called whenever device list or enabled state changes */
   onStatusChange(cb: MidiStatusCallback): void { this.statusCallbacks.push(cb); }
 
   onPitchBend(cb: MidiExpressionCallback): void { this.pitchBendCallbacks.push(cb); }

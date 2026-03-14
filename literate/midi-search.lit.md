@@ -34,6 +34,7 @@ type GitHubTreeItem = {
 type GitHubTreeResponse = {
   tree: GitHubTreeItem[];
 };
+
 ```
 
 ## Public Search Result and Adapter Interface
@@ -77,6 +78,7 @@ export interface MidiSearchAdapter {
    */
   fetch(result: MidiSearchResult): Promise<ArrayBuffer>;
 }
+
 ```
 
 ## GitHub Tree Loader
@@ -115,6 +117,7 @@ async function loadGitHubMidis(
   cache.items = data.tree.filter(item => item.type === 'blob' && item.path.endsWith('.mid'));
   return cache.items;
 }
+
 ```
 
 ## Path Encoding and Raw URL Construction
@@ -133,6 +136,7 @@ function encodeGitHubPath(path: string): string {
 function rawUrl(owner: string, repo: string, path: string): string {
   return `https://raw.githubusercontent.com/${owner}/${repo}/HEAD/${encodeGitHubPath(path)}`;
 }
+
 ```
 
 ## Tree Search Helper
@@ -171,6 +175,7 @@ function searchTree(
 
   return results;
 }
+
 ```
 
 ## Raw Bytes Fetcher
@@ -186,6 +191,7 @@ async function fetchArrayBuffer(url: string): Promise<ArrayBuffer> {
   }
   return response.arrayBuffer();
 }
+
 ```
 
 ## Wild West MIDIs Adapter
@@ -232,6 +238,7 @@ export class GitHubMidiAdapter implements MidiSearchAdapter {
     return fetchArrayBuffer(result.fetchUrl);
   }
 }
+
 ```
 
 ## Mutopia Project Adapter
@@ -273,6 +280,7 @@ export class MutopiaMidiAdapter implements MidiSearchAdapter {
     return fetchArrayBuffer(result.fetchUrl);
   }
 }
+
 ```
 
 ## Midishare Adapter
@@ -363,6 +371,7 @@ export class MidishareMidiAdapter implements MidiSearchAdapter {
     }
   }
 }
+
 ```
 
 ## Adapter Registry and Composite Search
