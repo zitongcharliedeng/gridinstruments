@@ -26,7 +26,6 @@ export default defineConfig({
         ...devices['Desktop Firefox'],
         launchOptions: {
           firefoxUserPrefs: {
-            // Allow AudioContext to resume without user gesture in headless CI
             'media.autoplay.default': 0,
             'media.autoplay.blocking_policy': 0,
           },

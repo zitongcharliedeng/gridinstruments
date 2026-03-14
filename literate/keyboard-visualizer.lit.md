@@ -1130,16 +1130,28 @@ key label width.
 
 ``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
 
-    // QWERTY overlay label (top-left of cell, high contrast)
+    // QWERTY overlay label (topmost corner of cell, high contrast)
     const qLabel = this.qwertyLabels.get(noteId);
     if (qLabel) {
       const qSize = Math.max(10, fontSize * 0.5);
       this.ctx.font = `bold ${qSize}px "JetBrains Mono", monospace`;
-      // Black background pill for contrast
       const metrics = this.ctx.measureText(qLabel);
       const pad = 2;
-      const lx = x - Math.abs(hv1.x) - Math.abs(hv2.x) + pad + 2;
-      const ly = y - Math.abs(hv1.y) - Math.abs(hv2.y) + pad + 2;
+      // Find the actual topmost corner of the parallelogram cell.
+      // The four corners are center ± hv1 ± hv2. We want the one with
+      // minimum Y (topmost on screen), breaking ties by minimum X.
+      // Using Math.abs would give the bounding-box corner, which for
+      // skewed parallelograms lands in the adjacent cell.
+      const corners = [
+        { x: hv1.x + hv2.x, y: hv1.y + hv2.y },
+        { x: hv1.x - hv2.x, y: hv1.y - hv2.y },
+        { x: -hv1.x + hv2.x, y: -hv1.y + hv2.y },
+        { x: -hv1.x - hv2.x, y: -hv1.y - hv2.y },
+      ];
+      corners.sort((a, b) => a.y - b.y || a.x - b.x);
+      const top = corners[0];
+      const lx = x + top.x + pad + 2;
+      const ly = y + top.y + pad + 2;
       this.ctx.fillStyle = 'rgba(0,0,0,0.7)';
       this.ctx.fillRect(lx - pad, ly - pad, metrics.width + pad * 2, qSize + pad * 2);
       this.ctx.fillStyle = '#ffff00';
