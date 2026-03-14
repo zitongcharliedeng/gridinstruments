@@ -1018,19 +1018,9 @@ export class DComposeApp {
     });
 
 
-     // Zoom slider — DOM mutations driven by appActor subscriber
-     //
-     // DPI-aware default zoom: target physical key width ≈ 15mm (QWERTY key cap width).
-     const targetMm = 23;
-     const cssPxPerMm = 96 / 25.4;
-     const targetPx = targetMm * cssPxPerMm;
-     if (this.visualizer) {
-       const { cellHv1, cellHv2 } = this.visualizer.getGridGeometry();
-       const cellWidth = (Math.abs(cellHv1.x) + Math.abs(cellHv2.x)) * 2;
-       if (cellWidth > 1) {
-         this.defaultZoom = Math.max(0.5, Math.min(1.5, targetPx / cellWidth));
-       }
-     }
+     const { cellHv1, cellHv2 } = this.visualizer!.getGridGeometry();
+     const cellWidth = (Math.abs(cellHv1.x) + Math.abs(cellHv2.x)) * 2;
+     this.defaultZoom = Math.max(0.5, Math.min(1.5, (23 * 96 / 25.4) / cellWidth));
      if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
        this.defaultZoom = Math.max(this.defaultZoom, Math.min(1.2, window.innerWidth / 480));
      }

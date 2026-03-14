@@ -1,6 +1,6 @@
 id: no-ts-comments
 message: "Use literate prose instead of code comments. Rationale belongs in .lit.md markdown, not // comments."
-severity: warning
+severity: error
 note: "In literate programming, explanatory text goes in markdown prose between code blocks. Code comments are redundant."
 language: TypeScript
 rule:
