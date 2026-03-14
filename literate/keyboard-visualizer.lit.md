@@ -57,11 +57,11 @@ and two layout parameters:
 export interface VisualizerOptions {
   width: number;
   height: number;
-  generator: [number, number]; // [fifth, octave] in cents
+  generator: [number, number];
   d4Hz: number;
   scaleX: number;
   scaleY: number;
-  buttonSpacing: number; // kept for API compat, not used in rendering
+  buttonSpacing: number;
   /**
    * DCompose ↔ MidiMech skew factor.
    * 1.0 = full DCompose diagonal skew
@@ -89,8 +89,8 @@ fields are the screen-space center of the cell (in CSS pixels), while
 ``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
 
 interface Button {
-  x: number;    // screen center X
-  y: number;    // screen center Y
+  x: number;
+  y: number;
   coordX: number;
   coordY: number;
   noteName: string;
