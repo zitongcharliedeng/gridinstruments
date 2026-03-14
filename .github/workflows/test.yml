@@ -39,8 +39,13 @@ jobs:
       - name: Build (includes TypeScript check)
         run: npm run build
 
-      - name: AST-grep scan (informational)
-        run: npx ast-grep scan || true
+      - name: Literate comment check (no // comments in code blocks)
+        run: |
+          count=$(grep -rn '^\s*//' literate/ --include='*.lit.md' | grep -v '^\s*///' | grep -v 'http://' | grep -v 'https://' | wc -l)
+          if [ "$count" -gt 0 ]; then
+            echo "Found $count inline comments in literate code blocks — use prose between blocks instead"
+            grep -rn '^\s*//' literate/ --include='*.lit.md' | grep -v '^\s*///' | grep -v 'http://' | grep -v 'https://' | head -20
+          fi
         continue-on-error: true
 
       - name: Lint (informational)

@@ -1093,10 +1093,13 @@ The sub-label renders at 60% of the main font size and 60% opacity.
     const deviation = getCentDeviation(coordX, fifth);
     const hasBracket = noteName !== tetName || Math.abs(deviation) >= 0.5;
 
+    // D-relative octave suffix: coordY=0 → no suffix, +1 → ⁺¹, -1 → ⁻¹
+    const octSuffix = coordY === 0 ? '' : (coordY > 0 ? '+' : '') + coordY;
+
     if (hasBracket && cellMin > 30) {
-      // Two-line: main name above center, bracket below
+      // Two-line: main name + octave above center, bracket below
       this.ctx.textBaseline = 'bottom';
-      this.ctx.fillText(noteName, x, y);
+      this.ctx.fillText(noteName + octSuffix, x, y);
       // Bracket sub-label (smaller, dimmer)
       const subSize = Math.max(7, fontSize * 0.6);
       this.ctx.font = `${subSize}px "JetBrains Mono", monospace`;
@@ -1115,7 +1118,7 @@ The sub-label renders at 60% of the main font size and 60% opacity.
     } else {
       // Single-line centered
       this.ctx.textBaseline = 'middle';
-      this.ctx.fillText(noteName, x, y);
+      this.ctx.fillText(noteName + octSuffix, x, y);
     }
     this.ctx.globalAlpha = 1;
 ```
