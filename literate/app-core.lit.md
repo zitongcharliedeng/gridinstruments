@@ -68,6 +68,11 @@ export class DComposeApp {
   // MPE vibrato state (Space key sends sinusoidal pitch bend to all active MPE notes)
   private vibratoRAF: number | null = null;
   private vibratoPhase = 0;
+  // Arrow key vibrato — holding both ArrowLeft + ArrowRight oscillates pitch
+  private arrowLeftHeld = false;
+  private arrowRightHeld = false;
+  private arrowVibratoInterval: ReturnType<typeof setInterval> | null = null;
+  private arrowVibratoPhase = 0;
 
   // Cached canvas rect — invalidated on resize only
   private cachedCanvasRect: DOMRect | null = null;
@@ -1463,15 +1468,22 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
     const code = event.code;
     if (event.ctrlKey || event.metaKey) return;
 
-    // Arrow keys: pitch bend for all held notes
+    // Arrow keys: pitch bend or vibrato (both held = vibrato)
     if (code === 'ArrowLeft' || code === 'ArrowRight') {
       event.preventDefault();
-      const bendSemitones = code === 'ArrowLeft' ? -1 : 1;
-      for (const [noteCode, noteData] of this.activeNotes) {
-        const cx = noteData.coordX + this.transposeOffset;
-        const cy = noteData.coordY + this.octaveOffset;
-        const noteId = `key_${noteCode}_${cx}_${cy}`;
-        this.synth.setPitchBend(noteId, bendSemitones);
+      if (code === 'ArrowLeft') this.arrowLeftHeld = true;
+      if (code === 'ArrowRight') this.arrowRightHeld = true;
+      if (this.arrowLeftHeld && this.arrowRightHeld) {
+        this.startArrowVibrato();
+      } else {
+        this.stopArrowVibrato();
+        const bendSemitones = code === 'ArrowLeft' ? -1 : 1;
+        for (const [noteCode, noteData] of this.activeNotes) {
+          const cx = noteData.coordX + this.transposeOffset;
+          const cy = noteData.coordY + this.octaveOffset;
+          const noteId = `key_${noteCode}_${cx}_${cy}`;
+          this.synth.setPitchBend(noteId, bendSemitones);
+        }
       }
       return;
     }
@@ -1536,13 +1548,26 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
     const code = event.code;
     this.keyRepeat.delete(code);
 
-    // Arrow key release: reset pitch bend to 0
+    // Arrow key release: stop vibrato or reset bend
     if (code === 'ArrowLeft' || code === 'ArrowRight') {
-      for (const [noteCode, noteData] of this.activeNotes) {
-        const cx = noteData.coordX + this.transposeOffset;
-        const cy = noteData.coordY + this.octaveOffset;
-        const noteId = `key_${noteCode}_${cx}_${cy}`;
-        this.synth.setPitchBend(noteId, 0);
+      if (code === 'ArrowLeft') this.arrowLeftHeld = false;
+      if (code === 'ArrowRight') this.arrowRightHeld = false;
+      this.stopArrowVibrato();
+      if (this.arrowLeftHeld || this.arrowRightHeld) {
+        const bendSemitones = this.arrowLeftHeld ? -1 : 1;
+        for (const [noteCode, noteData] of this.activeNotes) {
+          const cx = noteData.coordX + this.transposeOffset;
+          const cy = noteData.coordY + this.octaveOffset;
+          const noteId = `key_${noteCode}_${cx}_${cy}`;
+          this.synth.setPitchBend(noteId, bendSemitones);
+        }
+      } else {
+        for (const [noteCode, noteData] of this.activeNotes) {
+          const cx = noteData.coordX + this.transposeOffset;
+          const cy = noteData.coordY + this.octaveOffset;
+          const noteId = `key_${noteCode}_${cx}_${cy}`;
+          this.synth.setPitchBend(noteId, 0);
+        }
       }
       return;
     }
@@ -1957,6 +1982,31 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
       this.mpe.sendPitchBend(noteId, 0);
     }
     this.vibratoPhase = 0;
+  }
+
+  /** Start arrow-key vibrato — oscillates pitch bend ±1 semitone at ~5Hz. */
+  private startArrowVibrato(): void {
+    if (this.arrowVibratoInterval !== null) return;
+    this.arrowVibratoPhase = 0;
+    this.arrowVibratoInterval = setInterval(() => {
+      this.arrowVibratoPhase += 0.52; // ~5Hz at 60 ticks/s
+      const bend = Math.sin(this.arrowVibratoPhase);
+      for (const [noteCode, noteData] of this.activeNotes) {
+        const cx = noteData.coordX + this.transposeOffset;
+        const cy = noteData.coordY + this.octaveOffset;
+        const noteId = `key_${noteCode}_${cx}_${cy}`;
+        this.synth.setPitchBend(noteId, bend);
+      }
+    }, 16);
+  }
+
+  /** Stop arrow-key vibrato and reset pitch bend. */
+  private stopArrowVibrato(): void {
+    if (this.arrowVibratoInterval !== null) {
+      clearInterval(this.arrowVibratoInterval);
+      this.arrowVibratoInterval = null;
+    }
+    this.arrowVibratoPhase = 0;
   }
 
   private populateSliderPresets(
