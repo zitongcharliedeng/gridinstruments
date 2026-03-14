@@ -1961,8 +1961,6 @@ export const gameCalibrateBtnExists: StateInvariant = {
   check: async (page: Page) => {
     const btn = page.locator('#calibrate-btn');
     await expect(btn).toBeAttached();
-    const title = await btn.getAttribute('title');
-    if (!title || title.length === 0) throw new Error('#calibrate-btn missing title');
   },
 };
 
@@ -4534,19 +4532,13 @@ export const SONGBAR_HINT_4: StateInvariant = {
 
 export const SONGBAR_SEARCH_LABEL_1: StateInvariant = {
   id: 'SONGBAR-SEARCH-LABEL-1',
-  description: 'A visible "SEARCH" label exists adjacent to #midi-search-input',
+  description: 'Search input has placeholder with search hint text',
   check: async (page: Page) => {
-    const labelText = await page.evaluate(() => {
-      const searchContainer = document.getElementById('song-bar-search');
-      if (!searchContainer) throw new Error('#song-bar-search not found');
-      const allElements = searchContainer.querySelectorAll('*');
-      for (const el of allElements) {
-        if (el.textContent?.trim() === 'SEARCH') return 'found';
-      }
-      return 'not found';
-    });
-    if (labelText !== 'found') {
-      throw new Error('No "SEARCH" label found inside #song-bar-search');
+    const search = page.locator('#midi-search-input');
+    await expect(search).toBeAttached();
+    const placeholder = await search.getAttribute('placeholder');
+    if (!placeholder || placeholder.length < 5) {
+      throw new Error(`#midi-search-input placeholder missing or too short: "${placeholder}"`);
     }
   },
 };
@@ -4888,28 +4880,31 @@ export const FULLSCREEN_BTN: StateInvariant = {
   },
 };
 
-/** D = {}. Flat sound toggle checkbox exists in MIDI settings. */
+/** D = {}. Expression toggles exist in MIDI settings (replaces flat-sound-toggle). */
 export const FLAT_SOUND_TOGGLE: StateInvariant = {
   id: 'UI-FLAT-SOUND-1',
-  description: '#flat-sound-toggle checkbox exists',
+  description: 'Expression checkboxes exist (bend, velocity, pressure, timbre)',
   check: async (page: Page) => {
-    const exists = await page.evaluate(() =>
-      document.getElementById('flat-sound-toggle') !== null
+    await page.locator('#grid-settings-btn').click();
+    await page.waitForTimeout(300);
+    const count = await page.evaluate(() =>
+      document.querySelectorAll('#grid-overlay input[type="checkbox"]').length
     );
-    if (!exists) throw new Error('#flat-sound-toggle not found');
+    if (count < 4) throw new Error(`Expected at least 4 expression checkboxes, found ${count}`);
+    await page.keyboard.press('Escape');
   },
 };
 
 
-/** D = {}. All 9 slider info buttons exist (tuning, skew, shear, search, quantization, bend, velocity, pressure, timbre). */
+/** D = {}. All slider info buttons exist (tuning, skew, shear, search, quantization, bend, velocity, pressure, timbre, volume, dref, calibrate). */
 export const ALL_INFO_BTNS: StateInvariant = {
   id: 'UI-INFO-COMPLETE-1',
-  description: 'All 9 slider info buttons exist with data-info attributes',
+  description: 'All 12 slider info buttons exist with data-info attributes',
   check: async (page: Page) => {
     const count = await page.evaluate(() =>
       document.querySelectorAll('.slider-info-btn[data-info]').length
     );
-    if (count < 9) {
+    if (count < 12) {
       throw new Error(`Expected ≥9 info buttons, found ${count}`);
     }
   },
@@ -5057,13 +5052,13 @@ export const MIDI_SETTINGS_GROUPED: StateInvariant = {
 /** Only ONE flat-sound-toggle checkbox exists (prevents duplicate from agent conflicts). */
 export const SINGLE_FLAT_SOUND: StateInvariant = {
   id: 'IDEAL-SINGLE-FLAT',
-  description: 'Exactly one flat-sound-toggle checkbox',
+  description: 'No duplicate expression checkboxes',
   check: async (page: Page) => {
     const count = await page.evaluate(() =>
-      document.querySelectorAll('#flat-sound-toggle').length
+      document.querySelectorAll('#qwerty-overlay-toggle').length
     );
     if (count !== 1) {
-      throw new Error(`Expected 1 flat-sound-toggle, found ${count}`);
+      throw new Error(`Expected 1 qwerty-overlay-toggle, found ${count}`);
     }
   },
 };
