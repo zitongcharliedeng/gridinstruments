@@ -1021,22 +1021,6 @@ export class DComposeApp {
      // Zoom slider — DOM mutations driven by appActor subscriber
      //
      // DPI-aware default zoom: target physical key width ≈ 15mm (QWERTY key cap width).
-     //
-     // At zoom=1.0, keyboard-visualizer renders each visible key at PIANO_KEY_MM = 23.5mm
-     // in W3C CSS-spec units (1 CSS px = 1/96 inch, cssPxPerInch = 96 is a spec constant).
-     //
-     // DPI estimation: window.screen.width gives physical pixels; window.outerWidth gives
-     // CSS pixels. Their ratio × 96 estimates the physical DPI of the display.
-     //
-     // Formula:
-     //   dpi            = screen.width / outerWidth * 96   (CSS reference pixel = 96 dpi)
-     //   mmPerCssPx     = 25.4 / dpi
-     //   baseKeyWidthCssPx = PIANO_KEY_MM / 25.4 * 96      (key width at zoom=1.0 in CSS px)
-     //   zoom           = targetMm / (mmPerCssPx * baseKeyWidthCssPx)
-     //                  = targetMm * dpi / (PIANO_KEY_MM * 96)
-     //
-     // Fallback to 0.75 if DPI is unavailable (screen.width or outerWidth is zero/missing).
-     // Touch devices: Math.min(1.2, innerWidth / 480) — scales to viewport width.
      const targetMm = 23;
      const cssPxPerMm = 96 / 25.4;
      const targetPx = targetMm * cssPxPerMm;
