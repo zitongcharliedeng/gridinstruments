@@ -2192,7 +2192,8 @@ The render method is throttled to one repaint per animation frame via `renderSch
         )
       );
       const activeNoteIds = this.visualizer.getCellIdsForPitchCents(activePitchCents, fifth);
-      this.visualizer.setActiveNotes(activeNoteIds);
+      const sourceIds = Array.from(this.activeNotes.values()).map(({ coordX, coordY }) => `${coordX}_${coordY}`);
+      this.visualizer.setActiveNotes(activeNoteIds, sourceIds);
       this.visualizer.render();
     });
   }

@@ -105,6 +105,7 @@ export class KeyboardVisualizer {
   private ctx: CanvasRenderingContext2D;
   private buttons: Button[] = [];
   private activeNotes = new Set<string>();
+  private sourceActiveNotes = new Set<string>();
   private sustainedNotes = new Set<string>();
   private targetNotes = new Set<string>();
   private pressedTargetNotes = new Set<string>();
@@ -541,8 +542,9 @@ The MIDI formula is: `midi = 62 + coordX * 7 + coordY * 12` (D4 = MIDI 62,
 each fifth = 7 semitones, each octave = 12).
 
 ``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
-  setActiveNotes(noteIds: string[]): void {
+  setActiveNotes(noteIds: string[], sourceIds?: string[]): void {
     this.activeNotes = new Set(noteIds);
+    this.sourceActiveNotes = sourceIds ? new Set(sourceIds) : this.activeNotes;
   }
 
   getCellIdsForMidiNotes(midiNotes: ReadonlySet<number>): string[] {
@@ -885,6 +887,8 @@ colors for the resolved state.
     const noteId = `${coordX}_${coordY}`;
 
     const isActive = this.activeNotes.has(noteId);
+    const isSourceActive = isActive && this.sourceActiveNotes.has(noteId);
+    const isMirrorActive = isActive && !isSourceActive;
     const isTarget = this.targetNotes.has(noteId) && !isActive;
     const isTargetPressed = isTarget && this.pressedTargetNotes.has(noteId);
     const isTargetUnpressed = isTarget && !this.pressedTargetNotes.has(noteId);
@@ -942,8 +946,16 @@ computed as center +/- (hv1 * s) +/- (hv2 * s).
     this.ctx.lineTo(px(-1,  1), py(-1,  1));
     this.ctx.closePath();
     this.ctx.fillStyle = fillColor;
-    this.ctx.globalAlpha = cellAlpha;
+    this.ctx.globalAlpha = isMirrorActive ? cellAlpha * 0.4 : cellAlpha;
     this.ctx.fill();
+    if (isMirrorActive) {
+      this.ctx.globalAlpha = 0.9;
+      this.ctx.strokeStyle = fillColor;
+      this.ctx.lineWidth = 2;
+      this.ctx.setLineDash([4, 3]);
+      this.ctx.stroke();
+      this.ctx.setLineDash([]);
+    }
     this.ctx.globalAlpha = 1;
 ```
 
