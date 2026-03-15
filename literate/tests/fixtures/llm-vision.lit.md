@@ -3,8 +3,6 @@
 LLM vision assertion via Anthropic Claude API — sends screenshots for visual invariant verification with fail-open semantics.
 
 ``` {.typescript file=_generated/tests/fixtures/llm-vision.ts}
- *
- *
 import Anthropic from '@anthropic-ai/sdk';
 
 export interface VisionAssertionResult {
