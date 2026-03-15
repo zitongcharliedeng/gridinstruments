@@ -1131,6 +1131,28 @@ The QWERTY overlay toggle renders physical key labels (Q, W, E, R...) on the gri
       });
     }
 
+    const visSettingsBtn = document.getElementById('vis-settings-btn');
+    const visOverlay = document.getElementById('vis-overlay');
+    visSettingsBtn?.addEventListener('click', () => {
+      visOverlay?.classList.toggle('hidden');
+    });
+    const visTimeSlider = getElementOrNull('vis-time-slider', HTMLInputElement);
+    const visTimeBadge = document.getElementById('vis-time-badge');
+    visTimeSlider?.addEventListener('input', () => {
+      const val = parseFloat(visTimeSlider.value);
+      this.historyVisualizer?.setTimeWindow(val);
+      if (visTimeBadge) visTimeBadge.textContent = val.toFixed(1);
+    });
+    const visRangeSlider = getElementOrNull('vis-range-slider', HTMLInputElement);
+    const visRangeBadge = document.getElementById('vis-range-badge');
+    visRangeSlider?.addEventListener('input', () => {
+      const octaves = parseInt(visRangeSlider.value, 10);
+      const centerMidi = 62;
+      const halfRange = Math.floor(octaves * 12 / 2);
+      this.historyVisualizer?.setNoteRange(centerMidi - halfRange, centerMidi + halfRange);
+      if (visRangeBadge) visRangeBadge.textContent = String(octaves);
+    });
+
     window.addEventListener('blur', () => { this.stopAllNotes(); });
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'hidden') this.stopAllNotes();

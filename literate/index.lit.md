@@ -1204,6 +1204,20 @@ bottom border; `data-*` attributes declare the min/max/default heights and the
     <!-- Visualiser panel -->
     <div id="visualiser-panel">
       <canvas id="history-canvas" height="120"></canvas>
+      <button id="vis-settings-btn" class="grid-cog icon-btn icon-md" style="position:absolute;top:4px;left:4px;z-index:15;" title="Visualiser settings"><i data-lucide="settings"></i></button>
+      <div id="vis-overlay" class="hidden" style="position:absolute;top:0;left:0;width:200px;height:100%;background:rgba(0,0,0,0.9);z-index:14;padding:8px 8px 8px 36px;overflow-y:auto;">
+        <div class="overlay-section-title">VISUALISER</div>
+        <div class="slider-track" style="margin-top:8px;">
+          <span class="slider-label-overlay">TIME (s)</span>
+          <input type="range" id="vis-time-slider" min="1" max="10" step="0.5" value="3" title="History time window">
+          <span class="slider-value-badge" id="vis-time-badge">3.0</span>
+        </div>
+        <div class="slider-track" style="margin-top:8px;">
+          <span class="slider-label-overlay">RANGE (octaves)</span>
+          <input type="range" id="vis-range-slider" min="2" max="8" step="1" value="5" title="Visible note range in octaves">
+          <span class="slider-value-badge" id="vis-range-badge">5</span>
+        </div>
+      </div>
       <div class="panel-resize-handle-wrap">
          <div class="panel-resize-handle" tabindex="0" role="separator" aria-orientation="horizontal" aria-label="Resize visualiser" title="Drag to resize visualiser panel" data-target="visualiser-panel" data-min="60" data-max="400" data-default="120" data-key="gi_visualiser_h" data-hidden-key="gi_history_hidden"><span class="grip-lines"><span class="grip-line"></span><span class="grip-line"></span><span class="grip-line"></span></span><span class="handle-label">VISUALISER</span><span class="grip-lines"><span class="grip-line"></span><span class="grip-line"></span><span class="grip-line"></span></span></div>
       </div>
