@@ -39,7 +39,13 @@ if [ "$violations" -gt 0 ]; then
   exit 1
 fi
 
-# Step 1.6: Warn about long code blocks without interweaved prose
+# Step 1.6: Warn about raw title= tooltips (prefer info button + dialog)
+title_count=$(grep -c 'title="' literate/index.lit.md 2>/dev/null || echo "0")
+if [ "$title_count" -gt 0 ]; then
+  echo "[tangle] WARN: $title_count raw title= tooltips in index.lit.md. Migrate to info button + dialog pattern (#174)."
+fi
+
+# Step 1.7: Warn about long code blocks without interweaved prose
 if command -v python3 &>/dev/null; then
   python3 scripts/check-long-blocks.py 2>/dev/null || true
 fi
