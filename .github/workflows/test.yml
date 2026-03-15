@@ -30,7 +30,10 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps firefox
 
-      - name: Test (tangle → build → playwright)
+      - name: Tangle and build
+        run: npm run build
+
+      - name: Test (structural only — fast)
         run: npx playwright test --project=firefox --workers=1 -g "Structural"
 
       - name: Upload test results
