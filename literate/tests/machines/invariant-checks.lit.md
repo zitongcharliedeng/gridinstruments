@@ -508,7 +508,16 @@ export const appLoadedCheck: StateInvariant = {
 
 ## Golden Screenshot Comparisons
 
-Pixel-accurate golden image comparisons for full page, overlay, mobile, and QWERTY states.
+Pixel-accurate golden image comparisons for full page, overlay, mobile, and QWERTY states. Each test compares a live screenshot against the reference image below.
+
+**Full page reference:**
+![Full page](../../../tests/xstate-graph.spec.ts-snapshots/full-page-firefox-linux.png)
+
+**Overlay open reference:**
+![Overlay open](../../../tests/xstate-graph.spec.ts-snapshots/overlay-open-firefox-linux.png)
+
+**QWERTY overlay reference:**
+![QWERTY overlay](../../../tests/xstate-graph.spec.ts-snapshots/qwerty-overlay-firefox-linux.png)
 
 ``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const overlayGoldenCheck: StateInvariant = {
