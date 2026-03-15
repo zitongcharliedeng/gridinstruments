@@ -556,31 +556,10 @@ export const mobileGoldenCheck: StateInvariant = {
 
 export const qwertyGoldenCheck: StateInvariant = {
   id: 'GOLDEN-QWERTY',
+  description: 'QWERTY labels visible by default — golden screenshot',
   check: async (page: Page) => {
-    await page.locator('#grid-settings-btn').click();
-    await page.waitForTimeout(300);
-    await page.locator('text=QWERTY LABELS').scrollIntoViewIfNeeded();
-    await page.locator('text=QWERTY LABELS').click();
-    await page.waitForTimeout(500);
-    const debugInfo = await page.evaluate(() => {
-      const cb = document.querySelector<HTMLInputElement>('#qwerty-overlay-toggle');
-      const canvas = document.querySelector<HTMLCanvasElement>('#keyboard-canvas');
-      return {
-        toggleExists: !!cb,
-        checked: cb?.checked ?? false,
-        canvasExists: !!canvas,
-      };
-    });
-    if (!debugInfo.checked) {
-      throw new Error(`QWERTY toggle not checked after click! Debug: ${JSON.stringify(debugInfo)}`);
-    }
-    await page.keyboard.press('Escape');
     await page.waitForTimeout(500);
     await expect(page.locator('#keyboard-canvas')).toHaveScreenshot('qwerty-labels.png');
-    await page.locator('#grid-settings-btn').click();
-    await page.waitForTimeout(200);
-    await page.locator('text=QWERTY LABELS').click();
-    await page.keyboard.press('Escape');
   },
 };
 
