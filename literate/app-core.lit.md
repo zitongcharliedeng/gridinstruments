@@ -1500,6 +1500,7 @@ The MIDI search input queries multiple online MIDI repositories via `searchAllAd
               row.addEventListener('click', () => {
                 void this.handleSearchResultClick(r);
                 resultsDiv.style.display = 'none';
+                searchInput.value = '';
               });
 
               resultsDiv.appendChild(row);
@@ -1520,12 +1521,7 @@ The song bar hint ("drop a MIDI file or search") fades in when idle and hides wh
       searchInput.addEventListener('focus', () => {
         songBarHintEl.style.display = 'none';
       });
-      searchInput.addEventListener('blur', (e: FocusEvent) => {
-        const related = e.relatedTarget instanceof HTMLElement ? e.relatedTarget : null;
-        const clickedInResults = related && resultsDiv?.contains(related);
-        if (!clickedInResults) {
-          setTimeout(() => { if (resultsDiv) resultsDiv.style.display = 'none'; }, 400);
-        }
+      searchInput.addEventListener('blur', (_e: FocusEvent) => {
         if (searchInput.value.trim() === '') {
           const gameState = this.gameActor ? String(this.gameActor.getSnapshot().value) : undefined;
           if (!gameState || gameState === 'idle' || gameState === 'error') {
