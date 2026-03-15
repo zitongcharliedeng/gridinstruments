@@ -173,7 +173,10 @@ export class DComposeApp {
       this.updateGraffiti = createChordGraffiti({ container: keyboardContainer, visualizer: this.visualizer });
     }
     this.render();
-    requestAnimationFrame(() => this.updateGraffiti?.());
+    requestAnimationFrame(() => {
+      this.updateGraffiti?.();
+      this.setIdleState(true);
+    });
   }
 
   private setupVisualizer(): void {
