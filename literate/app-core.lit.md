@@ -1944,7 +1944,7 @@ The idle timer controls the visibility of decorative elements (chord graffiti, s
       if (gs !== 'playing') {
         this.setIdleState(true);
       }
-    }, 10000);
+    }, 3000);
   }
 
   private setIdleState(idle: boolean): void {
