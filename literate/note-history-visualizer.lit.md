@@ -464,7 +464,7 @@ Two private name formatters. `midiToNoteName` returns a plain pitch class name (
     const noteName = names[((midi % 12) + 12) % 12];
     const dOctave = Math.floor((midi - 62) / 12);
     if (dOctave === 0) return noteName;
-    return noteName + (dOctave > 0 ? '+' : '') + dOctave;
+    return noteName + Math.abs(dOctave);
   }
 ```
 
