@@ -101,7 +101,11 @@ export const overlayMachine = setup({
     },
   },
 });
+```
 
+The Playwright action table maps each overlay event to its DOM interaction, and the invariants and DOM assertion records complete the overlay machine's test contract.
+
+``` {.typescript file=_generated/tests/machines/uiMachine.ts}
 export const overlayPlaywrightActions: Record<OverlayEvent['type'], (page: Page) => Promise<void>> = {
   CLICK_COG: async (page) => {
     await page.locator('#grid-settings-btn').click();
@@ -180,7 +184,11 @@ export const visualiserMachine = setup({
     },
   },
 });
+```
 
+The Playwright action table, invariants map, and DOM assertions complete the visualiser machine's test contract, using the `dragHandle` helper for all resize interactions.
+
+``` {.typescript file=_generated/tests/machines/uiMachine.ts}
 const VIS_HANDLE = '#visualiser-panel .panel-resize-handle';
 
 export const visualiserPlaywrightActions: Record<VisualiserEvent['type'], (page: Page) => Promise<void>> = {
@@ -278,7 +286,11 @@ export const pedalsMachine = setup({
     },
   },
 });
+```
 
+The `DRAG_PED_FROM_COLLAPSED` action uses raw pointer events rather than the `dragHandle` helper because the collapsed panel needs pointer dispatch at precise coordinates; the invariants and DOM assertions complete the pedals machine's test contract.
+
+``` {.typescript file=_generated/tests/machines/uiMachine.ts}
 const PED_HANDLE = '#pedals-panel .panel-resize-handle';
 
 export const pedalsPlaywrightActions: Record<PedalsEvent['type'], (page: Page) => Promise<void>> = {
@@ -303,7 +315,11 @@ export const pedalsPlaywrightActions: Record<PedalsEvent['type'], (page: Page) =
     await page.locator(PED_HANDLE).dispatchEvent('dblclick');
   },
 };
+```
 
+The pedals invariants and DOM assertions mirror the visualiser pattern, checking for the `collapsed` CSS class and bounding-box height thresholds.
+
+``` {.typescript file=_generated/tests/machines/uiMachine.ts}
 export const pedalsInvariants: Record<string, string> = {
   default: 'The pedals panel is at its default height (~44px), showing sustain and vibrato buttons. No black gap anywhere.',
   expanded: 'The pedals panel is expanded taller than default. No black gap anywhere.',
@@ -331,7 +347,7 @@ export const pedalsDomAssertions: Record<string, (page: Page) => Promise<void>> 
 };
 ```
 
-The waveform machine tracks which oscillator waveform is active in the synth. The `selectWaveform` helper clicks the slim-select dropdown (the native `<select>` is hidden per project rules) and waits for the DOM to settle.
+The waveform machine tracks which oscillator waveform is active in the synth. It cycles between four states — `sawtooth` (default), `sine`, `square`, and `triangle` — each reachable from every other via a direct select event.
 
 ``` {.typescript file=_generated/tests/machines/uiMachine.ts}
 type WaveformEvent =
@@ -339,7 +355,11 @@ type WaveformEvent =
   | { type: 'SELECT_SINE' }
   | { type: 'SELECT_SQUARE' }
   | { type: 'SELECT_TRIANGLE' };
+```
 
+The machine itself defines all four waveform states with their metadata and full transition tables, forming a complete graph where every waveform is one step from every other.
+
+``` {.typescript file=_generated/tests/machines/uiMachine.ts}
 export const waveformMachine = setup({
   types: { events: {} as WaveformEvent },
 }).createMachine({
@@ -392,7 +412,11 @@ export const waveformMachine = setup({
     },
   },
 });
+```
 
+The `selectWaveform` helper clicks the slim-select dropdown (the native `<select>` is hidden per project rules) and waits for the DOM to settle; the action table, invariants map, and DOM assertions complete the waveform machine's test contract.
+
+``` {.typescript file=_generated/tests/machines/uiMachine.ts}
 const WAVEFORM_LABELS: Record<string, string> = {
   sawtooth: 'SAW', sine: 'SIN', square: 'SQR', triangle: 'TRI',
 };
@@ -475,7 +499,11 @@ export const sustainMachine = setup({
     },
   },
 });
+```
 
+The sustain Playwright actions, invariants, and DOM assertions complete the sustain machine's test contract; both Space-key and pointer-event paths are covered.
+
+``` {.typescript file=_generated/tests/machines/uiMachine.ts}
 export const sustainPlaywrightActions: Record<SustainEvent['type'], (page: Page) => Promise<void>> = {
   PRESS_SPACE: async (page) => {
     await page.keyboard.down('Space');
@@ -548,7 +576,11 @@ export const vibratoMachine = setup({
     },
   },
 });
+```
 
+The vibrato Playwright actions, invariants, and DOM assertions complete the vibrato machine's test contract; the structure mirrors the sustain machine exactly with Shift-key and pointer-event paths.
+
+``` {.typescript file=_generated/tests/machines/uiMachine.ts}
 export const vibratoPlaywrightActions: Record<VibratoEvent['type'], (page: Page) => Promise<void>> = {
   PRESS_SHIFT: async (page) => {
     await page.keyboard.down('Shift');
@@ -713,7 +745,11 @@ export const textInputFocusMachine = setup({
     },
   },
 });
+```
 
+The text input focus Playwright actions, invariants, and DOM assertions complete the machine's test contract; Enter and Escape both return to `blurred`, and `toBeFocused` confirms the `focused` state.
+
+``` {.typescript file=_generated/tests/machines/uiMachine.ts}
 export const textInputFocusPlaywrightActions: Record<TextInputFocusEvent['type'], (page: Page) => Promise<void>> = {
   CLICK_INPUT: async (page) => {
     await page.locator('#d-ref-input').click();
@@ -770,18 +806,24 @@ export const skewLabelMachine = setup({
     },
   },
 });
+```
 
+The skew label Playwright actions set the slider value programmatically and fire an `input` event to trigger the label update; the invariants and DOM assertions verify the label text at each extreme position.
+
+``` {.typescript file=_generated/tests/machines/uiMachine.ts}
 export const skewLabelPlaywrightActions: Record<SkewLabelEvent['type'], (page: Page) => Promise<void>> = {
   SET_SKEW_MAX: async (page) => {
     await page.evaluate(() => {
-      const s = document.getElementById('skew-slider') as HTMLInputElement;
+      const s = document.querySelector<HTMLInputElement>('#skew-slider');
+      if (!s) return;
       s.value = '1';
       s.dispatchEvent(new Event('input'));
     });
   },
   SET_SKEW_MIN: async (page) => {
     await page.evaluate(() => {
-      const s = document.getElementById('skew-slider') as HTMLInputElement;
+      const s = document.querySelector<HTMLInputElement>('#skew-slider');
+      if (!s) return;
       s.value = '0';
       s.dispatchEvent(new Event('input'));
     });
@@ -850,7 +892,11 @@ export {
   viewportMachine, viewportPlaywrightActions, viewportDomAssertions, viewportInvariants,
   songBarMachine, songBarPlaywrightActions, songBarDomAssertions, songBarInvariants,
 };
+```
 
+The `allMachines` array is the canonical list consumed by the graph-traversal test harness — every machine registered here gets automatic `(state, event)` coverage from the `enumerateTransitions` loop in the spec file.
+
+``` {.typescript file=_generated/tests/machines/uiMachine.ts}
 export const allMachines = [
   { name: 'overlay', machine: overlayMachine },
   { name: 'visualiser', machine: visualiserMachine },

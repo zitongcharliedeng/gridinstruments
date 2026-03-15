@@ -36,6 +36,11 @@ import {
   textInputFocusPlaywrightActions,
   textInputFocusInvariants,
   textInputFocusDomAssertions,
+```
+
+The second half of the import list brings in the slider, dialog, and newer machine triples — skew label, all four sliders, about dialog, D-ref input, modifier compound, layout persistence, viewport, and song bar.
+
+``` {.typescript file=_generated/tests/machines/state-assertions.ts}
   skewLabelPlaywrightActions,
   skewLabelInvariants,
   skewLabelDomAssertions,
@@ -80,7 +85,11 @@ export interface MachineAssertionKit {
   invariants: Partial<Record<string, string>>;
   domAssertions: Partial<Record<string, (page: Page) => Promise<void>>>;
 }
+```
 
+The registry's first half covers the core UI machines: overlay, visualiser, pedals, waveform, sustain, vibrato, MIDI panel, MPE, and text-input focus.
+
+``` {.typescript file=_generated/tests/machines/state-assertions.ts}
 const registry: Partial<Record<string, MachineAssertionKit>> = {
   overlay: {
     actions: overlayPlaywrightActions,
@@ -127,6 +136,11 @@ const registry: Partial<Record<string, MachineAssertionKit>> = {
     invariants: textInputFocusInvariants,
     domAssertions: textInputFocusDomAssertions,
   },
+```
+
+The second half of the registry maps the slider, dialog, and newer machines — skew label, the four slider resets, about dialog, D-ref input, modifier compound, layout persistence, viewport, and song bar.
+
+``` {.typescript file=_generated/tests/machines/state-assertions.ts}
   skewLabel: {
     actions: skewLabelPlaywrightActions,
     invariants: skewLabelInvariants,
@@ -157,6 +171,11 @@ const registry: Partial<Record<string, MachineAssertionKit>> = {
     invariants: aboutDialogInvariants,
     domAssertions: aboutDialogDomAssertions,
   },
+```
+
+The final registry entries cover the newer interaction machines — D-ref frequency input, compound modifier keys, panel layout persistence, responsive viewport states, and the song-bar game mode.
+
+``` {.typescript file=_generated/tests/machines/state-assertions.ts}
   drefInput: {
     actions: drefInputPlaywrightActions,
     invariants: drefInputInvariants,

@@ -71,7 +71,7 @@ async function loadGitHubMidis(
     );
   }
 
-  const data = await response.json() as GitHubTreeResponse;
+  const data = await response.json() as unknown as GitHubTreeResponse;
   cache.items = data.tree.filter(item => item.type === 'blob' && item.path.endsWith('.mid'));
   return cache.items;
 }
@@ -223,7 +223,7 @@ export class MidishareMidiAdapter implements MidiSearchAdapter {
           );
           return [];
         }
-        this._cache.midis = await response.json() as { id: string; title?: string; name?: string }[];
+        this._cache.midis = await response.json() as unknown as { id: string; title?: string; name?: string }[];
       } catch (err) {
         console.warn('[midi-search] midishare.dev fetch failed:', err);
         return [];

@@ -30,7 +30,11 @@ const noHorizontalOverflow: StateInvariant = {
     expect(noOverflow).toBe(true);
   },
 };
+```
 
+The tablet invariant checks that all header elements remain visible at 768 px wide. The mobile invariant verifies that the grid overlay is hidden and the canvas fills the full viewport width, maximising the playable area on small screens.
+
+``` {.typescript file=_generated/tests/machines/viewportMachine.ts}
 const tabletAllVisible: StateInvariant = {
   id: 'BH-MOB-4',
   check: async (page: Page) => {
@@ -82,7 +86,7 @@ export const viewportMachine = setup({
       meta: {
         reason: 'Standard desktop viewport — all UI elements visible.',
         designIntent: 'Full desktop experience with all navigation and controls',
-        invariants: [canvasValidAfterResize] as StateInvariant[],
+        invariants: [canvasValidAfterResize] satisfies StateInvariant[],
       },
       on: {
         SET_VIEWPORT_375: 'mobile_375',
@@ -94,7 +98,7 @@ export const viewportMachine = setup({
       meta: {
         reason: 'Tablet viewport — all UI elements including GitHub actions visible.',
         designIntent: 'Tablet users get full desktop-like experience',
-        invariants: [canvasValidAfterResize, tabletAllVisible] as StateInvariant[],
+        invariants: [canvasValidAfterResize, tabletAllVisible] satisfies StateInvariant[],
       },
       on: {
         SET_VIEWPORT_375: 'mobile_375',
@@ -102,11 +106,16 @@ export const viewportMachine = setup({
         SET_VIEWPORT_1280: 'desktop_1280',
       },
     },
+```
+
+The two mobile states mirror the tablet state but enforce the canvas-fills-width and no-horizontal-overflow invariants appropriate to narrow screens.
+
+``` {.typescript file=_generated/tests/machines/viewportMachine.ts}
     mobile_390: {
       meta: {
         reason: 'Mobile 390px viewport — overlay hidden, canvas fills width.',
         designIntent: 'Mobile users get maximum playable grid area',
-        invariants: [canvasValidAfterResize, mobileCanvasFillsWidth] as StateInvariant[],
+        invariants: [canvasValidAfterResize, mobileCanvasFillsWidth] satisfies StateInvariant[],
       },
       on: {
         SET_VIEWPORT_375: 'mobile_375',
@@ -118,7 +127,7 @@ export const viewportMachine = setup({
       meta: {
         reason: 'Smallest common phone viewport — essential UI visible, no overflow.',
         designIntent: 'Small phone users can access info button, title, and settings',
-        invariants: [canvasValidAfterResize, noHorizontalOverflow] as StateInvariant[],
+        invariants: [canvasValidAfterResize, noHorizontalOverflow] satisfies StateInvariant[],
       },
       on: {
         SET_VIEWPORT_390: 'mobile_390',

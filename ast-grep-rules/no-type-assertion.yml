@@ -1,0 +1,22 @@
+id: no-type-assertion
+message: |
+  Use type guards or generic parameters instead of `as` type assertions.
+
+  Allowed patterns:
+  - `as unknown` (double-cast entry point: `x as unknown as T`)
+  - XState setup pattern: `types: { context: {} as T, events: {} as T }`
+
+  Replace `value as SomeType` with:
+  - Type guards: `if (value instanceof SomeType) { ... }`
+  - Generic query: `document.querySelector<SomeType>('#id')`
+  - Typed variable: `const x: SomeType[] = []`
+  - `satisfies` for literal conformance checks
+severity: error
+language: TypeScript
+rule:
+  kind: as_expression
+  not:
+    any:
+      - pattern: $E as unknown
+      - pattern: $E as unknown as $T
+      - pattern: "{} as $T"

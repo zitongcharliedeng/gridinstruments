@@ -184,7 +184,7 @@ use the caller-supplied values; all other sliders start at their compile-time de
     octaveOffset: 0,
     transposeOffset: 0,
     layoutId: 'ansi',
-    waveform: 'sawtooth' as import('./types').WaveformType,
+    waveform: 'sawtooth' satisfies import('./types').WaveformType,
     midiPanelOpen: false,
     mpeEnabled: false,
     mpeOutputId: null,

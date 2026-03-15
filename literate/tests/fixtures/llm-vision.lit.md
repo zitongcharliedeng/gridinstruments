@@ -70,10 +70,14 @@ export async function assertWithVision(
         },
       ],
     });
+```
 
+After the API call, the response text is parsed as JSON. Malformed responses return a fail-open result with `confidence: 'low'` rather than throwing, and any network or API error also returns fail-open so a missing API key never blocks the test suite.
+
+``` {.typescript file=_generated/tests/fixtures/llm-vision.ts}
     const text =
       response.content[0].type === 'text' ? response.content[0].text : '';
-    const parsed = JSON.parse(text) as VisionAssertionResult;
+    const parsed = JSON.parse(text) as unknown as VisionAssertionResult;
 
     if (typeof parsed.pass !== 'boolean' || typeof parsed.reason !== 'string') {
       return { pass: true, confidence: 'low', reason: `LLM returned malformed JSON: ${text}` };

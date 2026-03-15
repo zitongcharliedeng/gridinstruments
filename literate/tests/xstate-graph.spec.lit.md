@@ -244,7 +244,7 @@ function computeShortestPaths(machine: AnyStateMachine): Map<string, string[]> {
         : null;
       if (!targetSerialized) continue;
 
-      const targetState = JSON.parse(targetSerialized) as string;
+      const targetState = String(JSON.parse(targetSerialized));
       if (!visited.has(targetState)) {
         visited.add(targetState);
         const eventType = transition.event?.type ?? transition.eventType ?? '';
@@ -272,7 +272,7 @@ function enumerateTransitions(
   const tests: TransitionTest[] = [];
 
   for (const [serializedState, node] of Object.entries(adj)) {
-    const sourceState = JSON.parse(serializedState) as string;
+    const sourceState = String(JSON.parse(serializedState));
 
     for (const [, transition] of Object.entries(node.transitions)) {
       const targetSerialized = transition.state
@@ -280,7 +280,7 @@ function enumerateTransitions(
         : null;
       if (!targetSerialized) continue;
 
-      const targetState = JSON.parse(targetSerialized) as string;
+      const targetState = String(JSON.parse(targetSerialized));
       const eventType = transition.event?.type ?? transition.eventType ?? '';
 
       tests.push({
@@ -344,7 +344,7 @@ The mobile smart-zoom test verifies that on a 390px touch viewport the app's `ge
     await p.waitForTimeout(1500);
 
     const defaultZoom = await p.evaluate(() => {
-      const app = (window as Window & { dcomposeApp?: { getDefaultZoom: () => number } }).dcomposeApp;
+      const app = (window as unknown as { dcomposeApp?: { getDefaultZoom: () => number } }).dcomposeApp;
       return app?.getDefaultZoom() ?? -1;
     });
     expect(defaultZoom).toBeGreaterThan(0);
@@ -453,11 +453,19 @@ The coordinate theory (CT) tests verify the mathematical correctness of the pitc
   test('CT-HUE-2: Adjacent fifths differ by 210\u00B0 for max contrast', async ({ page }) => {
     await ctHue2Check.check(page);
   });
+```
 
+The round-trip fidelity, cents deviation, runtime machine consistency, and double-accidental tests complete the coordinate theory suite.
+
+``` {.typescript file=_generated/tests/xstate-graph.spec.ts}
   test('CT-ROUNDTRIP-1: coordToMidiNote round-trips for canonical positions', async ({ page }) => {
     await ctRoundtrip1Check.check(page);
   });
+```
 
+The remaining CT tests verify cents deviation at different fifth sizes, runtime machine state consistency, and double-accidental note naming at extreme grid coordinates.
+
+``` {.typescript file=_generated/tests/xstate-graph.spec.ts}
   test('CT-CENTS-1: At 12-TET (700\u00A2), all coordinates have 0 deviation', async ({ page }) => {
     await ctCents1Check.check(page);
   });
@@ -513,7 +521,11 @@ The MPE protocol tests (ISC-MPE-* and ISC-SVC-*) verify the MIDI Polyphonic Expr
   test('ISC-A-MPE-1: no per-note messages go to manager channel 1', async ({ page }) => {
     await iscAMpe1Check.check(page);
   });
+```
 
+The ISC-SVC-* tests exercise the full `MPEService` lifecycle: constructor defaults, settings updates, note-on/off allocation, voice state subscriptions, all-notes-off panic, resource disposal, pressure mode, enable/disable, and custom CC numbers.
+
+``` {.typescript file=_generated/tests/xstate-graph.spec.ts}
   test('ISC-SVC-1: MPEService constructor creates default settings', async ({ page }) => {
     await iscSvc1Check.check(page);
   });
@@ -1109,7 +1121,11 @@ The ideal-state invariants (IDEAL-* prefix) define the project's "done" criteria
   test('IDEAL-SINGLE-FLAT: Exactly one flat-sound-toggle', async ({ page }) => {
     await SINGLE_FLAT_SOUND.check(page);
   });
+```
 
+The golden screenshot tests compare rendered pixels against stored reference images, and the UI-completeness and design-vow checks enforce project-wide structural rules before closing the `[Structural]` describe block.
+
+``` {.typescript file=_generated/tests/xstate-graph.spec.ts}
   test('GOLDEN-OVERLAY-2: Overlay screenshot golden', async ({ page }) => {
     await overlayGoldenCheck2.check(page);
   });
@@ -1167,7 +1183,11 @@ for (const { name: machineName, machine } of allMachines) {
       await page.waitForLoadState('networkidle');
       await page.waitForTimeout(1500);
     });
+```
 
+Each generated test navigates to the source state via the BFS shortest path, fires the event, asserts the DOM reflects the target state, checks any `meta.invariants` on the target state node, and optionally runs an LLM vision check if the state has a registered visual invariant.
+
+``` {.typescript file=_generated/tests/xstate-graph.spec.ts}
     for (const t of transitions) {
       test(`${t.sourceState} → ${t.eventType} → ${t.targetState}`, async ({ page }) => {
         if (NEEDS_OVERLAY_OPEN.has(machineName)) {

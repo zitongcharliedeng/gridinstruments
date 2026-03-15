@@ -74,7 +74,7 @@ export function refreshAllSliderUI(): void {
     ['d-ref-slider', 'd-ref-input', 80],
   ];
   for (const [sliderId, badgeId, badgeWidth] of sliderBadgePairs) {
-    const slider = document.getElementById(sliderId) as HTMLInputElement | null;
+    const slider = document.querySelector<HTMLInputElement>(`#${sliderId}`);
     if (!slider) continue;
     applySliderFill(slider);
     if (badgeId) {

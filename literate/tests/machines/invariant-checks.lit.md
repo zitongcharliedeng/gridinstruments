@@ -22,6 +22,13 @@ import {
 } from './uiMachine';
 
 
+```
+
+## UI Element Invariants
+
+Structural checks for tooltips, panel handles, overlays, and icon sizes.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const tooltipCheck: StateInvariant = {
   id: 'BH-TT-1',
   check: async (page: Page) => {
@@ -67,6 +74,12 @@ export const pianoRollVisible: StateInvariant = {
   },
 };
 
+
+```
+
+Continuing with `pedHandlePosition` and related invariants.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const pedHandlePosition: StateInvariant = {
   id: 'PNL-VIS-5',
   check: async (page: Page) => {
@@ -109,6 +122,12 @@ export const overlayShimmerCheck: StateInvariant = {
   },
 };
 
+
+```
+
+Continuing with `overlaySectionsCheck` and related invariants.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const overlaySectionsCheck: StateInvariant = {
   id: 'OV-SECTIONS-1',
   check: async (page: Page) => {
@@ -166,6 +185,12 @@ export const iconSizeCheck: StateInvariant = {
   },
 };
 
+
+```
+
+Continuing with `visCap60Check` and related invariants.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const visCap60Check: StateInvariant = {
   id: 'PNL-DRAG-4',
   check: async (page: Page) => {
@@ -180,6 +205,13 @@ export const visCap60Check: StateInvariant = {
 };
 
 
+```
+
+## Slider Invariants
+
+Slider fill colors, badge positioning, pointer events, and value range assertions.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export function createSliderFillDefaultInvariant(sliderId: string): StateInvariant {
   return {
     id: `FILL-DEFAULT-${sliderId}`,
@@ -230,6 +262,12 @@ export const sliderBadgePositionCheck: StateInvariant = {
   },
 };
 
+
+```
+
+Continuing with `badgePointerEventsCheck` and related invariants.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const badgePointerEventsCheck: StateInvariant = {
   id: 'SM-BADGE-PE',
   check: async (page: Page) => {
@@ -305,6 +343,12 @@ export const sliderValuesCheck: StateInvariant = {
   },
 };
 
+
+```
+
+Continuing with `tetBelowTrackCheck` and related invariants.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const tetBelowTrackCheck: StateInvariant = {
   id: 'SM-TET-BELOW',
   check: async (page: Page) => {
@@ -325,6 +369,13 @@ export const tetBelowTrackCheck: StateInvariant = {
   },
 };
 
+```
+
+## Overlay Color and Annotation Checks
+
+Overlay section colors, D-ref annotations, and overlay control visibility.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const overlayColorsCheck: StateInvariant = {
   id: 'SM-COLOR-OVERLAY',
   check: async (page: Page) => {
@@ -393,6 +444,12 @@ export const overlayControlsCheck: StateInvariant = {
 };
 
 
+
+```
+
+Continuing with `appLoadedCheck` and related invariants.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const appLoadedCheck: StateInvariant = {
   id: 'SM-APP-LOADED',
   check: async (page: Page) => {
@@ -447,6 +504,13 @@ export const appLoadedCheck: StateInvariant = {
 };
 
 
+```
+
+## Golden Screenshot Comparisons
+
+Pixel-accurate golden image comparisons for full page, overlay, mobile, and QWERTY states.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const overlayGoldenCheck: StateInvariant = {
   id: 'GOLDEN-OVERLAY',
   check: async (page: Page) => {
@@ -490,8 +554,8 @@ export const qwertyGoldenCheck: StateInvariant = {
     await page.locator('text=QWERTY LABELS').click();
     await page.waitForTimeout(500);
     const debugInfo = await page.evaluate(() => {
-      const cb = document.getElementById('qwerty-overlay-toggle') as HTMLInputElement;
-      const canvas = document.getElementById('keyboard-canvas') as HTMLCanvasElement;
+      const cb = document.querySelector<HTMLInputElement>('#qwerty-overlay-toggle');
+      const canvas = document.querySelector<HTMLCanvasElement>('#keyboard-canvas');
       return {
         toggleExists: !!cb,
         checked: cb?.checked ?? false,
@@ -511,6 +575,12 @@ export const qwertyGoldenCheck: StateInvariant = {
   },
 };
 
+
+```
+
+Continuing with `keyboardCanvasGoldenCheck` and related invariants.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const keyboardCanvasGoldenCheck: StateInvariant = {
   id: 'GOLDEN-KEYBOARD',
   check: async (page: Page) => {
@@ -528,6 +598,13 @@ export const tetNotchGoldenCheck: StateInvariant = {
 };
 
 
+```
+
+## DOM Structure Invariants
+
+Handle parenting, ARIA labels, scrollbar dimensions, slim-select theming, and native select absence.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const handleDomParent: StateInvariant = {
   id: 'PNL-VIS-6',
   check: async (page: Page) => {
@@ -580,6 +657,12 @@ export const scrollbarWidthCheck: StateInvariant = {
   },
 };
 
+
+```
+
+Continuing with `scrollbarOverflowCheck` and related invariants.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const scrollbarOverflowCheck: StateInvariant = {
   id: 'ISS-62-2',
   check: async (page: Page) => {
@@ -627,6 +710,12 @@ export const slimSelectThemeCheck: StateInvariant = {
   },
 };
 
+
+```
+
+Continuing with `nativeSelectHiddenCheck` and related invariants.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const nativeSelectHiddenCheck: StateInvariant = {
   id: 'ISS-85-2',
   check: async (page: Page) => {
@@ -678,6 +767,13 @@ export const customCheckboxCheck: StateInvariant = {
   },
 };
 
+```
+
+## Visual Style Invariants
+
+Background colors, D-ref drift detection, key bindings, and D-ref frequency range validation.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const noWhiteBackgroundCheck: StateInvariant = {
   id: 'ISS-85-4',
   check: async (page: Page) => {
@@ -736,6 +832,12 @@ export const drefDriftCheck: StateInvariant = {
   },
 };
 
+
+```
+
+Continuing with `rKeyNotSustainCheck` and related invariants.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const rKeyNotSustainCheck: StateInvariant = {
   id: 'ISS-14-1',
   check: async (page: Page) => {
@@ -761,6 +863,13 @@ export const drefRangeCheck: StateInvariant = {
 
 
 
+```
+
+## Chord Theory Invariants
+
+Cent markers, nearest-TET detection, note naming, MIDI conversion, and pitch class calculations.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const ctMarkers1Check: StateInvariant = {
   id: 'CT-MARKERS-1',
   check: async (page: Page) => {
@@ -802,6 +911,12 @@ export const ctNearest1Check: StateInvariant = {
   },
 };
 
+
+```
+
+Continuing with `ctNotename1Check` and related invariants.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const ctNotename1Check: StateInvariant = {
   id: 'CT-NOTENAME-1',
   check: async (page: Page) => {
@@ -852,6 +967,12 @@ export const ctNotename3Check: StateInvariant = {
 };
 
 
+
+```
+
+Continuing with `ctMidi1Check` and related invariants.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const ctMidi1Check: StateInvariant = {
   id: 'CT-MIDI-1',
   check: async (_page: Page) => {
@@ -893,6 +1014,12 @@ export const ctPc2Check: StateInvariant = {
   },
 };
 
+
+```
+
+Continuing with `ctHue1Check` and related invariants.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const ctHue1Check: StateInvariant = {
   id: 'CT-HUE-1',
   check: async (_page: Page) => {
@@ -935,6 +1062,12 @@ export const ctCents1Check: StateInvariant = {
   },
 };
 
+
+```
+
+Continuing with `ctCents2Check` and related invariants.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const ctCents2Check: StateInvariant = {
   id: 'CT-CENTS-2',
   check: async (_page: Page) => {
@@ -989,6 +1122,12 @@ export const ctMachine3Check: StateInvariant = {
   },
 };
 
+
+```
+
+Continuing with `ctMachine4Check` and related invariants.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const ctMachine4Check: StateInvariant = {
   id: 'CT-MACHINE-4',
   check: async (_page: Page) => {
@@ -1029,6 +1168,12 @@ export const bhDoubleAccidental1Check: StateInvariant = {
 };
 
 
+
+```
+
+Continuing with `iscMpe1Check` and related invariants.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const iscMpe1Check: StateInvariant = {
   id: 'ISC-MPE-1',
   check: async (page: Page) => {
@@ -1109,6 +1254,12 @@ export const iscMpe2Check: StateInvariant = {
   },
 };
 
+
+```
+
+Continuing with `iscMpe3Check` and related invariants.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const iscMpe3Check: StateInvariant = {
   id: 'ISC-MPE-3',
   check: async (page: Page) => {
@@ -1164,6 +1315,12 @@ export const iscMpe3Check: StateInvariant = {
   },
 };
 
+
+```
+
+Continuing with `iscMpe4Check` and related invariants.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const iscMpe4Check: StateInvariant = {
   id: 'ISC-MPE-4',
   check: async (page: Page) => {
@@ -1208,6 +1365,12 @@ export const iscMpe4Check: StateInvariant = {
   },
 };
 
+
+```
+
+Continuing with `iscMpe5Check` and related invariants.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const iscMpe5Check: StateInvariant = {
   id: 'ISC-MPE-5',
   check: async (page: Page) => {
@@ -1278,6 +1441,12 @@ export const iscAMpe1Check: StateInvariant = {
 };
 
 
+
+```
+
+Continuing with `iscSvc1Check` and related invariants.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const iscSvc1Check: StateInvariant = {
   id: 'ISC-SVC-1',
   check: async (page: Page) => {
@@ -1340,6 +1509,12 @@ export const iscSvc3Check: StateInvariant = {
   },
 };
 
+
+```
+
+Continuing with `iscSvc4Check` and related invariants.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const iscSvc4Check: StateInvariant = {
   id: 'ISC-SVC-4',
   check: async (page: Page) => {
@@ -1400,6 +1575,12 @@ export const iscSvc5Check: StateInvariant = {
   },
 };
 
+
+```
+
+Continuing with `iscSvc6Check` and related invariants.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const iscSvc6Check: StateInvariant = {
   id: 'ISC-SVC-6',
   check: async (page: Page) => {
@@ -1457,6 +1638,12 @@ export const iscSvc7Check: StateInvariant = {
   },
 };
 
+
+```
+
+Continuing with `iscSvc8Check` and related invariants.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const iscSvc8Check: StateInvariant = {
   id: 'ISC-SVC-8',
   check: async (page: Page) => {
@@ -1499,6 +1686,12 @@ export const iscSvc8Check: StateInvariant = {
   },
 };
 
+
+```
+
+Continuing with `iscSvc9Check` and related invariants.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const iscSvc9Check: StateInvariant = {
   id: 'ISC-SVC-9',
   check: async (page: Page) => {
@@ -1539,6 +1732,12 @@ export const iscSvc9Check: StateInvariant = {
   },
 };
 
+
+```
+
+Continuing with `iscSvc10Check` and related invariants.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const iscSvc10Check: StateInvariant = {
   id: 'ISC-SVC-10',
   check: async (page: Page) => {
@@ -1587,6 +1786,12 @@ export const iss81SkewNotchCheck: StateInvariant = {
   },
 };
 
+
+```
+
+Continuing with `iss87CogNoOverlapCheck` and related invariants.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const iss87CogNoOverlapCheck: StateInvariant = {
   id: 'ISS-87-1',
   check: async (page: Page) => {
@@ -1613,7 +1818,7 @@ export const iss96WaveSelectCheck: StateInvariant = {
     const waveReset = page.locator('#wave-reset');
     await expect(waveReset).toBeVisible();
     const options = await waveSelect.locator('option').evaluateAll(
-      els => els.map(el => (el as HTMLOptionElement).value)
+      els => els.map(el => el instanceof HTMLOptionElement ? el.value : '')
     );
     expect(options).toEqual(['sawtooth', 'sine', 'square', 'triangle']);
     await ssMain.click();
@@ -1640,6 +1845,12 @@ export const iss97LayoutResetCheck: StateInvariant = {
   },
 };
 
+
+```
+
+Continuing with `iss98AlignmentCheck` and related invariants.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const iss98AlignmentCheck: StateInvariant = {
   id: 'ISS-98-1',
   check: async (page: Page) => {
@@ -1680,6 +1891,12 @@ export const ghostNoteApiExists: StateInvariant = {
   },
 };
 
+
+```
+
+Continuing with `canvasDropZone` and related invariants.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const canvasDropZone: StateInvariant = {
   id: 'GAME-DROP-1',
   check: async (page: Page) => {
@@ -1728,6 +1945,12 @@ export const gameScoreOverlay: StateInvariant = {
   },
 };
 
+
+```
+
+Continuing with `gameCalibrateBtnExists` and related invariants.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const gameCalibrateBtnExists: StateInvariant = {
   id: 'GAME-CAL-1',
   check: async (page: Page) => {
@@ -1769,6 +1992,12 @@ export const gameCalibrationStorage: StateInvariant = {
 };
 
 
+
+```
+
+Continuing with `gameMidiParserIntegration` and related invariants.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const gameMidiParserIntegration: StateInvariant = {
   id: 'GAME-INT-1',
   check: async (page: Page) => {
@@ -1815,6 +2044,12 @@ export const gameBuildNoteGroupsIntegration: StateInvariant = {
   },
 };
 
+
+```
+
+Continuing with `gameMachineTransitions` and related invariants.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const gameMachineTransitions: StateInvariant = {
   id: 'GAME-INT-3',
   check: async (_page: Page) => {
@@ -1877,6 +2112,12 @@ export const gameMachineReset: StateInvariant = {
   },
 };
 
+
+```
+
+Continuing with `gameFreqMatch` and related invariants.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const gameFreqMatch: StateInvariant = {
   id: 'GAME-FREQ-1',
   check: async (_page: Page) => {
@@ -1917,6 +2158,12 @@ export const gameSm1IdleToLoading: StateInvariant = {
   },
 };
 
+
+```
+
+Continuing with `gameSm2LoadingToPlaying` and related invariants.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const gameSm2LoadingToPlaying: StateInvariant = {
   id: 'GAME-SM-2',
   description: 'loading → SONG_LOADED → playing (context initialised correctly)',
@@ -1964,6 +2211,12 @@ export const gameSm3LoadingToError: StateInvariant = {
   },
 };
 
+
+```
+
+Continuing with `gameSm4ErrorReset` and related invariants.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const gameSm4ErrorReset: StateInvariant = {
   id: 'GAME-SM-4',
   description: 'error → GAME_RESET → idle (context cleared)',
@@ -2008,6 +2261,12 @@ export const gameSm5ErrorRetry: StateInvariant = {
   },
 };
 
+
+```
+
+Continuing with `gameSm6CompleteNewGame` and related invariants.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const gameSm6CompleteNewGame: StateInvariant = {
   id: 'GAME-SM-6',
   description: 'complete → FILE_DROPPED → loading (new game from complete state)',
@@ -2057,6 +2316,12 @@ export const gameSm7CompleteReset: StateInvariant = {
   },
 };
 
+
+```
+
+Continuing with `gameSm8PlayingNewSong` and related invariants.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const gameSm8PlayingNewSong: StateInvariant = {
   id: 'GAME-SM-8',
   description: 'playing → FILE_DROPPED → loading (new song mid-game, context reset)',
@@ -2109,6 +2374,12 @@ export const gameSm9PlayingReset: StateInvariant = {
   },
 };
 
+
+```
+
+Continuing with `gameSm10WrongNoteNoop` and related invariants.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const gameSm10WrongNoteNoop: StateInvariant = {
   id: 'GAME-SM-10',
   description: 'playing → wrong NOTE_PRESSED → stays in playing, no state change',
@@ -2162,6 +2433,12 @@ export const gameSm11TuningWarnAck: StateInvariant = {
   },
 };
 
+
+```
+
+Continuing with `gameFreqReject` and related invariants.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const gameFreqReject: StateInvariant = {
   id: 'GAME-FREQ-2',
   check: async (_page: Page) => {
@@ -2213,6 +2490,12 @@ export const gameChordAll: StateInvariant = {
   },
 };
 
+
+```
+
+Continuing with `gameChordSingle` and related invariants.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const gameChordSingle: StateInvariant = {
   id: 'GAME-CHORD-2',
   check: async (_page: Page) => {
@@ -2253,6 +2536,12 @@ export const gameInstructionsText: StateInvariant = {
   },
 };
 
+
+```
+
+Continuing with `gameProgressApi` and related invariants.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const gameProgressApi: StateInvariant = {
   id: 'GAME-UI-3',
   check: async (page: Page) => {
@@ -2296,6 +2585,12 @@ export const gameChordClear: StateInvariant = {
   },
 };
 
+
+```
+
+Continuing with `gameMultiCellHighlight` and related invariants.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const gameMultiCellHighlight: StateInvariant = {
   id: 'GAME-HIGHLIGHT-1',
   check: async (page: Page) => {
@@ -2346,6 +2641,12 @@ export const gameCalibrationVisualApi: StateInvariant = {
   },
 };
 
+
+```
+
+Continuing with `gameCalibrationVisualDim` and related invariants.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const gameCalibrationVisualDim: StateInvariant = {
   id: 'GAME-CAL-4',
   check: async (page: Page) => {
@@ -2392,6 +2693,12 @@ export const gameCalibrationVisualDim: StateInvariant = {
 };
 
 
+
+```
+
+Continuing with `gameEngBuildNoteGroups1` and related invariants.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const gameEngBuildNoteGroups1: StateInvariant = {
   id: 'GAME-ENG-1',
   description: 'buildNoteGroups groups notes within 20 ms window into one chord group',
@@ -2451,6 +2758,12 @@ export const gameEngBuildNoteGroups2: StateInvariant = {
   },
 };
 
+
+```
+
+Continuing with `gameEngTransposeSong` and related invariants.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const gameEngTransposeSong: StateInvariant = {
   id: 'GAME-ENG-3',
   description: 'transposeSong shifts all midiNotes by N semitones and recalculates cellIds',
@@ -2516,6 +2829,12 @@ export const gameEngCropToRange: StateInvariant = {
   },
 };
 
+
+```
+
+Continuing with `gameEngFindOptimalTransposition` and related invariants.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const gameEngFindOptimalTransposition: StateInvariant = {
   id: 'GAME-ENG-5',
   description: 'findOptimalTransposition returns the semitone offset that maximises in-range notes',
@@ -2558,6 +2877,12 @@ export const gameEngComputeMedianMidiNote: StateInvariant = {
   },
 };
 
+
+```
+
+Continuing with `gameEngBuildNoteGroupsEmpty` and related invariants.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const gameEngBuildNoteGroupsEmpty: StateInvariant = {
   id: 'GAME-ENG-7',
   description: 'buildNoteGroups returns empty array for empty NoteEvent input',
@@ -2601,6 +2926,12 @@ export const gameMidi1: StateInvariant = {
   },
 };
 
+
+```
+
+Continuing with `gameMidi2` and related invariants.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const gameMidi2: StateInvariant = {
   id: 'GAME-MIDI-2',
   description: 'Running status: consecutive NoteOn events without repeated status byte are decoded',
@@ -2672,6 +3003,12 @@ export const gameMidi3: StateInvariant = {
   },
 };
 
+
+```
+
+Continuing with `gameMidi4` and related invariants.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const gameMidi4: StateInvariant = {
   id: 'GAME-MIDI-4',
   description: 'Channel 9 (drums) is filtered: single open drum note yields empty array',
@@ -2725,6 +3062,12 @@ export const gameMidi5: StateInvariant = {
   },
 };
 
+
+```
+
+Continuing with `gameMidi6` and related invariants.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const gameMidi6: StateInvariant = {
   id: 'GAME-MIDI-6',
   description: 'Corrupt buffer (bad magic bytes) throws with descriptive MThd error',
@@ -2781,6 +3124,12 @@ export const gameMidi7: StateInvariant = {
 };
 
 
+
+```
+
+Continuing with `gameInput1` and related invariants.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const gameInput1: StateInvariant = {
   id: 'GAME-INPUT-1',
   description: 'NOTE_PRESSED with correct midiNote field advances currentGroupIndex',
@@ -2834,6 +3183,12 @@ export const gameInput2: StateInvariant = {
   },
 };
 
+
+```
+
+Continuing with `gameInput3` and related invariants.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const gameInput3: StateInvariant = {
   id: 'GAME-INPUT-3',
   description: 'NOTE_PRESSED matches by midiNote only — arbitrary cellId with correct midiNote advances group',
@@ -2882,6 +3237,12 @@ export const gameEdge1: StateInvariant = {
   },
 };
 
+
+```
+
+Continuing with `gameEdge2` and related invariants.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const gameEdge2: StateInvariant = {
   id: 'GAME-EDGE-2',
   description: 'Drum-only events → buildNoteGroups returns empty; machine enters error on LOAD_FAILED',
@@ -2935,6 +3296,12 @@ export const gameEdge3: StateInvariant = {
   },
 };
 
+
+```
+
+Continuing with `gameEdge4` and related invariants.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const gameEdge4: StateInvariant = {
   id: 'GAME-EDGE-4',
   description: 'cropToRange with empty Set removes all groups; machine enters error on LOAD_FAILED',
@@ -2976,6 +3343,12 @@ export const gameSearch1: StateInvariant = {
   }
 };
 
+
+```
+
+Continuing with `gameEdge5` and related invariants.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const gameEdge5: StateInvariant = {
   id: 'GAME-EDGE-5',
   description: 'Single-note group advances immediately on correct press (no chord accumulation phase)',
@@ -3027,6 +3400,12 @@ export const gameSearch2: StateInvariant = {
   },
 };
 
+
+```
+
+Continuing with `gameSearch3` and related invariants.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const gameSearch3: StateInvariant = {
   id: 'GAME-SEARCH-3',
   description: 'GitHubMidiAdapter search returns results with required fields (title, source, fetchUrl)',
@@ -3085,6 +3464,12 @@ export const gameSearch5: StateInvariant = {
   },
 };
 
+
+```
+
+Continuing with `gameSearch6` and related invariants.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const gameSearch6: StateInvariant = {
   id: 'GAME-SEARCH-6',
   description: '#midi-search-input is type=text and #midi-search-results exists inside #song-bar',
@@ -3098,6 +3483,13 @@ export const gameSearch6: StateInvariant = {
 };
 
 
+```
+
+## Game Quantization Checks
+
+Quantization timing accuracy tests at various subdivision levels.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const gameQuant1: StateInvariant = {
   id: 'GAME-QUANT-1',
   description: 'quantizeNotes with level=none returns events unchanged (passthrough)',
@@ -3154,6 +3546,12 @@ export const gameQuant2: StateInvariant = {
   },
 };
 
+
+```
+
+Continuing with `gameQuant3` and related invariants.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const gameQuant3: StateInvariant = {
   id: 'GAME-QUANT-3',
   description: 'long note spanning multiple grid points splits into repeated events',
@@ -3210,6 +3608,12 @@ export const gameQuant4: StateInvariant = {
   },
 };
 
+
+```
+
+Continuing with `gameQuant5` and related invariants.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const gameQuant5: StateInvariant = {
   id: 'GAME-QUANT-5',
   description: 'time signature change (4/4 → 3/4) handled without error',
@@ -3256,6 +3660,12 @@ export const gameQuant6: StateInvariant = {
   },
 };
 
+
+```
+
+Continuing with `gameQuant7` and related invariants.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const gameQuant7: StateInvariant = {
   id: 'GAME-QUANT-7',
   description: 'parseMidi returns tempoMap and timeSigMap alongside events',
@@ -3315,6 +3725,12 @@ export const gameQuant8: StateInvariant = {
   },
 };
 
+
+```
+
+Continuing with `gameQuant9` and related invariants.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const gameQuant9: StateInvariant = {
   id: 'GAME-QUANT-9',
   description: 'odd meter (7/8) does not break quantization — grid is BPM-based',
@@ -3379,6 +3795,12 @@ export const gameChordProgress1: StateInvariant = {
   },
 };
 
+
+```
+
+Continuing with `gameRestart1` and related invariants.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const gameRestart1: StateInvariant = {
   id: 'GAME-RESTART-1',
   description: 'GAME_RESTART event exists in playing and complete states',
@@ -3387,10 +3809,10 @@ export const gameRestart1: StateInvariant = {
       const { gameMachine } = await import('/_generated/machines/gameMachine.ts');
       const config = gameMachine.config;
       if (!config.states) return { playingHasRestart: false, completeHasRestart: false };
-      const playingState = config.states['playing'] as Record<string, unknown>;
-      const completeState = config.states['complete'] as Record<string, unknown>;
-      const playingOn = playingState?.['on'] as Record<string, unknown> | undefined;
-      const completeOn = completeState?.['on'] as Record<string, unknown> | undefined;
+      const playingState = config.states['playing'] as unknown as Record<string, unknown>;
+      const completeState = config.states['complete'] as unknown as Record<string, unknown>;
+      const playingOn = playingState?.['on'] as unknown as Record<string, unknown> | undefined;
+      const completeOn = completeState?.['on'] as unknown as Record<string, unknown> | undefined;
       return {
         playingHasRestart: playingOn ? 'GAME_RESTART' in playingOn : false,
         completeHasRestart: completeOn ? 'GAME_RESTART' in completeOn : false,
@@ -3402,6 +3824,13 @@ export const gameRestart1: StateInvariant = {
 };
 
 
+```
+
+## Song Bar State Machine
+
+Song bar visibility and state tracking across game machine states.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const songBarSm1: StateInvariant = {
   id: 'SONGBAR-SM-1',
   description: 'songBarMachine defines 3+ states (idle, searching, calibrating)',
@@ -3448,6 +3877,12 @@ export const songBarSm4: StateInvariant = {
   },
 };
 
+
+```
+
+Continuing with `songBarSm5` and related invariants.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const songBarSm5: StateInvariant = {
   id: 'SONGBAR-SM-5',
   description: 'calibration confirm and cancel buttons exist inside #calibration-banner',
@@ -3457,6 +3892,13 @@ export const songBarSm5: StateInvariant = {
   },
 };
 
+```
+
+## Mirror and Canvas Invariants
+
+Mirror note highlighting correctness and canvas rendering without artifacts.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const mirrorHighlight1: StateInvariant = {
   id: 'MIRROR-HIGHLIGHT-1',
   description: 'getCellIdsForMidiNotes returns >1 cell ID for MIDI 62 (multiple isomorphic positions)',
@@ -3492,7 +3934,7 @@ export const CANVAS_CLEAN_1: StateInvariant = {
   description: 'Canvas has no hint text at center-bottom when idle (no "Drop a MIDI file" text)',
   check: async (page: Page) => {
     const result = await page.evaluate(() => {
-      const canvas = document.getElementById('keyboard-canvas') as HTMLCanvasElement;
+      const canvas = document.querySelector<HTMLCanvasElement>('#keyboard-canvas');
       if (!canvas) throw new Error('keyboard-canvas not found');
       const ctx = canvas.getContext('2d');
       if (!ctx) throw new Error('canvas context not available');
@@ -3508,12 +3950,18 @@ export const CANVAS_CLEAN_1: StateInvariant = {
   },
 };
 
+
+```
+
+Continuing with `CANVAS_CLEAN_2` and related invariants.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const CANVAS_CLEAN_2: StateInvariant = {
   id: 'CANVAS-CLEAN-2',
   description: 'Canvas has no solid-white progress bar at top (no white bar at y=0..3)',
   check: async (page: Page) => {
     const result = await page.evaluate(() => {
-      const canvas = document.getElementById('keyboard-canvas') as HTMLCanvasElement;
+      const canvas = document.querySelector<HTMLCanvasElement>('#keyboard-canvas');
       if (!canvas) throw new Error('keyboard-canvas not found');
       const ctx = canvas.getContext('2d');
       if (!ctx) throw new Error('canvas context not available');
@@ -3532,7 +3980,7 @@ export const CANVAS_CLEAN_3: StateInvariant = {
   description: 'Canvas has no elapsed timer text at top-right',
   check: async (page: Page) => {
     const result = await page.evaluate(() => {
-      const canvas = document.getElementById('keyboard-canvas') as HTMLCanvasElement;
+      const canvas = document.querySelector<HTMLCanvasElement>('#keyboard-canvas');
       if (!canvas) throw new Error('keyboard-canvas not found');
       const ctx = canvas.getContext('2d');
       if (!ctx) throw new Error('canvas context not available');
@@ -3558,6 +4006,12 @@ export const CANVAS_CLEAN_4: StateInvariant = {
   },
 };
 
+
+```
+
+Continuing with `CANVAS_CLEAN_5` and related invariants.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const CANVAS_CLEAN_5: StateInvariant = {
   id: 'CANVAS-CLEAN-5',
   description: 'KeyboardVisualizer.setGameProgress method still exists (API preserved)',
@@ -3570,6 +4024,13 @@ export const CANVAS_CLEAN_5: StateInvariant = {
   },
 };
 
+```
+
+## Song Bar Hint and Progress
+
+Song hint display, progress indicator visibility, and calibration state checks.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const SONGBAR_HINT_1: StateInvariant = {
   id: 'SONGBAR-HINT-1',
   description: '#song-bar-calibrate has margin-left: auto (right-aligned in song-bar)',
@@ -3613,6 +4074,12 @@ export const SONGBAR_HINT_2: StateInvariant = {
   },
 };
 
+
+```
+
+Continuing with `SONGBAR_HINT_3` and related invariants.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const SONGBAR_HINT_3: StateInvariant = {
   id: 'SONGBAR-HINT-3',
   description: 'Focusing #midi-search-input hides #song-bar-hint',
@@ -3665,6 +4132,12 @@ export const SONGBAR_SEARCH_LABEL_1: StateInvariant = {
   },
 };
 
+
+```
+
+Continuing with `SONGBAR_PROGRESS_1` and related invariants.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const SONGBAR_PROGRESS_1: StateInvariant = {
   id: 'SONGBAR-PROGRESS-1',
   description: '#game-elapsed-timer element exists inside #game-status',
@@ -3710,6 +4183,12 @@ export const SONGBAR_PROGRESS_3: StateInvariant = {
   },
 };
 
+
+```
+
+Continuing with `SONGBAR_PROGRESS_4` and related invariants.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const SONGBAR_PROGRESS_4: StateInvariant = {
   id: 'SONGBAR-PROGRESS-4',
   description: '#game-reset-btn text is "⟲ Restart"',
@@ -3745,7 +4224,7 @@ export const SONGBAR_CAL_2: StateInvariant = {
   description: '#calibrate-btn is not disabled when game is idle (default state)',
   check: async (page: Page) => {
     const disabled = await page.evaluate(() => {
-      const btn = document.getElementById('calibrate-btn') as HTMLButtonElement | null;
+      const btn = document.querySelector<HTMLButtonElement>('#calibrate-btn');
       if (!btn) throw new Error('#calibrate-btn not found');
       return btn.disabled;
     });
@@ -3755,6 +4234,12 @@ export const SONGBAR_CAL_2: StateInvariant = {
   },
 };
 
+
+```
+
+Continuing with `SONGBAR_CAL_3` and related invariants.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const SONGBAR_CAL_3: StateInvariant = {
   id: 'SONGBAR-CAL-3',
   description: 'Calibration message text mentions "playable area"',
@@ -3781,6 +4266,13 @@ export const SONGBAR_CAL_4: StateInvariant = {
   },
 };
 
+```
+
+## Info Popup Invariants
+
+Info popup positioning, content rendering, label alignment, and close behavior.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const INFO_POPUP_1: StateInvariant = {
   id: 'INFO-POPUP-1',
   description: '.slider-info-btn[data-info="quantization"] exists in song-bar area',
@@ -3821,6 +4313,12 @@ export const INFO_POPUP_3: StateInvariant = {
   },
 };
 
+
+```
+
+Continuing with `INFO_POPUP_4` and related invariants.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const INFO_POPUP_4: StateInvariant = {
   id: 'INFO-POPUP-4',
   description: '#info-dialog exists as a <dialog> element (showModal() handles centering)',
@@ -3879,6 +4377,13 @@ export const INFO_POPUP_LABEL_1: StateInvariant = {
   },
 };
 
+```
+
+## Expression and Pitch Bend
+
+Joint expression control checks and pitch bend styling assertions.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const EXPR_JOINT_1: StateInvariant = {
   id: 'EXPR-JOINT-1',
   description: '.slider-info-btn[data-info="bend"] exists in EXPRESSION section',
@@ -3929,13 +4434,19 @@ export const EXPR_JOINT_4: StateInvariant = {
   },
 };
 
+
+```
+
+Continuing with `PB_STYLE_1` and related invariants.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const PB_STYLE_1: StateInvariant = {
   id: 'PB-STYLE-1',
   description: 'Pitch bend range input has type="text" (no native spinner arrows)',
   check: async (page) => {
     const type = await page.evaluate(() => {
-      const input = document.getElementById('midi-pb-range') as HTMLInputElement | null
-        ?? document.getElementById('midi-pb-range-expr') as HTMLInputElement | null;
+      const input = document.querySelector<HTMLInputElement>('#midi-pb-range')
+        ?? document.querySelector<HTMLInputElement>('#midi-pb-range-expr');
       if (!input) throw new Error('pitch bend range input not found');
       return input.getAttribute('type');
     });
@@ -3950,8 +4461,8 @@ export const PB_STYLE_2: StateInvariant = {
   description: 'Pitch bend range input has no border-radius and uses JetBrains Mono',
   check: async (page) => {
     const result = await page.evaluate(() => {
-      const input = document.getElementById('midi-pb-range') as HTMLInputElement | null
-        ?? document.getElementById('midi-pb-range-expr') as HTMLInputElement | null;
+      const input = document.querySelector<HTMLInputElement>('#midi-pb-range')
+        ?? document.querySelector<HTMLInputElement>('#midi-pb-range-expr');
       if (!input) throw new Error('pitch bend range input not found');
       const style = window.getComputedStyle(input);
       return {
@@ -3968,6 +4479,13 @@ export const PB_STYLE_2: StateInvariant = {
   },
 };
 
+```
+
+## Idle State and UI Controls
+
+Inactivity fade behavior, fullscreen button, flat sound toggle, and info button inventory.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const IDLE_FADE_1: StateInvariant = {
   id: 'IDLE-FADE-1',
   description: '#midi-search-input has placeholder with .mid hint',
@@ -4014,6 +4532,12 @@ export const FLAT_SOUND_TOGGLE: StateInvariant = {
 };
 
 
+
+```
+
+Continuing with `ALL_INFO_BTNS` and related invariants.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const ALL_INFO_BTNS: StateInvariant = {
   id: 'UI-INFO-COMPLETE-1',
   description: 'All 12 slider info buttons exist with data-info attributes',
@@ -4028,6 +4552,13 @@ export const ALL_INFO_BTNS: StateInvariant = {
 };
 
 
+```
+
+## Binding Vow Invariants
+
+Structurally enforced design constraints: no native selects, no scrolling, single font, no border-radius.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const VOW_NO_NATIVE_SELECT: StateInvariant = {
   id: 'VOW-NO-NATIVE-SELECT',
   description: 'No visible native <select> elements (slim-select wraps them)',
@@ -4067,6 +4598,12 @@ export const VOW_SINGLE_FONT: StateInvariant = {
   },
 };
 
+
+```
+
+Continuing with `VOW_NO_BORDER_RADIUS` and related invariants.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const VOW_NO_BORDER_RADIUS: StateInvariant = {
   id: 'VOW-NO-BORDER-RADIUS',
   description: 'No border-radius on main UI elements (sharp corners only, dialogs excepted)',
@@ -4087,6 +4624,13 @@ export const VOW_NO_BORDER_RADIUS: StateInvariant = {
 };
 
 
+```
+
+## Ideal State Invariants
+
+The final checks defining project correctness: no duplicate IDs, no D4 in UI, grouped MIDI settings.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const NO_DUPLICATE_IDS: StateInvariant = {
   id: 'IDEAL-NO-DUP-IDS',
   description: 'Zero duplicate element IDs in DOM',
@@ -4128,6 +4672,12 @@ export const NO_D4_IN_UI: StateInvariant = {
   },
 };
 
+
+```
+
+Continuing with `MIDI_SETTINGS_GROUPED` and related invariants.
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const MIDI_SETTINGS_GROUPED: StateInvariant = {
   id: 'IDEAL-MIDI-GROUPED',
   description: 'MIDI settings has EXPRESSION subtitle and logical grouping',

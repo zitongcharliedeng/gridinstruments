@@ -48,7 +48,7 @@ The subscriber translates machine snapshots into DOM mutations: collapsed class,
 ``` {.typescript file=_generated/app-panels.ts}
     let prevState = '';
     actor.subscribe((snapshot) => {
-      const state = snapshot.value as string;
+      const state = String(snapshot.value);
       if (state === 'routing') return;
       const { height } = snapshot.context;
       const isCollapsed = state === 'collapsed';

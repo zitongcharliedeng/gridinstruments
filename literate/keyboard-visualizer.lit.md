@@ -1173,7 +1173,11 @@ grids.
 
     const iRound = Math.round(iFloat);
     const jRound = Math.round(jFloat);
+```
 
+The neighborhood search checks only buttons within radius 2 of the rounded lattice coordinate for O(1) expected cost. If no candidate is found in that window (e.g. near the grid edge), the full-scan fallback guarantees a result.
+
+``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
     for (const button of this.buttons) {
       if (Math.abs(button.coordX - iRound) > 2 || Math.abs(button.coordY - jRound) > 2) continue;
       const bx = screenX - button.x;

@@ -69,7 +69,7 @@ export const aboutDialogMachine = setup({
       meta: {
         reason: 'The about dialog is visible showing project description, credits, and links.',
         designIntent: 'Attribution and project context accessible without leaving the app',
-        invariants: [aboutContentCheck, aboutLinksCheck, aboutFooterCheck] as StateInvariant[],
+        invariants: [aboutContentCheck, aboutLinksCheck, aboutFooterCheck] satisfies StateInvariant[],
       },
       on: { CLOSE: 'closed' },
     },

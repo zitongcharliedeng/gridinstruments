@@ -385,7 +385,7 @@ The MIDI device panel renders a list of connected controllers with enable/disabl
     this.canvas.addEventListener('pointercancel', this.handlePointerUp.bind(this));
     this.canvas.addEventListener('contextmenu', (e) => { e.preventDefault(); });
     const savedWaveform = this.loadSetting('waveform', 'sawtooth');
-    const initialWaveform = isWaveformType(savedWaveform) ? savedWaveform : 'sawtooth' as WaveformType;
+    const initialWaveform: WaveformType = isWaveformType(savedWaveform) ? savedWaveform : 'sawtooth';
     const waveformActor = createActor(waveformMachine, { input: { initial: initialWaveform } });
     const waveSelect = getElementOrNull('wave-select', HTMLSelectElement);
     let waveSS: SlimSelect | null = null;
@@ -410,7 +410,7 @@ The MIDI device panel renders a list of connected controllers with enable/disabl
       this.saveSetting('waveform', active);
     });
     waveformActor.start();
-    const waveReset = document.getElementById('wave-reset') as HTMLButtonElement | null;
+    const waveReset = getElementOrNull('wave-reset', HTMLButtonElement);
     waveReset?.addEventListener('click', () => { waveformActor.send({ type: 'SELECT', waveform: 'sawtooth' }); });
 ```
 
@@ -432,7 +432,7 @@ The keyboard layout selector auto-detects ISO vs ANSI by probing the Keyboard AP
         this.currentLayout = getLayout('ansi');
         this.layoutSelect.value = 'ansi';
         try {
-          const kb = (navigator as unknown as Record<string, unknown>)['keyboard'] as { getLayoutMap?: () => Promise<Map<string, string>> } | undefined;
+          const kb = (navigator as unknown as Record<string, unknown>)['keyboard'] as unknown as { getLayoutMap?: () => Promise<Map<string, string>> } | undefined;
           if (kb?.getLayoutMap) {
             kb.getLayoutMap().then((layoutMap) => {
               if (layoutMap.has('IntlBackslash')) {
@@ -454,7 +454,7 @@ The keyboard layout selector auto-detects ISO vs ANSI by probing the Keyboard AP
             if (val) {
               this.currentLayout = getLayout(val);
               this.saveSetting('layout', val);
-              const qToggle = document.getElementById('qwerty-overlay-toggle') as HTMLInputElement | null;
+              const qToggle = getElementOrNull('qwerty-overlay-toggle', HTMLInputElement);
               if (qToggle?.checked) {
                 this.visualizer?.setQwertyLabels(this.buildQwertyLabels());
                 this.visualizer?.render();
@@ -1115,7 +1115,7 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
 The QWERTY overlay toggle renders physical key labels (Q, W, E, R...) on the grid cells so players can see which keyboard key triggers which note. When the toggle is off, grid cells show only note names.
 
 ``` {.typescript file=_generated/app-core.ts}
-    const qwertyToggle = document.getElementById('qwerty-overlay-toggle') as HTMLInputElement | null;
+    const qwertyToggle = getElementOrNull('qwerty-overlay-toggle', HTMLInputElement);
     if (qwertyToggle) {
       if (qwertyToggle.checked) {
         this.visualizer?.setQwertyLabels(this.buildQwertyLabels());
@@ -1194,7 +1194,8 @@ The grid settings overlay is a scrollable panel toggled by the cog button. An `o
       }).observe(gridOverlay);
       gridCog.addEventListener('click', () => { overlayActor.send({ type: 'TOGGLE' }); });
       gridOverlay.addEventListener('click', (e) => {
-        const target = e.target as Element;
+        const target = e.target instanceof Element ? e.target : null;
+        if (!target) return;
         if (target === gridOverlay ||
             (!target.closest('.overlay-section') &&
              !target.closest('.overlay-section-title') &&
@@ -1203,7 +1204,7 @@ The grid settings overlay is a scrollable panel toggled by the cog button. An `o
           overlayActor.send({ type: 'CLOSE' });
         }
       });
-      (window as Window & { overlayActor?: unknown }).overlayActor = overlayActor;
+      (window as unknown as { overlayActor?: unknown }).overlayActor = overlayActor;
     }
 ```
 
@@ -1290,7 +1291,7 @@ the tuning slider and calibrate button to prevent mid-game tuning changes.
 
 ``` {.typescript file=_generated/app-core.ts}
     this.gameActor.subscribe((snapshot) => {
-      const state = snapshot.value as string;
+      const state = String(snapshot.value);
       const ctx = snapshot.context;
 
       this.visualizer?.setGameState(state);
@@ -1298,14 +1299,14 @@ the tuning slider and calibrate button to prevent mid-game tuning changes.
         this.visualizer?.setGameProgress(ctx.currentGroupIndex, ctx.noteGroups.length, Date.now() - ctx.startTimeMs);
       }
 
-      const statusEl = document.getElementById('game-status') as HTMLElement | null;
-      const progressFill = document.getElementById('game-progress-fill') as HTMLElement | null;
-      const elapsedTimer = document.getElementById('game-elapsed-timer') as HTMLElement | null;
+      const statusEl = document.querySelector<HTMLElement>('#game-status');
+      const progressFill = document.querySelector<HTMLElement>('#game-progress-fill');
+      const elapsedTimer = document.querySelector<HTMLElement>('#game-elapsed-timer');
       const songBarHint = document.getElementById('song-bar-hint');
 
       if (this.tuningSlider) this.tuningSlider.disabled = state === 'playing';
 
-      const calibrateBtn = document.getElementById('calibrate-btn') as HTMLButtonElement | null;
+      const calibrateBtn = getElementOrNull('calibrate-btn', HTMLButtonElement);
       if (calibrateBtn) calibrateBtn.disabled = state === 'playing' || state === 'loading';
 
       if (state === 'playing') {
@@ -1429,7 +1430,7 @@ Drag-and-drop MIDI file loading lets users drop a `.mid` file anywhere on the pa
 
     document.body.addEventListener('dragleave', (e) => {
       e.preventDefault();
-      if (!e.relatedTarget || !(document.documentElement.contains(e.relatedTarget as Node))) {
+      if (!e.relatedTarget || !(e.relatedTarget instanceof Node) || !(document.documentElement.contains(e.relatedTarget))) {
         if (songBar) songBar.classList.remove('dropping');
       }
     });
@@ -1462,7 +1463,7 @@ Drag-and-drop MIDI file loading lets users drop a `.mid` file anywhere on the pa
 The MIDI search input queries multiple online MIDI repositories via `searchAllAdapters` with 300ms debounce. Results render as clickable rows that fetch and load the selected file directly into the game engine.
 
 ``` {.typescript file=_generated/app-core.ts}
-    const searchInput = document.getElementById('midi-search-input') as HTMLInputElement | null;
+    const searchInput = getElementOrNull('midi-search-input', HTMLInputElement);
     const resultsDiv = document.getElementById('midi-search-results');
     if (searchInput && resultsDiv) {
       let searchDebounce: ReturnType<typeof setTimeout> | null = null;
@@ -1515,19 +1516,19 @@ The MIDI search input queries multiple online MIDI repositories via `searchAllAd
 The song bar hint ("drop a MIDI file or search") fades in when idle and hides when the search input is focused or a game is active. This keeps the hint visible only when it is useful.
 
 ``` {.typescript file=_generated/app-core.ts}
-    const songBarHintEl = document.getElementById('song-bar-hint') as HTMLElement | null;
+    const songBarHintEl = document.querySelector<HTMLElement>('#song-bar-hint');
     if (searchInput && songBarHintEl) {
       searchInput.addEventListener('focus', () => {
         songBarHintEl.style.display = 'none';
       });
       searchInput.addEventListener('blur', (e: FocusEvent) => {
-        const related = e.relatedTarget as HTMLElement | null;
+        const related = e.relatedTarget instanceof HTMLElement ? e.relatedTarget : null;
         const clickedInResults = related && resultsDiv?.contains(related);
         if (!clickedInResults) {
           setTimeout(() => { if (resultsDiv) resultsDiv.style.display = 'none'; }, 400);
         }
         if (searchInput.value.trim() === '') {
-          const gameState = this.gameActor?.getSnapshot().value as string | undefined;
+          const gameState = this.gameActor ? String(this.gameActor.getSnapshot().value) : undefined;
           if (!gameState || gameState === 'idle' || gameState === 'error') {
             songBarHintEl.style.display = '';
           }
@@ -1537,7 +1538,7 @@ The song bar hint ("drop a MIDI file or search") fades in when idle and hides wh
         if (searchInput.value.trim() !== '') {
           songBarHintEl.style.display = 'none';
         } else if (document.activeElement !== searchInput) {
-          const gameState = this.gameActor?.getSnapshot().value as string | undefined;
+          const gameState = this.gameActor ? String(this.gameActor.getSnapshot().value) : undefined;
           if (!gameState || gameState === 'idle' || gameState === 'error') {
             songBarHintEl.style.display = '';
           }
@@ -1843,7 +1844,7 @@ The idle timer controls the visibility of decorative elements (chord graffiti, s
 
 ``` {.typescript file=_generated/app-core.ts}
   private resetIdleTimer(): void {
-    const gameState = this.gameActor?.getSnapshot().value as string | undefined;
+    const gameState = this.gameActor ? String(this.gameActor.getSnapshot().value) : undefined;
     if (gameState === 'playing') return;
 
     if (this.idleTimeout !== null) {
@@ -1857,7 +1858,7 @@ The idle timer controls the visibility of decorative elements (chord graffiti, s
 
     this.idleTimeout = setTimeout(() => {
       this.idleTimeout = null;
-      const gs = this.gameActor?.getSnapshot().value as string | undefined;
+      const gs = this.gameActor ? String(this.gameActor.getSnapshot().value) : undefined;
       if (gs !== 'playing') {
         this.setIdleState(true);
       }
@@ -1907,14 +1908,15 @@ MIDI buffer loading is the shared entry point for both drag-and-drop files and s
     const actor = this.gameActor;
     if (!actor) return;
 
-    const titleEl = document.getElementById('game-song-title') as HTMLElement | null;
+    const titleEl = document.querySelector<HTMLElement>('#game-song-title');
     if (titleEl) {
       titleEl.textContent = songTitle;
     }
 
-    const badgeEl = document.getElementById('game-quantization-badge') as HTMLElement | null;
-    const levelBtn = document.getElementById('quantization-level') as HTMLButtonElement | null;
-    const level = (levelBtn?.value ?? 'none') as QuantizationLevel;
+    const badgeEl = document.querySelector<HTMLElement>('#game-quantization-badge');
+    const levelBtn = getElementOrNull('quantization-level', HTMLButtonElement);
+    const rawLevel = levelBtn?.value ?? 'none';
+    const level: QuantizationLevel = rawLevel === '1/4' || rawLevel === '1/8' || rawLevel === '1/16' ? rawLevel : 'none';
     if (badgeEl) {
       badgeEl.textContent = level === 'none' ? '' : `Q:${level}`;
     }
@@ -1939,7 +1941,7 @@ MIDI buffer loading is the shared entry point for both drag-and-drop files and s
 
       const adjustedMedianMidi = medianMidi + semitones;
       const adjustedMedianHz = 440 * Math.pow(2, (adjustedMedianMidi - 69) / 12);
-      const dRefSlider = document.getElementById('d-ref-slider') as HTMLInputElement | null;
+      const dRefSlider = getElementOrNull('d-ref-slider', HTMLInputElement);
       if (dRefSlider) {
         const dMin = parseFloat(dRefSlider.min);
         const dMax = parseFloat(dRefSlider.max);
@@ -2138,15 +2140,15 @@ MPE vibrato uses `requestAnimationFrame` to oscillate pitch bend at approximatel
 
     const updateActive = (): void => {
       const val = parseFloat(slider.value);
-      container.querySelectorAll('.slider-preset-mark').forEach(mark => {
+      container.querySelectorAll<HTMLElement>('.slider-preset-mark').forEach(mark => {
         const btn = mark.querySelector<HTMLElement>('.slider-preset-btn');
         if (!btn) return;
         const pVal = parseFloat(btn.dataset.value ?? '');
         const isActive = Math.abs(val - pVal) < 0.05;
         btn.classList.toggle('active', isActive);
-        (mark as HTMLElement).classList.toggle('active', isActive);
-        (mark as HTMLElement).classList.toggle('preset-below', !isActive && pVal < val);
-        (mark as HTMLElement).classList.toggle('preset-above', !isActive && pVal > val);
+        mark.classList.toggle('active', isActive);
+        mark.classList.toggle('preset-below', !isActive && pVal < val);
+        mark.classList.toggle('preset-above', !isActive && pVal > val);
       });
     };
     slider.addEventListener('input', updateActive);
@@ -2199,7 +2201,7 @@ Calibration mode shows a banner instructing the user to play all reachable notes
     const warning = document.getElementById('calibration-warning');
     if (banner) banner.style.display = 'flex';
     if (msg) msg.textContent = 'Play all reachable notes to set your playable area, then confirm';
-    const gameState = this.gameActor?.getSnapshot().value as string | undefined;
+    const gameState = this.gameActor ? String(this.gameActor.getSnapshot().value) : undefined;
     const songActive = gameState === 'playing' || gameState === 'loading' || gameState === 'complete';
     if (warning) warning.style.display = songActive ? '' : 'none';
     const btn = document.getElementById('calibrate-btn');

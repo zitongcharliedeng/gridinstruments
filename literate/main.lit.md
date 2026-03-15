@@ -78,7 +78,7 @@ Delegates to the overlay actor if it is in the `visible` state.
 ``` {.typescript file=_generated/main.ts}
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
-      const actor = (window as Window & { overlayActor?: { send: (e: { type: string }) => void; getSnapshot: () => { matches: (s: string) => boolean } } }).overlayActor;
+      const actor = (window as unknown as { overlayActor?: { send: (e: { type: string }) => void; getSnapshot: () => { matches: (s: string) => boolean } } }).overlayActor;
       if (actor?.getSnapshot().matches('visible')) {
         actor.send({ type: 'CLOSE' });
       }

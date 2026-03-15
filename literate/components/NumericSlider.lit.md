@@ -61,8 +61,11 @@ The constructor wires up three event groups: range `input` (fires on every drag)
       for (const cb of this._resetCbs) cb();
     };
     this._attach(resetBtn, 'click', onReset);
+```
 
+When `config.editable` is true and the badge is an `<input>` element, three additional listeners are wired: `input` forwards raw keystrokes to registered callbacks, `blur` reverts invalid text via `parseInput`, and `focus` pre-selects the badge value for convenient overwrite.
 
+``` {.typescript file=_generated/components/NumericSlider.ts}
     if (config.editable && badge instanceof HTMLInputElement) {
       const inputEl = badge;
 

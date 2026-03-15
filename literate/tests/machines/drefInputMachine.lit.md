@@ -63,7 +63,7 @@ export const drefInputMachine = setup({
       meta: {
         reason: 'D-ref input is unfocused, showing default or last valid frequency.',
         designIntent: 'Default state with annotation visible in label overlay',
-        invariants: [bracketAnnotationCheck, idleValueCheck] as StateInvariant[],
+        invariants: [bracketAnnotationCheck, idleValueCheck] satisfies StateInvariant[],
       },
       on: {
         CLICK_INPUT: 'focused',
@@ -85,6 +85,11 @@ export const drefInputMachine = setup({
         RESET: 'idle',
       },
     },
+```
+
+The remaining three states handle typed content: `validValue` accepts further valid input or reverts on blur, `invalidValue` shows a red border and waits for correction or blur, and `emptyValue` holds cleared content until blur restores the last valid frequency.
+
+``` {.typescript file=_generated/tests/machines/drefInputMachine.ts}
     validValue: {
       meta: {
         reason: 'D-ref input contains a valid frequency or note name, converted to Hz.',
@@ -103,7 +108,7 @@ export const drefInputMachine = setup({
       meta: {
         reason: 'D-ref input contains invalid text, showing red border.',
         designIntent: 'Red border provides immediate visual feedback before auto-revert',
-        invariants: [redBorderCheck] as StateInvariant[],
+        invariants: [redBorderCheck] satisfies StateInvariant[],
       },
       on: {
         TYPE_NOTE_NAME: 'validValue',
@@ -161,7 +166,7 @@ export const drefInputPlaywrightActions: Record<DrefEvent['type'], (page: Page) 
     await page.waitForTimeout(100);
   },
   BLUR: async (page) => {
-    await page.evaluate(() => { (document.activeElement as HTMLElement).blur(); });
+    await page.evaluate(() => { if (document.activeElement instanceof HTMLElement) document.activeElement.blur(); });
     await page.waitForTimeout(200);
   },
   PRESS_ENTER: async (page) => {

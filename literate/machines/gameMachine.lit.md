@@ -80,11 +80,12 @@ export const gameMachine = setup({
   actions: {
     assignSongLoaded: assign(({ event }) => {
       assertEvent(event, 'SONG_LOADED');
+      const pressedMidiNotes: number[] = [];
       return {
         noteGroups: event.noteGroups,
         currentGroupIndex: 0,
         targetCellIds: event.noteGroups[0]?.cellIds ?? [],
-        pressedMidiNotes: [] as number[],
+        pressedMidiNotes,
         startTimeMs: Date.now(),
         finishTimeMs: 0,
         error: null,
@@ -108,30 +109,34 @@ The remaining actions advance to the next chord group, record the finish timesta
 ``` {.typescript file=_generated/machines/gameMachine.ts}
     advanceGroup: assign(({ context }) => {
       const nextIndex = context.currentGroupIndex + 1;
+      const pressedMidiNotes: number[] = [];
       return {
         currentGroupIndex: nextIndex,
         targetCellIds: context.noteGroups[nextIndex]?.cellIds ?? [],
-        pressedMidiNotes: [] as number[],
+        pressedMidiNotes,
       };
     }),
     setFinishTime: assign(() => ({ finishTimeMs: Date.now() })),
-    resetGame: assign(() => ({
-      noteGroups: [] as NoteGroup[],
+    resetGame: assign((): Partial<GameContext> => ({
+      noteGroups: [],
       currentGroupIndex: 0,
-      targetCellIds: [] as string[],
-      pressedMidiNotes: [] as number[],
+      targetCellIds: [],
+      pressedMidiNotes: [],
       startTimeMs: 0,
       finishTimeMs: 0,
-      error: null as string | null,
+      error: null,
       tuningWarnAcknowledged: false,
     })),
-    restartGame: assign(({ context }) => ({
-      currentGroupIndex: 0,
-      targetCellIds: context.noteGroups[0]?.cellIds ?? [],
-      pressedMidiNotes: [] as number[],
-      startTimeMs: Date.now(),
-      finishTimeMs: 0,
-    })),
+    restartGame: assign(({ context }) => {
+      const pressedMidiNotes: number[] = [];
+      return {
+        currentGroupIndex: 0,
+        targetCellIds: context.noteGroups[0]?.cellIds ?? [],
+        pressedMidiNotes,
+        startTimeMs: Date.now(),
+        finishTimeMs: 0,
+      };
+    }),
     ackTuningWarn: assign(() => ({ tuningWarnAcknowledged: true })),
   },
 ```

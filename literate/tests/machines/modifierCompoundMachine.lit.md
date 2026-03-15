@@ -57,7 +57,7 @@ export const modifierCompoundMachine = setup({
       meta: {
         reason: 'No modifier keys active — vibrato and sustain both off.',
         designIntent: 'Default playing state with no modifiers engaged',
-        invariants: [ctrlPassthroughCheck] as StateInvariant[],
+        invariants: [ctrlPassthroughCheck] satisfies StateInvariant[],
       },
       on: {
         PRESS_SHIFT: 'vibratoOnly',
@@ -78,6 +78,11 @@ export const modifierCompoundMachine = setup({
         WINDOW_BLUR: 'idle',
       },
     },
+```
+
+The `sustainOnly` and `bothActive` states mirror the two single-modifier states: each can combine with the other modifier key, and `WINDOW_BLUR` always resets both back to `idle` so modifiers are never stuck when focus leaves the window.
+
+``` {.typescript file=_generated/tests/machines/modifierCompoundMachine.ts}
     sustainOnly: {
       meta: {
         reason: 'Sustain active, vibrato inactive — notes held after release.',

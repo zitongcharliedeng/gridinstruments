@@ -71,6 +71,11 @@ export const layoutPersistenceMachine = setup({
         CLICK_RESET: 'reset',
       },
     },
+```
+
+The final three states handle restoration after reload, the clamped-height safety case, and the nuclear reset. Both `insaneRestored` and `reset` carry invariants that assert the respective safety properties hold immediately on entry.
+
+``` {.typescript file=_generated/tests/machines/layoutPersistenceMachine.ts}
     reloaded: {
       meta: {
         reason: 'Page reloaded — panel height restored from localStorage.',
@@ -84,7 +89,7 @@ export const layoutPersistenceMachine = setup({
       meta: {
         reason: 'Insane localStorage value (9999) was discarded on load — height capped at 60% viewport.',
         designIntent: 'Sanity guard prevents bad saved value from hiding the grid',
-        invariants: [insaneHeightDiscarded] as StateInvariant[],
+        invariants: [insaneHeightDiscarded] satisfies StateInvariant[],
       },
       on: {
         CLICK_RESET: 'reset',
@@ -94,7 +99,7 @@ export const layoutPersistenceMachine = setup({
       meta: {
         reason: 'Reset button clicked — all gi_* keys cleared, panels at defaults.',
         designIntent: 'One-click nuclear reset restores known-good layout',
-        invariants: [resetClearsCustomValues] as StateInvariant[],
+        invariants: [resetClearsCustomValues] satisfies StateInvariant[],
       },
       on: {
         DRAG_PANEL: 'customized',

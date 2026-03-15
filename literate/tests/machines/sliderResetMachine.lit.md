@@ -43,7 +43,7 @@ function createSliderResetMachine(config: SliderResetConfig) {
         meta: {
           reason: `The ${config.sliderId} slider is at its default value (${config.defaultDisplay}).`,
           designIntent: `Default slider position for ${config.name}`,
-          invariants: [fillDefault] as StateInvariant[],
+          invariants: [fillDefault] satisfies StateInvariant[],
         },
         on: {
           SET_VALUE: 'modified',
@@ -54,7 +54,7 @@ function createSliderResetMachine(config: SliderResetConfig) {
         meta: {
           reason: `The ${config.sliderId} slider has been moved from its default value.`,
           designIntent: `User has adjusted ${config.name} away from default`,
-          invariants: [fillModified] as StateInvariant[],
+          invariants: [fillModified] satisfies StateInvariant[],
         },
         on: {
           SET_VALUE: 'modified',
@@ -63,15 +63,20 @@ function createSliderResetMachine(config: SliderResetConfig) {
       },
     },
   });
+```
 
+The Playwright actions drive the browser: `SET_VALUE` writes directly to the slider DOM element and forwards a `SLIDER_INPUT` event to the app actor, while `RESET` clicks the reset button and dispatches `SLIDER_RESET`. The invariant strings and badge-reading DOM assertions complete the kit.
+
+``` {.typescript file=_generated/tests/machines/sliderResetMachine.ts}
   const playwrightActions: Record<SliderEvent['type'], (page: Page) => Promise<void>> = {
     SET_VALUE: async (page: Page) => {
       const sliderKey = config.sliderId.replace('-slider', '');
       await page.evaluate((cfg) => {
-        const s = document.getElementById(cfg.sliderId) as HTMLInputElement;
+        const s = document.querySelector<HTMLInputElement>(`#${cfg.sliderId}`);
+        if (!s) return;
         s.value = cfg.modifiedValue;
         s.dispatchEvent(new Event('input'));
-        const w = window as Window & { dcomposeApp?: { actor: { send: (e: { type: string; slider: string; value: number }) => void } } };
+        const w = window as unknown as { dcomposeApp?: { actor: { send: (e: { type: string; slider: string; value: number }) => void } } };
         w.dcomposeApp?.actor.send({ type: 'SLIDER_INPUT', slider: cfg.sliderKey, value: parseFloat(cfg.modifiedValue) });
       }, { sliderId: config.sliderId, modifiedValue: config.modifiedValue, sliderKey });
       await page.waitForTimeout(150);
@@ -80,7 +85,7 @@ function createSliderResetMachine(config: SliderResetConfig) {
       const sliderKey = config.sliderId.replace('-slider', '');
       await page.locator('#' + config.resetBtnId).click();
       await page.evaluate((key) => {
-        const w = window as Window & { dcomposeApp?: { actor: { send: (e: { type: string; slider: string }) => void } } };
+        const w = window as unknown as { dcomposeApp?: { actor: { send: (e: { type: string; slider: string }) => void } } };
         w.dcomposeApp?.actor.send({ type: 'SLIDER_RESET', slider: key });
       }, sliderKey);
       await page.waitForTimeout(150);

@@ -213,7 +213,7 @@ listeners, keeping the services layer in sync independently of XState.
 Attached to `window.dcomposeApp` for Playwright verification and browser console inspection.
 
 ``` {.typescript file=_generated/app-actor-wiring.ts}
-  (window as Window & { dcomposeApp?: unknown }).dcomposeApp = {
+  (window as unknown as { dcomposeApp?: unknown }).dcomposeApp = {
     actor: appActor,
     getSnapshot: () => appActor.getSnapshot(),
     getActiveNoteCount: () => (app as unknown as { activeNotes: Map<string, unknown> }).activeNotes.size,
