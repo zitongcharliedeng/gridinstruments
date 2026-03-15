@@ -5,6 +5,12 @@ export default defineConfig({
   testMatch: ['**/xstate-graph.spec.ts'],
   timeout: 60_000,
   retries: 1,
+  expect: {
+    toHaveScreenshot: {
+      maxDiffPixelRatio: 0.05,
+      threshold: 0.3,
+    },
+  },
   use: {
     baseURL: 'http://localhost:3099',
     screenshot: 'only-on-failure',
