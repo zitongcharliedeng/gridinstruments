@@ -3,8 +3,6 @@
 CSS overrides for third-party library styles (slim-select, OverlayScrollbars). Loaded after library CSS in main.ts. Matches the app's dark design language.
 
 ``` {.css file=_generated/ui-overrides.css}
-   Overrides library CSS variables so they match the app design language. */
-
 :root {
   --ss-bg-color: #000;
   --ss-font-color: #fff;
