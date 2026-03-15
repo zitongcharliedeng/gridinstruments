@@ -58,7 +58,7 @@ export class DComposeApp {
 
   private pointerDown = new Map<number, { coordX: number; coordY: number } | null>();
 
-  private maxSimultaneousKeys = 6;
+  private maxSimultaneousKeys = 8;
 
   private vibratoRAF: number | null = null;
   private vibratoPhase = 0;
@@ -1285,11 +1285,11 @@ Calibration mode lets MIDI controller users define their playable range by press
 ``` {.typescript file=_generated/app-core.ts}
     const maxKeysInput = getElementOrNull('max-keys-input', HTMLInputElement);
     if (maxKeysInput) {
-      const savedMax = this.loadSetting('maxKeys', '6');
+      const savedMax = this.loadSetting('maxKeys', '8');
       maxKeysInput.value = savedMax;
       this.maxSimultaneousKeys = parseInt(savedMax, 10);
       maxKeysInput.addEventListener('change', () => {
-        const val = Math.max(1, Math.min(20, parseInt(maxKeysInput.value, 10) || 6));
+        const val = Math.max(1, parseInt(maxKeysInput.value, 10) || 8);
         maxKeysInput.value = String(val);
         this.maxSimultaneousKeys = val;
         this.saveSetting('maxKeys', String(val));

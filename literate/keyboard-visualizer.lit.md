@@ -1083,34 +1083,23 @@ Without a bracket sub-label the note name is simply vertically centred. The octa
 ### QWERTY key overlay
 
 When QWERTY labels are enabled (for beginner key discovery), each mapped cell
-shows its keyboard shortcut in the top-left corner. The label uses a
-high-contrast treatment: yellow text (#ffff00) on a semi-transparent black pill
-(rgba(0,0,0,0.7)). The pill is sized dynamically from `measureText` to fit any
-key label width.
+shows its keyboard shortcut as inline text to the right of the note name. The
+label uses a smaller font size and dimmer color to avoid competing with the
+note name while remaining readable at any skew angle.
 
 ``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
 
     const qLabel = this.qwertyLabels.get(noteId);
     if (qLabel) {
-      const qSize = Math.max(10, fontSize * 0.5);
-      this.ctx.font = `bold ${qSize}px "JetBrains Mono", monospace`;
-      const metrics = this.ctx.measureText(qLabel);
-      const pad = 3;
-      const kw = metrics.width + pad * 2 + 2;
-      const kh = qSize + pad * 2 + 2;
-      const lx = x - kw / 2;
-      const ly = y + Math.abs(hv2.y) * 0.3;
-      this.ctx.fillStyle = '#222';
-      this.ctx.fillRect(lx, ly + 2, kw, kh);
-      this.ctx.fillStyle = '#444';
-      this.ctx.fillRect(lx, ly, kw, kh);
-      this.ctx.fillStyle = '#555';
-      this.ctx.fillRect(lx + 1, ly + 1, kw - 2, kh - 3);
-      this.ctx.fillStyle = '#ddd';
-      this.ctx.globalAlpha = 1;
+      const qSize = Math.max(8, fontSize * 0.4);
+      this.ctx.font = `${qSize}px "JetBrains Mono", monospace`;
+      const nameW = this.ctx.measureText(noteName).width;
+      this.ctx.fillStyle = '#ffff00';
+      this.ctx.globalAlpha = 0.6;
       this.ctx.textAlign = 'left';
-      this.ctx.textBaseline = 'top';
-      this.ctx.fillText(qLabel, lx + pad + 1, ly + pad);
+      this.ctx.textBaseline = 'middle';
+      this.ctx.fillText(qLabel, x + nameW / 2 + 2, y);
+      this.ctx.globalAlpha = 1;
     }
   }
 
