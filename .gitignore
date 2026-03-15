@@ -64,3 +64,4 @@ tests/.vision-cache.json
 _generated/
 # index.html is also tangled from literate/index.lit.md:
 index.html
+MEMORY/
