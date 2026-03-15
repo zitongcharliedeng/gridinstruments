@@ -222,6 +222,12 @@ star count, and suggest link as adjacent inline-flex children separated by
     .gh-suggest { color: #4caf50; }
     .gh-suggest svg { fill: #4caf50; }
     .gh-suggest:hover { color: #66bb6a; background: var(--subtle); }
+```
+
+The about button and reset-layout button sit at the far right of `.top-bar-left`; both
+use dim text at rest and brighten on hover.
+
+``` {.html file=index.html}
      #about-btn {
        font-size: 11px;
        color: var(--dim);
@@ -320,6 +326,12 @@ white on hover to signal draggability.
        border: 1px solid var(--border);
      }
     .panel-resize-handle:focus-visible { outline: 1px solid var(--accent); }
+```
+
+The grip lines inside each handle are three thin horizontal bars; on touch devices they
+thicken and fully brighten so they remain visible without a hover state.
+
+``` {.html file=index.html}
     .panel-resize-handle .grip-lines {
       display: flex;
       flex-direction: column;
@@ -727,6 +739,13 @@ against the filled portion. The badge sits above the thumb for live feedback.
       text-overflow: ellipsis;
       max-width: calc(100% - 30px);
     }
+```
+
+The `.slider-value-badge` floats above the thumb for live readout, while `.badge-input`
+replaces it with an editable text field that accepts direct numeric entry and shows a red
+border on invalid input.
+
+``` {.html file=index.html}
     .slider-value-badge {
       position: absolute;
       bottom: 100%;
@@ -844,6 +863,13 @@ dialog for that parameter.
      .slider-preset-btn.active { color: #4f4; text-decoration: underline; }
      .slider-preset-mark.active .slider-tick { background: #4f4; }
      .slider-preset-mark.active .slider-preset-btn { color: #4f4; }
+```
+
+The `.slider-info-btn` is an absolute-positioned info-circle icon at the left edge of
+each `.tuning-slider-area`, and `.midi-panel-row` provides a flex row for MIDI control
+label+input pairs in the INPUT section.
+
+``` {.html file=index.html}
      .midi-panel-row {
       display: flex; align-items: center; gap: 4px;
       font-size: 11px; flex-wrap: wrap;
@@ -986,6 +1012,12 @@ entirely below 375 px to recover horizontal space for the essential controls.
         width: 150px;
       }
     }
+```
+
+At 480 px and below, the top bar wraps its children, the star count badge is hidden to
+save horizontal space, and the song bar reduces its gap and font size for phone viewports.
+
+``` {.html file=index.html}
 
     @media (max-width: 480px) {
       #top-bar {
@@ -1022,6 +1054,15 @@ entirely below 375 px to recover horizontal space for the essential controls.
         padding: 1px 4px;
         margin-left: 2px;
       }
+    }
+```
+
+Still within the 480 px breakpoint, the visualiser panel and history canvas are clamped
+to full viewport width to prevent overflow, and the song bar wraps its children at reduced
+gap and font size.
+
+``` {.html file=index.html}
+    @media (max-width: 480px) {
       #visualiser-panel {
         max-width: 100%;
         overflow: hidden;
@@ -1039,6 +1080,12 @@ entirely below 375 px to recover horizontal space for the essential controls.
         width: 120px;
       }
     }
+```
+
+At 375 px (small phones), the site title shrinks further, the reset-layout button is
+hidden entirely, and the song bar compresses to its minimum height and search width.
+
+``` {.html file=index.html}
 
     @media (max-width: 375px) {
       .site-title {
@@ -1098,6 +1145,13 @@ song bar wraps below the title on narrow viewports.
           <input id="midi-search-input" type="text" placeholder="Search or drop .mid file..." title="Search for MIDI songs or drop a .mid file anywhere" style="width:200px;box-sizing:border-box;font-family:var(--font);font-size:10px;background:var(--bg);color:var(--fg);border:1px solid var(--border);padding:2px 6px;">
           <div id="midi-search-results" style="position:absolute;top:100%;left:0;min-width:280px;max-height:300px;overflow-y:auto;background:var(--bg);border:1px solid var(--border);z-index:25;display:none;"></div>
         </div>
+```
+
+The song bar's status section shows quantization level, game progress bar with elapsed
+timer, and the calibration banner with confirm/cancel actions — all hidden by default and
+revealed by state machine transitions.
+
+``` {.html file=index.html}
       <div id="song-bar-status" style="display:inline-flex;align-items:center;gap:8px;">
           <button class="slider-info-btn icon-btn icon-lg" data-info="quantization" style="position:static;transform:none;"><i data-lucide="info"></i></button>
           <label style="display:inline-flex;align-items:center;gap:4px;font-size:10px;color:var(--dim);">
@@ -1284,9 +1338,17 @@ range, velocity, channel pressure, timbre CC mode, and MPE output routing.
                    <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;">
                      <span class="gi-checkbox"><input type="checkbox" id="expr-bend" checked><span class="gi-check"></span></span>
                      <span style="color:#fff">Pitch Bend</span>
-                     <input type="text" inputmode="numeric" pattern="[0-9]*" id="midi-pb-range-expr" value="48" style="width:3ch;text-align:center;font-family:var(--font);font-size:10px;background:var(--bg);color:var(--fg);border:1px solid var(--border);padding:2px 3px;">
+                     <input type="text" inputmode="numeric" pattern="[0-9]*" id="midi-pb-range-expr" value="48" style="width:3ch;text-align:center;font-family:var(--font);font-size:10px;background:var(--bg);color:var(--fg);border:1px solid var(--border);padding:2px 3px;" title="Pitch bend range in semitones">
+                     <span style="color:var(--dim);font-size:10px;">semitones</span>
                    </label>
                  </div>
+```
+
+The remaining EXPRESSION checkboxes — velocity, channel pressure, timbre slide with CC
+cycling, and MPE output enable — each follow the same checkbox-plus-label pattern and
+close out the INPUT section.
+
+``` {.html file=index.html}
                  <div class="midi-panel-row" id="expr-velocity-row" style="gap:6px">
                    <button class="slider-info-btn icon-btn icon-lg" data-info="velocity" style="position:static;transform:none;"><i data-lucide="info"></i></button>
                    <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;">
