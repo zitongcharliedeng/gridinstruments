@@ -1037,8 +1037,7 @@ The sub-label renders at 60% of the main font size and 60% opacity.
     const deviation = getCentDeviation(coordX, fifth);
     const hasBracket = noteName !== tetName || Math.abs(deviation) >= 0.5;
 
-    const octNum = Math.abs(coordY);
-    const octStr = coordY === 0 ? '' : String(octNum);
+    const octStr = '';
 
     if (hasBracket && cellMin > 30) {
       this.ctx.textBaseline = 'bottom';

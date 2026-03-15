@@ -150,8 +150,8 @@ function pcHue(pc: number): number {
  * anchored at D = 29°. See: https://en.wikipedia.org/wiki/Cent_(music)
  */
 function pitchCentsToHue(pitchCents: number): number {
-  const semitones = ((pitchCents % 1200) + 1200) % 1200 / 100;
-  const pc = ((Math.round(semitones) + 10) % 12 + 12) % 12;
+  const semitonesFromD = ((pitchCents % 1200) + 1200) % 1200 / 100;
+  const pc = ((Math.round(semitonesFromD) + 2) % 12 + 12) % 12;
   return pcHue(pc);
 }
 
