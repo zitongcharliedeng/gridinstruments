@@ -661,7 +661,7 @@ The page is a vertical flex layout (`#app`) with these major sections:
       display: flex;
       flex-direction: column;
       align-items: center;
-      pointer-events: auto;
+      pointer-events: none;
       top: 0;
     }
     .slider-tick {
@@ -684,6 +684,7 @@ The page is a vertical flex layout (`#app`) with these major sections:
       background: none;
       border: none;
       cursor: pointer;
+      pointer-events: auto;
       padding: 2px;
       line-height: 1;
     }
