@@ -30,7 +30,11 @@ import { isWaveformType, parseNum, formatSliderAnnotation, noteNameToHz } from '
 import { getElement, getElementOrNull, setupCyclingButton } from './app-dom';
 import { thumbCenterPx, clampBadgePosition, applySliderFill, refreshAllSliderUI } from './app-slider';
 import { SHEAR_PRESETS, TUNING_LABEL_PRESETS } from './app-constants';
+```
 
+All dependencies come from sibling modules tangled from their own literate files. The app wires together synth, visualizer, MIDI, MPE, game engine, and UI state machines into a single orchestrator class.
+
+``` {.typescript file=_generated/app-core.ts}
 export class DComposeApp {
   private synth: Synth;
   private visualizer: KeyboardVisualizer | null = null;
@@ -115,7 +119,11 @@ export class DComposeApp {
       this.mpe.updateSettings({ timbreCC: numericCc });
     }
   }
+```
 
+The constructor initializes the core subsystems (synth, MIDI, MPE, layout) and grabs DOM references for all sliders and indicators. Expression settings are restored from localStorage so MPE behavior persists across sessions. The async `init()` call is fire-and-forget because the constructor itself cannot be async.
+
+``` {.typescript file=_generated/app-core.ts}
   constructor() {
     this.synth = new Synth();
     this.midi = new MidiInput();
@@ -144,7 +152,11 @@ export class DComposeApp {
 
     void this.init();
   }
+```
 
+Initialization is async because MIDI and MPE both require browser permission grants. The init sequence is ordered: icons first (so UI renders immediately), then visualizer and history panel, then event listeners, then MIDI/MPE (which may prompt the user). The MPE subscription pipes per-note expression data into the visualizer for real-time pressure/bend display.
+
+``` {.typescript file=_generated/app-core.ts}
   private async init(): Promise<void> {
     createIcons({ icons: { Info, Star, RotateCcw, RotateCw, Settings, X } });
     this.calibratedRange = loadCalibratedRange();
@@ -178,7 +190,11 @@ export class DComposeApp {
       this.setIdleState(true);
     });
   }
+```
 
+The visualizer wraps the main canvas element with a `KeyboardVisualizer` instance. A `ResizeObserver` keeps the canvas dimensions synchronized with its container, and scroll/orientation listeners invalidate the cached bounding rect so hit-testing stays accurate after layout shifts.
+
+``` {.typescript file=_generated/app-core.ts}
   private setupVisualizer(): void {
     const container = this.canvas.parentElement;
     if (!container) return;
@@ -202,7 +218,11 @@ export class DComposeApp {
     window.addEventListener('orientationchange', () => { this.cachedCanvasRect = null; });
     document.addEventListener('scroll', () => { this.cachedCanvasRect = null; }, { passive: true, capture: true });
   }
+```
 
+The history visualizer drives the waterfall display and staff notation in the top panel. Like the main canvas, it uses a `ResizeObserver` to stay sized correctly when the user drags the panel divider.
+
+``` {.typescript file=_generated/app-core.ts}
   private setupHistoryVisualizer(): void {
     this.historyVisualizer = new NoteHistoryVisualizer(this.historyCanvas);
     this.historyVisualizer.start();
@@ -219,7 +239,11 @@ export class DComposeApp {
       }).observe(historyContainer);
     }
   }
+```
 
+MIDI listener setup wires incoming note-on, note-off, pitch bend, slide (CC74), and pressure (aftertouch) messages from physical controllers into the synth and MPE service. Each expression dimension is gated by its own toggle so users can selectively disable per-note expression channels.
+
+``` {.typescript file=_generated/app-core.ts}
   private setupMidiListeners(): void {
     this.midi.onNoteOn((note, velocity, channel, deviceId) => {
       this.handleMidiNoteOn(note, velocity, channel, deviceId);
@@ -253,7 +277,11 @@ export class DComposeApp {
       }
     });
   }
+```
 
+MIDI note-on maps the incoming MIDI note number to grid coordinates using `midiToCoord`, then starts a voice in both the audio synth and the MPE service. Calibration mode piggybacks on this path to record which cells the user can physically reach on their controller.
+
+``` {.typescript file=_generated/app-core.ts}
   private handleMidiNoteOn(midiNote: number, velocity: number, channel: number, deviceId: string): void {
     const [coordX, coordY] = midiToCoord(midiNote);
     const noteKey = `midi_${deviceId}_${channel}_${midiNote}`;
@@ -289,7 +317,11 @@ export class DComposeApp {
     this.trackNoteOff(coordX, coordY);
     this.render();
   }
+```
 
+The MIDI device panel renders a list of connected controllers with enable/disable checkboxes and connection-status dots. It handles three states: WebMIDI unavailable (browser doesn't support it), no devices detected, and the normal device list.
+
+``` {.typescript file=_generated/app-core.ts}
   private updateMidiDevicePanel(devices: MidiDeviceInfo[]): void {
     if (!this.midiDeviceList) return;
     this.midiDeviceList.innerHTML = '';
@@ -333,7 +365,11 @@ export class DComposeApp {
       this.midiDeviceList.appendChild(row);
     }
   }
+```
 
+`setupEventListeners` is the largest method in the class -- it wires every UI control to its backing state. Keyboard and pointer listeners come first, then each slider/toggle/select gets its event bindings, localStorage persistence, and reset button. The method is split across multiple code blocks below for readability.
+
+``` {.typescript file=_generated/app-core.ts}
   private setupEventListeners(): void {
     document.addEventListener('keydown', this.handleKeyDown.bind(this));
     document.addEventListener('keyup', this.handleKeyUp.bind(this));
@@ -372,7 +408,11 @@ export class DComposeApp {
     waveformActor.start();
     const waveReset = document.getElementById('wave-reset') as HTMLButtonElement | null;
     waveReset?.addEventListener('click', () => { waveformActor.send({ type: 'SELECT', waveform: 'sawtooth' }); });
+```
 
+The keyboard layout selector auto-detects ISO vs ANSI by probing the Keyboard API for the `IntlBackslash` key. When the user changes layout, QWERTY overlay labels update to match the new physical key positions.
+
+``` {.typescript file=_generated/app-core.ts}
     if (this.layoutSelect) {
       for (const variant of KEYBOARD_VARIANTS) {
         const opt = document.createElement('option');
@@ -425,7 +465,11 @@ export class DComposeApp {
         layoutSS.setSelected('ansi');
       });
     }
+```
 
+The skew slider smoothly morphs between DCompose (diagonal parallelogram, skew=0) and MidiMech (orthogonal rectangular, skew=1) geometries. The thumb badge shows the current numeric value and is directly editable for precise input.
+
+``` {.typescript file=_generated/app-core.ts}
     if (this.skewSlider) {
       const skewRef = this.skewSlider;
       const skewBadge = getElementOrNull('skew-thumb-badge', HTMLInputElement);
@@ -473,7 +517,11 @@ export class DComposeApp {
         { value: 1, label: 'MidiMech', description: 'MidiMech: orthogonal rectangular grid' },
       ]);
     }
+```
 
+Wicked Shear (bfact) controls the row-offset angle of the lattice. At bfact=0 (DCompose), rows stack diagonally; at bfact=1 (Wicki-Hayden), rows align horizontally. The label dynamically annotates which preset is closest to the current value.
+
+``` {.typescript file=_generated/app-core.ts}
     if (this.bfactSlider) {
       const bfactRef = this.bfactSlider;
       const bfactBadge = getElementOrNull('bfact-thumb-badge', HTMLInputElement);
@@ -548,7 +596,11 @@ export class DComposeApp {
         { value: 1, label: 'Wicki-Hayden', description: 'Wicki-Hayden: horizontal rows (shear mapping from Tonnetz)' },
       ]);
     }
+```
 
+The fifths tuning slider sets the generator interval in cents. This is the core microtonality control: 700 cents = 12-TET, 701.96 = Pythagorean, 696.58 = quarter-comma meantone. Double-clicking snaps to the nearest named temperament marker. The thumb badge is editable for precise cent values.
+
+``` {.typescript file=_generated/app-core.ts}
     if (this.tuningSlider) {
       const tuningRef = this.tuningSlider;
       tuningRef.min = FIFTH_MIN.toString();
@@ -632,7 +684,11 @@ export class DComposeApp {
         thumbBadge.addEventListener('focus', () => { thumbBadge.select(); });
       }
     }
+```
 
+TET preset tick marks are generated from the `TUNING_MARKERS` array (5-TET through 53-TET and named temperaments). Each tick is a clickable button that snaps the tuning slider to that temperament's fifth size.
+
+``` {.typescript file=_generated/app-core.ts}
     if (this.tuningSlider) {
       const tetPresets = TUNING_MARKERS.map(m => ({
         value: m.fifth,
@@ -662,7 +718,11 @@ export class DComposeApp {
          this.volumeSlider.dispatchEvent(new Event('input'));
        }
      });
+```
 
+The D-ref input accepts both raw Hz values and note names (e.g. "A4", "Bb3"). The slider and text input stay synchronized bidirectionally -- editing one updates the other. This lets users set the reference pitch by ear (slider) or by theory (note name).
+
+``` {.typescript file=_generated/app-core.ts}
     const spacingInput = getElementOrNull('spacing-input', HTMLInputElement);
     spacingInput?.addEventListener('input', () => {
       this.visualizer?.setButtonSpacing(parseNum(spacingInput.value, 0));
@@ -705,6 +765,14 @@ export class DComposeApp {
       updateDRefDisplay(hz);
     };
 
+```
+
+The D-ref input field handles both numeric Hz values and note name strings (e.g.
+"A4", "Bb3"). On each keystroke, it tries note-name parsing first via
+`noteNameToHz`, falling back to raw float parsing. Blur commits the value or
+resets to the default 293.66 Hz if invalid.
+
+``` {.typescript file=_generated/app-core.ts}
     dRefInput?.addEventListener('input', () => {
       const raw = dRefInput.value.trim();
       if (raw === '') return;
@@ -768,7 +836,11 @@ export class DComposeApp {
           dRefSlider.dispatchEvent(new Event('input'));
         }
       });
+```
 
+MIDI expression settings let the user configure pitch bend range (2-48 semitones) and toggle individual expression dimensions on or off. This is important because not all controllers send all MPE dimensions, and some players prefer deterministic behavior over expressive control.
+
+``` {.typescript file=_generated/app-core.ts}
     const pbRangeInput = getElementOrNull('midi-pb-range-expr', HTMLInputElement);
     if (pbRangeInput) {
       pbRangeInput.value = this.midiPitchBendRange.toString();
@@ -815,6 +887,14 @@ export class DComposeApp {
       });
     }
 
+```
+
+Each expression dimension (bend, velocity, pressure, timbre) has a checkbox that
+toggles it on or off, persisted in localStorage. The timbre CC mode cycles through
+CC74 (brightness), CC1 (mod wheel), and CC11 (expression) via a compact cycling
+button component.
+
+``` {.typescript file=_generated/app-core.ts}
     const exprBendCb = getElementOrNull('expr-bend', HTMLInputElement);
     if (exprBendCb) {
       exprBendCb.checked = this.expressionBend;
@@ -860,7 +940,11 @@ export class DComposeApp {
       this.applyTimbreCcMode(cc);
       this.saveSetting('timbreCcMode', cc);
     });
+```
 
+MPE output sends per-note expression data to an external MIDI device. The state machine (`mpeMachine`) gates the enable/disable toggle, while the SlimSelect dropdown lists available MIDI outputs. The output list refreshes automatically when devices are connected or disconnected.
+
+``` {.typescript file=_generated/app-core.ts}
     const mpeCheckbox = getElementOrNull('mpe-enabled', HTMLInputElement);
     const mpeSelect = getElementOrNull('mpe-output-select', HTMLSelectElement);
     const mpeActor = createActor(mpeMachine);
@@ -925,7 +1009,11 @@ export class DComposeApp {
     if (midiAccess) {
       midiAccess.onstatechange = () => { refreshMpeOutputs(); };
     }
+```
 
+Prevent the browser's default Space-key scroll behavior when the keyboard body has focus, since Space is the sustain pedal.
+
+``` {.typescript file=_generated/app-core.ts}
     document.addEventListener('keydown', (e) => {
       if (e.code === 'Space' && e.target === document.body) e.preventDefault();
     });
@@ -945,24 +1033,44 @@ The grid should feel like other finger instruments. Three reference key widths:
 
 We target **23mm** (piano white key) as the default — it's the largest common reference and produces cells where note labels are comfortably readable. Users can adjust via the zoom slider.
 
-#### Why CSS constants, not exposed DPI?
+#### DPI detection via matchMedia resolution probing
 
-Browsers expose [`window.devicePixelRatio`](https://developer.mozilla.org/en-US/docs/Web/API/Window/devicePixelRatio) and `screen.width`, but these are **device pixels**, not physical measurements. A previous approach used `screen.width / outerWidth * 96` to estimate DPI, but:
+The CSS `1px = 1/96 inch` spec constant is only a **reference pixel** for print
+layout — on screen, browsers do not guarantee this mapping. A 27" 1080p desktop
+monitor has ~82 physical DPI while a 13" MacBook retina has ~227 physical DPI,
+yet both nominally use 96 CSS px/inch. The result: `PIANO_KEY_MM * 96 / 25.4`
+produces a CSS pixel count that is ~2x too large on high-DPI laptops and ~1.5x
+too small on low-DPI TVs.
 
-- Returns 0 in headless browsers (Playwright, CI) — needs fallback
-- `devicePixelRatio` is the ratio of device px to CSS px, not physical DPI
-- Different browsers report different values for the same screen
-
-The key insight: **CSS pixels are already DPI-normalized by the browser**. The [CSS Values spec](https://www.w3.org/TR/css-values-3/#absolute-lengths) defines 1 CSS px = 1/96 inch. The browser uses `devicePixelRatio` internally to map CSS px to physical pixels. So we never need to detect DPI — the browser already did it. Since [1 inch = 25.4mm](https://en.wikipedia.org/wiki/Inch), the conversion from physical millimeters to CSS pixels is:
+The correct approach: probe the actual physical DPI using
+[`matchMedia('(resolution: Ndpi)')`](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/resolution).
+This is how virtual ruler sites achieve real-world accuracy without device databases.
+We binary-search the DPI from 40 to 600, fall back to `96 * devicePixelRatio`
+if matchMedia is unavailable (headless/CI), and clamp to a sane range.
 
 ``` {.typescript file=_generated/app-core.ts}
      const PIANO_KEY_MM = 23;
-     const CSS_PX_PER_INCH = 96;
      const MM_PER_INCH = 25.4;
-     const pianoKeyPx = PIANO_KEY_MM * CSS_PX_PER_INCH / MM_PER_INCH;
-```
 
-This conversion is **universal** — every browser on every device maps CSS pixels to physical size through [devicePixelRatio](https://developer.mozilla.org/en-US/docs/Web/API/Window/devicePixelRatio). We never need to detect DPI because the browser already did it for us. Text at `font-size: 16px` is the same physical size on a 96 DPI laptop and a 400 DPI phone.
+     const detectPhysicalDPI = (): number => {
+       if (typeof window.matchMedia !== 'function') {
+         return Math.max(72, Math.min(300, 96 * window.devicePixelRatio));
+       }
+       let lo = 40, hi = 600;
+       while (lo < hi) {
+         const mid = Math.floor((lo + hi + 1) / 2);
+         if (window.matchMedia(`(min-resolution: ${mid}dpi)`).matches) {
+           lo = mid;
+         } else {
+           hi = mid - 1;
+         }
+       }
+       return lo;
+     };
+
+     const physicalDPI = detectPhysicalDPI();
+     const pianoKeyPx = PIANO_KEY_MM * physicalDPI / MM_PER_INCH;
+```
 
 The grid's cell width at zoom=1.0 comes from the lattice geometry — specifically the **half-vectors** `cellHv1` (wholetone direction) and `cellHv2` (octave direction). These change with the skew and shear sliders, so we measure them live:
 
@@ -998,7 +1106,11 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
          this.zoomSlider.dispatchEvent(new Event('input'));
        }
      });
+```
 
+The QWERTY overlay toggle renders physical key labels (Q, W, E, R...) on the grid cells so players can see which keyboard key triggers which note. When the toggle is off, grid cells show only note names.
+
+``` {.typescript file=_generated/app-core.ts}
     const qwertyToggle = document.getElementById('qwerty-overlay-toggle') as HTMLInputElement | null;
     if (qwertyToggle) {
       if (qwertyToggle.checked) {
@@ -1019,7 +1131,11 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'hidden') this.stopAllNotes();
     });
+```
 
+Focus management prevents UI controls from capturing keyboard input after interaction. Selects, sliders, and checkboxes auto-blur on pointer-up so subsequent keypresses route to the synth instead of the control. Text inputs blur on Enter/Escape to return focus to the instrument.
+
+``` {.typescript file=_generated/app-core.ts}
     document.querySelectorAll<HTMLElement>('select, input[type="range"], input[type="checkbox"]').forEach(el => {
       el.addEventListener('pointerup', () => setTimeout(() => { el.blur(); }, 0));
       el.addEventListener('change', () => setTimeout(() => { el.blur(); }, 0));
@@ -1034,7 +1150,11 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
         }
       });
     });
+```
 
+The grid settings overlay is a scrollable panel toggled by the cog button. An `overlayMachine` state machine manages open/close transitions. OverlayScrollbars provides a custom scrollbar theme, and a `ResizeObserver` re-measures slider fill positions whenever the overlay resizes.
+
+``` {.typescript file=_generated/app-core.ts}
 
     const gridCog = getElementOrNull('grid-settings-btn', HTMLButtonElement);
     const gridOverlay = document.getElementById('grid-overlay');
@@ -1081,7 +1201,11 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
       });
       (window as Window & { overlayActor?: unknown }).overlayActor = overlayActor;
     }
+```
 
+Sustain and vibrato pedals are modeled as `pedalMachine` actors (activate/deactivate state). Both the on-screen pedal buttons (pointer events) and keyboard modifiers (Space/Shift) drive these actors. The actors' subscriptions toggle CSS classes and synth behavior in lockstep.
+
+``` {.typescript file=_generated/app-core.ts}
     const sustainPedal = getElementOrNull('sustain-indicator', HTMLButtonElement);
     const vibratoPedal = getElementOrNull('vibrato-indicator', HTMLButtonElement);
 
@@ -1127,6 +1251,11 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
         vibRef.send({ type: 'DEACTIVATE' });
       });
     }
+```
+
+Calibration mode lets MIDI controller users define their playable range by pressing all reachable keys. The game actor (`gameMachine`) manages the Piano Tiles game lifecycle -- idle, loading, playing, complete, error. Its subscription drives all game UI updates: target notes, progress bar, elapsed timer, and score overlay.
+
+``` {.typescript file=_generated/app-core.ts}
     const calibrateBtn = document.getElementById('calibrate-btn');
     const calibrateConfirm = document.getElementById('calibrate-confirm');
     const calibrateCancel = document.getElementById('calibrate-cancel');
@@ -1148,6 +1277,14 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
     this.gameActor = createActor(gameMachine);
     this.gameActor.start();
 
+```
+
+The game actor subscription drives the entire Piano Tiles UI. On each state
+transition, it updates target note highlighting, progress bar width, elapsed
+timer, ghosting warnings, and the score overlay. The `playing` state disables
+the tuning slider and calibrate button to prevent mid-game tuning changes.
+
+``` {.typescript file=_generated/app-core.ts}
     this.gameActor.subscribe((snapshot) => {
       const state = snapshot.value as string;
       const ctx = snapshot.context;
@@ -1227,6 +1364,11 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
           updateTimer();
           this.gameElapsedInterval = setInterval(updateTimer, 1000);
         }
+```
+
+The remaining game states handle loading (show progress bar, hide hint), completion (show score overlay, stop timer), and idle/error (clear all game visuals, restore the song bar hint).
+
+``` {.typescript file=_generated/app-core.ts}
       } else if (state === 'loading') {
         if (statusEl) statusEl.style.display = 'flex';
         if (songBarHint) songBarHint.style.display = 'none';
@@ -1268,7 +1410,11 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
         if (elapsedTimer) elapsedTimer.textContent = '';
       }
     });
+```
 
+Drag-and-drop MIDI file loading lets users drop a `.mid` file anywhere on the page. The song bar gets a visual `dropping` class during drag-over, and the file is parsed into note groups for the game engine on drop.
+
+``` {.typescript file=_generated/app-core.ts}
     const songBar = document.getElementById('song-bar');
     document.body.addEventListener('dragover', (e) => {
       e.preventDefault();
@@ -1307,7 +1453,11 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
         if (actor) actor.send({ type: 'LOAD_FAILED', error: msg });
       });
     });
+```
 
+The MIDI search input queries multiple online MIDI repositories via `searchAllAdapters` with 300ms debounce. Results render as clickable rows that fetch and load the selected file directly into the game engine.
+
+``` {.typescript file=_generated/app-core.ts}
     const searchInput = document.getElementById('midi-search-input') as HTMLInputElement | null;
     const resultsDiv = document.getElementById('midi-search-results');
     if (searchInput && resultsDiv) {
@@ -1356,7 +1506,11 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
         }, 300);
       });
     }
+```
 
+The song bar hint ("drop a MIDI file or search") fades in when idle and hides when the search input is focused or a game is active. This keeps the hint visible only when it is useful.
+
+``` {.typescript file=_generated/app-core.ts}
     const songBarHintEl = document.getElementById('song-bar-hint') as HTMLElement | null;
     if (searchInput && songBarHintEl) {
       searchInput.addEventListener('focus', () => {
@@ -1389,7 +1543,11 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
 
     document.querySelectorAll<HTMLInputElement>('input[type="range"]').forEach(s => { this.updateSliderFill(s); });
   }
+```
 
+Keyboard input handling maps physical key codes to grid coordinates through the current layout's `keyMap`. Modifier keys are intercepted first: Shift triggers vibrato, Space triggers sustain, and arrow keys bend pitch (or produce vibrato when both are held simultaneously). Regular keys play notes by computing grid coordinates with octave and transpose offsets applied.
+
+``` {.typescript file=_generated/app-core.ts}
   private handleKeyDown(event: KeyboardEvent): void {
     const target = event.target instanceof HTMLElement ? event.target : null;
     if (!target) return;
@@ -1473,7 +1631,11 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
       this.mpe.noteOn(audioNoteId, midiNote, 0.7);
     }
   }
+```
 
+Key-up mirrors key-down: arrow releases clear pitch bend (or switch from vibrato back to single-direction bend), Shift/Space deactivate their respective pedal actors, and note keys stop the corresponding synth voice and update the history visualizer.
+
+``` {.typescript file=_generated/app-core.ts}
   private handleKeyUp(event: KeyboardEvent): void {
     const code = event.code;
     this.keyRepeat.delete(code);
@@ -1524,7 +1686,11 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
     this.trackNoteOff(effectiveCoordX, effectiveCoordY);
     this.render();
   }
+```
 
+Pointer input (touch and mouse) uses the Pointer Events API for unified handling. Pointer-down starts a note, pointer-move slides between cells (stopping the old note and starting the new one), and pointer-up releases. For MPE-enabled sessions, pointer-move also tracks pressure, pitch bend (vertical displacement within a cell), and slide/timbre (horizontal displacement).
+
+``` {.typescript file=_generated/app-core.ts}
   private handlePointerDown(event: PointerEvent): void {
     this.pointerDown.set(event.pointerId, null);
     this.synth.tryUnlock();
@@ -1592,7 +1758,11 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
     const rect = this.getCanvasRect();
     return this.visualizer.getButtonAtPoint(event.clientX - rect.left, event.clientY - rect.top);
   }
+```
 
+`playPointerNote` and `stopPointerNote` are the pointer equivalents of the keyboard note-on/off path. They apply the same octave and transpose offsets, feed the same synth and MPE pipelines, and participate in calibration mode and game hit detection identically to keyboard input.
+
+``` {.typescript file=_generated/app-core.ts}
   private playPointerNote(pointerId: number, coordX: number, coordY: number, pressure = 0.7): void {
     const effectiveCoordX = coordX + this.transposeOffset;
     const effectiveCoordY = coordY + this.octaveOffset;
@@ -1623,7 +1793,11 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
     this.trackNoteOff(effectiveCoordX, effectiveCoordY);
     this.render();
   }
+```
 
+Note tracking uses reference counting (`noteHoldCounts`) because multiple input sources can play the same grid cell simultaneously -- e.g. a MIDI controller and a keyboard key both hitting the same note. The history visualizer only gets a note-on when the count goes from 0 to 1, and a note-off when it returns to 0.
+
+``` {.typescript file=_generated/app-core.ts}
   private trackNoteOn(coordX: number, coordY: number, midiNote: number): void {
     const key = `${coordX},${coordY}`;
     const count = this.noteHoldCounts.get(key) ?? 0;
@@ -1659,7 +1833,11 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
     this.midiChannelVoice.clear();
     this.render();
   }
+```
 
+The idle timer controls the visibility of decorative elements (chord graffiti, song bar hint) that should fade out during active playing and reappear after 10 seconds of silence. During an active game session, the idle timer is suppressed entirely.
+
+``` {.typescript file=_generated/app-core.ts}
   private resetIdleTimer(): void {
     const gameState = this.gameActor?.getSnapshot().value as string | undefined;
     if (gameState === 'playing') return;
@@ -1693,7 +1871,11 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
 
     this.historyVisualizer?.setIdleState(idle);
   }
+```
 
+Search result click handling fetches the MIDI file from the remote URL and pipes it into the same `loadMidiFromBuffer` path used by drag-and-drop. The results div shows a loading indicator during the fetch.
+
+``` {.typescript file=_generated/app-core.ts}
   private async handleSearchResultClick(result: MidiSearchResult): Promise<void> {
     const resultsDiv = document.getElementById('midi-search-results');
     if (resultsDiv) resultsDiv.innerHTML = '<div class="search-status">Loading\u2026</div>';
@@ -1712,7 +1894,11 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
       }
     }
   }
+```
 
+MIDI buffer loading is the shared entry point for both drag-and-drop files and search results. It parses the raw MIDI bytes, applies quantization, computes optimal transposition to fit the calibrated range, adjusts the D-ref frequency to center the song's median pitch, and forces 12-TET tuning (since standard MIDI files assume equal temperament).
+
+``` {.typescript file=_generated/app-core.ts}
   private loadMidiFromBuffer(buffer: ArrayBuffer, songTitle: string): void {
     const actor = this.gameActor;
     if (!actor) return;
@@ -1777,7 +1963,11 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
       actor.send({ type: 'LOAD_FAILED', error: msg });
     }
   }
+```
 
+Game UI overlays are created programmatically rather than in HTML because they appear only transiently. The score overlay shows completion time with a "Play again" button, the tuning warning auto-dismisses after 3 seconds, and the ghosting toast warns keyboard users when a chord requires more simultaneous keys than their keyboard can register.
+
+``` {.typescript file=_generated/app-core.ts}
   private showGameScore(elapsedSec: string): void {
     const existing = document.getElementById('game-score-overlay');
     if (existing) existing.remove();
@@ -1832,7 +2022,11 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
        toast.style.display = 'none';
      }, 10000);
    }
+```
 
+MPE vibrato uses `requestAnimationFrame` to oscillate pitch bend at approximately 5Hz across all active notes. Arrow-key vibrato uses `setInterval` instead because it runs at a fixed tick rate independent of frame rendering. Both systems track phase to produce smooth sinusoidal bends.
+
+``` {.typescript file=_generated/app-core.ts}
   private getMpeNoteIds(): string[] {
     const ids: string[] = [];
     for (const [key, { coordX, coordY }] of this.activeNotes) {
@@ -1894,7 +2088,11 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
     }
     this.arrowVibratoPhase = 0;
   }
+```
 
+`populateSliderPresets` generates the tick marks and clickable preset buttons beneath each slider. Presets are positioned proportionally along the slider track and get `active`/`preset-below`/`preset-above` classes for visual feedback relative to the current slider value.
+
+``` {.typescript file=_generated/app-core.ts}
   private populateSliderPresets(
     containerId: string,
     slider: HTMLInputElement,
@@ -1955,7 +2153,11 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
   private updateSliderFill(slider: HTMLInputElement): void {
     applySliderFill(slider);
   }
+```
 
+The render method is throttled to one repaint per animation frame via `renderScheduled`. It computes which grid cells are active by projecting note coordinates through the current fifth-size tuning, then hands the set to the visualizer. This projection is necessary because in non-12-TET tunings, the same pitch can map to different grid positions.
+
+``` {.typescript file=_generated/app-core.ts}
   private render(): void {
     if (!this.visualizer) return;
     if (this.renderScheduled) return;
@@ -1979,7 +2181,11 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
     this.cachedCanvasRect = this.canvas.getBoundingClientRect();
     return this.cachedCanvasRect;
   }
+```
 
+Calibration mode shows a banner instructing the user to play all reachable notes on their controller. Each note-on (from any input source) adds the cell to the calibrated set, which is persisted to localStorage. The game engine later uses this range to transpose songs and crop notes that fall outside the player's physical reach.
+
+``` {.typescript file=_generated/app-core.ts}
   private enterCalibrationMode(): void {
     this.calibrating = true;
     this.calibratedCells = new Set();
@@ -2020,7 +2226,11 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
     }
     this.render();
   }
+```
 
+`buildQwertyLabels` maps each physical key code in the current layout to its printable label (e.g. `KeyQ` becomes `Q`). The resulting map is keyed by grid cell ID (`coordX_coordY`) so the visualizer can render the label on the correct cell.
+
+``` {.typescript file=_generated/app-core.ts}
   private buildQwertyLabels(): Map<string, string> {
     const map = new Map<string, string>();
     for (const [code, coord] of Object.entries(this.currentLayout.keyMap)) {
