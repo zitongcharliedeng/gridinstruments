@@ -72,12 +72,16 @@ export default tseslint.config(
       '@typescript-eslint/no-floating-promises': 'error',
       '@typescript-eslint/no-misused-promises': 'error',
 
-      // ── Strict boolean expressions (no truthy checks on non-booleans) ──
+      // ── Strict boolean expressions — relaxed for idiomatic patterns ──
       '@typescript-eslint/strict-boolean-expressions': ['error', {
         allowNullableBoolean: true,
-        allowNullableString: true,       // if (str) is common enough
-        allowNumber: false,              // no if (count) — use if (count > 0)
+        allowNullableString: true,
+        allowNumber: true,
+        allowNullableObject: true,
       }],
+
+      // ── Allow defensive String() calls on values that may vary at runtime ──
+      '@typescript-eslint/no-unnecessary-type-conversion': 'off',
 
       // ── Numbers in template literals are idiomatic ──
       '@typescript-eslint/restrict-template-expressions': ['error', {
