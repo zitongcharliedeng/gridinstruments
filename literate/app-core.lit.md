@@ -12,6 +12,7 @@ import { MPEService } from './lib/mpe-service';
 import { midiToCoord, coordToMidiNote } from './lib/note-colors';
 import { createChordGraffiti } from './lib/chord-graffiti';
 import { createIcons, Info, Search, Star, Maximize, RotateCcw, RotateCw, Settings, X } from 'lucide';
+import { mountVisOverlay } from './components/mount-vis-overlay';
 import { overlayMachine } from './machines/overlayMachine';
 import { waveformMachine } from './machines/waveformMachine';
 import { pedalMachine } from './machines/pedalMachines';
@@ -1211,30 +1212,10 @@ The QWERTY overlay toggle renders physical key labels (Q, W, E, R...) on the gri
     }
 
     const visSettingsBtn = document.getElementById('vis-settings-btn');
-    const visOverlayMount = document.getElementById('vis-overlay');
-    if (visSettingsBtn && visOverlayMount) {
-      let visVisible = false;
-      visSettingsBtn.addEventListener('click', () => {
-        visVisible = !visVisible;
-        visOverlayMount.classList.toggle('hidden', !visVisible);
-      });
+    const visOverlayMount = document.getElementById('vis-overlay-mount');
+    if (visSettingsBtn && visOverlayMount && this.historyVisualizer) {
+      mountVisOverlay(visOverlayMount, visSettingsBtn, this.historyVisualizer);
     }
-    const visTimeSlider = getElementOrNull('vis-time-slider', HTMLInputElement);
-    const visTimeBadge = document.getElementById('vis-time-badge');
-    visTimeSlider?.addEventListener('input', () => {
-      const val = parseFloat(visTimeSlider.value);
-      this.historyVisualizer?.setTimeWindow(val);
-      if (visTimeBadge) visTimeBadge.textContent = val.toFixed(1);
-    });
-    const visRangeSlider = getElementOrNull('vis-range-slider', HTMLInputElement);
-    const visRangeBadge = document.getElementById('vis-range-badge');
-    visRangeSlider?.addEventListener('input', () => {
-      const octaves = parseInt(visRangeSlider.value, 10);
-      const centerMidi = 62;
-      const halfRange = Math.floor(octaves * 12 / 2);
-      this.historyVisualizer?.setNoteRange(centerMidi - halfRange, centerMidi + halfRange);
-      if (visRangeBadge) visRangeBadge.textContent = String(octaves);
-    });
 
     window.addEventListener('blur', () => { this.stopAllNotes(); });
     document.addEventListener('visibilitychange', () => {
