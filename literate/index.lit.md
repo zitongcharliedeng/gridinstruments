@@ -921,10 +921,15 @@ top-right corner.
       font-family: var(--font);
     }
     dialog::backdrop { background: rgba(0,0,0,0.7); }
-    #info-dialog {
-
-    }
-    #about-dialog {
+    #info-dialog, #about-dialog {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      max-width: min(90vw, 600px);
+      max-height: 80vh;
+      overflow-y: auto;
+      border: 1px solid var(--border);
     }
      dialog button {
        position: absolute; top: 8px; right: 12px;
