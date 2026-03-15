@@ -21,7 +21,7 @@ export function loadCalibratedRange(): ReadonlySet<string> | null {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
-    const arr = JSON.parse(raw);
+    const arr: unknown = JSON.parse(raw);
     if (!Array.isArray(arr)) return null;
     return new Set(arr.filter((x): x is string => typeof x === 'string'));
   } catch {

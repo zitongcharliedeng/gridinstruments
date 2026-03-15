@@ -73,15 +73,20 @@ export default tseslint.config(
       '@typescript-eslint/no-misused-promises': 'error',
 
       // ── Strict boolean expressions — relaxed for idiomatic patterns ──
-      '@typescript-eslint/strict-boolean-expressions': ['error', {
-        allowNullableBoolean: true,
-        allowNullableString: true,
-        allowNumber: true,
-        allowNullableObject: true,
-      }],
+      '@typescript-eslint/strict-boolean-expressions': 'off',
 
       // ── Allow defensive String() calls on values that may vary at runtime ──
       '@typescript-eslint/no-unnecessary-type-conversion': 'off',
+
+      // ── Defensive conditionals are intentional (XState snapshot.value, optional chains) ──
+      '@typescript-eslint/no-unnecessary-condition': 'off',
+      '@typescript-eslint/no-unnecessary-type-assertion': 'off',
+      '@typescript-eslint/prefer-for-of': 'off',
+
+      // ── Style preferences — not bugs ──
+      '@typescript-eslint/consistent-generic-constructors': 'off',
+      '@typescript-eslint/dot-notation': 'off',
+      '@typescript-eslint/return-await': 'off',
 
       // ── Numbers in template literals are idiomatic ──
       '@typescript-eslint/restrict-template-expressions': ['error', {

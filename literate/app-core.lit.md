@@ -1357,7 +1357,7 @@ the tuning slider and calibrate button to prevent mid-game tuning changes.
 
         if (!this.gameElapsedInterval && ctx.startTimeMs > 0) {
           const startMs = ctx.startTimeMs;
-          const updateTimer = () => {
+          const updateTimer = (): void => {
             const el = document.getElementById('game-elapsed-timer');
             if (el) {
               const totalSec = Math.floor((Date.now() - startMs) / 1000);
@@ -1469,7 +1469,7 @@ The MIDI search input queries multiple online MIDI repositories via `searchAllAd
       let searchDebounce: ReturnType<typeof setTimeout> | null = null;
       searchInput.addEventListener('input', () => {
         if (searchDebounce !== null) clearTimeout(searchDebounce);
-        searchDebounce = setTimeout(async () => {
+        searchDebounce = setTimeout(() => void (async () => {
           const query = searchInput.value.trim();
           if (query.length < 2) { resultsDiv.innerHTML = ''; resultsDiv.style.display = 'none'; return; }
           resultsDiv.style.display = 'block';
@@ -1499,7 +1499,7 @@ The MIDI search input queries multiple online MIDI repositories via `searchAllAd
               row.appendChild(sourceSpan);
 
               row.addEventListener('click', () => {
-                this.handleSearchResultClick(r);
+                void this.handleSearchResultClick(r);
                 resultsDiv.style.display = 'none';
               });
 
@@ -1508,7 +1508,7 @@ The MIDI search input queries multiple online MIDI repositories via `searchAllAd
           } catch {
             resultsDiv.innerHTML = '<div class="search-status">Search failed</div>';
           }
-        }, 300);
+        })(), 300);
       });
     }
 ```
