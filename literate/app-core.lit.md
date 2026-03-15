@@ -11,7 +11,7 @@ import { MidiInput, MidiDeviceInfo } from './lib/midi-input';
 import { MPEService } from './lib/mpe-service';
 import { midiToCoord, coordToMidiNote } from './lib/note-colors';
 import { createChordGraffiti } from './lib/chord-graffiti';
-import { createIcons, Info, Star, Maximize, RotateCcw, RotateCw, Settings, X } from 'lucide';
+import { createIcons, Info, Search, Star, Maximize, RotateCcw, RotateCw, Settings, X } from 'lucide';
 import { overlayMachine } from './machines/overlayMachine';
 import { waveformMachine } from './machines/waveformMachine';
 import { pedalMachine } from './machines/pedalMachines';
@@ -162,7 +162,7 @@ Initialization is async because MIDI and MPE both require browser permission gra
 
 ``` {.typescript file=_generated/app-core.ts}
   private async init(): Promise<void> {
-    createIcons({ icons: { Info, Star, Maximize, RotateCcw, RotateCw, Settings, X } });
+    createIcons({ icons: { Info, Search, Star, Maximize, RotateCcw, RotateCw, Settings, X } });
     this.calibratedRange = loadCalibratedRange();
     this.setupVisualizer();
     if (this.calibratedRange) {

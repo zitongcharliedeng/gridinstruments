@@ -1146,8 +1146,10 @@ song bar wraps below the title on narrow viewports.
       <div id="song-bar">
       <div id="song-bar-search" style="position:relative;display:inline-flex;align-items:center;gap:4px;">
           <button class="slider-info-btn icon-btn icon-lg" data-info="search" style="position:static;transform:none;"><i data-lucide="info"></i></button>
-          <label for="midi-search-input" style="font-family:var(--font);font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:0.06em;white-space:nowrap;">Song Search</label>
-          <input id="midi-search-input" type="text" placeholder="Search or drop .mid file..." title="Search for MIDI songs or drop a .mid file anywhere" style="width:200px;box-sizing:border-box;font-family:var(--font);font-size:10px;background:var(--bg);color:var(--fg);border:1px solid var(--border);padding:2px 6px;">
+          <div style="position:relative;display:inline-flex;align-items:center;">
+            <i data-lucide="search" style="position:absolute;left:6px;width:12px;height:12px;color:var(--dim);pointer-events:none;"></i>
+            <input id="midi-search-input" type="text" placeholder="Search or drop .mid file..." title="Search for MIDI songs or drop a .mid file anywhere" style="width:200px;box-sizing:border-box;font-family:var(--font);font-size:10px;background:var(--bg);color:var(--fg);border:1px solid var(--border);padding:2px 6px 2px 22px;">
+          </div>
           <div id="midi-search-results" style="position:absolute;top:100%;left:0;min-width:280px;max-height:300px;overflow-y:auto;background:var(--bg);border:1px solid var(--border);z-index:25;display:none;"></div>
         </div>
 ```
