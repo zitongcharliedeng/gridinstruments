@@ -260,10 +260,12 @@ in D-relative octave notation. It is the single source of truth used by the
 grid, the note history waterfall, the chord panel, and any other UI that
 needs to display a note name.
 
-The format: pitch class name followed by an octave suffix. One apostrophe `'`
-per octave above D-ref; one comma `,` per octave below. D-ref itself (MIDI 62)
-has no suffix. Examples: `D` = D-ref, `D'` = one octave above, `D,,` = two
-octaves below, `A'` = A one octave above D-ref.
+The format: pitch class name followed by a numeric octave suffix. The number
+indicates octaves away from D-ref (MIDI 62). Octaves above D-ref show as
+superscript-positioned numbers; octaves below as subscript-positioned. D-ref
+itself has no suffix. Examples: `D` = D-ref, `D1` = one octave above, `D2` =
+two octaves below (rendered as subscript by the visualizer), `A1` = A one
+octave above D-ref.
 
 The note names use standard accidentals: `C#`, `Eb`, etc. This matches the
 standard musical convention and is consistent with the chord detector output.
@@ -274,8 +276,7 @@ export function midiToDRefNoteName(midi: number): string {
   const noteName = names[((midi % 12) + 12) % 12];
   const dOctave = Math.floor((midi - 62) / 12);
   if (dOctave === 0) return noteName;
-  const suffix = dOctave > 0 ? "'".repeat(dOctave) : ','.repeat(-dOctave);
-  return noteName + suffix;
+  return noteName + Math.abs(dOctave);
 }
 ```
 

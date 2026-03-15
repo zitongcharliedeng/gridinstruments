@@ -1009,7 +1009,7 @@ The sub-label renders at 60% of the main font size and 60% opacity.
 
     const midi = 62 + coordX * 7 + coordY * 12;
     const dRefOctave = Math.floor((midi - 62) / 12);
-    const octStr = dRefOctave === 0 ? '' : (dRefOctave > 0 ? "'".repeat(dRefOctave) : ','.repeat(-dRefOctave));
+    const octStr = dRefOctave === 0 ? '' : String(Math.abs(dRefOctave));
 ```
 
 When `hasBracket` is true and the cell is large enough, the note name renders flush to the baseline and the sub-label (showing 12-TET name and/or cent deviation) appears below it at 60% size and 60% opacity.
