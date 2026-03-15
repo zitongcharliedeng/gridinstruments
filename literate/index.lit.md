@@ -1183,7 +1183,7 @@ revealed by state machine transitions.
           <label style="display:inline-flex;align-items:center;gap:3px;font-family:var(--font);font-size:9px;color:var(--dim);">
             Max Keys <input type="number" id="max-keys-input" min="1" value="8" style="width:4ch;font-family:var(--font);font-size:9px;background:var(--bg);color:var(--fg);border:1px solid var(--border);padding:1px 2px;text-align:center;">
           </label>
-          <button id="calibrate-btn" style="font-family:var(--font);font-size:9px;background:none;color:var(--dim);border:1px solid var(--border);padding:2px 8px;cursor:pointer;">Calibrate</button>
+          <button id="calibrate-btn" style="font-family:var(--font);font-size:9px;background:none;color:var(--dim);border:1px solid var(--border);padding:2px 8px;cursor:pointer;">Calibrate Area</button>
           <span id="calibration-banner" style="display:none;font-family:var(--font);font-size:9px;gap:2px;align-items:center;">
             <span id="calibration-warning" style="display:none;"></span>
             <span id="calibration-msg" style="color:var(--fg);">Play notes</span>

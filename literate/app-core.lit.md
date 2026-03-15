@@ -2297,7 +2297,7 @@ Calibration mode shows a banner instructing the user to play all reachable notes
     if (banner) banner.style.display = 'none';
     const btn = document.getElementById('calibrate-btn');
     if (btn) {
-      btn.textContent = 'Calibrate playable area';
+      btn.textContent = 'Calibrate Area';
       btn.style.display = '';
     }
     this.render();
