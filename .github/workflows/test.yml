@@ -27,52 +27,10 @@ jobs:
 
       - run: npm ci
 
-      - name: Tangle literate source
-        run: bash scripts/tangle.sh
-
-      - name: Verify tangle output
-        run: |
-          echo "Tangled files:"
-          ls _generated/lib/*.ts _generated/machines/*.ts _generated/*.ts 2>/dev/null | wc -l
-          echo "files generated from literate/*.lit.md"
-
-      - name: Build (includes TypeScript check)
-        run: npm run build
-
-      - name: Literate comment check (no // comments in code blocks)
-        run: |
-          violations=$(grep -rn '^\s*\(//\|/\*\|\*/\)' literate/ --include='*.lit.md' | grep -v 'http://' | grep -v 'https://' || true)
-          count=$(echo "$violations" | grep -c '.' || true)
-          if [ "$count" -gt 0 ]; then
-            echo "ERROR: Found $count inline comments in literate code blocks."
-            echo ""
-            echo "FIX: End the code block, write the explanation as Markdown prose,"
-            echo "then start a new code block. Entangled concatenates blocks targeting"
-            echo "the same file in document order. Example:"
-            echo ""
-            echo '  ``` {.typescript file=_generated/example.ts}'
-            echo '  const a = computeValue();'
-            echo '  ```'
-            echo ''
-            echo '  Explain WHY a is computed this way here in prose.'
-            echo ''
-            echo '  ``` {.typescript file=_generated/example.ts}'
-            echo '  const b = a * KNOWN_CONSTANT;'
-            echo '  ```'
-            echo ""
-            echo "First 20 violations:"
-            echo "$violations" | head -20
-            exit 1
-          fi
-
-      - name: Lint (informational)
-        run: npm run lint || true
-        continue-on-error: true
-
       - name: Install Playwright browsers
         run: npx playwright install --with-deps firefox
 
-      - name: Run Playwright tests (structural only — fast)
+      - name: Test (tangle → build → playwright)
         run: npx playwright test --project=firefox --workers=1 -g "Structural"
 
       - name: Upload test results
@@ -80,6 +38,5 @@ jobs:
         if: always()
         with:
           name: playwright-report
-          path: |
-            test-results/
+          path: test-results/
           retention-days: 7

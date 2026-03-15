@@ -1,13 +1,9 @@
 name: Deploy to GitHub Pages
 
 on:
-  # Stable deploy: explicit version tags (e.g., v1.0.0) → deploys to root /
   push:
     tags: ['v*']
-    # Dev deploy: every main push → deploys to /dev (unstable preview)
     branches: ['main']
-
-  # Manual deploy (emergency or promotion)
   workflow_dispatch:
 
 permissions:
@@ -23,69 +19,42 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
 
-      - name: Set up Python 3.13
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.13'
 
-      - name: Install Entangled
-        run: pip install entangled-cli==2.4.2
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Tangle literate source
-        run: bash scripts/tangle.sh
-
-      - name: Verify tangle output
-        run: |
-          echo "Tangled files:"
-          ls _generated/lib/*.ts _generated/machines/*.ts _generated/*.ts 2>/dev/null | wc -l
-          echo "files generated from literate/*.lit.md"
+      - run: pip install entangled-cli==2.4.2
+      - run: npm ci
 
       - name: Determine deploy target
         id: target
         run: |
           if [[ "$GITHUB_REF" == refs/tags/* ]]; then
             echo "is_stable=true" >> $GITHUB_OUTPUT
-            echo "base=/" >> $GITHUB_OUTPUT
           else
             echo "is_stable=false" >> $GITHUB_OUTPUT
-            echo "base=/dev/" >> $GITHUB_OUTPUT
           fi
 
-      - name: Build (TypeScript check)
-        run: npx tsc --noEmit
+      - name: Build (tangle → tsc → vite)
+        run: npm run build
+        env:
+          VITE_BASE: ${{ steps.target.outputs.is_stable == 'true' && '/' || '/dev/' }}
 
-      - name: Build stable (root path)
-        if: steps.target.outputs.is_stable == 'true'
-        run: npx vite build
-
-      - name: Build dev (/dev path)
+      - name: Rebuild with /dev base (if dev deploy)
         if: steps.target.outputs.is_stable == 'false'
         run: npx vite build --base /dev/
-
-      - name: AST-grep scan (informational)
-        run: npx ast-grep scan || true
-        continue-on-error: true
-
-      - name: Lint (informational)
-        run: npm run lint || true
-        continue-on-error: true
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps firefox
 
-      - name: Run tests
+      - name: Test (full suite for deploys)
         run: npx playwright test --project=firefox --workers=1
 
       - name: Deploy stable to GitHub Pages root
