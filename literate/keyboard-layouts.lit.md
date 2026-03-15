@@ -275,8 +275,7 @@ export function midiToDRefNoteName(midi: number): string {
   const names = ['C','C#','D','Eb','E','F','F#','G','Ab','A','Bb','B'];
   const noteName = names[((midi % 12) + 12) % 12];
   const dOctave = Math.floor((midi - 62) / 12);
-  if (dOctave === 0) return noteName;
-  return `${noteName}${Math.abs(dOctave)}`;
+  return `${Math.abs(dOctave)}${noteName}`;
 }
 ```
 

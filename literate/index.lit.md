@@ -268,7 +268,7 @@ calibrate — each use `inline-flex` to keep their controls tight. The
       gap: 6px;
     }
     #song-bar #calibrate-btn { font-size: 10px; padding: 2px 8px; }
-    #song-bar #calibration-banner { flex-direction: column; gap: 4px; }
+    #song-bar #calibration-banner { gap: 2px; }
     #song-bar.dropping {
       outline: 2px solid rgba(255, 255, 255, 0.7);
       outline-offset: -2px;
@@ -1183,15 +1183,15 @@ revealed by state machine transitions.
       <div id="song-bar-calibrate" style="margin-left:auto;">
           <button class="slider-info-btn icon-btn icon-lg" data-info="calibrate" style="position:static;transform:none;"><i data-lucide="info"></i></button>
           <label style="display:inline-flex;align-items:center;gap:3px;font-family:var(--font);font-size:9px;color:var(--dim);">
-            Max Keys <input type="number" id="max-keys-input" min="1" max="999" value="8" style="width:3ch;font-family:var(--font);font-size:9px;background:var(--bg);color:var(--fg);border:1px solid var(--border);padding:1px 2px;text-align:center;">
+            Max Keys <input type="number" id="max-keys-input" min="1" value="8" style="width:4ch;font-family:var(--font);font-size:9px;background:var(--bg);color:var(--fg);border:1px solid var(--border);padding:1px 2px;text-align:center;">
           </label>
           <button id="calibrate-btn" style="font-family:var(--font);font-size:9px;background:none;color:var(--dim);border:1px solid var(--border);padding:2px 8px;cursor:pointer;">Calibrate</button>
-          <div id="calibration-banner" style="display:none;align-items:center;gap:4px;">
-            <span id="calibration-warning" style="display:none;font-family:var(--font);font-size:9px;color:var(--dim);"></span>
-            <span id="calibration-msg" style="font-family:var(--font);font-size:9px;color:var(--fg);">Play all reachable notes</span>
-            <button id="calibrate-confirm" style="font-family:var(--font);font-size:9px;background:none;color:#4f4;border:1px solid #4f4;padding:1px 6px;cursor:pointer;">&#x2713;</button>
-            <button id="calibrate-cancel" style="font-family:var(--font);font-size:9px;background:none;color:var(--dim);border:1px solid var(--border);padding:1px 6px;cursor:pointer;">&#x2717;</button>
-          </div>
+          <span id="calibration-banner" style="display:none;font-family:var(--font);font-size:9px;gap:2px;align-items:center;">
+            <span id="calibration-warning" style="display:none;"></span>
+            <span id="calibration-msg" style="color:var(--fg);">Play notes</span>
+            <button id="calibrate-confirm" style="font-family:var(--font);font-size:9px;background:none;color:#4f4;border:1px solid #4f4;padding:1px 4px;cursor:pointer;line-height:1;">&#x2713;</button>
+            <button id="calibrate-cancel" style="font-family:var(--font);font-size:9px;background:none;color:var(--dim);border:1px solid var(--border);padding:1px 4px;cursor:pointer;line-height:1;">&#x2717;</button>
+          </span>
         </div>
     </div>
     </header>
