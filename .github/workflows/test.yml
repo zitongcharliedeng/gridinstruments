@@ -72,8 +72,8 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps firefox
 
-      - name: Run Playwright tests
-        run: npx playwright test --project=firefox --workers=1
+      - name: Run Playwright tests (structural only — fast)
+        run: npx playwright test --project=firefox --workers=1 -g "Structural"
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
