@@ -1086,16 +1086,8 @@ key label width.
       const pad = 3;
       const kw = metrics.width + pad * 2 + 2;
       const kh = qSize + pad * 2 + 2;
-      const corners = [
-        { x: hv1.x + hv2.x, y: hv1.y + hv2.y },
-        { x: hv1.x - hv2.x, y: hv1.y - hv2.y },
-        { x: -hv1.x + hv2.x, y: -hv1.y + hv2.y },
-        { x: -hv1.x - hv2.x, y: -hv1.y - hv2.y },
-      ];
-      corners.sort((a, b) => b.y - a.y || a.x - b.x);
-      const bl = corners[0];
-      const lx = x + bl.x + 2;
-      const ly = y + bl.y - kh;
+      const lx = x - kw / 2;
+      const ly = y + Math.abs(hv2.y) * 0.3;
       this.ctx.fillStyle = '#222';
       this.ctx.fillRect(lx, ly + 2, kw, kh);
       this.ctx.fillStyle = '#444';
