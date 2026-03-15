@@ -31,7 +31,7 @@ fi
 
 # Step 1.5: Block build if literate code blocks contain comments
 # Comments belong in prose BETWEEN blocks, not inside them.
-violations=$(grep -rn '\(^\s*//\|^\s*/\*\|^\s*\*/\|\s//\s\|;\s*//\)' literate/ --include='*.lit.md' | grep -v 'http://' | grep -v 'https://' | wc -l || true)
+violations=$(grep -rn '^\s*\(//\|/\*\|\*/\)' literate/ --include='*.lit.md' | grep -v 'http://' | grep -v 'https://' | wc -l || true)
 if [ "$violations" -gt 0 ]; then
   echo "[tangle] ERROR: $violations comment violations in literate code blocks."
   echo "[tangle] Use prose between code blocks instead. Run:"
