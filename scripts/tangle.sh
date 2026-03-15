@@ -39,6 +39,11 @@ if [ "$violations" -gt 0 ]; then
   exit 1
 fi
 
+# Step 1.6: Warn about long code blocks without interweaved prose
+if command -v python3 &>/dev/null; then
+  python3 scripts/check-long-blocks.py 2>/dev/null || true
+fi
+
 # Step 2: Tangle from .lit.md source (no-op if no .lit.md files exist)
 if ls literate/*.lit.md literate/**/*.lit.md &>/dev/null 2>&1; then
   echo "[tangle] Tangling from literate source..."
