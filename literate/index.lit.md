@@ -429,21 +429,19 @@ buttons that invert on hover.
 
 ``` {.html file=index.html}
 
-    #grid-overlay {
+    .settings-overlay {
       position: absolute;
       top: 0; left: 0; right: 0; bottom: 0;
       background: rgba(30, 30, 32, 0.78);
       z-index: 12;
-      padding: 48px 24px 24px 24px;
-      padding-left: 48px;
-      padding-right: 36px;
+      padding: 48px 24px 24px 48px;
       overflow-y: auto;
       overflow-x: hidden;
       scrollbar-width: thin;
       scrollbar-color: var(--dim) transparent;
     }
 
-    #grid-overlay::before {
+    .settings-overlay::before {
       content: '';
       position: absolute;
       inset: 0;
@@ -1210,7 +1208,7 @@ bottom border; `data-*` attributes declare the min/max/default heights and the
     <div id="visualiser-panel">
       <canvas id="history-canvas" height="120"></canvas>
       <button id="vis-settings-btn" class="grid-cog icon-btn icon-md" style="position:absolute;top:4px;left:4px;z-index:15;"><i data-lucide="settings"></i></button>
-      <div id="vis-overlay" class="hidden" style="position:absolute;top:0;left:0;width:200px;height:100%;background:rgba(0,0,0,0.9);z-index:14;padding:8px 8px 8px 36px;overflow-y:auto;">
+      <div id="vis-overlay" class="settings-overlay hidden">
         <div class="overlay-section-title">VISUALISER</div>
         <div class="slider-track" style="margin-top:8px;">
           <span class="slider-label-overlay">TIME (s)</span>
@@ -1248,7 +1246,7 @@ with pitch bend, velocity, pressure, timbre, and MPE output controls.
          <button id="grid-settings-btn" class="grid-cog icon-btn icon-md"><i data-lucide="settings"></i></button>
 
         <!-- Grid settings overlay (was sidebar) -->
-        <div id="grid-overlay" class="hidden">
+        <div id="grid-overlay" class="settings-overlay hidden">
 
            <div class="overlay-section-title">SOUND</div>
            <div class="overlay-section">
