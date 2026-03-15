@@ -1071,10 +1071,12 @@ key label width.
 
     const qLabel = this.qwertyLabels.get(noteId);
     if (qLabel) {
-      const qSize = Math.max(8, fontSize * 0.4);
+      const qSize = Math.max(10, fontSize * 0.5);
       this.ctx.font = `bold ${qSize}px "JetBrains Mono", monospace`;
       const metrics = this.ctx.measureText(qLabel);
-      const pad = 1;
+      const pad = 3;
+      const kw = metrics.width + pad * 2 + 2;
+      const kh = qSize + pad * 2 + 2;
       const corners = [
         { x: hv1.x + hv2.x, y: hv1.y + hv2.y },
         { x: hv1.x - hv2.x, y: hv1.y - hv2.y },
@@ -1083,15 +1085,19 @@ key label width.
       ];
       corners.sort((a, b) => b.y - a.y || a.x - b.x);
       const bl = corners[0];
-      const lx = x + bl.x + pad + 1;
-      const ly = y + bl.y - qSize - pad;
-      this.ctx.fillStyle = 'rgba(255,255,255,0.85)';
-      this.ctx.fillRect(lx - pad, ly - pad, metrics.width + pad * 2, qSize + pad * 2);
-      this.ctx.fillStyle = '#000000';
+      const lx = x + bl.x + 2;
+      const ly = y + bl.y - kh;
+      this.ctx.fillStyle = '#222';
+      this.ctx.fillRect(lx, ly + 2, kw, kh);
+      this.ctx.fillStyle = '#444';
+      this.ctx.fillRect(lx, ly, kw, kh);
+      this.ctx.fillStyle = '#555';
+      this.ctx.fillRect(lx + 1, ly + 1, kw - 2, kh - 3);
+      this.ctx.fillStyle = '#ddd';
       this.ctx.globalAlpha = 1;
       this.ctx.textAlign = 'left';
       this.ctx.textBaseline = 'top';
-      this.ctx.fillText(qLabel, lx, ly);
+      this.ctx.fillText(qLabel, lx + pad + 1, ly + pad);
     }
   }
 
