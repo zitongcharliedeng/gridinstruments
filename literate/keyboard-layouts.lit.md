@@ -260,23 +260,19 @@ in D-relative octave notation. It is the single source of truth used by the
 grid, the note history waterfall, the chord panel, and any other UI that
 needs to display a note name.
 
-The format: pitch class name followed by a numeric octave suffix. The number
-indicates octaves away from D-ref (MIDI 62). Octaves above D-ref show as
-superscript-positioned numbers; octaves below as subscript-positioned. D-ref
-itself has no suffix. Examples: `D` = D-ref, `D1` = one octave above, `D2` =
-two octaves below (rendered as subscript by the visualizer), `A1` = A one
-octave above D-ref.
-
-The note names use standard accidentals: `C#`, `Eb`, etc. This matches the
-standard musical convention and is consistent with the chord detector output.
+The format: numeric octave prefix BEFORE the pitch class name. The number
+indicates octaves away from D-ref (MIDI 62). Octave 0 (D-ref octave) shows
+`0` prefix. Positive/negative octaves show their absolute value as prefix.
+The visualizer positions this number as superscript (above D-ref) or subscript
+(below D-ref); octave 0 is centered. Examples: `0D` = D-ref octave,
+`1A` = A one octave above, `2C` = C two octaves below.
 
 ``` {.typescript file=_generated/lib/keyboard-layouts.ts}
 export function midiToDRefNoteName(midi: number): string {
   const names = ['C','C#','D','Eb','E','F','F#','G','Ab','A','Bb','B'];
   const noteName = names[((midi % 12) + 12) % 12];
   const dOctave = Math.floor((midi - 62) / 12);
-  if (dOctave === 0) return noteName;
-  return `${noteName}${Math.abs(dOctave)}`;
+  return `${Math.abs(dOctave)}${noteName}`;
 }
 ```
 

@@ -1058,7 +1058,7 @@ The sub-label renders at 60% of the main font size and 60% opacity.
 
     const midi = 62 + coordX * 7 + coordY * 12;
     const dRefOctave = Math.floor((midi - 62) / 12);
-    const octStr = dRefOctave === 0 ? '' : String(Math.abs(dRefOctave));
+    const octStr = String(Math.abs(dRefOctave));
 ```
 
 When `hasBracket` is true and the cell is large enough, the note name renders flush to the baseline and the sub-label (showing 12-TET name and/or cent deviation) appears below it at 60% size and 60% opacity.
@@ -1066,14 +1066,16 @@ When `hasBracket` is true and the cell is large enough, the note name renders fl
 ``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
     if (hasBracket && cellMin > 30) {
       this.ctx.textBaseline = 'bottom';
-      if (octStr) {
+      {
         const nameW = this.ctx.measureText(noteName).width;
         const octFont = Math.max(6, fontSize * 0.45);
         this.ctx.font = `${octFont}px "JetBrains Mono", monospace`;
         this.ctx.textAlign = 'right';
         const octY = dRefOctave > 0
           ? y - fontSize * 0.85
-          : y + octFont * 0.15;
+          : dRefOctave < 0
+          ? y + octFont * 0.15
+          : y - fontSize * 0.35;
         this.ctx.fillText(octStr, x - nameW / 2 - 1, octY);
         this.ctx.font = `bold ${fontSize}px "JetBrains Mono", monospace`;
         this.ctx.textAlign = 'center';
@@ -1100,14 +1102,16 @@ Without a bracket sub-label the note name is simply vertically centred. The octa
 
 ``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
       this.ctx.textBaseline = 'middle';
-      if (octStr) {
+      {
         const nameW = this.ctx.measureText(noteName).width;
         const octFont = Math.max(6, fontSize * 0.45);
         this.ctx.font = `${octFont}px "JetBrains Mono", monospace`;
         this.ctx.textAlign = 'right';
         const octY = dRefOctave > 0
           ? y - fontSize * 0.35
-          : y + fontSize * 0.15;
+          : dRefOctave < 0
+          ? y + fontSize * 0.15
+          : y;
         this.ctx.fillText(octStr, x - nameW / 2 - 1, octY);
         this.ctx.font = `bold ${fontSize}px "JetBrains Mono", monospace`;
         this.ctx.textAlign = 'center';
