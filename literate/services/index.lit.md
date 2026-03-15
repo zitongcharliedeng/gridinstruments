@@ -23,8 +23,8 @@ export const AudioService = Context.GenericTag<AudioService>('AudioService');
 
 export interface MidiService {
   readonly requestAccess: () => Effect.Effect<MIDIAccess, Error>;
-  readonly listInputs: (access: MIDIAccess) => Effect.Effect<ReadonlyArray<MIDIInput>, Error>;
-  readonly listOutputs: (access: MIDIAccess) => Effect.Effect<ReadonlyArray<MIDIOutput>, Error>;
+  readonly listInputs: (access: MIDIAccess) => Effect.Effect<readonly MIDIInput[], Error>;
+  readonly listOutputs: (access: MIDIAccess) => Effect.Effect<readonly MIDIOutput[], Error>;
 }
 
 export const MidiService = Context.GenericTag<MidiService>('MidiService');

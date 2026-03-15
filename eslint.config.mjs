@@ -92,6 +92,12 @@ export default tseslint.config(
         argsIgnorePattern: '^_',
         varsIgnorePattern: '^_',
       }],
+
+      // ── Allow empty catch blocks (intentional in MIDI/audio error swallowing) ──
+      'no-empty': ['error', { allowEmptyCatch: true }],
+      '@typescript-eslint/no-empty-function': ['error', {
+        allow: ['methods'],
+      }],
     },
   },
 
