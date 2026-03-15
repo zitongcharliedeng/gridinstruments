@@ -1179,13 +1179,11 @@ revealed by state machine transitions.
       <div id="song-bar-calibrate" style="margin-left:auto;">
           <button class="slider-info-btn icon-btn icon-lg" data-info="calibrate" style="position:static;transform:none;"><i data-lucide="info"></i></button>
           <button id="calibrate-btn" style="font-family:var(--font);font-size:9px;background:none;color:var(--dim);border:1px solid var(--border);padding:2px 8px;cursor:pointer;">Calibrate</button>
-          <div id="calibration-banner" style="display:none;flex-direction:column;gap:8px;">
-            <span id="calibration-warning" style="display:none;font-family:var(--font);font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:0.06em;">This will reset your current song progress.</span>
-            <span id="calibration-msg" style="font-family:var(--font);font-size:11px;color:var(--fg);text-transform:uppercase;letter-spacing:0.06em;">Play all reachable notes to set your playable area, then confirm</span>
-            <div style="display:flex;gap:6px;">
-              <button id="calibrate-confirm" class="overlay-btn" style="flex:1;" title="Save calibrated range">Confirm</button>
-              <button id="calibrate-cancel" class="overlay-btn" style="flex:1;color:var(--dim);" title="Cancel calibration">Cancel</button>
-            </div>
+          <div id="calibration-banner" style="display:none;align-items:center;gap:4px;">
+            <span id="calibration-warning" style="display:none;font-family:var(--font);font-size:9px;color:var(--dim);"></span>
+            <span id="calibration-msg" style="font-family:var(--font);font-size:9px;color:var(--fg);">Play all reachable notes</span>
+            <button id="calibrate-confirm" style="font-family:var(--font);font-size:9px;background:none;color:#4f4;border:1px solid #4f4;padding:1px 6px;cursor:pointer;" title="Save calibrated range">&#x2713;</button>
+            <button id="calibrate-cancel" style="font-family:var(--font);font-size:9px;background:none;color:var(--dim);border:1px solid var(--border);padding:1px 6px;cursor:pointer;" title="Cancel calibration">&#x2717;</button>
           </div>
         </div>
     </div>
