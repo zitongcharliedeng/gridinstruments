@@ -55,18 +55,6 @@ The conversion pipeline is: **OKLCH -> OKLAB -> LMS -> linear sRGB -> gamma sRGB
    [sRGB transfer function](https://en.wikipedia.org/wiki/SRGB#Transfer_function_(%22gamma%22))
 
 ``` {.typescript file=_generated/lib/note-colors.ts}
-/**
- * OKLCH-based note colors — perceptually uniform, chromatic hue mapping.
- *
- * D = red (root). Each semitone step = 30° on the OKLCH hue wheel.
- * Adjacent grid cells (fifths apart = 7 semitones) differ by 210° — maximum
- * contrast on the hue circle.
- *
- * Hue table (D=29° OKLCH red):
- *   C=329° C♯=359° D=29°  E♭=59°  E=89°   F=119°
- *   F♯=149° G=179° A♭=209° A=239° B♭=269° B=299°
- */
-
 
 function oklchToRgb(L: number, C: number, H: number): [number, number, number] {
   const hRad = H * Math.PI / 180;
@@ -137,12 +125,10 @@ hue by first recovering the pitch class. Each step on the x-axis is 7 semitones
 ``` {.typescript file=_generated/lib/note-colors.ts}
 
 
-/** OKLCH hue for a pitch class (0=C). Each semitone = 30°, anchored so D=29°. */
 function pcHue(pc: number): number {
   return (pc * 30 + 329) % 360;
 }
 
-/** OKLCH hue for a circle-of-fifths coordinate (D=0). */
 function pitchCentsToHue(pitchCents: number): number {
   const centsInOctave = ((pitchCents % 1200) + 1200) % 1200;
   return (centsInOctave / 1200 * 360 + 29) % 360;
@@ -184,7 +170,6 @@ its pitch class, look up the CoF position, then compute the grid coordinate.
 ``` {.typescript file=_generated/lib/note-colors.ts}
 
 
-/** Circle-of-fifths position for each pitch class (0=C..11=B). D=0. */
 const COF_FROM_PC: readonly number[] = [
   -2,  // C
    5,  // C#
@@ -221,11 +206,9 @@ background presence without visual clutter.
 ``` {.typescript file=_generated/lib/note-colors.ts}
 
 
-/** Vivid colors: for active notes and history visualization. */
 export const NOTE_COLORS: readonly string[] = Array.from({ length: 12 }, (_, pc) =>
   oklch(0.72, 0.19, pcHue(pc)));
 
-/** Dimmed colors: for history trail. */
 export const NOTE_COLORS_DIM: readonly string[] = Array.from({ length: 12 }, (_, pc) =>
   oklch(0.32, 0.07, pcHue(pc)));
 ```
@@ -242,9 +225,6 @@ computing an `rgba()` string on the fly.
 ``` {.typescript file=_generated/lib/note-colors.ts}
 
 
-/**
- * Get vivid color for a MIDI note number.
- */
 export function noteColor(midiNote: number, alpha = 1): string {
   const pc = ((midiNote % 12) + 12) % 12;
   if (alpha === 1) return NOTE_COLORS[pc];
@@ -262,9 +242,6 @@ but not the MIDI note number.
 
 ``` {.typescript file=_generated/lib/note-colors.ts}
 
-/**
- * Vivid color for a DCompose coordX (circle-of-fifths position, D=0).
- */
 export function colorFromCoordX(coordX: number): string {
   return oklch(0.72, 0.19, chromaticHue(coordX));
 }
@@ -296,18 +273,6 @@ for MPE pressure visualization once calibration is complete.
 
 ``` {.typescript file=_generated/lib/note-colors.ts}
 
-/**
- * Cell fill + text colors for the keyboard grid.
- *
- * Returns hue-tinted fills so parallelogram shapes are always visible on
- * the pure-black canvas. All inactive keys share the same brightness —
- * sharp/flat vs natural distinction is conveyed by note name, not lightness.
- *
- *   Active:    vivid fill, white text
- *   Sustained: warm glow fill, bright hue text
- *   White key: dark tinted fill (L=0.24), readable hue text
- *   Black key: same as white key (L=0.24) — uniform brightness
- */
 export function cellColors(
   coordX: number,
   state: 'active' | 'target' | 'target-pressed' | 'sustained' | 'uncalibrated-white' | 'uncalibrated-black' | 'white' | 'black',
@@ -363,18 +328,15 @@ where `pitchCents = (midi - 62) * 100` measures the interval from D4 in cents.
 
 ``` {.typescript file=_generated/lib/note-colors.ts}
 
-/** Pitch class (0=C) from DCompose coordX. */
 export function pitchClassFromCoordX(coordX: number): number {
   return ((2 + coordX * 7) % 12 + 12) % 12;
 }
 
-/** MIDI note number from DCompose coordinates. */
 export function coordToMidiNote(coordX: number, coordY: number): number {
 
   return 62 + coordX * 7 + coordY * 12;
 }
 
-/** DCompose coordinates from MIDI note (canonical short-path CoF position). */
 export function midiToCoord(midi: number): [number, number] {
   const pitchClass = ((midi % 12) + 12) % 12;
   const x = COF_FROM_PC[pitchClass];

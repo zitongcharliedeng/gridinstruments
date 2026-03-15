@@ -3,16 +3,8 @@
 Ten independent XState v5 machines modelling user-visible UI state transitions — overlay, visualiser, pedals, waveform, sustain, vibrato, midiPanel, mpe, textInputFocus, and skewLabel — plus slider reset, about dialog, D-ref input, modifier compound, layout persistence, viewport, and song bar machines.
 
 ``` {.typescript file=_generated/tests/machines/uiMachine.ts}
-/**
- * UI state machines for model-based test generation.
  *
- * Ten independent XState v5 machines modelling user-visible UI state
- * transitions. Used ONLY with `getAdjacencyMap` to enumerate (state, event)
- * pairs for Playwright test generation — NOT used at runtime.
  *
- * Total (state × event) pairs across all machines: 76.
- */
-
 import { setup } from 'xstate';
 import { type Page, expect } from '@playwright/test';
 import {

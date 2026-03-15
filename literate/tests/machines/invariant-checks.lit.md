@@ -3,14 +3,6 @@
 Structural invariants for XState graph-based test generation — DOM checks, golden screenshots, slider fill assertions, MPE protocol checks, game engine tests, and more.
 
 ``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
-/**
- * Invariant predicates for XState model-based tests.
- *
- * Classification by dependency set D(P) over the product state space:
- *   D(P) = {}    → Structural: state-independent, tested once per page load
- *   D(P) = {M}   → State predicate of M, wired to M's meta.invariants
- *   D(P) = {M,N} → Cross-machine: would violate independence (model error)
- */
 
 import type { Page } from '@playwright/test';
 import { expect } from '@playwright/test';
@@ -30,7 +22,6 @@ import {
 } from './uiMachine';
 
 
-/** D = {overlay}. Truth changes with overlay state. Wire: overlay.visible */
 export const tooltipCheck: StateInvariant = {
   id: 'BH-TT-1',
   check: async (page: Page) => {
@@ -51,7 +42,6 @@ export const tooltipCheck: StateInvariant = {
   },
 };
 
-/** D = {visualiser}. Truth changes at default height. Wire: visualiser.default */
 export const visHandlePosition: StateInvariant = {
   id: 'PNL-VIS-4',
   check: async (page: Page) => {
@@ -65,7 +55,6 @@ export const visHandlePosition: StateInvariant = {
   },
 };
 
-/** D = {visualiser}. Canvas visible iff not collapsed. Wire: visualiser.{default, expanded} */
 export const pianoRollVisible: StateInvariant = {
   id: 'BH-PIANOROLL-1',
   check: async (page: Page) => {
@@ -78,7 +67,6 @@ export const pianoRollVisible: StateInvariant = {
   },
 };
 
-/** D = {pedals}. Truth changes at default height. Wire: pedals.default */
 export const pedHandlePosition: StateInvariant = {
   id: 'PNL-VIS-5',
   check: async (page: Page) => {
@@ -92,7 +80,6 @@ export const pedHandlePosition: StateInvariant = {
   },
 };
 
-/** D = {overlay}. Background color check. Wire: overlay.visible */
 export const overlayBgCheck: StateInvariant = {
   id: 'OV-BG-1',
   check: async (page: Page) => {
@@ -110,7 +97,6 @@ export const overlayBgCheck: StateInvariant = {
   },
 };
 
-/** D = {overlay}. Shimmer animation check. Wire: overlay.visible */
 export const overlayShimmerCheck: StateInvariant = {
   id: 'OV-SHIMMER-1',
   check: async (page: Page) => {
@@ -123,7 +109,6 @@ export const overlayShimmerCheck: StateInvariant = {
   },
 };
 
-/** D = {overlay}. Section count check. Wire: overlay.visible */
 export const overlaySectionsCheck: StateInvariant = {
   id: 'OV-SECTIONS-1',
   check: async (page: Page) => {
@@ -132,7 +117,6 @@ export const overlaySectionsCheck: StateInvariant = {
   },
 };
 
-/** D = {overlay}. Active preset check at default tuning. Wire: overlay.visible */
 export const overlayPresetCheck: StateInvariant = {
   id: 'OV-PRESET-1',
   check: async (page: Page) => {
@@ -143,7 +127,6 @@ export const overlayPresetCheck: StateInvariant = {
   },
 };
 
-/** D = {overlay}. MPE controls visible when overlay open. Wire: overlay.visible */
 export const mpeUiCheck: StateInvariant = {
   id: 'BH-MPE-1',
   check: async (page: Page) => {
@@ -152,7 +135,6 @@ export const mpeUiCheck: StateInvariant = {
   },
 };
 
-/** D = {overlay}. Settings toggle doesn't steal focus. Wire: overlay.visible */
 export const focusPreserveCheck: StateInvariant = {
   id: 'BH-FOCUS-PRESERVE-1',
   check: async (page: Page) => {
@@ -162,7 +144,6 @@ export const focusPreserveCheck: StateInvariant = {
   },
 };
 
-/** D = {overlay}. Lucide icon SVGs render at text-matching pixel dimensions. Wire: overlay.visible */
 export const iconSizeCheck: StateInvariant = {
   id: 'BH-ICON-1',
   check: async (page: Page) => {
@@ -185,7 +166,6 @@ export const iconSizeCheck: StateInvariant = {
   },
 };
 
-/** D = {visualiser}. 60% viewport cap on expanded. Wire: visualiser.expanded */
 export const visCap60Check: StateInvariant = {
   id: 'PNL-DRAG-4',
   check: async (page: Page) => {
@@ -200,7 +180,6 @@ export const visCap60Check: StateInvariant = {
 };
 
 
-/** D = {slider}. Fill gradient check for slider in default (min) position. */
 export function createSliderFillDefaultInvariant(sliderId: string): StateInvariant {
   return {
     id: `FILL-DEFAULT-${sliderId}`,
@@ -216,7 +195,6 @@ export function createSliderFillDefaultInvariant(sliderId: string): StateInvaria
   };
 }
 
-/** D = {slider}. Fill gradient check for slider in modified position. */
 export function createSliderFillModifiedInvariant(sliderId: string): StateInvariant {
   return {
     id: `FILL-MODIFIED-${sliderId}`,
@@ -233,7 +211,6 @@ export function createSliderFillModifiedInvariant(sliderId: string): StateInvari
 }
 
 
-/** D = {overlay}. All slider badges sit above their tracks. Wire: overlay.visible */
 export const sliderBadgePositionCheck: StateInvariant = {
   id: 'SM-BADGE-ALL',
   check: async (page: Page) => {
@@ -253,7 +230,6 @@ export const sliderBadgePositionCheck: StateInvariant = {
   },
 };
 
-/** D = {overlay}. Non-editable badges pass-through clicks; editable badges accept them. Wire: overlay.visible */
 export const badgePointerEventsCheck: StateInvariant = {
   id: 'SM-BADGE-PE',
   check: async (page: Page) => {
@@ -270,7 +246,6 @@ export const badgePointerEventsCheck: StateInvariant = {
   },
 };
 
-/** D = {overlay}. Slider labels sit inside their tracks. Wire: overlay.visible */
 export const sliderLabelPositionCheck: StateInvariant = {
   id: 'SM-LABEL-POS',
   check: async (page: Page) => {
@@ -289,7 +264,6 @@ export const sliderLabelPositionCheck: StateInvariant = {
   },
 };
 
-/** D = {overlay}. Slider badge/label values match design spec after init. Wire: overlay.visible */
 export const sliderValuesCheck: StateInvariant = {
   id: 'SM-VAL-ALL',
   check: async (page: Page) => {
@@ -331,7 +305,6 @@ export const sliderValuesCheck: StateInvariant = {
   },
 };
 
-/** D = {overlay}. TET buttons sit below the tuning track. Wire: overlay.visible */
 export const tetBelowTrackCheck: StateInvariant = {
   id: 'SM-TET-BELOW',
   check: async (page: Page) => {
@@ -352,7 +325,6 @@ export const tetBelowTrackCheck: StateInvariant = {
   },
 };
 
-/** D = {overlay}. Overlay control labels and slider labels are white. Wire: overlay.visible */
 export const overlayColorsCheck: StateInvariant = {
   id: 'SM-COLOR-OVERLAY',
   check: async (page: Page) => {
@@ -375,7 +347,6 @@ export const overlayColorsCheck: StateInvariant = {
   },
 };
 
-/** D = {overlay}. D-ref annotation is in label, not in the input value. Wire: overlay.visible */
 export const drefAnnotationCheck: StateInvariant = {
   id: 'SM-COLOR-2',
   check: async (page: Page) => {
@@ -388,7 +359,6 @@ export const drefAnnotationCheck: StateInvariant = {
   },
 };
 
-/** D = {overlay}. Overlay structural controls: reset buttons, border-radius, d-ref width, tuning padding. Wire: overlay.visible */
 export const overlayControlsCheck: StateInvariant = {
   id: 'SM-STRUCT-OVERLAY',
   check: async (page: Page) => {
@@ -423,7 +393,6 @@ export const overlayControlsCheck: StateInvariant = {
 };
 
 
-/** D = {}. App-level colors, font, and DPR scaling. Structural test, not per-state. */
 export const appLoadedCheck: StateInvariant = {
   id: 'SM-APP-LOADED',
   check: async (page: Page) => {
@@ -478,7 +447,6 @@ export const appLoadedCheck: StateInvariant = {
 };
 
 
-/** D = {overlay}. Grid overlay pixel-level golden. Caller must open overlay first. */
 export const overlayGoldenCheck: StateInvariant = {
   id: 'GOLDEN-OVERLAY',
   check: async (page: Page) => {
@@ -486,7 +454,6 @@ export const overlayGoldenCheck: StateInvariant = {
   },
 };
 
-/** D = {}. Full page pixel-level golden. Structural test. */
 export const fullPageGoldenCheck: StateInvariant = {
   id: 'GOLDEN-FULL-PAGE',
   check: async (page: Page) => {
@@ -494,7 +461,6 @@ export const fullPageGoldenCheck: StateInvariant = {
   },
 };
 
-/** D = {overlay}. Overlay open golden — catches slider layout, section grouping, info button regressions. */
 export const overlayGoldenCheck2: StateInvariant = {
   id: 'GOLDEN-OVERLAY-2',
   check: async (page: Page) => {
@@ -505,7 +471,6 @@ export const overlayGoldenCheck2: StateInvariant = {
   },
 };
 
-/** D = {}. Mobile viewport golden — catches responsive breakpoints, overflow, handle visibility. */
 export const mobileGoldenCheck: StateInvariant = {
   id: 'GOLDEN-MOBILE',
   check: async (page: Page) => {
@@ -516,7 +481,6 @@ export const mobileGoldenCheck: StateInvariant = {
   },
 };
 
-/** D = {}. QWERTY labels golden — catches label rendering, sizing, positioning on grid cells. */
 export const qwertyGoldenCheck: StateInvariant = {
   id: 'GOLDEN-QWERTY',
   check: async (page: Page) => {
@@ -547,7 +511,6 @@ export const qwertyGoldenCheck: StateInvariant = {
   },
 };
 
-/** D = {}. Keyboard canvas pixel-level golden. Structural test. */
 export const keyboardCanvasGoldenCheck: StateInvariant = {
   id: 'GOLDEN-KEYBOARD',
   check: async (page: Page) => {
@@ -555,7 +518,6 @@ export const keyboardCanvasGoldenCheck: StateInvariant = {
   },
 };
 
-/** D = {}. TET notch labels pixel-level golden. Caller must open overlay first. */
 export const tetNotchGoldenCheck: StateInvariant = {
   id: 'GOLDEN-TET-NOTCH',
   check: async (page: Page) => {
@@ -566,7 +528,6 @@ export const tetNotchGoldenCheck: StateInvariant = {
 };
 
 
-/** D = {}. DOM hierarchy never changes. Structural test, not per-state. */
 export const handleDomParent: StateInvariant = {
   id: 'PNL-VIS-6',
   check: async (page: Page) => {
@@ -577,7 +538,6 @@ export const handleDomParent: StateInvariant = {
   },
 };
 
-/** D = {}. ARIA attributes are static HTML. Structural test, not per-state. */
 export const panelAriaCheck: StateInvariant = {
   id: 'PNL-VIS-3',
   check: async (page: Page) => {
@@ -591,7 +551,6 @@ export const panelAriaCheck: StateInvariant = {
 };
 
 
-/** D = {}. Scrollbar 12px width at small viewport (#62). Structural test. */
 export const scrollbarWidthCheck: StateInvariant = {
   id: 'ISS-62-1',
   check: async (page: Page) => {
@@ -621,7 +580,6 @@ export const scrollbarWidthCheck: StateInvariant = {
   },
 };
 
-/** D = {}. Scrollbar overflow at small viewport (#62). Structural test. */
 export const scrollbarOverflowCheck: StateInvariant = {
   id: 'ISS-62-2',
   check: async (page: Page) => {
@@ -645,7 +603,6 @@ export const scrollbarOverflowCheck: StateInvariant = {
   },
 };
 
-/** D = {overlay}. slim-select dark theme check (#85). Wire: overlay.visible */
 export const slimSelectThemeCheck: StateInvariant = {
   id: 'ISS-85-1',
   check: async (page: Page) => {
@@ -670,7 +627,6 @@ export const slimSelectThemeCheck: StateInvariant = {
   },
 };
 
-/** D = {overlay}. Native selects hidden by slim-select, .ss-main visible (#85). Wire: overlay.visible */
 export const nativeSelectHiddenCheck: StateInvariant = {
   id: 'ISS-85-2',
   check: async (page: Page) => {
@@ -699,7 +655,6 @@ export const nativeSelectHiddenCheck: StateInvariant = {
   },
 };
 
-/** D = {overlay}. MPE checkbox uses custom .gi-checkbox component (#85). Wire: overlay.visible */
 export const customCheckboxCheck: StateInvariant = {
   id: 'ISS-85-3',
   check: async (page: Page) => {
@@ -723,7 +678,6 @@ export const customCheckboxCheck: StateInvariant = {
   },
 };
 
-/** D = {overlay}. No unexpected white backgrounds in overlay (#85). Wire: overlay.visible */
 export const noWhiteBackgroundCheck: StateInvariant = {
   id: 'ISS-85-4',
   check: async (page: Page) => {
@@ -755,7 +709,6 @@ export const noWhiteBackgroundCheck: StateInvariant = {
   },
 };
 
-/** D = {}. D-ref must not drift from keyboard canvas interaction (#84). Structural test. */
 export const drefDriftCheck: StateInvariant = {
   id: 'ISS-84-1',
   check: async (page: Page) => {
@@ -783,7 +736,6 @@ export const drefDriftCheck: StateInvariant = {
   },
 };
 
-/** D = {sustain}. R key must not activate sustain (#14). Wire: sustain.inactive */
 export const rKeyNotSustainCheck: StateInvariant = {
   id: 'ISS-14-1',
   check: async (page: Page) => {
@@ -796,7 +748,6 @@ export const rKeyNotSustainCheck: StateInvariant = {
   },
 };
 
-/** D = {overlay}. D-ref slider range covers D2 to D6. Wire: overlay.visible */
 export const drefRangeCheck: StateInvariant = {
   id: 'BH-DREF-RANGE-1',
   check: async (page: Page) => {
@@ -810,7 +761,6 @@ export const drefRangeCheck: StateInvariant = {
 
 
 
-/** D = {}. TUNING_MARKERS must be sorted descending for binary search. */
 export const ctMarkers1Check: StateInvariant = {
   id: 'CT-MARKERS-1',
   check: async (page: Page) => {
@@ -825,7 +775,6 @@ export const ctMarkers1Check: StateInvariant = {
   },
 };
 
-/** D = {}. All 8 expected TET markers present. */
 export const ctMarkers2Check: StateInvariant = {
   id: 'CT-MARKERS-2',
   check: async (page: Page) => {
@@ -839,7 +788,6 @@ export const ctMarkers2Check: StateInvariant = {
   },
 };
 
-/** D = {}. findNearestMarker(700) returns 12-TET with distance 0. */
 export const ctNearest1Check: StateInvariant = {
   id: 'CT-NEAREST-1',
   check: async (page: Page) => {
@@ -854,7 +802,6 @@ export const ctNearest1Check: StateInvariant = {
   },
 };
 
-/** D = {}. D is at coordinate 0. */
 export const ctNotename1Check: StateInvariant = {
   id: 'CT-NOTENAME-1',
   check: async (page: Page) => {
@@ -866,7 +813,6 @@ export const ctNotename1Check: StateInvariant = {
   },
 };
 
-/** D = {}. Known note names at various coordinates. */
 export const ctNotename2Check: StateInvariant = {
   id: 'CT-NOTENAME-2',
   check: async (page: Page) => {
@@ -890,7 +836,6 @@ export const ctNotename2Check: StateInvariant = {
   },
 };
 
-/** D = {}. Double accidentals exist at extreme coordinates. */
 export const ctNotename3Check: StateInvariant = {
   id: 'CT-NOTENAME-3',
   check: async (page: Page) => {
@@ -907,7 +852,6 @@ export const ctNotename3Check: StateInvariant = {
 };
 
 
-/** D = {}. coordToMidi(0, 0) = 62 (D4). */
 export const ctMidi1Check: StateInvariant = {
   id: 'CT-MIDI-1',
   check: async (_page: Page) => {
@@ -916,7 +860,6 @@ export const ctMidi1Check: StateInvariant = {
   },
 };
 
-/** D = {}. coordToMidi for known notes. */
 export const ctMidi2Check: StateInvariant = {
   id: 'CT-MIDI-2',
   check: async (_page: Page) => {
@@ -930,7 +873,6 @@ export const ctMidi2Check: StateInvariant = {
   },
 };
 
-/** D = {}. pitchClassFromCoordX(0) = 2 (D). */
 export const ctPc1Check: StateInvariant = {
   id: 'CT-PC-1',
   check: async (_page: Page) => {
@@ -940,7 +882,6 @@ export const ctPc1Check: StateInvariant = {
   },
 };
 
-/** D = {}. pitchClassFromCoordX for various coordinates. */
 export const ctPc2Check: StateInvariant = {
   id: 'CT-PC-2',
   check: async (_page: Page) => {
@@ -952,7 +893,6 @@ export const ctPc2Check: StateInvariant = {
   },
 };
 
-/** D = {}. D (pitch class 2) has hue 29°. */
 export const ctHue1Check: StateInvariant = {
   id: 'CT-HUE-1',
   check: async (_page: Page) => {
@@ -962,7 +902,6 @@ export const ctHue1Check: StateInvariant = {
   },
 };
 
-/** D = {}. Adjacent fifths differ by 210° for max contrast. */
 export const ctHue2Check: StateInvariant = {
   id: 'CT-HUE-2',
   check: async (_page: Page) => {
@@ -973,7 +912,6 @@ export const ctHue2Check: StateInvariant = {
   },
 };
 
-/** D = {}. coordToMidiNote round-trips for canonical positions. */
 export const ctRoundtrip1Check: StateInvariant = {
   id: 'CT-ROUNDTRIP-1',
   check: async (_page: Page) => {
@@ -986,7 +924,6 @@ export const ctRoundtrip1Check: StateInvariant = {
   },
 };
 
-/** D = {}. At 12-TET (700¢), all coordinates have 0 deviation. */
 export const ctCents1Check: StateInvariant = {
   id: 'CT-CENTS-1',
   check: async (_page: Page) => {
@@ -998,7 +935,6 @@ export const ctCents1Check: StateInvariant = {
   },
 };
 
-/** D = {}. At 720¢ (5-TET), deviation is 20¢ per fifth step. */
 export const ctCents2Check: StateInvariant = {
   id: 'CT-CENTS-2',
   check: async (_page: Page) => {
@@ -1013,7 +949,6 @@ export const ctCents2Check: StateInvariant = {
 };
 
 
-/** D = {}. Runtime overlay machine states match test machine. */
 export const ctMachine1Check: StateInvariant = {
   id: 'CT-MACHINE-1',
   check: async (_page: Page) => {
@@ -1023,7 +958,6 @@ export const ctMachine1Check: StateInvariant = {
   },
 };
 
-/** D = {}. Runtime pedal machine states match test sustain/vibrato. */
 export const ctMachine2Check: StateInvariant = {
   id: 'CT-MACHINE-2',
   check: async (_page: Page) => {
@@ -1035,7 +969,6 @@ export const ctMachine2Check: StateInvariant = {
   },
 };
 
-/** D = {}. Test panel states map to runtime panel machine states. */
 export const ctMachine3Check: StateInvariant = {
   id: 'CT-MACHINE-3',
   check: async (_page: Page) => {
@@ -1056,7 +989,6 @@ export const ctMachine3Check: StateInvariant = {
   },
 };
 
-/** D = {}. Runtime waveform machine has correct initial waveform. */
 export const ctMachine4Check: StateInvariant = {
   id: 'CT-MACHINE-4',
   check: async (_page: Page) => {
@@ -1070,7 +1002,6 @@ export const ctMachine4Check: StateInvariant = {
 };
 
 
-/** D = {}. Note naming includes double sharps and flats. */
 export const bhDoubleAccidental1Check: StateInvariant = {
   id: 'BH-DOUBLEACCIDENTAL-1',
   check: async (page: Page) => {
@@ -1098,7 +1029,6 @@ export const bhDoubleAccidental1Check: StateInvariant = {
 };
 
 
-/** D = {}. noteOn sends correct status byte on member channel 2–16. */
 export const iscMpe1Check: StateInvariant = {
   id: 'ISC-MPE-1',
   check: async (page: Page) => {
@@ -1127,7 +1057,6 @@ export const iscMpe1Check: StateInvariant = {
   },
 };
 
-/** D = {}. pitch bend produces valid 14-bit LSB/MSB encoding. */
 export const iscMpe2Check: StateInvariant = {
   id: 'ISC-MPE-2',
   check: async (page: Page) => {
@@ -1180,7 +1109,6 @@ export const iscMpe2Check: StateInvariant = {
   },
 };
 
-/** D = {}. CC74 slide normalizes 0–1 to 0–127. */
 export const iscMpe3Check: StateInvariant = {
   id: 'ISC-MPE-3',
   check: async (page: Page) => {
@@ -1236,7 +1164,6 @@ export const iscMpe3Check: StateInvariant = {
   },
 };
 
-/** D = {}. FIFO channel allocation across channels 2–16. */
 export const iscMpe4Check: StateInvariant = {
   id: 'ISC-MPE-4',
   check: async (page: Page) => {
@@ -1281,7 +1208,6 @@ export const iscMpe4Check: StateInvariant = {
   },
 };
 
-/** D = {}. MCM sent on output selection. */
 export const iscMpe5Check: StateInvariant = {
   id: 'ISC-MPE-5',
   check: async (page: Page) => {
@@ -1316,7 +1242,6 @@ export const iscMpe5Check: StateInvariant = {
   },
 };
 
-/** D = {}. No per-note messages go to manager channel 1. */
 export const iscAMpe1Check: StateInvariant = {
   id: 'ISC-A-MPE-1',
   check: async (page: Page) => {
@@ -1353,7 +1278,6 @@ export const iscAMpe1Check: StateInvariant = {
 };
 
 
-/** D = {}. MPEService constructor creates default settings. */
 export const iscSvc1Check: StateInvariant = {
   id: 'ISC-SVC-1',
   check: async (page: Page) => {
@@ -1372,7 +1296,6 @@ export const iscSvc1Check: StateInvariant = {
   },
 };
 
-/** D = {}. updateSettings changes configuration. */
 export const iscSvc2Check: StateInvariant = {
   id: 'ISC-SVC-2',
   check: async (page: Page) => {
@@ -1389,7 +1312,6 @@ export const iscSvc2Check: StateInvariant = {
   },
 };
 
-/** D = {}. noteOn allocates member channel and sends correct MIDI. */
 export const iscSvc3Check: StateInvariant = {
   id: 'ISC-SVC-3',
   check: async (page: Page) => {
@@ -1418,7 +1340,6 @@ export const iscSvc3Check: StateInvariant = {
   },
 };
 
-/** D = {}. noteOff sends correct note-off message. */
 export const iscSvc4Check: StateInvariant = {
   id: 'ISC-SVC-4',
   check: async (page: Page) => {
@@ -1446,7 +1367,6 @@ export const iscSvc4Check: StateInvariant = {
   },
 };
 
-/** D = {}. subscribe receives voice state updates. */
 export const iscSvc5Check: StateInvariant = {
   id: 'ISC-SVC-5',
   check: async (page: Page) => {
@@ -1480,7 +1400,6 @@ export const iscSvc5Check: StateInvariant = {
   },
 };
 
-/** D = {}. panic sends all-notes-off on all member channels. */
 export const iscSvc6Check: StateInvariant = {
   id: 'ISC-SVC-6',
   check: async (page: Page) => {
@@ -1509,7 +1428,6 @@ export const iscSvc6Check: StateInvariant = {
   },
 };
 
-/** D = {}. dispose cleans up resources. */
 export const iscSvc7Check: StateInvariant = {
   id: 'ISC-SVC-7',
   check: async (page: Page) => {
@@ -1539,7 +1457,6 @@ export const iscSvc7Check: StateInvariant = {
   },
 };
 
-/** D = {}. configurable pressureMode changes message type. */
 export const iscSvc8Check: StateInvariant = {
   id: 'ISC-SVC-8',
   check: async (page: Page) => {
@@ -1582,7 +1499,6 @@ export const iscSvc8Check: StateInvariant = {
   },
 };
 
-/** D = {}. setEnabled(false) prevents note output. */
 export const iscSvc9Check: StateInvariant = {
   id: 'ISC-SVC-9',
   check: async (page: Page) => {
@@ -1623,7 +1539,6 @@ export const iscSvc9Check: StateInvariant = {
   },
 };
 
-/** D = {}. configurable timbreCC uses custom CC number. */
 export const iscSvc10Check: StateInvariant = {
   id: 'ISC-SVC-10',
   check: async (page: Page) => {
@@ -1655,7 +1570,6 @@ export const iscSvc10Check: StateInvariant = {
 };
 
 
-/** D = {overlay}. Skew notch at value 0 reads "DCompose / Wicki-Hayden" (#81). */
 export const iss81SkewNotchCheck: StateInvariant = {
   id: 'ISS-81-1',
   check: async (page: Page) => {
@@ -1673,7 +1587,6 @@ export const iss81SkewNotchCheck: StateInvariant = {
   },
 };
 
-/** D = {overlay}. Cog button does not overlap overlay content (#87). */
 export const iss87CogNoOverlapCheck: StateInvariant = {
   id: 'ISS-87-1',
   check: async (page: Page) => {
@@ -1687,7 +1600,6 @@ export const iss87CogNoOverlapCheck: StateInvariant = {
   },
 };
 
-/** D = {overlay}. WAVE is a select dropdown with reset button (#96). */
 export const iss96WaveSelectCheck: StateInvariant = {
   id: 'ISS-96-1',
   check: async (page: Page) => {
@@ -1714,7 +1626,6 @@ export const iss96WaveSelectCheck: StateInvariant = {
   },
 };
 
-/** D = {overlay}. KEYBOARD LAYOUT has a reset button that resets to ANSI (#97). */
 export const iss97LayoutResetCheck: StateInvariant = {
   id: 'ISS-97-1',
   check: async (page: Page) => {
@@ -1729,7 +1640,6 @@ export const iss97LayoutResetCheck: StateInvariant = {
   },
 };
 
-/** D = {overlay}. All slider-track rows share same left/right edges (#98). */
 export const iss98AlignmentCheck: StateInvariant = {
   id: 'ISS-98-1',
   check: async (page: Page) => {
@@ -1750,7 +1660,6 @@ export const iss98AlignmentCheck: StateInvariant = {
   },
 };
 
-/** D = {}. Target note glow: KeyboardVisualizer must export setTargetNotes. */
 export const targetNoteApiExists: StateInvariant = {
   id: 'GAME-TGT-1',
   check: async (page: Page) => {
@@ -1761,7 +1670,6 @@ export const targetNoteApiExists: StateInvariant = {
   },
 };
 
-/** D = {}. Ghost note API: NoteHistoryVisualizer must export setGhostNote. */
 export const ghostNoteApiExists: StateInvariant = {
   id: 'GAME-GHOST-1',
   check: async (page: Page) => {
@@ -1772,7 +1680,6 @@ export const ghostNoteApiExists: StateInvariant = {
   },
 };
 
-/** D = {}. File drop: song-bar exists and is the visual drop target (drop handled on document.body). */
 export const canvasDropZone: StateInvariant = {
   id: 'GAME-DROP-1',
   check: async (page: Page) => {
@@ -1785,7 +1692,6 @@ export const canvasDropZone: StateInvariant = {
   },
 };
 
-/** D = {overlay}. Overlay has organized category headings in correct style (#92). */
 export const iss92OverlayHeadingsCheck: StateInvariant = {
   id: 'ISS-92-1',
   check: async (page: Page) => {
@@ -1805,7 +1711,6 @@ export const iss92OverlayHeadingsCheck: StateInvariant = {
   },
 };
 
-/** D = {}. Game score overlay can be dynamically created and removed. */
 export const gameScoreOverlay: StateInvariant = {
   id: 'GAME-SCORE-1',
   check: async (page: Page) => {
@@ -1864,7 +1769,6 @@ export const gameCalibrationStorage: StateInvariant = {
 };
 
 
-/** D = {}. MIDI parser produces valid NoteEvent array from fixture file. */
 export const gameMidiParserIntegration: StateInvariant = {
   id: 'GAME-INT-1',
   check: async (page: Page) => {
@@ -1887,7 +1791,6 @@ export const gameMidiParserIntegration: StateInvariant = {
   },
 };
 
-/** D = {}. buildNoteGroups produces valid NoteGroup array from parsed MIDI. */
 export const gameBuildNoteGroupsIntegration: StateInvariant = {
   id: 'GAME-INT-2',
   check: async (page: Page) => {
@@ -1912,7 +1815,6 @@ export const gameBuildNoteGroupsIntegration: StateInvariant = {
   },
 };
 
-/** D = {}. gameMachine transitions: idle → loading → playing → complete with chord completion. */
 export const gameMachineTransitions: StateInvariant = {
   id: 'GAME-INT-3',
   check: async (_page: Page) => {
@@ -1951,7 +1853,6 @@ export const gameMachineTransitions: StateInvariant = {
   },
 };
 
-/** D = {}. Game reset returns to idle with cleared context. */
 export const gameMachineReset: StateInvariant = {
   id: 'GAME-INT-4',
   check: async (_page: Page) => {
@@ -1976,14 +1877,6 @@ export const gameMachineReset: StateInvariant = {
   },
 };
 
-/**
- * D = {}. Frequency-based matching: correct midiNote with mismatched cellId is accepted.
- *
- * On an isomorphic grid, the same pitch can appear at multiple grid coordinates.
- * Matching by midiNote (frequency) instead of cellId ensures a C4 played at any
- * grid position counts as correct. If matching regressed to cellId-based, this test
- * would fail because the cellId '99_99' doesn't exist in the group's cellIds.
- */
 export const gameFreqMatch: StateInvariant = {
   id: 'GAME-FREQ-1',
   check: async (_page: Page) => {
@@ -2006,13 +1899,6 @@ export const gameFreqMatch: StateInvariant = {
 };
 
 
-/**
- * D = {}. gameMachine: idle → FILE_DROPPED → loading
- *
- * The fundamental entry point of the game flow. When the user drops a MIDI file,
- * the machine must leave idle and enter loading immediately. If this transition
- * is broken, no game can ever start — every feature downstream depends on it.
- */
 export const gameSm1IdleToLoading: StateInvariant = {
   id: 'GAME-SM-1',
   description: 'idle → FILE_DROPPED → loading',
@@ -2031,14 +1917,6 @@ export const gameSm1IdleToLoading: StateInvariant = {
   },
 };
 
-/**
- * D = {}. gameMachine: loading → SONG_LOADED → playing (context initialised correctly)
- *
- * After successful MIDI parsing the machine transitions to playing and initialises
- * game context: currentGroupIndex resets to 0, startTimeMs is stamped with the
- * current wall clock so duration tracking is accurate from the first note. If
- * either value is wrong the scoring/progress system silently breaks.
- */
 export const gameSm2LoadingToPlaying: StateInvariant = {
   id: 'GAME-SM-2',
   description: 'loading → SONG_LOADED → playing (context initialised correctly)',
@@ -2068,14 +1946,6 @@ export const gameSm2LoadingToPlaying: StateInvariant = {
   },
 };
 
-/**
- * D = {}. gameMachine: loading → LOAD_FAILED → error (errorMessage stored in context)
- *
- * When MIDI parsing fails (corrupt file, unsupported format) the machine enters
- * an explicit `error` state and stores the error message in context. The error
- * message is surfaced to the user in the UI — if it isn't stored, the error
- * panel shows nothing and the user has no idea what went wrong.
- */
 export const gameSm3LoadingToError: StateInvariant = {
   id: 'GAME-SM-3',
   description: 'loading → LOAD_FAILED → error (errorMessage stored in context)',
@@ -2094,14 +1964,6 @@ export const gameSm3LoadingToError: StateInvariant = {
   },
 };
 
-/**
- * D = {}. gameMachine: error → GAME_RESET → idle (context fully cleared)
- *
- * From the error state the user can click reset to return to idle. This is the
- * primary recovery flow. The reset action must clear ALL context fields back to
- * their initial values — stale error messages or leftover noteGroups leaking into
- * the next game session would cause subtle UI or logic bugs.
- */
 export const gameSm4ErrorReset: StateInvariant = {
   id: 'GAME-SM-4',
   description: 'error → GAME_RESET → idle (context cleared)',
@@ -2124,13 +1986,6 @@ export const gameSm4ErrorReset: StateInvariant = {
   },
 };
 
-/**
- * D = {}. gameMachine: error → FILE_DROPPED → loading (retry without explicit reset)
- *
- * The user should be able to drop a new MIDI file directly from the error state —
- * a common UX pattern for "try again with a different file". This avoids requiring
- * an explicit reset before each retry and is critical for a low-friction experience.
- */
 export const gameSm5ErrorRetry: StateInvariant = {
   id: 'GAME-SM-5',
   description: 'error → FILE_DROPPED → loading (retry without explicit reset)',
@@ -2153,13 +2008,6 @@ export const gameSm5ErrorRetry: StateInvariant = {
   },
 };
 
-/**
- * D = {}. gameMachine: complete → FILE_DROPPED → loading (new game from complete state)
- *
- * After successfully completing a song, the user should be able to drop a new MIDI
- * file to start a new game without resetting first. This mirrors the error→loading
- * shortcut and ensures the complete state doesn't become a dead end.
- */
 export const gameSm6CompleteNewGame: StateInvariant = {
   id: 'GAME-SM-6',
   description: 'complete → FILE_DROPPED → loading (new game from complete state)',
@@ -2183,13 +2031,6 @@ export const gameSm6CompleteNewGame: StateInvariant = {
   },
 };
 
-/**
- * D = {}. gameMachine: complete → GAME_RESET → idle
- *
- * From the complete state the user can also reset explicitly to return to idle.
- * Both recovery paths (FILE_DROPPED and GAME_RESET) must work from complete — the
- * reset clears all timing and group context so the next game starts with a clean slate.
- */
 export const gameSm7CompleteReset: StateInvariant = {
   id: 'GAME-SM-7',
   description: 'complete → GAME_RESET → idle',
@@ -2216,14 +2057,6 @@ export const gameSm7CompleteReset: StateInvariant = {
   },
 };
 
-/**
- * D = {}. gameMachine: playing → FILE_DROPPED → loading (new song mid-game, context reset)
- *
- * Added in T3: the playing state now accepts FILE_DROPPED so the user can load a
- * new song without explicitly resetting first. The transition also fires the
- * resetGame action so no stale game state (noteGroups, startTimeMs, etc.) leaks
- * into the new load cycle.
- */
 export const gameSm8PlayingNewSong: StateInvariant = {
   id: 'GAME-SM-8',
   description: 'playing → FILE_DROPPED → loading (new song mid-game, context reset)',
@@ -2248,14 +2081,6 @@ export const gameSm8PlayingNewSong: StateInvariant = {
   },
 };
 
-/**
- * D = {}. gameMachine: playing → GAME_RESET → idle (pressedMidiNotes cleared)
- *
- * Resetting mid-game must clear `pressedMidiNotes` so partial chord state from the
- * abandoned game cannot influence the next session. This is tested with a note
- * already accumulated in a two-note chord to confirm the action clears non-empty
- * arrays correctly — the most critical form of the reset invariant.
- */
 export const gameSm9PlayingReset: StateInvariant = {
   id: 'GAME-SM-9',
   description: 'playing → GAME_RESET → idle (pressedMidiNotes cleared)',
@@ -2284,14 +2109,6 @@ export const gameSm9PlayingReset: StateInvariant = {
   },
 };
 
-/**
- * D = {}. gameMachine: playing → wrong NOTE_PRESSED → stays in playing (no-op)
- *
- * A wrong note (midiNote not in the current group's midiNotes) must be silently
- * ignored: the machine stays in `playing`, the group index does not advance, and
- * the wrong note is NOT accumulated in pressedMidiNotes. This is essential UX —
- * stray keystrokes or accidental MIDI input must never corrupt game state.
- */
 export const gameSm10WrongNoteNoop: StateInvariant = {
   id: 'GAME-SM-10',
   description: 'playing → wrong NOTE_PRESSED → stays in playing, no state change',
@@ -2319,15 +2136,6 @@ export const gameSm10WrongNoteNoop: StateInvariant = {
   },
 };
 
-/**
- * D = {}. gameMachine: TUNING_WARN_ACK sets tuningWarnAcknowledged flag in context
- *
- * When the user plays with a non-standard tuning the UI shows a warning overlay.
- * TUNING_WARN_ACK records that the user dismissed the warning so it is not shown
- * again for the rest of the session. If the flag is not written correctly, the
- * warning re-appears every time the user presses a note, breaking the UX.
- * The machine must stay in `playing` — this is a context mutation, not a transition.
- */
 export const gameSm11TuningWarnAck: StateInvariant = {
   id: 'GAME-SM-11',
   description: 'playing → TUNING_WARN_ACK → tuningWarnAcknowledged becomes true',
@@ -2354,15 +2162,6 @@ export const gameSm11TuningWarnAck: StateInvariant = {
   },
 };
 
-/**
- * D = {}. Frequency-based matching: wrong midiNote is rejected even if cellId looks valid.
- *
- * In the old coordinate-based system, a note at the "right" grid position but wrong
- * pitch would incorrectly pass. Frequency matching ensures only the correct pitch
- * advances the game — critical for isomorphic grids where layout geometry varies
- * with tuning. If matching regressed to cellId-based, this test would fail because
- * cellId '0_0' IS in the group's cellIds.
- */
 export const gameFreqReject: StateInvariant = {
   id: 'GAME-FREQ-2',
   check: async (_page: Page) => {
@@ -2386,14 +2185,6 @@ export const gameFreqReject: StateInvariant = {
   },
 };
 
-/**
- * D = {}. Chord completion: multi-note group requires ALL notes before advancing.
- *
- * A chord (e.g. C major triad = [60, 64, 67]) should only advance when every
- * constituent note has been pressed. This tests the core chord-completion gate:
- * pressing 2 of 3 notes stays in the same group, pressing all 3 advances.
- * Catches regressions to the old "press ANY one" behavior.
- */
 export const gameChordAll: StateInvariant = {
   id: 'GAME-CHORD-1',
   check: async (_page: Page) => {
@@ -2422,14 +2213,6 @@ export const gameChordAll: StateInvariant = {
   },
 };
 
-/**
- * D = {}. Single-note groups advance immediately (backward compatible).
- *
- * Groups with a single midiNote should advance on the first correct press,
- * preserving the behavior users expect for melodies. This ensures chord
- * completion logic doesn't add unnecessary delay to single-note passages.
- * Catches bugs where the accumulation logic breaks single-note fast-path.
- */
 export const gameChordSingle: StateInvariant = {
   id: 'GAME-CHORD-2',
   check: async (_page: Page) => {
@@ -2459,7 +2242,6 @@ export const gameChordSingle: StateInvariant = {
   },
 };
 
-/** D = {}. Search input placeholder contains ".mid" drop hint. */
 export const gameInstructionsText: StateInvariant = {
   id: 'GAME-UI-2',
   check: async (page: Page) => {
@@ -2471,7 +2253,6 @@ export const gameInstructionsText: StateInvariant = {
   },
 };
 
-/** D = {}. KeyboardVisualizer prototype has setGameState and setGameProgress methods. */
 export const gameProgressApi: StateInvariant = {
   id: 'GAME-UI-3',
   check: async (page: Page) => {
@@ -2487,14 +2268,6 @@ export const gameProgressApi: StateInvariant = {
   },
 };
 
-/**
- * D = {}. pressedMidiNotes clears on group advance.
- *
- * When a chord group is completed, pressedMidiNotes must reset to empty for
- * the next group. Without this reset, notes from a previous chord would
- * "leak" into the next group's accumulator, potentially auto-completing it.
- * Catches regressions where advanceGroup forgets to clear the accumulator.
- */
 export const gameChordClear: StateInvariant = {
   id: 'GAME-CHORD-3',
   check: async (_page: Page) => {
@@ -2523,14 +2296,6 @@ export const gameChordClear: StateInvariant = {
   },
 };
 
-/**
- * D = {}. Multi-cell highlighting: getCellIdsForMidiNotes returns multiple cells for one pitch.
- *
- * On an isomorphic grid, every MIDI note appears at multiple grid coordinates
- * (e.g. C4 at (0,0) and also at (12,-1)). Target highlighting must glow ALL
- * matching cells, not just one. This verifies the API exists and returns >1
- * cell when duplicate positions exist.
- */
 export const gameMultiCellHighlight: StateInvariant = {
   id: 'GAME-HIGHLIGHT-1',
   check: async (page: Page) => {
@@ -2561,13 +2326,6 @@ export const gameMultiCellHighlight: StateInvariant = {
   },
 };
 
-/**
- * D = {}. Tuning slider disables during game play.
- *
- * Changing tuning mid-game would invalidate all note-frequency relationships,
- * making previously-correct answers wrong. The slider must be disabled when
- * game state is 'playing' and re-enabled otherwise.
- */
 export const gameTuningLock: StateInvariant = {
   id: 'GAME-LOCK-1',
   check: async (page: Page) => {
@@ -2577,7 +2335,6 @@ export const gameTuningLock: StateInvariant = {
   },
 };
 
-/** D = {}. setCalibratedRange method exists on KeyboardVisualizer prototype. */
 export const gameCalibrationVisualApi: StateInvariant = {
   id: 'GAME-CAL-3',
   check: async (page: Page) => {
@@ -2589,7 +2346,6 @@ export const gameCalibrationVisualApi: StateInvariant = {
   },
 };
 
-/** D = {}. Uncalibrated cells render greyscale (R≈G≈B) — zero chroma, brightness reserved for MPE pressure. */
 export const gameCalibrationVisualDim: StateInvariant = {
   id: 'GAME-CAL-4',
   check: async (page: Page) => {
@@ -2636,14 +2392,6 @@ export const gameCalibrationVisualDim: StateInvariant = {
 };
 
 
-/**
- * D = {}. buildNoteGroups correctly groups simultaneous notes within CHORD_THRESHOLD_MS (20ms).
- *
- * Three note events: two at 0 ms and 10 ms (delta = 10 ms ≤ 20 ms → one chord group),
- * plus one at 500 ms (delta = 500 ms > 20 ms → separate group).
- * Verifies that the grouping boundary is correctly placed and startMs is preserved.
- * Catches off-by-one errors in the threshold comparison and off-order sorting.
- */
 export const gameEngBuildNoteGroups1: StateInvariant = {
   id: 'GAME-ENG-1',
   description: 'buildNoteGroups groups notes within 20 ms window into one chord group',
@@ -2678,15 +2426,6 @@ export const gameEngBuildNoteGroups1: StateInvariant = {
   },
 };
 
-/**
- * D = {}. buildNoteGroups deduplicates cellIds when two events map to the same grid cell.
- *
- * On an isomorphic grid, two NoteEvents with the same midiNote produce the same
- * cellId via midiToCellId(). When both fall within the 20 ms chord window, the
- * second must be silently discarded so the group contains only one copy of that
- * cell. Without deduplication, a song with repeated same-pitch rapid events
- * would produce duplicate target cellIds, breaking chord-completion counting.
- */
 export const gameEngBuildNoteGroups2: StateInvariant = {
   id: 'GAME-ENG-2',
   description: 'buildNoteGroups deduplicates cellIds within a single chord group',
@@ -2712,15 +2451,6 @@ export const gameEngBuildNoteGroups2: StateInvariant = {
   },
 };
 
-/**
- * D = {}. transposeSong shifts every midiNote by the given semitone offset.
- *
- * A two-group song (C4=60, E4=64) transposed by +2 semitones should yield
- * (D4=62, F#4=66). The cellIds must be recalculated from the transposed MIDI
- * values (not carried over from the originals), and startMs must be preserved
- * unchanged. Catches bugs where transposition updates midiNotes but forgets to
- * recompute cellIds, or where startMs is accidentally zeroed.
- */
 export const gameEngTransposeSong: StateInvariant = {
   id: 'GAME-ENG-3',
   description: 'transposeSong shifts all midiNotes by N semitones and recalculates cellIds',
@@ -2752,19 +2482,6 @@ export const gameEngTransposeSong: StateInvariant = {
   },
 };
 
-/**
- * D = {}. cropToRange keeps only cellIds present in the available range set.
- *
- * Three input groups:
- *   - C4-only group (cellId NOT in range) → removed entirely
- *   - D4-only group (cellId IN range) → kept intact
- *   - Mixed group with C4 + D4 (only D4 in range) → C4 removed, D4 kept
- *
- * Verifies that both whole-group removal and partial-note removal work correctly,
- * and that the output preserves midiNotes in sync with their cellIds.
- * Catches bugs where the filter removes whole groups but leaves partial ones
- * intact, or where midiNotes fall out of sync with cellIds after filtering.
- */
 export const gameEngCropToRange: StateInvariant = {
   id: 'GAME-ENG-4',
   description: 'cropToRange removes notes not in range and drops empty groups',
@@ -2799,16 +2516,6 @@ export const gameEngCropToRange: StateInvariant = {
   },
 };
 
-/**
- * D = {}. findOptimalTransposition returns the semitone offset maximising notes in range.
- *
- * A one-note song (C4 = MIDI 60) against a range containing only D4 (MIDI 62).
- * The search space is [-24, +24]. At semitones = +2, MIDI 60 → 62 lands in range
- * (count = 1). At semitones = 0, MIDI 60 is not in range (count = 0).
- * The function must return +2 as the global optimum.
- * Also verifies tie-breaking: among equal-count transpositions, the one closest
- * to 0 is preferred (not tested here — but a known property guarded elsewhere).
- */
 export const gameEngFindOptimalTransposition: StateInvariant = {
   id: 'GAME-ENG-5',
   description: 'findOptimalTransposition returns the semitone offset that maximises in-range notes',
@@ -2827,16 +2534,6 @@ export const gameEngFindOptimalTransposition: StateInvariant = {
   },
 };
 
-/**
- * D = {}. computeMedianMidiNote returns the median pitch of the input, defaulting to 62 (D) for empty.
- *
- * Empty input → 62: the D-reference default ensures a sensible auto-center
- * when no song has been loaded yet.
- * Odd-count input [60, 62, 64] → sorted median at index 1 = 62.
- * Even-count input [60, 64] → floor(2/2) = index 1 → 64.
- * Catches regressions where the default changes from D or the sort order is
- * broken (e.g. lexicographic instead of numeric).
- */
 export const gameEngComputeMedianMidiNote: StateInvariant = {
   id: 'GAME-ENG-6',
   description: 'computeMedianMidiNote returns median pitch or 62 for empty input',
@@ -2861,14 +2558,6 @@ export const gameEngComputeMedianMidiNote: StateInvariant = {
   },
 };
 
-/**
- * D = {}. buildNoteGroups returns an empty array when given an empty events array.
- *
- * The empty-input case is a boundary condition that must not throw or return
- * null/undefined. Game loading logic calls buildNoteGroups on the full parsed
- * MIDI event list; if the MIDI file is silent (no note events), the result must
- * be a valid empty array so downstream code (noteGroups.length, etc.) is safe.
- */
 export const gameEngBuildNoteGroupsEmpty: StateInvariant = {
   id: 'GAME-ENG-7',
   description: 'buildNoteGroups returns empty array for empty NoteEvent input',
@@ -2887,15 +2576,6 @@ export const gameEngBuildNoteGroupsEmpty: StateInvariant = {
 };
 
 
-/**
- * D = {}. Type 1 (multi-track) MIDI is merged into a single NoteEvent stream.
- *
- * MIDI Type 1 stores each instrument on its own track. The parser must merge
- * all tracks' note events into one time-ordered array. If track merging is
- * broken, only track-0 events would appear — or the result might be empty.
- * The `type1-two-tracks.mid` fixture contains two non-drum tracks, so a
- * correct parse must yield more than zero events, all with valid structure.
- */
 export const gameMidi1: StateInvariant = {
   id: 'GAME-MIDI-1',
   description: 'Type 1 multi-track MIDI parsed into merged NoteEvent array',
@@ -2921,18 +2601,6 @@ export const gameMidi1: StateInvariant = {
   },
 };
 
-/**
- * D = {}. Running status: consecutive channel-voice events that share a status
- * byte are decoded correctly when the status byte is omitted.
- *
- * The MIDI running-status rule lets a transmitter omit the status byte for
- * consecutive events on the same channel. If the parser fails to carry
- * `runningStatus` across boundaries, the second and subsequent events in a run
- * would be mis-parsed — reading data bytes as status bytes, producing wrong
- * pitches or crashing. The `running-status.mid` fixture encodes NoteOn events
- * with running status; a correct parse must yield at least one valid note event
- * with all structural fields populated.
- */
 export const gameMidi2: StateInvariant = {
   id: 'GAME-MIDI-2',
   description: 'Running status: consecutive NoteOn events without repeated status byte are decoded',
@@ -2970,18 +2638,6 @@ export const gameMidi2: StateInvariant = {
   },
 };
 
-/**
- * D = {}. NoteOn with velocity=0 is treated as NoteOff per the MIDI spec.
- *
- * The MIDI 1.0 specification (section 2.2) states that a NoteOn message with
- * velocity=0 is equivalent to NoteOff. This allows devices that only emit
- * NoteOn messages to express note release using running status. The parser
- * must:
- *   1. Treat vel=0 as a note-close signal (adds the pending note to output).
- *   2. Not add a separate zero-velocity event to the result.
- * Test: NoteOn note60 vel=64, then NoteOn note60 vel=0 (running status).
- * Expected: exactly 1 NoteEvent with velocity=64, no zero-velocity events.
- */
 export const gameMidi3: StateInvariant = {
   id: 'GAME-MIDI-3',
   description: 'Velocity-0 NoteOn treated as NoteOff: closes pending note, not emitted as note-on',
@@ -3016,15 +2672,6 @@ export const gameMidi3: StateInvariant = {
   },
 };
 
-/**
- * D = {}. Channel 9 (General MIDI drums) events are filtered from parser output.
- *
- * Channel 9 (0-indexed) is the percussion channel in General MIDI. GridInstruments
- * plays pitched notes only — drum hits have no meaningful pitch and must be
- * excluded. A lone NoteOn on channel 9 with no explicit NoteOff is auto-closed
- * by the parser's end-of-track pending-note cleanup, producing one TickNote
- * with channel=9. parseMidi must filter it out, yielding an empty result.
- */
 export const gameMidi4: StateInvariant = {
   id: 'GAME-MIDI-4',
   description: 'Channel 9 (drums) is filtered: single open drum note yields empty array',
@@ -3050,16 +2697,6 @@ export const gameMidi4: StateInvariant = {
   },
 };
 
-/**
- * D = {}. A structurally valid MIDI file with no note events returns an empty array.
- *
- * A file can have a correct MThd/MTrk header and valid ppq but contain only
- * metadata (tempo, time signature) or just the mandatory End-of-Track meta
- * event. parseMidi must handle this cleanly, returning [] rather than null,
- * undefined, or throwing. This boundary arises when loading a MIDI template or
- * a file whose notes were stripped — downstream code (noteGroups.length, etc.)
- * must not crash.
- */
 export const gameMidi5: StateInvariant = {
   id: 'GAME-MIDI-5',
   description: 'Valid MIDI with no notes returns empty array without throwing',
@@ -3088,15 +2725,6 @@ export const gameMidi5: StateInvariant = {
   },
 };
 
-/**
- * D = {}. A buffer with invalid magic bytes throws with a descriptive error.
- *
- * Browsers receive arbitrary bytes when users drag and drop files. The parser
- * must reject non-MIDI data early and clearly rather than silently producing
- * garbage or crashing with an unrelated RangeError. The thrown error must
- * mention 'MThd' so callers can surface a meaningful diagnostic to the user
- * (e.g. "Not a MIDI file — check your upload").
- */
 export const gameMidi6: StateInvariant = {
   id: 'GAME-MIDI-6',
   description: 'Corrupt buffer (bad magic bytes) throws with descriptive MThd error',
@@ -3120,16 +2748,6 @@ export const gameMidi6: StateInvariant = {
   },
 };
 
-/**
- * D = {}. A MIDI file containing only drum-channel events returns an empty array.
- *
- * A percussion-only MIDI (all events on channel 9) is structurally valid but
- * produces no pitched output. Multiple complete drum patterns — kick (note36)
- * and snare (note38), each with explicit NoteOff via running status vel=0 —
- * must all be filtered out by parseMidi. This guards against a user dropping a
- * drum loop and receiving a broken/empty game state rather than a clear signal
- * (count=0) they can handle gracefully.
- */
 export const gameMidi7: StateInvariant = {
   id: 'GAME-MIDI-7',
   description: 'MIDI with only drum channel (ch9) events returns empty array after filtering',
@@ -3163,16 +2781,6 @@ export const gameMidi7: StateInvariant = {
 };
 
 
-/**
- * D = {}. gameMachine accepts NOTE_PRESSED with midiNote field and advances group on match.
- *
- * The game machine uses frequency-based (midiNote) matching exclusively —
- * the `cellId` field in the event is carried for UI highlighting only.
- * This test sends a NOTE_PRESSED event with the correct midiNote to a
- * two-group playing machine and verifies currentGroupIndex advances from
- * 0 to 1. If the machine ignored the midiNote field, or if the event shape
- * were wrong, the group would never advance and the game could never progress.
- */
 export const gameInput1: StateInvariant = {
   id: 'GAME-INPUT-1',
   description: 'NOTE_PRESSED with correct midiNote field advances currentGroupIndex',
@@ -3202,15 +2810,6 @@ export const gameInput1: StateInvariant = {
   },
 };
 
-/**
- * D = {}. gameMachine rejects NOTE_PRESSED with midiNote not in current group.
- *
- * The guard `isCorrectNote` checks whether `event.midiNote` is in the current
- * group's `midiNotes` array. A midiNote absent from that list must be a no-op:
- * state remains `playing`, currentGroupIndex unchanged, and the wrong note is
- * NOT accumulated in pressedMidiNotes. This protects against stray keystrokes
- * or wrong MIDI input corrupting game progress.
- */
 export const gameInput2: StateInvariant = {
   id: 'GAME-INPUT-2',
   description: 'NOTE_PRESSED with wrong midiNote is rejected: state, index, and accumulator unchanged',
@@ -3235,16 +2834,6 @@ export const gameInput2: StateInvariant = {
   },
 };
 
-/**
- * D = {}. gameMachine matches NOTE_PRESSED by midiNote, not by cellId.
- *
- * The machine's `isCorrectNote` guard reads `event.midiNote` and checks it
- * against `context.noteGroups[currentGroupIndex].midiNotes`. The `cellId`
- * field on the event is used only for UI highlighting — it plays no role in
- * correctness checking. Sending a NOTE_PRESSED with the matching midiNote (60)
- * but a cellId NOT in the group's cellIds ('99_99') must still advance the
- * group. This proves matching is purely frequency-based throughout the machine.
- */
 export const gameInput3: StateInvariant = {
   id: 'GAME-INPUT-3',
   description: 'NOTE_PRESSED matches by midiNote only — arbitrary cellId with correct midiNote advances group',
@@ -3272,17 +2861,6 @@ export const gameInput3: StateInvariant = {
 };
 
 
-/**
- * D = {}. gameMachine accepts any FILE_DROPPED regardless of file extension.
- *
- * File type validation (.mid / .midi extension check) happens in main.ts
- * BEFORE the machine receives the event. The machine itself is a pure state
- * machine that accepts FILE_DROPPED unconditionally from `idle`. This test
- * documents that contract: dropping a .txt file transitions the machine to
- * `loading` (where main.ts would then send LOAD_FAILED with a type error).
- * The machine correctly handles that subsequent LOAD_FAILED and stores the
- * error message in context for the UI to display.
- */
 export const gameEdge1: StateInvariant = {
   id: 'GAME-EDGE-1',
   description: 'Non-MIDI file: machine enters loading then error (file type validation is in main.ts, not machine)',
@@ -3304,15 +2882,6 @@ export const gameEdge1: StateInvariant = {
   },
 };
 
-/**
- * D = {}. Drum-only MIDI events produce zero NoteGroups; machine handles LOAD_FAILED gracefully.
- *
- * A MIDI file that contains only channel-9 (percussion) events has no pitched
- * notes and cannot form any NoteGroups. `buildNoteGroups` must return an empty
- * array for this input — verified at the game-engine layer here. Main.ts then
- * detects the empty noteGroups array and sends LOAD_FAILED with "No playable
- * notes". The machine must enter the error state and store that message.
- */
 export const gameEdge2: StateInvariant = {
   id: 'GAME-EDGE-2',
   description: 'Drum-only events → buildNoteGroups returns empty; machine enters error on LOAD_FAILED',
@@ -3341,16 +2910,6 @@ export const gameEdge2: StateInvariant = {
   },
 };
 
-/**
- * D = {}. Pressing the same correct note twice in a chord accumulates it only once.
- *
- * The `accumulateNote` action guards against duplicate entries using
- * `pressedMidiNotes.includes(event.midiNote)`. For a two-note chord [60, 64],
- * pressing 60 twice must leave `pressedMidiNotes` with exactly one entry (60),
- * and the chord must NOT advance because 64 has never been pressed.
- * Without this dedup, rapid or bouncing key events could falsely satisfy chord
- * completion — making the game unplayable for fast typists or bouncy MIDI controllers.
- */
 export const gameEdge3: StateInvariant = {
   id: 'GAME-EDGE-3',
   description: 'Pressing same correct note twice: deduped to 1 entry, two-note chord does not advance',
@@ -3376,15 +2935,6 @@ export const gameEdge3: StateInvariant = {
   },
 };
 
-/**
- * D = {}. cropToRange with an empty range Set removes all groups; LOAD_FAILED handled correctly.
- *
- * When `cropToRange` is called with an empty available-range Set (no calibrated
- * cells), every group is stripped and the result is an empty array. This models
- * the case where calibration data is absent or corrupted. Main.ts detects the
- * empty post-crop array and sends LOAD_FAILED. The machine must enter the error
- * state and store the error message for the user to see.
- */
 export const gameEdge4: StateInvariant = {
   id: 'GAME-EDGE-4',
   description: 'cropToRange with empty Set removes all groups; machine enters error on LOAD_FAILED',
@@ -3413,16 +2963,6 @@ export const gameEdge4: StateInvariant = {
   },
 };
 
-/**
- * D = {}. A single-note group advances immediately on the correct press — no accumulation phase.
- *
- * Chord accumulation only matters for multi-note groups. For a group with exactly
- * one note, `isChordComplete` is immediately true the moment that note is pressed:
- * withNew = {60}, [60].every(n => {60}.has(n)) → true. The group must advance
- * to the next in the same event, without any intermediate half-pressed state.
- * This is the simplest game interaction; if it breaks, no single-note melody
- * can ever be played through.
- */
 export const gameSearch1: StateInvariant = {
   id: 'GAME-SEARCH-1',
   description: '#midi-search-input exists in DOM inside #song-bar',
@@ -3466,14 +3006,6 @@ export const gameEdge5: StateInvariant = {
   },
 };
 
-/**
- * D = {}. searchAllAdapters returns an array (may be empty if offline), never throws.
- *
- * searchAllAdapters wraps all adapter calls in Promise.allSettled + .catch() so
- * individual adapter network failures (GitHub rate limit, DNS failure, etc.) are
- * silently folded into an empty array. The function contract is: always returns
- * MidiSearchResult[], never propagates an exception to the caller.
- */
 export const gameSearch2: StateInvariant = {
   id: 'GAME-SEARCH-2',
   description: 'searchAllAdapters returns array (may be empty if offline, never throws)',
@@ -3495,14 +3027,6 @@ export const gameSearch2: StateInvariant = {
   },
 };
 
-/**
- * D = {}. GitHubMidiAdapter search returns results with required fields.
- *
- * Every MidiSearchResult must expose title (display name), source (adapter id),
- * and fetchUrl (the URL loadMidiFromBuffer passes to fetch()). If any field is
- * missing or the wrong type, the click-to-load pipeline silently breaks.
- * Tests shape contract independent of network availability.
- */
 export const gameSearch3: StateInvariant = {
   id: 'GAME-SEARCH-3',
   description: 'GitHubMidiAdapter search returns results with required fields (title, source, fetchUrl)',
@@ -3524,14 +3048,6 @@ export const gameSearch3: StateInvariant = {
   },
 };
 
-/**
- * D = {}. Typing in #midi-search-input triggers the search pipeline.
- *
- * The search input has a 300ms debounce listener. After the debounce fires,
- * #midi-search-results must show a non-empty status string ("Searching…",
- * "No results", "Search failed", or actual results). An empty div after
- * typing means the input event listener is not wired.
- */
 export const gameSearch4: StateInvariant = {
   id: 'GAME-SEARCH-4',
   description: 'typing in #midi-search-input triggers search pipeline — results div shows status',
@@ -3547,14 +3063,6 @@ export const gameSearch4: StateInvariant = {
   },
 };
 
-/**
- * D = {}. All 3 MIDI search adapters implement the MidiSearchAdapter interface.
- *
- * loadMidiFromBuffer is a shared function called from both file-drop and
- * search-result-click. Its adapter.fetch() call depends on all adapters
- * exposing the same interface: search(query), fetch(result), id, name.
- * This verifies the DRY pipeline contract without requiring network access.
- */
 export const gameSearch5: StateInvariant = {
   id: 'GAME-SEARCH-5',
   description: 'all 3 MIDI search adapters implement MidiSearchAdapter interface for shared pipeline',
@@ -3578,13 +3086,6 @@ export const gameSearch5: StateInvariant = {
   },
 };
 
-/**
- * D = {}. Search input is type="text" inside #song-bar; results container present.
- *
- * Structural DOM contract for the MIDI search UI: the input must be a text field
- * (not a hidden input or other type), and the results container must exist as a
- * sibling so the search handler can populate it. Both must live inside #song-bar.
- */
 export const gameSearch6: StateInvariant = {
   id: 'GAME-SEARCH-6',
   description: '#midi-search-input is type=text and #midi-search-results exists inside #song-bar',
@@ -3598,16 +3099,6 @@ export const gameSearch6: StateInvariant = {
 };
 
 
-/**
- * GAME-QUANT-1: quantizeNotes with level='none' returns events unchanged.
- *
- * Musical scenario: A player selects "None (raw)" difficulty. Every note from
- * the original MIDI file should appear exactly as parsed — no snapping, no
- * merging, no splitting. This is the bypass/passthrough mode.
- *
- * Why it matters: If 'none' modified events, the "raw" difficulty would
- * silently alter songs, breaking the user's expectation of faithful playback.
- */
 export const gameQuant1: StateInvariant = {
   id: 'GAME-QUANT-1',
   description: 'quantizeNotes with level=none returns events unchanged (passthrough)',
@@ -3638,17 +3129,6 @@ export const gameQuant1: StateInvariant = {
   },
 };
 
-/**
- * GAME-QUANT-2: quantizeNotes with level='1/4' snaps events to quarter-note grid.
- *
- * Musical scenario: At 120 BPM, quarter notes fall at 0ms, 500ms, 1000ms, etc.
- * A note at 250ms (an eighth note position) should snap to either 0ms or 500ms.
- * A note at 600ms should snap to 500ms. This is the "Beginner" difficulty —
- * fast passages collapse into simple chord sequences on the beat.
- *
- * Why it matters: If snapping doesn't work, beginner mode would still present
- * the full rhythmic complexity, defeating the purpose of difficulty levels.
- */
 export const gameQuant2: StateInvariant = {
   id: 'GAME-QUANT-2',
   description: 'quantizeNotes with 1/4 snaps events to quarter-note grid at 120 BPM',
@@ -3675,17 +3155,6 @@ export const gameQuant2: StateInvariant = {
   },
 };
 
-/**
- * GAME-QUANT-3: Long notes spanning multiple grid points split into repeated events.
- *
- * Musical scenario: A whole note (2000ms at 120 BPM) at 1/8 quantization
- * (grid spacing = 250ms) should become multiple taps — one at each grid point
- * within the note's duration. This is the Piano Tiles convention: sustained
- * notes become repeated taps so the player maintains a constant rhythm.
- *
- * Why it matters: Without splitting, a whole note would be a single tap followed
- * by silence, breaking the "constant pace = original tempo" principle.
- */
 export const gameQuant3: StateInvariant = {
   id: 'GAME-QUANT-3',
   description: 'long note spanning multiple grid points splits into repeated events',
@@ -3712,17 +3181,6 @@ export const gameQuant3: StateInvariant = {
   },
 };
 
-/**
- * GAME-QUANT-4: Tempo change mid-song adjusts grid spacing.
- *
- * Musical scenario: A song starts at 120 BPM (quarter = 500ms) then switches
- * to 60 BPM (quarter = 1000ms) at tick 960. Notes after the tempo change should
- * snap to the wider grid. This tests that ritardando/accelerando in MIDI files
- * produce correct quantization — the grid follows the tempo map, not a fixed spacing.
- *
- * Why it matters: Many real MIDI files have tempo changes. If the grid ignores
- * them, notes in slow sections would be over-quantized and fast sections under-quantized.
- */
 export const gameQuant4: StateInvariant = {
   id: 'GAME-QUANT-4',
   description: 'tempo change mid-song adjusts grid spacing (faster tempo = tighter grid)',
@@ -3753,17 +3211,6 @@ export const gameQuant4: StateInvariant = {
   },
 };
 
-/**
- * GAME-QUANT-5: Time signature change (4/4 → 3/4) is handled without error.
- *
- * Musical scenario: A waltz section (3/4) follows a march section (4/4).
- * The quantization grid adapts because it's BPM-based, not bar-based —
- * time signatures affect how humans group beats but not the grid spacing.
- * This test verifies the function doesn't crash on time sig changes.
- *
- * Why it matters: Real MIDI files can have time signature changes. The
- * quantizer must handle them gracefully even though the grid is BPM-based.
- */
 export const gameQuant5: StateInvariant = {
   id: 'GAME-QUANT-5',
   description: 'time signature change (4/4 → 3/4) handled without error',
@@ -3791,16 +3238,6 @@ export const gameQuant5: StateInvariant = {
   },
 };
 
-/**
- * GAME-QUANT-6: Two notes snapping to same grid point + same midiNote are deduplicated.
- *
- * Musical scenario: Two C4 notes at 10ms and 20ms apart both snap to grid point 0ms
- * at 1/4 quantization. Without deduplication, the player would need to press C4 twice
- * at the exact same moment — impossible. Dedup keeps only one.
- *
- * Why it matters: Without dedup, quantization could create impossible double-hits
- * that frustrate players and make the game unplayable at coarse difficulty levels.
- */
 export const gameQuant6: StateInvariant = {
   id: 'GAME-QUANT-6',
   description: 'two notes at same grid point + same midiNote are deduplicated',
@@ -3820,16 +3257,6 @@ export const gameQuant6: StateInvariant = {
   },
 };
 
-/**
- * GAME-QUANT-7: parseMidi returns tempoMap and timeSigMap (not just events).
- *
- * Musical scenario: The quantization system depends on tempo and time signature
- * data extracted from the MIDI file. parseMidi must return all three: events,
- * tempoMap, and timeSigMap. This is the contract between parser and quantizer.
- *
- * Why it matters: If parseMidi only returned events (the old API), quantization
- * would have no tempo/time-sig data and couldn't build a correct beat grid.
- */
 export const gameQuant7: StateInvariant = {
   id: 'GAME-QUANT-7',
   description: 'parseMidi returns tempoMap and timeSigMap alongside events',
@@ -3856,17 +3283,6 @@ export const gameQuant7: StateInvariant = {
   },
 };
 
-/**
- * GAME-QUANT-8: Default time signature is 4/4 when no FF 58 event in MIDI file.
- *
- * Musical scenario: Many simple MIDI files omit the time signature meta event.
- * The parser should insert a default 4/4 time signature so the quantizer always
- * has valid time-sig data. Without this default, quantization would fail on
- * files that lack explicit time signatures.
- *
- * Why it matters: A missing default would cause quantizeNotes to receive an
- * empty timeSigMap, potentially producing incorrect grid spacing or crashing.
- */
 export const gameQuant8: StateInvariant = {
   id: 'GAME-QUANT-8',
   description: 'default time signature is 4/4 when no FF 58 event in MIDI file',
@@ -3900,17 +3316,6 @@ export const gameQuant8: StateInvariant = {
   },
 };
 
-/**
- * GAME-QUANT-9: Odd meter (7/8) produces correct number of grid points.
- *
- * Musical scenario: A piece in 7/8 time (like Tigran Hamasyan's music) should
- * still quantize correctly. The grid is BPM-based, not bar-based, so 7/8 doesn't
- * change the grid spacing — it only affects how humans group beats. This test
- * verifies that odd meters don't break the quantizer.
- *
- * Why it matters: If the quantizer assumed 4/4, odd-meter pieces would have
- * incorrect grid alignment, producing musically wrong results.
- */
 export const gameQuant9: StateInvariant = {
   id: 'GAME-QUANT-9',
   description: 'odd meter (7/8) does not break quantization — grid is BPM-based',
@@ -3975,13 +3380,6 @@ export const gameChordProgress1: StateInvariant = {
   },
 };
 
-/**
- * GAME-RESTART-1: GAME_RESTART event exists and transitions are correct.
- *
- * The restart button should allow users to replay the same song without
- * re-loading it. GAME_RESTART keeps noteGroups and songTitle, resets
- * currentGroupIndex to 0, and clears pressedMidiNotes.
- */
 export const gameRestart1: StateInvariant = {
   id: 'GAME-RESTART-1',
   description: 'GAME_RESTART event exists in playing and complete states',
@@ -4060,14 +3458,6 @@ export const songBarSm5: StateInvariant = {
   },
 };
 
-/**
- * D = {}. Mirror note highlighting: MIDI 62 appears at multiple isomorphic grid positions.
- *
- * The formula midiNote = 62 + coordX*7 + coordY*12 yields MIDI 62 for any (coordX, coordY)
- * satisfying 7*coordX + 12*coordY = 0, i.e. coordX = 12k, coordY = -7k. Within the default
- * grid range (iRange=20, jRange=12), three positions exist: (0,0), (12,-7), (-12,7).
- * getCellIdsForMidiNotes must return all of them.
- */
 export const mirrorHighlight1: StateInvariant = {
   id: 'MIRROR-HIGHLIGHT-1',
   description: 'getCellIdsForMidiNotes returns >1 cell ID for MIDI 62 (multiple isomorphic positions)',
@@ -4098,13 +3488,6 @@ export const mirrorHighlight1: StateInvariant = {
 };
 
 
-/**
- * D = {}. Canvas center-bottom should not have bright hint text.
- *
- * The "Drop a MIDI file to play" hint was rendered at rgba(255,255,255,0.15)
- * at (width/2, height*0.75). After removal, that pixel should be the keyboard
- * cell color (near-black background). Threshold 200 allows for colored cells.
- */
 export const CANVAS_CLEAN_1: StateInvariant = {
   id: 'CANVAS-CLEAN-1',
   description: 'Canvas has no hint text at center-bottom when idle (no "Drop a MIDI file" text)',
@@ -4126,12 +3509,6 @@ export const CANVAS_CLEAN_1: StateInvariant = {
   },
 };
 
-/**
- * D = {}. Canvas top strip should not have a white progress bar.
- *
- * The progress bar was a solid white fillRect at y=0..3. After removal,
- * the top pixel should be the black background (#000).
- */
 export const CANVAS_CLEAN_2: StateInvariant = {
   id: 'CANVAS-CLEAN-2',
   description: 'Canvas has no solid-white progress bar at top (no white bar at y=0..3)',
@@ -4151,12 +3528,6 @@ export const CANVAS_CLEAN_2: StateInvariant = {
   },
 };
 
-/**
- * D = {}. Canvas top-right corner should not have white timer text.
- *
- * The elapsed timer was rendered at top-right (width-10, 6) in white.
- * After removal, that pixel should be the black background.
- */
 export const CANVAS_CLEAN_3: StateInvariant = {
   id: 'CANVAS-CLEAN-3',
   description: 'Canvas has no elapsed timer text at top-right',
@@ -4176,11 +3547,6 @@ export const CANVAS_CLEAN_3: StateInvariant = {
   },
 };
 
-/**
- * D = {}. KeyboardVisualizer.setGameState method must still exist (API preserved).
- *
- * Removing canvas rendering must not remove the method — main.ts calls it.
- */
 export const CANVAS_CLEAN_4: StateInvariant = {
   id: 'CANVAS-CLEAN-4',
   description: 'KeyboardVisualizer.setGameState method still exists (API preserved)',
@@ -4193,11 +3559,6 @@ export const CANVAS_CLEAN_4: StateInvariant = {
   },
 };
 
-/**
- * D = {}. KeyboardVisualizer.setGameProgress method must still exist (API preserved).
- *
- * Removing canvas rendering must not remove the method — main.ts calls it.
- */
 export const CANVAS_CLEAN_5: StateInvariant = {
   id: 'CANVAS-CLEAN-5',
   description: 'KeyboardVisualizer.setGameProgress method still exists (API preserved)',
@@ -4628,7 +3989,6 @@ export const IDLE_FADE_2: StateInvariant = {
 };
 
 
-/** D = {}. Fullscreen button exists in top bar. */
 export const FULLSCREEN_BTN: StateInvariant = {
   id: 'UI-FULLSCREEN-1',
   description: '#fullscreen-btn exists in top bar',
@@ -4640,7 +4000,6 @@ export const FULLSCREEN_BTN: StateInvariant = {
   },
 };
 
-/** D = {}. Expression toggles exist in MIDI settings (replaces flat-sound-toggle). */
 export const FLAT_SOUND_TOGGLE: StateInvariant = {
   id: 'UI-FLAT-SOUND-1',
   description: 'Expression checkboxes exist (bend, velocity, pressure, timbre)',
@@ -4656,7 +4015,6 @@ export const FLAT_SOUND_TOGGLE: StateInvariant = {
 };
 
 
-/** D = {}. All slider info buttons exist (tuning, skew, shear, search, quantization, bend, velocity, pressure, timbre, volume, dref, calibrate). */
 export const ALL_INFO_BTNS: StateInvariant = {
   id: 'UI-INFO-COMPLETE-1',
   description: 'All 12 slider info buttons exist with data-info attributes',
@@ -4730,7 +4088,6 @@ export const VOW_NO_BORDER_RADIUS: StateInvariant = {
 };
 
 
-/** No duplicate element IDs anywhere in the DOM. Duplicate IDs cause silent wiring bugs. */
 export const NO_DUPLICATE_IDS: StateInvariant = {
   id: 'IDEAL-NO-DUP-IDS',
   description: 'Zero duplicate element IDs in DOM',
@@ -4751,7 +4108,6 @@ export const NO_DUPLICATE_IDS: StateInvariant = {
   },
 };
 
-/** No "D4" text visible in the UI (should be "D-ref" or just "D"). */
 export const NO_D4_IN_UI: StateInvariant = {
   id: 'IDEAL-NO-D4',
   description: 'No "D4" text visible in UI elements (use D-ref)',
@@ -4773,7 +4129,6 @@ export const NO_D4_IN_UI: StateInvariant = {
   },
 };
 
-/** MIDI settings section has proper grouping with subtitles. */
 export const MIDI_SETTINGS_GROUPED: StateInvariant = {
   id: 'IDEAL-MIDI-GROUPED',
   description: 'MIDI settings has EXPRESSION subtitle and logical grouping',
@@ -4796,7 +4151,6 @@ export const MIDI_SETTINGS_GROUPED: StateInvariant = {
   },
 };
 
-/** Only ONE flat-sound-toggle checkbox exists (prevents duplicate from agent conflicts). */
 export const SINGLE_FLAT_SOUND: StateInvariant = {
   id: 'IDEAL-SINGLE-FLAT',
   description: 'No duplicate expression checkboxes',

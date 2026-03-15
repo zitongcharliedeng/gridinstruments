@@ -11,17 +11,6 @@ The [MPE specification (MIDI Association, 2018)](https://www.midi.org/specificat
 `MPEVoice` is the runtime snapshot of a single sounding note — its assigned channel, normalized expression values, and lifecycle state. `MPEListener` is a callback type for UI subscribers that receive the full voice list on every state change.
 
 ``` {.typescript file=_generated/lib/mpe-service.ts}
-/**
- * MPE (MIDI Polyphonic Expression) Service — configurable MPE output with voice tracking.
- *
- * Standalone service wrapping the Web MIDI API with:
- * - Configurable MPE zone (lower or upper zone, flexible member channel count)
- * - Per-note pitch bend, pressure, and timbre (slide) with configurable CC/mode
- * - Voice state tracking with listener subscription for real-time UI updates
- * - FIFO channel allocator — oldest freed channel is reused first
- *
- * Reference: François Georgy's MPE Tester (https://studiocode.dev/mpe-monitor/)
- */
 export interface MPESettings {
   masterChannel: 1 | 16;
   memberChannelCount: number;
@@ -265,7 +254,6 @@ These three methods deliver the "3D" expression that distinguishes MPE from stan
 
 ``` {.typescript file=_generated/lib/mpe-service.ts}
 
-  /** Send All Notes Off on every member channel and reset channel pool. */
   panic(): void {
     if (this.output) {
       const channels = this.buildChannelPool();
@@ -294,7 +282,6 @@ The MIDI spec allows any voice-allocation strategy; this implementation uses a s
 
 ``` {.typescript file=_generated/lib/mpe-service.ts}
 
-  /** Build the full set of member channels based on current settings. */
   private buildChannelPool(): number[] {
     const channels: number[] = [];
     if (this.settings.masterChannel === 1) {
@@ -307,7 +294,6 @@ The MIDI spec allows any voice-allocation strategy; this implementation uses a s
     return channels;
   }
 
-  /** Reset channel allocation — panics first to avoid orphaned notes. */
   private resetChannelPool(): void {
     this.panic();
   }
@@ -340,7 +326,6 @@ The MPE spec leaves pressure routing open to the implementer. Channel Aftertouch
 
 ``` {.typescript file=_generated/lib/mpe-service.ts}
 
-  /** Send pressure using the configured mode (channel aftertouch, poly AT, or CC). */
   private sendPressureRaw(chIdx: number, midiNote: number, pressure: number): void {
     if (!this.output) return;
     const val = Math.round(pressure * 127);
@@ -368,7 +353,6 @@ Both RPNs are terminated with a null RPN (CC 101 = 127, CC 100 = 127) to prevent
 
 ``` {.typescript file=_generated/lib/mpe-service.ts}
 
-  /** Send MCM (MPE Configuration Message) + Pitch Bend Sensitivity. */
   private sendMCM(): void {
     if (!this.output) return;
 
@@ -397,7 +381,6 @@ Both RPNs are terminated with a null RPN (CC 101 = 127, CC 100 = 127) to prevent
     }
   }
 
-  /** Send RPN 0x00/0x00 (Pitch Bend Sensitivity) on a 0-indexed channel. */
   private sendPitchBendSensitivity(chIdx: number, semitones: number): void {
     if (!this.output) return;
     const status = 0xB0 | chIdx;

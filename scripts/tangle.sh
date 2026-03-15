@@ -29,6 +29,16 @@ except Exception as e:
   rm -f "$FILEDB"
 fi
 
+# Step 1.5: Block build if literate code blocks contain comments
+# Comments belong in prose BETWEEN blocks, not inside them.
+violations=$(grep -rn '^\s*\(//\|/\*\|\*/\)' literate/ --include='*.lit.md' | grep -v 'http://' | grep -v 'https://' | wc -l || true)
+if [ "$violations" -gt 0 ]; then
+  echo "[tangle] ERROR: $violations comment violations in literate code blocks."
+  echo "[tangle] Use prose between code blocks instead. Run:"
+  echo "  grep -rn '^\s*\(//\|/\*\|\*/\)' literate/ --include='*.lit.md' | grep -v http | head -20"
+  exit 1
+fi
+
 # Step 2: Tangle from .lit.md source (no-op if no .lit.md files exist)
 if ls literate/*.lit.md literate/**/*.lit.md &>/dev/null 2>&1; then
   echo "[tangle] Tangling from literate source..."

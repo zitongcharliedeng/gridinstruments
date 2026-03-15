@@ -3,19 +3,6 @@
 Unified state assertion registry for XState graph test generation — single lookup interface for DOM assertions, LLM invariants, and Playwright actions for any (machine, state) or (machine, event) pair.
 
 ``` {.typescript file=_generated/tests/machines/state-assertions.ts}
-/**
- * Unified state assertion registry for XState graph test generation.
- *
- * @reason The graph spec needs a single lookup interface to find the
- *   DOM assertion, LLM invariant, and Playwright action for any
- *   (machine, state) or (machine, event) pair. This module collects
- *   all per-machine maps from uiMachine.ts into a unified registry.
- *
- * @design-intent Decouple the graph traversal logic (xstate-graph.spec.ts)
- *   from the per-machine assertion details. The spec only needs to call
- *   `getAction(machineName, eventType)` and `assertState(machineName, stateName, page)`.
- */
-
 import type { Page } from '@playwright/test';
 
 import {
@@ -191,20 +178,12 @@ const registry: Partial<Record<string, MachineAssertionKit>> = {
   },
 };
 
-/**
- * Get the full assertion kit for a machine by name.
- * Throws if machine name is unknown.
- */
 export function getKit(machineName: string): MachineAssertionKit {
   const kit = registry[machineName];
   if (!kit) throw new Error(`Unknown machine: ${machineName}`);
   return kit;
 }
 
-/**
- * Get the Playwright action for a specific event on a machine.
- * Throws if machine or event is unknown.
- */
 export function getAction(
   machineName: string,
   eventType: string,
@@ -215,10 +194,6 @@ export function getAction(
   return action;
 }
 
-/**
- * Run the deterministic DOM assertion for a state on a machine.
- * Throws if machine or state is unknown.
- */
 export async function assertDomState(
   machineName: string,
   stateName: string,
@@ -230,10 +205,6 @@ export async function assertDomState(
   await assertion(page);
 }
 
-/**
- * Get the LLM vision invariant string for a state on a machine.
- * Returns undefined if not found (non-throwing for optional LLM layer).
- */
 export function getInvariant(
   machineName: string,
   stateName: string,
@@ -242,6 +213,5 @@ export function getInvariant(
   return kit?.invariants[stateName];
 }
 
-/** Re-export the machine list for the graph spec. */
 export { allMachines };
 ```

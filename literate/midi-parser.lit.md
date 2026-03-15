@@ -9,8 +9,6 @@ The [Standard MIDI File specification](https://www.midi.org/specifications/file-
 A `NoteEvent` is the primary output unit — one record per sounded note, with timing already converted to milliseconds.
 
 ``` {.typescript file=_generated/lib/midi-parser.ts}
-/** Inline MIDI file parser — no npm dependencies. Type 0 + Type 1, running status, drum filter. */
-
 export interface NoteEvent {
   midiNote: number;
   startMs: number;
@@ -29,22 +27,12 @@ The MIDI spec encodes tempo as microseconds per quarter note rather than BPM. Me
 Time signatures use a compact encoding: the denominator is stored as a power of two (`dd`), so `2` means `2^2 = 4` (quarter note), `3` means `2^3 = 8` (eighth note). Meta event `FF 58 04 nn dd cc bb` carries numerator, denominator power, MIDI clocks per click, and 32nd notes per quarter.
 
 ``` {.typescript file=_generated/lib/midi-parser.ts}
-/** Set Tempo meta event (FF 51): defines microseconds per quarter note at a tick position. */
 export interface TempoEvent {
   tickPosition: number;
   microsecondsPerQuarter: number;
   bpm: number;
 }
 
-/**
- * Time Signature meta event (FF 58): defines meter at a tick position.
- *
- * MIDI binary format: FF 58 04 nn dd cc bb
- *   nn = numerator (e.g. 4 for 4/4)
- *   dd = denominator as a power of 2 (e.g. 2 → 2^2 = 4, so 4/4; 3 → 2^3 = 8, so 7/8)
- *   cc = MIDI clocks per metronome click (typically 24)
- *   bb = 32nd notes per quarter note (typically 8)
- */
 export interface TimeSigEvent {
   tickPosition: number;
   numerator: number;
@@ -52,7 +40,6 @@ export interface TimeSigEvent {
   ticksPerQuarter: number;
 }
 
-/** Parsed output of a MIDI file: note events plus extracted tempo and time signature maps. */
 export interface ParsedMidi {
   events: NoteEvent[];
   tempoMap: TempoEvent[];
@@ -101,7 +88,6 @@ interface PendingNote {
 MIDI uses a variable-length quantity (VLQ) encoding for delta times and meta-event lengths. Each byte contributes 7 bits of value; the high bit is a continuation flag. Reading stops at the first byte where bit 7 is clear. A single byte encodes values 0–127; two bytes reach 16 383; four bytes reach the maximum of 268 435 455 ticks.
 
 ``` {.typescript file=_generated/lib/midi-parser.ts}
-/** Variable-length integer encoding used throughout MIDI binary format. */
 function readVarLen(view: DataView, offset: number): { value: number; bytesRead: number } {
   let value = 0;
   let bytesRead = 0;
@@ -123,7 +109,6 @@ Tick time is converted to wall-clock milliseconds by walking the sorted tempo ma
 `readUint24` reads a big-endian 24-bit integer — the wire format for tempo values. `closePending` finalises an open note by moving it from the pending map into the completed notes array.
 
 ``` {.typescript file=_generated/lib/midi-parser.ts}
-/** ms = sum(deltaTicks * tempoUs / ppq / 1000) across tempo segments. */
 function tickToMs(tick: number, tempoMap: ReadonlyArray<TempoEntry>, ppq: number): number {
   let ms = 0;
   let prevTick = 0;
@@ -320,11 +305,6 @@ The SMF header layout: bytes 0–3 are the tag `MThd`; bytes 4–7 are the 32-bi
 In Type 1 files only track 0 is authoritative for tempo and time signature data; subsequent tracks may duplicate these meta events for DAW compatibility but the parser ignores them.
 
 ``` {.typescript file=_generated/lib/midi-parser.ts}
-/**
- * Parse a Standard MIDI File (Type 0 or Type 1) from an ArrayBuffer.
- * Returns ParsedMidi with events sorted by startMs, plus tempo and time signature maps.
- * Channel 9 (drums) is filtered from events.
- */
 export function parseMidi(buffer: ArrayBuffer): ParsedMidi {
   const view = new DataView(buffer);
 

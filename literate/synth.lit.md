@@ -19,19 +19,6 @@ oscillator, timbre filter, gain envelope, grid coordinates (for live re-tuning),
 and a per-voice vibrato gain node.
 
 ``` {.typescript file=_generated/lib/synth.ts}
-/**
- * Low-latency Web Audio API Synthesizer
- * 
- * Polyphonic oscillator-based synth with envelope, EQ, and dynamic tuning
- * Based on original WickiSynth by Piers Titus van der Torren
- * 
- * Key features:
- * - Live tuning changes (setGenerator updates all playing notes)
- * - Volume control with smooth transitions
- * - EQ filter for tone shaping (treble/bass boost)
- * - Multiple waveforms
- */
-
 export type WaveformType = 'sine' | 'square' | 'sawtooth' | 'triangle';
 
 interface Voice {
@@ -68,11 +55,6 @@ systems:
 | `tet7` | 685.71 | [7-TET](https://en.xen.wiki/w/7edo) | Thai, Mandinka balafon |
 
 ``` {.typescript file=_generated/lib/synth.ts}
-/**
- * Reference tuning markers for the continuous slider
- * These are just labels - the slider is continuous from ~650 to ~750+ cents
- * Users can set ANY value, these are just common reference points
- */
 export const TUNING_MARKERS: { id: string; name: string; fifth: number; description: string }[] = [
   { id: 'tet5', name: '5', fifth: 720, description: '5-TET · Indonesian slendro' },
   { id: 'tet17', name: '17', fifth: 705.88, description: '17-TET · 17 equal divisions' },
@@ -99,10 +81,6 @@ export const FIFTH_MIN = 683;
 export const FIFTH_MAX = 722;
 export const FIFTH_DEFAULT = 700;
 
-/**
- * Find the nearest tuning marker to a given fifth value
- * Returns the marker and how far away it is in cents
- */
 export function findNearestMarker(fifthCents: number): { marker: typeof TUNING_MARKERS[0]; distance: number } {
   let nearest = TUNING_MARKERS[0];
   let minDistance = Math.abs(fifthCents - nearest.fifth);
@@ -191,8 +169,6 @@ mobile browsers require a user interaction before creating an AudioContext
     this.eqFilter.connect(this.context.destination);
   }
 
-  /** Call synchronously from any user gesture handler to unlock the AudioContext.
-   *  Creates the context if needed, then calls resume() synchronously (iOS-safe). */
   tryUnlock(): void {
     this.initSync();
     if (this.context?.state === 'suspended') {
@@ -242,10 +218,6 @@ active voice instantly by recalculating frequencies from stored grid
 coordinates.
 
 ``` {.typescript file=_generated/lib/synth.ts}
-  /**
-   * Set the tuning generator [fifth, octave] in cents
-   * This updates ALL currently playing notes in real-time!
-   */
   setGenerator(generator: [number, number]): void {
     this.generator = generator;
     
@@ -270,9 +242,6 @@ coordinates.
 named preset from the `TUNING_MARKERS` table above.
 
 ``` {.typescript file=_generated/lib/synth.ts}
-  /**
-   * Set just the fifth size (keeping octave at 1200)
-   */
   setFifth(cents: number): void {
     this.setGenerator([cents, 1200]);
   }
@@ -281,9 +250,6 @@ named preset from the `TUNING_MARKERS` table above.
     return this.generator[0];
   }
   
-  /**
-   * Jump to a tuning marker (convenience method)
-   */
   setTuningMarker(markerId: string): void {
     const marker = TUNING_MARKERS.find(m => m.id === markerId);
     if (marker) {
@@ -305,13 +271,6 @@ the entire instrument. Every sounding voice updates immediately, just like
 `setGenerator`.
 
 ``` {.typescript file=_generated/lib/synth.ts}
-  /**
-   * Set D reference frequency (default 293.66Hz — standard D at A440).
-   * This updates baseFreq and all playing notes.
-   *
-   * D-ref is the center note of the DCompose layout (coordinate [0,0]).
-   * Not locked to any specific octave — adjustable across the full range.
-   */
   setD4Hz(hz: number): void {
     this._d4Hz = Math.max(100, Math.min(2000, hz));
     this.baseFreq = this._d4Hz;
@@ -326,9 +285,6 @@ the entire instrument. Every sounding voice updates immediately, just like
     return this._d4Hz;
   }
   
-  /**
-   * Sets baseFreq to the current D-ref frequency — all note frequencies derive from this.
-   */
   private recalculateBaseFreq(): void {
     this.baseFreq = this._d4Hz;
   }
@@ -367,9 +323,6 @@ filter at 3 kHz provides a simple tone control. The UI maps `-1..+1` to
 `-12 dB..+12 dB`, giving a bass-boost to treble-boost sweep.
 
 ``` {.typescript file=_generated/lib/synth.ts}
-  /**
-   * Set EQ value: -1 = bass boost, 0 = flat, +1 = treble boost
-   */
   setEQ(value: number): void {
     this._eqValue = Math.max(-1, Math.min(1, value));
     if (this.eqFilter && this.context) {
@@ -428,9 +381,6 @@ corresponds to a frequency deviation of `f * (2^(d/1200) - 1)`, which for
 small `d` approximates to `f * d / 1200`.
 
 ``` {.typescript file=_generated/lib/synth.ts}
-  /**
-   * Initialize the shared vibrato LFO (called once on first use)
-   */
   private ensureVibratoLFO(): void {
     if (!this.context || this.vibratoLFO) return;
     
@@ -450,11 +400,6 @@ through a per-voice gain node. When disabled, gain is zeroed and the LFO is
 disconnected.
 
 ``` {.typescript file=_generated/lib/synth.ts}
-  /**
-   * Enable/disable vibrato (pitch modulation) on ALL currently-playing voices in real-time.
-   * When enabled: connects shared LFO → per-voice gain → oscillator.frequency for every voice.
-   * When disabled: zeros gain and disconnects LFO from every voice.
-   */
   setVibrato(enabled: boolean): void {
     if (!this.context) return;
     this._vibratoEnabled = enabled;
@@ -498,12 +443,6 @@ x-axis steps through the
 along y steps through octaves.
 
 ``` {.typescript file=_generated/lib/synth.ts}
-  /**
-   * Calculate frequency from isomorphic coordinates.
-   * ALL frequencies are relative to D-ref (baseFreq).
-   * - Formula: freq = D-ref * 2^(cents/1200)
-   * - Coordinate (0,0) = D-ref frequency exactly
-   */
   private getFrequency(x: number, y: number, octaveOffset = 0): number {
     const cents = y * this.generator[1] + x * this.generator[0] + octaveOffset * 1200;
     return this.baseFreq * Math.pow(2, cents / 1200);
@@ -532,13 +471,6 @@ If vibrato is active, the shared LFO is connected to this voice's frequency
 input through a per-voice gain node.
 
 ``` {.typescript file=_generated/lib/synth.ts}
-  /**
-   * Play a note
-   * @param noteId Unique identifier for this note instance
-   * @param x Circle of fifths position
-   * @param y Octave offset
-   * @param octaveOffset Global octave offset
-   */
   playNote(noteId: string, x: number, y: number, octaveOffset = 0, velocity = 1): void {
     if (!this.context || !this.masterGain || this.context.state !== 'running') return;
     if (this.voices.has(noteId)) return;
@@ -593,11 +525,6 @@ If sustain is active and `force` is false, the note is deferred to the
 `sustainedVoices` set instead of being released.
 
 ``` {.typescript file=_generated/lib/synth.ts}
-  /**
-   * Stop a note
-   * @param noteId The note to stop
-   * @param force Force stop even if sustained
-   */
   stopNote(noteId: string, force = false): void {
     if (!this.context) return;
     
@@ -633,11 +560,6 @@ oscillator frequency by a given number of semitones (can be fractional) using
 the standard equal-temperament formula `bentFreq = baseFreq * 2^(semitones/12)`.
 
 ``` {.typescript file=_generated/lib/synth.ts}
-  /**
-   * Apply pitch bend to a specific voice by detuning the oscillator.
-   * @param noteId The voice to bend
-   * @param semitones Pitch offset in semitones (can be fractional)
-   */
   setPitchBend(noteId: string, semitones: number): void {
     if (!this.context) return;
     const voice = this.voices.get(noteId);
@@ -656,11 +578,6 @@ exponential curve used in `playNote`, giving CC74 slide a consistent brightness
 range from 500 Hz to 18 000 Hz.
 
 ``` {.typescript file=_generated/lib/synth.ts}
-  /**
-   * Update timbre (lowpass filter cutoff) for a specific voice.
-   * Maps 0→1 to 500Hz→18000Hz via exponential curve.
-   * Called from MPE CC74 (slide) input.
-   */
   setTimbre(noteId: string, value: number): void {
     if (!this.context) return;
     const voice = this.voices.get(noteId);
@@ -679,11 +596,6 @@ matching the velocity response so that MPE pressure feels continuous with the
 initial strike velocity.
 
 ``` {.typescript file=_generated/lib/synth.ts}
-  /**
-   * Update gain for a specific voice from aftertouch/pressure.
-   * Uses sqrt curve so light pressure → noticeable volume.
-   * Called from MPE channel pressure input.
-   */
   setPressure(noteId: string, value: number): void {
     if (!this.context) return;
     const voice = this.voices.get(noteId);
@@ -701,9 +613,6 @@ Utility methods for panic (stop all voices), introspection (active note list,
 voice count), and teardown (close the AudioContext).
 
 ``` {.typescript file=_generated/lib/synth.ts}
-  /**
-   * Stop all notes
-   */
   stopAll(): void {
     for (const noteId of this.voices.keys()) {
       this.stopNote(noteId, true);
@@ -711,23 +620,14 @@ voice count), and teardown (close the AudioContext).
     this.sustainedVoices.clear();
   }
   
-  /**
-   * Get list of currently playing note IDs
-   */
   getActiveNotes(): string[] {
     return Array.from(this.voices.keys());
   }
   
-  /**
-   * Get count of active voices
-   */
   getVoiceCount(): number {
     return this.voices.size;
   }
   
-  /**
-   * Dispose of the synth
-   */
   dispose(): void {
     this.stopAll();
     if (this.context) {

@@ -3,15 +3,6 @@
 Parameterized slider reset machine factory — produces tuning, skew, volume, and zoom instances that each model the 2-state (default/modified) lifecycle with SET_VALUE and RESET events.
 
 ``` {.typescript file=_generated/tests/machines/sliderResetMachine.ts}
-/**
- * Parameterized slider reset machine factory.
- *
- * Produces 4 instances (tuning, skew, volume, zoom) that each model
- * the same 2-state (default / modified) lifecycle with SET_VALUE and RESET events.
- *
- * Uses the standard 4-export pattern: machine, playwrightActions, domAssertions, invariants.
- */
-
 import { setup } from 'xstate';
 import { type Page, expect } from '@playwright/test';
 import type { StateInvariant } from './types';
@@ -21,19 +12,12 @@ import {
 } from './invariant-checks';
 
 interface SliderResetConfig {
-  /** Machine name used in registry keys. */
   name: string;
-  /** DOM id of the <input type="range"> slider element. */
   sliderId: string;
-  /** DOM id of the thumb badge element showing the current value. */
   badgeId: string;
-  /** DOM id of the reset button. */
   resetBtnId: string;
-  /** The display string shown in the badge at default position. */
   defaultDisplay: string;
-  /** The value to set when firing SET_VALUE (must differ from default). */
   modifiedValue: string;
-  /** How to read the badge: 'inputValue' or 'textContent'. */
   badgeReadMode: 'inputValue' | 'textContent';
 }
 

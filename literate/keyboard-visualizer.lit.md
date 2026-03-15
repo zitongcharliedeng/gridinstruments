@@ -24,16 +24,6 @@ The visualizer depends on two sibling modules:
   [note-colors.lit.md](note-colors.lit.md) for the full color system.
 
 ``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
-/**
- * DCompose/Wicki-Hayden Keyboard Visualizer
- *
- * Renders an isomorphic grid as a tiling of parallelograms.
- * - Every pixel on the canvas maps to exactly one cell (Voronoi = parallelogram partition).
- * - No gaps, no overlaps — a continuous discrete space.
- * - CELL_INSET shrinks inactive cells to reveal black background as "mortar".
- * - skewFactor: 1.0 = full DCompose diagonal, 0.0 = MidiMech (octave axis leans right, pitch ↗).
- */
-
 import { getNoteNameFromCoord, get12TETName, getCentDeviation } from './keyboard-layouts';
 import { cellColors } from './note-colors';
 ```
@@ -62,18 +52,7 @@ export interface VisualizerOptions {
   scaleX: number;
   scaleY: number;
   buttonSpacing: number;
-  /**
-   * DCompose ↔ MidiMech skew factor.
-   * 1.0 = full DCompose diagonal skew
-   * 0.0 = MidiMech orthogonal rows (default)
-   */
   skewFactor: number;
-  /**
-   * Row-flattening shear toward Wicki-Hayden layout.
-   * 0.0 = no flattening (default, current DCompose/MidiMech behavior)
-   * 1.0 = rows fully horizontal (Wicki-Hayden: DCompose cells with flat rows)
-   * Shears genY0 toward genY1/2, making the wholetone direction horizontal.
-   */
   bFact: number;
 }
 ```
@@ -264,7 +243,6 @@ scale recomputes button positions and re-renders.
     this.render();
   }
 
-  /** Uniform zoom: sets both scaleX and scaleY to the same value. */
   setZoom(zoom: number): void {
     this.setScale(zoom, zoom);
   }
@@ -318,7 +296,6 @@ layout with DCompose cell shapes.
 
 ``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
 
-  /** Set the DCompose↔MidiMech skew factor. 0=MidiMech, 1=DCompose, values outside 0-1 allowed. */
   setSkewFactor(f: number): void {
     this.options.skewFactor = f;
     this.generateButtons();
@@ -353,10 +330,6 @@ scrolling display.
 
 ``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
 
-  /**
-   * Public grid geometry for external consumers (e.g. chord graffiti).
-   * Returns cell half-vectors (parallelogram shape) and canvas dimensions.
-   */
   getGridGeometry(): {
     cellHv1: { x: number; y: number };
     cellHv2: { x: number; y: number };
@@ -572,8 +545,6 @@ each fifth = 7 semitones, each octave = 12).
     this.activeNotes = new Set(noteIds);
   }
 
-  /** Returns all cell IDs ("coordX_coordY") whose MIDI note is in the given set.
-   *  Used to highlight all duplicate positions for the same pitch on the isomorphic grid. */
   getCellIdsForMidiNotes(midiNotes: ReadonlySet<number>): string[] {
     const result: string[] = [];
     for (const b of this.buttons) {
@@ -794,7 +765,6 @@ direction but flips to remain left-to-right readable.
 
 ``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
 
-  /** Draw a labeled axis line through center with arrowhead at the positive end. */
   private drawAxisLine(
     cx: number, cy: number,
     dx: number, dy: number,
@@ -1170,10 +1140,6 @@ grids.
 
 ``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
 
-  /**
-   * Find the button nearest to screen coordinates using the exact parallelogram
-   * Voronoi partition — O(N) nearest-neighbor, no dead zones.
-   */
   getButtonAtPoint(screenX: number, screenY: number): { coordX: number; coordY: number; noteId: string } | null {
     if (this.buttons.length === 0) return null;
 

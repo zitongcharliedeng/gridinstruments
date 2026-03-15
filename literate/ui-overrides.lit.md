@@ -3,7 +3,6 @@
 CSS overrides for third-party library styles (slim-select, OverlayScrollbars). Loaded after library CSS in main.ts. Matches the app's dark design language.
 
 ``` {.css file=_generated/ui-overrides.css}
-/* Loaded AFTER slim-select/styles and overlayscrollbars CSS in main.ts.
    Overrides library CSS variables so they match the app design language. */
 
 :root {
@@ -77,8 +76,6 @@ CSS overrides for third-party library styles (slim-select, OverlayScrollbars). L
   opacity: 0.5;
 }
 
-/* OverlayScrollbars theme */
-.os-scrollbar.gi-scrollbar {
   --os-size: 12px;
   --os-handle-bg: #888;
   --os-handle-bg-hover: #fff;

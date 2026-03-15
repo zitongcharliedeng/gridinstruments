@@ -3,19 +3,8 @@
 LLM vision assertion via Anthropic Claude API — sends screenshots for visual invariant verification with fail-open semantics.
 
 ``` {.typescript file=_generated/tests/fixtures/llm-vision.ts}
-/**
- * LLM vision assertion via Anthropic Claude API.
  *
- * @reason Every visual state transition should be verified by at least one
- *   LLM vision call. This module provides the raw API integration.
- *   Caching and env gating live in cost-control.ts and visual-assert.ts.
  *
- * @design-intent Separate raw API call from caching/gating concerns.
- *   This function is pure: screenshot in, structured result out.
- *   On API failure, it returns a pass (fail-open) so tests don't break
- *   when the API is unavailable.
- */
-
 import Anthropic from '@anthropic-ai/sdk';
 
 export interface VisionAssertionResult {
@@ -42,17 +31,8 @@ Rules:
 Respond with ONLY valid JSON (no markdown, no explanation outside JSON):
 {"pass": boolean, "confidence": "high"|"medium"|"low", "reason": "one sentence explanation"}`;
 
-/**
- * Send a screenshot to Claude for visual invariant verification.
- *
- * @param screenshot - PNG buffer from `page.screenshot({ type: 'png' })`
- * @param invariant - Human-readable description of what should be true
- * @param context - Optional state/event context for the LLM
- * @returns Structured pass/fail result. On API error, returns pass=true (fail-open).
- */
 export async function assertWithVision(
   screenshot: Buffer,
-  invariant: string,
   context?: string,
 ): Promise<VisionAssertionResult> {
   const userText = context

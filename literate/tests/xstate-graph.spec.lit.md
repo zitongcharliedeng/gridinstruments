@@ -3,37 +3,6 @@
 Model-based test suite — enumerates all (state, event) pairs from 10+ XState UI machines via adjacency map traversal, generating Playwright tests for each transition plus structural invariant checks.
 
 ``` {.typescript file=_generated/tests/xstate-graph.spec.ts}
-/**
- * XState Graph-Generated Test Suite
- *
- * @reason Every UI state transition in GridInstruments should be covered by
- *   at least one test. Hand-writing tests for every (state, event) pair is
- *   error-prone and leads to coverage gaps. Instead, we enumerate all pairs
- *   from 10 independent UI state machines using `getAdjacencyMap` from
- *   `xstate/graph`, and generate a Playwright test for each.
- *
- * @design-intent Model-based testing via XState graph traversal ensures
- *   complete coverage of all user-reachable UI states. Each generated test:
- *   1. Walks the shortest path from initial state to the source state
- *   2. Fires the event (Playwright action)
- *   3. Verifies the target state (DOM assertions)
- *   4. Optionally runs LLM vision verification (if LLM_VISION_ENABLED=true)
- *
- * Machines:
- *   overlay (2 states, 6 pairs) — overlay show/hide
- *   visualiser (3 states, 12 pairs) — panel resize
- *   pedals (3 states, 12 pairs) — panel resize
- *   waveform (4 states, 16 pairs) — waveform selection
- *   sustain (2 states, 8 pairs) — sustain hold
- *   vibrato (2 states, 8 pairs) — vibrato hold
- *   midiPanel (2 states, 2 pairs) — MIDI panel toggle (skipped: no DOM element)
- *   mpe (2 states, 2 pairs) — MPE toggle
- *   textInputFocus (2 states, 6 pairs) — text input focus/blur
- *   skewLabel (2 states, 4 pairs) — skew label annotation
- *
- * Total: 76 pairs, ~74 active tests (midiPanel skipped).
- */
-
 import { test, expect } from '@playwright/test';
 import { type AnyStateMachine } from 'xstate';
 import { getAdjacencyMap } from 'xstate/graph';
@@ -226,11 +195,9 @@ interface TransitionTest {
   sourceState: string;
   eventType: string;
   targetState: string;
-  /** Sequence of events to reach sourceState from initial state. */
   pathToSource: string[];
 }
 
-/** Structural type for adjacency map transition entries. */
 interface AdjTransition {
   state: { value: unknown } | null;
   event?: { type: string };
@@ -241,10 +208,6 @@ interface AdjNode {
   transitions: Record<string, AdjTransition>;
 }
 
-/**
- * Compute shortest paths from initial state to every other state.
- * Returns a map: stateName → event sequence to reach it.
- */
 function computeShortestPaths(machine: AnyStateMachine): Map<string, string[]> {
   const adj = getAdjacencyMap(machine, {
     serializeState: (state) => JSON.stringify(state.value),
@@ -284,9 +247,6 @@ function computeShortestPaths(machine: AnyStateMachine): Map<string, string[]> {
   return paths;
 }
 
-/**
- * Enumerate all (source, event, target) transitions from the adjacency map.
- */
 function enumerateTransitions(
   machineName: string,
   machine: AnyStateMachine,
@@ -1081,12 +1041,6 @@ for (const { name: machineName, machine } of allMachines) {
     });
 
     for (const t of transitions) {
-      /**
-       * @reason Graph-generated test for the ${t.machineName} machine.
-       *   Covers the transition: ${t.sourceState} → ${t.eventType} → ${t.targetState}.
-       * @design-intent Model-based test from XState adjacency map ensures
-       *   every user-reachable (state, event) pair is exercised.
-       */
       test(`${t.sourceState} → ${t.eventType} → ${t.targetState}`, async ({ page }) => {
         if (NEEDS_OVERLAY_OPEN.has(machineName)) {
           await page.locator('#grid-settings-btn').click();

@@ -74,7 +74,7 @@ The page is a vertical flex layout (`#app`) with these major sections:
       --icon-lg: 18px;
     }
 
-    /* ── Icon Design System ──────────────────────────────────── */
+
     .icon {
       display: inline-flex;
       align-items: center;
@@ -141,7 +141,7 @@ The page is a vertical flex layout (`#app`) with these major sections:
       overflow: hidden;
     }
 
-    /* ── Top bar ──────────────────────────────────────────────── */
+
     #top-bar {
       display: flex;
       justify-content: space-between;
@@ -197,7 +197,7 @@ The page is a vertical flex layout (`#app`) with these major sections:
     }
     #reset-layout:hover { color: var(--fg); border-color: var(--accent); }
 
-    /* ── Song bar ─────────────────────────────────────────────── */
+
     #song-bar {
       display: inline-flex;
       align-items: center;
@@ -225,12 +225,12 @@ The page is a vertical flex layout (`#app`) with these major sections:
       transition: opacity 2s ease-in;
     }
 
-    /* ── Graffiti inactivity fade ──────────────────────────── */
+
     .graffiti-overlay {
       transition: opacity 1.5s ease;
     }
 
-    /* ── Visualiser panel ────────────────────────────────────── */
+
     #visualiser-panel {
       flex-shrink: 0;
       overflow: visible;
@@ -291,7 +291,7 @@ The page is a vertical flex layout (`#app`) with these major sections:
       height: 100%;
     }
 
-    /* ── Grid area ───────────────────────────────────────────── */
+
     #grid-area {
       flex: 1;
       display: flex;
@@ -317,7 +317,7 @@ The page is a vertical flex layout (`#app`) with these major sections:
     }
 
 
-    /* ── Grid settings cog ───────────────────────────────────── */
+
      .grid-cog {
        position: absolute;
        top: 8px;
@@ -338,7 +338,7 @@ The page is a vertical flex layout (`#app`) with these major sections:
      .grid-cog:hover { color: var(--fg); border-color: var(--accent); }
       .grid-cog.active { color: var(--bg); background: var(--fg); border-color: var(--fg); }
 
-    /* ── Grid settings overlay ───────────────────────────────── */
+
     #grid-overlay {
       position: absolute;
       top: 0; left: 0; right: 0; bottom: 0;
@@ -445,7 +445,7 @@ The page is a vertical flex layout (`#app`) with these major sections:
       padding: 4px 0;
     }
 
-    /* ── Pedals panel ────────────────────────────────────────── */
+
     #pedals-panel {
       flex-shrink: 0;
       display: flex;
@@ -480,7 +480,7 @@ The page is a vertical flex layout (`#app`) with these major sections:
     }
     .pedal-btn.active { color: var(--bg); background: var(--fg); }
 
-    /* ── Controls (shared) ───────────────────────────────────── */
+
     .ctrl-group {
       display: flex;
       align-items: center;
@@ -519,7 +519,7 @@ The page is a vertical flex layout (`#app`) with these major sections:
 
     
 
-    /* Custom checkbox — cross-platform identical (#85) */
+
     .gi-checkbox { position: relative; display: inline-block; width: 14px; height: 14px; cursor: pointer; vertical-align: middle; }
     .gi-checkbox input { position: absolute; inset: 0; margin: 0; cursor: pointer; appearance: none; -webkit-appearance: none; background: transparent; border: none; z-index: 1; }
     .gi-checkbox .gi-check { display: block; width: 14px; height: 14px; border: 1px solid var(--border); background: var(--bg); pointer-events: none; }
@@ -644,7 +644,7 @@ The page is a vertical flex layout (`#app`) with these major sections:
      }
     .slider-reset:hover { color: var(--fg); border-color: var(--accent); }
 
-    /* ── Tuning slider area (ⓘ button + presets) ─────────────── */
+
     .tuning-slider-area .slider-track { width: 100%; }
     .tet-presets, .slider-presets {
       position: absolute;
@@ -707,7 +707,7 @@ The page is a vertical flex layout (`#app`) with these major sections:
     .slider-info-btn:hover { opacity: 1; color: var(--accent, #4af); }
     .tuning-slider-area .slider-track { margin-left: 18px; width: calc(100% - 18px); }
 
-    /* ── About dialog ────────────────────────────────────────── */
+
     .about-content h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent, #4af); margin: 24px 0 8px; border-bottom: 1px solid #222; padding-bottom: 4px; }
     .about-content h3 { font-size: 12px; color: #aaa; margin: 16px 0 4px; }
     .about-content p { font-size: 12px; line-height: 1.6; color: #ccc; margin: 8px 0; }
@@ -732,7 +732,7 @@ The page is a vertical flex layout (`#app`) with these major sections:
     }
     dialog::backdrop { background: rgba(0,0,0,0.7); }
     #info-dialog {
-      /* showModal() handles centering + backdrop — no position: fixed needed */
+
     }
     #about-dialog {
     }
@@ -742,7 +742,7 @@ The page is a vertical flex layout (`#app`) with these major sections:
      }
     dialog button:hover { color: var(--fg); }
 
-    /* ── Chord shape graffiti overlays ────────────────────────── */
+
     .graffiti-overlay {
       position: absolute;
       pointer-events: none;
@@ -758,10 +758,10 @@ The page is a vertical flex layout (`#app`) with these major sections:
       opacity: 0.9;
     }
 
-    /* ── Wave / layout selects inside slider-track ─────────── */
+
     .slider-track select { flex: 1; min-width: 0; }
 
-    /* ── Instructions ────────────────────────────────────────── */
+
     #instructions {
       font-size: 11px;
       color: var(--dim);
@@ -777,7 +777,7 @@ The page is a vertical flex layout (`#app`) with these major sections:
       font-size: 10px;
     }
 
-    /* ── Responsive: narrow / mobile screens ─────────────────── */
+
     @media (max-width: 768px) {
       #top-bar {
         padding: 2px 4px;

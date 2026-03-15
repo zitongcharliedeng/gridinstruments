@@ -672,7 +672,6 @@ export class DComposeApp {
     const dRefSlider = getElementOrNull('d-ref-slider', HTMLInputElement);
     const dRefLabel = getElementOrNull('d-ref-label', HTMLSpanElement);
 
-    /** Update slider label overlay — show D-ref frequency, no "D4" note name */
     const updateDRefLabel = (hz: number): void => {
       if (!dRefLabel) return;
       dRefLabel.textContent = `D REF (${hz.toFixed(1)} Hz)`;
@@ -700,7 +699,6 @@ export class DComposeApp {
       updateDRefLabel(hz);
     };
 
-    /** Apply a new Hz value from any source */
     const applyDRefHz = (hz: number): void => {
       this.synth.setD4Hz(hz);
       this.visualizer?.setD4Hz(hz);
@@ -1659,12 +1657,6 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
     this.render();
   }
 
-  /**
-   * Reset the idle timer — called on ANY note play (keyboard, pointer, MIDI).
-   * Immediately marks the app as active (not idle), suppresses hints,
-   * then starts a 10-second timer to return to idle.
-   * Does nothing during game 'playing' state (always forced non-idle).
-   */
   private resetIdleTimer(): void {
     const gameState = this.gameActor?.getSnapshot().value as string | undefined;
     if (gameState === 'playing') return;
@@ -1687,12 +1679,6 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
     }, 10000);
   }
 
-  /**
-   * Apply idle/active state to all UI elements:
-   * - Chord graffiti SVG overlay opacity (CSS transition handles animation)
-   * - NoteHistoryVisualizer "Play some notes" text
-   * - Song bar hint text
-   */
   private setIdleState(idle: boolean): void {
     this.isIdle = idle;
 
@@ -1724,10 +1710,6 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
     }
   }
 
-  /**
-   * Shared pipeline: ArrayBuffer → parseMidi → D-ref center → calibration
-   * range → buildNoteGroups → SONG_LOADED. Used by both file drop and search.
-   */
   private loadMidiFromBuffer(buffer: ArrayBuffer, songTitle: string): void {
     const actor = this.gameActor;
     if (!actor) return;
@@ -1848,7 +1830,6 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
      }, 10000);
    }
 
-  /** Reconstruct MPE noteIds from the activeNotes map. */
   private getMpeNoteIds(): string[] {
     const ids: string[] = [];
     for (const [key, { coordX, coordY }] of this.activeNotes) {
@@ -1863,7 +1844,6 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
     return ids;
   }
 
-  /** Start sinusoidal pitch bend vibrato on all active MPE notes (~5Hz, ±0.5 semitones). */
   private startMpeVibrato(): void {
     if (!this.mpe.isEnabled() || this.vibratoRAF !== null) return;
     this.vibratoPhase = 0;
@@ -1878,7 +1858,6 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
     this.vibratoRAF = requestAnimationFrame(tick);
   }
 
-  /** Stop MPE vibrato and reset pitch bend to zero for all active notes. */
   private stopMpeVibrato(): void {
     if (this.vibratoRAF !== null) {
       cancelAnimationFrame(this.vibratoRAF);
@@ -1890,7 +1869,6 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
     this.vibratoPhase = 0;
   }
 
-  /** Start arrow-key vibrato — oscillates pitch bend ±1 semitone at ~5Hz. */
   private startArrowVibrato(): void {
     if (this.arrowVibratoInterval !== null) return;
     this.arrowVibratoPhase = 0;
@@ -1906,7 +1884,6 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
     }, 16);
   }
 
-  /** Stop arrow-key vibrato and reset pitch bend. */
   private stopArrowVibrato(): void {
     if (this.arrowVibratoInterval !== null) {
       clearInterval(this.arrowVibratoInterval);
@@ -1995,7 +1972,6 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
     });
   }
 
-  /** Cached canvas rect — avoids layout thrashing on every pointer event. */
   private getCanvasRect(): DOMRect {
     this.cachedCanvasRect = this.canvas.getBoundingClientRect();
     return this.cachedCanvasRect;

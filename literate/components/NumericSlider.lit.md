@@ -3,32 +3,12 @@
 Reusable UI component wrapping an existing slider DOM structure. Handles value get/set, badge positioning, fill gradient (Firefox workaround), reset button, and editable vs non-editable badges. Does not create new DOM elements — all elements are passed in via constructor.
 
 ``` {.typescript file=_generated/components/NumericSlider.ts}
-/**
- * NumericSlider — Reusable UI component wrapping an existing slider DOM structure.
- *
- * Handles: value get/set, badge positioning, fill gradient (Firefox workaround),
- * reset button, editable vs non-editable badges.
- *
- * Does NOT create new DOM elements — all elements are passed in via constructor.
- * Does NOT import XState types — this is a pure UI layer component.
- */
-
-/** Config for a single slider component instance */
 export interface SliderComponentConfig {
-  /** Unique name — used for logging only */
   name: string;
-  /** Default value for reset */
   defaultValue: number;
-  /** Format raw number → badge display string */
   formatBadge: (value: number) => string;
-  /** Format raw number → label text (optional, for dynamic labels) */
   formatLabel?: (value: number) => string;
-  /** If true, badge is an <input> the user can type into */
   editable: boolean;
-  /**
-   * Parse user-typed string → number (null = invalid).
-   * Only used when editable=true. On null, badge reverts to current value.
-   */
   parseInput?: (raw: string) => number | null;
 }
 
@@ -41,7 +21,6 @@ export class NumericSlider {
   private readonly _badgeEditCbs: ((rawValue: string) => void)[] = [];
   private readonly _resetCbs: (() => void)[] = [];
 
-  /** [target, eventType, listener] tuples stored for disposal */
   private readonly _attached: [EventTarget, string, EventListener][] = [];
 
   constructor(
@@ -132,30 +111,18 @@ export class NumericSlider {
     }
   }
 
-  /** Register a callback fired on every range-input event */
   onInput(cb: (value: number) => void): void {
     this._inputCbs.push(cb);
   }
 
-  /**
-   * Register a callback fired when the user types into an editable badge.
-   * Only fires when config.editable=true.
-   */
   onBadgeEdit(cb: (rawValue: string) => void): void {
     this._badgeEditCbs.push(cb);
   }
 
-  /** Register a callback fired when the reset button is clicked */
   onReset(cb: () => void): void {
     this._resetCbs.push(cb);
   }
 
-  /**
-   * Recompute the fill gradient from the current slider value.
-   *
-   * Accounts for the 3px thumb width so the gradient edge tracks
-   * the thumb center precisely. Uses offsetWidth for pixel-exact alignment.
-   */
   updateFill(): void {
     const min = Number.isFinite(parseFloat(this.rangeInput.min)) ? parseFloat(this.rangeInput.min) : 0;
     const max = Number.isFinite(parseFloat(this.rangeInput.max)) ? parseFloat(this.rangeInput.max) : 100;
@@ -175,17 +142,6 @@ export class NumericSlider {
     }
   }
 
-  /**
-   * Reposition the badge over the current thumb position and update its text.
-   *
-   * Badge position is computed in px from the left edge of the track using
-   * rangeInput.offsetWidth so it aligns with the actual rendered thumb.
-   *
-   * NOTE: If the badge currently has focus (user is typing), this is a no-op
-   * to prevent clobbering in-progress input. Guard the call site with:
-   *   if (document.activeElement !== badge) slider.updateBadge();
-   * (The internal range-input listener already applies this guard.)
-   */
   updateBadge(): void {
     const value = parseFloat(this.rangeInput.value);
     const min = Number.isFinite(parseFloat(this.rangeInput.min)) ? parseFloat(this.rangeInput.min) : 0;
@@ -206,7 +162,6 @@ export class NumericSlider {
     }
   }
 
-  /** Remove all internal event listeners. Call when tearing down the component. */
   dispose(): void {
     for (const [target, type, listener] of this._attached) {
       target.removeEventListener(type, listener);
