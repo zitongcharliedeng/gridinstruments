@@ -4,74 +4,43 @@ Chord name detection from active MIDI notes using Tonal.js — converts grid coo
 
 ## Imports
 
-Tonal.js provides two namespaces used here: `Chord` for detection and `Note` for MIDI-to-name conversion and pitch sorting.
+Tonal.js provides `Chord` for detection and `Note` for pitch sorting. Note naming is delegated to `keyboard-layouts` — the single source of truth for D-relative naming.
 
 ``` {.typescript file=_generated/lib/chord-detector.ts}
 import { Chord, Note } from 'tonal';
+import { getNoteNameFromCoord, midiToDRefNoteName } from './keyboard-layouts';
 ```
 
 ## Coordinate to Note Name
 
-`coordToNoteName` maps an isomorphic grid coordinate `(x, y)` to a note name with octave (e.g. `"D4"`). The x-axis steps through the circle of fifths — D is the origin (index 3 in the base array), and each step is 7 semitones. Accidentals accumulate when `x` carries outside the 7-note base range. The octave is derived from the absolute MIDI number produced by the coordinate, anchored at D4 = MIDI 62.
+`coordToNoteName` maps an isomorphic grid coordinate `(x, y)` to a D-relative note name with numeric octave suffix (e.g. `"D"`, `"A1"`, `"C1"`). It delegates pitch-class naming to `getNoteNameFromCoord` and octave computation to `midiToDRefNoteName` — both from `keyboard-layouts.ts`, the single source of truth.
 
 ``` {.typescript file=_generated/lib/chord-detector.ts}
 export function coordToNoteName(x: number, y: number, octaveOffset = 0): string {
-  const noteNamesBase = ['F', 'C', 'G', 'D', 'A', 'E', 'B'];
-
-  const noteIndex = (((x + 3) % 7) + 7) % 7;
-  const accidentalCount = Math.floor((x + 3) / 7);
-
-  let noteName = noteNamesBase[noteIndex];
-
-  if (accidentalCount > 0) {
-    noteName += '#'.repeat(Math.min(accidentalCount, 2));
-  } else if (accidentalCount < 0) {
-    noteName += 'b'.repeat(Math.min(-accidentalCount, 2));
-  }
-
-  const baseMidi = 62; // D at default reference
-  const semitones = x * 7 + y * 12 + octaveOffset * 12;
-  const midi = baseMidi + semitones;
-  const octave = Math.floor(midi / 12) - 1;
-
-  return noteName + String(octave);
+  const midi = 62 + x * 7 + y * 12 + octaveOffset * 12;
+  return midiToDRefNoteName(midi);
 }
 ```
 
 ## MIDI Note Number to Note Name
 
-A thin wrapper around `Note.fromMidi` from Tonal.js, returning an empty string when the conversion yields nothing (Tonal returns `null` for out-of-range values).
+Delegates to `midiToDRefNoteName` from keyboard-layouts — the single source of truth for D-relative note names with numeric octave suffixes.
 
 ``` {.typescript file=_generated/lib/chord-detector.ts}
 export function midiToNoteName(midi: number): string {
-  const noteName = Note.fromMidi(midi);
-  return noteName || '';
+  return midiToDRefNoteName(midi);
 }
 ```
 
 ## Chord Detection
 
-`detectChord` takes an array of `[x, y, octaveOffset]` grid coordinates, converts each to a pitch-class name (ignoring octave), deduplicates, and passes the set to `Chord.detect`. The `assumePerfectFifth` option lets Tonal name power chords and incomplete triads. The trailing `M` major-chord suffix is stripped for cleaner display (e.g. `"DM"` → `"D"`).
+`detectChord` takes an array of `[x, y, octaveOffset]` grid coordinates, converts each to a pitch-class name via `getNoteNameFromCoord` (the single source of truth), deduplicates, and passes the set to `Chord.detect`. The `assumePerfectFifth` option lets Tonal name power chords and incomplete triads. The trailing `M` major-chord suffix is stripped for cleaner display (e.g. `"DM"` → `"D"`).
 
 ``` {.typescript file=_generated/lib/chord-detector.ts}
 export function detectChord(coords: [number, number, number][]): string[] {
   if (coords.length < 2) return [];
 
-  const noteNames = coords.map(([x, _y, _oct]) => {
-    const noteNamesBase = ['F', 'C', 'G', 'D', 'A', 'E', 'B'];
-    const noteIndex = (((x + 3) % 7) + 7) % 7; // D (x=0) → index 3
-    const accidentalCount = Math.floor((x + 3) / 7);
-
-    let noteName = noteNamesBase[noteIndex];
-
-    if (accidentalCount > 0) {
-      noteName += '#'.repeat(Math.min(accidentalCount, 2));
-    } else if (accidentalCount < 0) {
-      noteName += 'b'.repeat(Math.min(-accidentalCount, 2));
-    }
-
-    return noteName;
-  });
+  const noteNames = coords.map(([x, _y, _oct]) => getNoteNameFromCoord(x));
 
   const uniqueNotes = [...new Set(noteNames)];
 
