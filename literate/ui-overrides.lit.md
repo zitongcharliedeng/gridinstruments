@@ -76,6 +76,7 @@ CSS overrides for third-party library styles (slim-select, OverlayScrollbars). L
   opacity: 0.5;
 }
 
+.os-scrollbar.gi-scrollbar {
   --os-size: 12px;
   --os-handle-bg: #888;
   --os-handle-bg-hover: #fff;
