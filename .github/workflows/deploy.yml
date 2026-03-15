@@ -40,17 +40,17 @@ jobs:
       - name: Install Entangled
         run: pip install entangled-cli==2.4.2
 
+      - name: Install dependencies
+        run: npm ci
+
       - name: Tangle literate source
-        run: entangled tangle --force
+        run: bash scripts/tangle.sh
 
       - name: Verify tangle output
         run: |
           echo "Tangled files:"
-          ls -la _generated/lib/*.ts _generated/machines/*.ts _generated/*.ts 2>/dev/null | wc -l
+          ls _generated/lib/*.ts _generated/machines/*.ts _generated/*.ts 2>/dev/null | wc -l
           echo "files generated from literate/*.lit.md"
-
-      - name: Install dependencies
-        run: npm ci
 
       - name: Determine deploy target
         id: target
