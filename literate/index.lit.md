@@ -1371,10 +1371,8 @@ close out the INPUT section.
                  </div>
                  <div class="midi-panel-row" id="expr-pressure-row" style="gap:6px">
                    <button class="slider-info-btn icon-btn icon-lg" data-info="pressure" style="position:static;transform:none;"><i data-lucide="info"></i></button>
-                   <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;">
-                     <span class="gi-checkbox"><input type="checkbox" id="expr-pressure" checked><span class="gi-check"></span></span>
-                     <span style="color:#fff">Channel Pressure</span>
-                   </label>
+                   <span style="color:#fff;font-size:12px;">Pressure</span>
+                   <button id="pressure-mode" style="font-family:var(--font);font-size:10px;background:var(--bg);color:var(--fg);border:1px solid var(--border);padding:2px 6px;cursor:pointer;" value="channel">Channel</button>
                  </div>
                  <div class="midi-panel-row" id="expr-timbre-row" style="gap:6px">
                    <button class="slider-info-btn icon-btn icon-lg" data-info="timbre" style="position:static;transform:none;"><i data-lucide="info"></i></button>

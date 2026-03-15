@@ -107,6 +107,7 @@ The second group of private fields covers DOM references and UI state: canvas el
     exprBend: 'gi_expr_bend', exprVelocity: 'gi_expr_velocity', exprPressure: 'gi_expr_pressure', exprTimbre: 'gi_expr_timbre',
     timbreCcMode: 'gi_timbre_cc_mode',
     maxKeys: 'gi_max_keys',
+    pressureMode: 'gi_pressure_mode',
     dpi: 'gi_dpi',
   } as const;
 
@@ -939,14 +940,18 @@ button component.
         this.saveSetting('exprVelocity', exprVelCb.checked.toString());
       });
     }
-    const exprPressCb = getElementOrNull('expr-pressure', HTMLInputElement);
-    if (exprPressCb) {
-      exprPressCb.checked = this.expressionPressure;
-      exprPressCb.addEventListener('change', () => {
-        this.expressionPressure = exprPressCb.checked;
-        this.saveSetting('exprPressure', exprPressCb.checked.toString());
-      });
-    }
+    const PRESSURE_MODES = [
+      { value: 'channel', label: 'Channel' },
+      { value: 'poly', label: 'Poly AT' },
+      { value: 'mpe', label: 'MPE' },
+      { value: 'off', label: 'Off' },
+    ];
+    const savedPressureMode = this.loadSetting('pressureMode', 'channel');
+    this.expressionPressure = savedPressureMode !== 'off';
+    setupCyclingButton('pressure-mode', PRESSURE_MODES, savedPressureMode, (mode) => {
+      this.expressionPressure = mode !== 'off';
+      this.saveSetting('pressureMode', mode);
+    });
 
     const exprTimbreCb = getElementOrNull('expr-timbre', HTMLInputElement);
     if (exprTimbreCb) {
