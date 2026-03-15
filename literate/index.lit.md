@@ -1180,8 +1180,8 @@ revealed by state machine transitions.
       <span id="song-bar-hint" style="display:none;"></span>
       <div id="song-bar-calibrate" style="margin-left:auto;">
           <button class="slider-info-btn icon-btn icon-lg" data-info="calibrate" style="position:static;transform:none;"><i data-lucide="info"></i></button>
-          <label style="display:inline-flex;align-items:center;gap:3px;font-family:var(--font);font-size:9px;color:var(--dim);">
-            Max Keys <input type="number" id="max-keys-input" min="1" value="8" style="width:4ch;font-family:var(--font);font-size:9px;background:var(--bg);color:var(--fg);border:1px solid var(--border);padding:1px 2px;text-align:center;">
+          <label style="display:inline-flex;align-items:center;gap:2px;font-family:var(--font);font-size:9px;color:var(--dim);">
+            Keys<input type="number" id="max-keys-input" min="1" value="8" style="width:3ch;font-family:var(--font);font-size:9px;background:var(--bg);color:var(--fg);border:1px solid var(--border);padding:1px 2px;text-align:center;">
           </label>
           <button id="calibrate-btn" style="font-family:var(--font);font-size:9px;background:none;color:var(--dim);border:1px solid var(--border);padding:2px 8px;cursor:pointer;">Calibrate Area</button>
           <span id="calibration-banner" style="display:none;font-family:var(--font);font-size:9px;gap:2px;align-items:center;">
