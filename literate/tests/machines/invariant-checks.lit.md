@@ -482,9 +482,7 @@ export const appLoadedCheck: StateInvariant = {
 export const overlayGoldenCheck: StateInvariant = {
   id: 'GOLDEN-OVERLAY',
   check: async (page: Page) => {
-    await expect(page.locator('#grid-overlay')).toHaveScreenshot('grid-overlay.png', {
-      maxDiffPixelRatio: 0.05,
-    });
+    await expect(page.locator('#grid-overlay')).toHaveScreenshot('grid-overlay.png');
   },
 };
 
@@ -492,10 +490,7 @@ export const overlayGoldenCheck: StateInvariant = {
 export const fullPageGoldenCheck: StateInvariant = {
   id: 'GOLDEN-FULL-PAGE',
   check: async (page: Page) => {
-    await expect(page).toHaveScreenshot('full-page.png', {
-      fullPage: true,
-      maxDiffPixelRatio: 0.02,
-    });
+    await expect(page).toHaveScreenshot('full-page.png', { fullPage: true });
   },
 };
 
@@ -505,9 +500,7 @@ export const overlayGoldenCheck2: StateInvariant = {
   check: async (page: Page) => {
     await page.locator('#grid-settings-btn').click();
     await page.waitForTimeout(400);
-    await expect(page.locator('#grid-overlay')).toHaveScreenshot('overlay-open.png', {
-      maxDiffPixelRatio: 0.02,
-    });
+    await expect(page.locator('#grid-overlay')).toHaveScreenshot('overlay-open.png');
     await page.keyboard.press('Escape');
   },
 };
@@ -518,10 +511,7 @@ export const mobileGoldenCheck: StateInvariant = {
   check: async (page: Page) => {
     await page.setViewportSize({ width: 375, height: 812 });
     await page.waitForTimeout(300);
-    await expect(page).toHaveScreenshot('mobile-375.png', {
-      fullPage: true,
-      maxDiffPixelRatio: 0.03,
-    });
+    await expect(page).toHaveScreenshot('mobile-375.png', { fullPage: true });
     await page.setViewportSize({ width: 1280, height: 900 });
   },
 };
@@ -549,9 +539,7 @@ export const qwertyGoldenCheck: StateInvariant = {
     }
     await page.keyboard.press('Escape');
     await page.waitForTimeout(500);
-    await expect(page.locator('#keyboard-canvas')).toHaveScreenshot('qwerty-labels.png', {
-      maxDiffPixelRatio: 0.02,
-    });
+    await expect(page.locator('#keyboard-canvas')).toHaveScreenshot('qwerty-labels.png');
     await page.locator('#grid-settings-btn').click();
     await page.waitForTimeout(200);
     await page.locator('text=QWERTY LABELS').click();
@@ -563,9 +551,7 @@ export const qwertyGoldenCheck: StateInvariant = {
 export const keyboardCanvasGoldenCheck: StateInvariant = {
   id: 'GOLDEN-KEYBOARD',
   check: async (page: Page) => {
-    await expect(page.locator('#keyboard-canvas')).toHaveScreenshot('keyboard-canvas.png', {
-      maxDiffPixelRatio: 0.10,
-    });
+    await expect(page.locator('#keyboard-canvas')).toHaveScreenshot('keyboard-canvas.png');
   },
 };
 
@@ -575,9 +561,7 @@ export const tetNotchGoldenCheck: StateInvariant = {
   check: async (page: Page) => {
     const tetPresets = page.locator('#tet-presets');
     await expect(tetPresets).toBeVisible();
-    await expect(tetPresets).toHaveScreenshot('tuning-notch-labels.png', {
-      maxDiffPixelRatio: 0.05,
-    });
+    await expect(tetPresets).toHaveScreenshot('tuning-notch-labels.png');
   },
 };
 

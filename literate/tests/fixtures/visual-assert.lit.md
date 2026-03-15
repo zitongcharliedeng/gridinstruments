@@ -71,15 +71,12 @@ export interface VisualAssertResult {
 export async function assertVisualState(
   opts: VisualAssertOptions,
 ): Promise<VisualAssertResult> {
-  const { page, invariant, context, goldenName, locator, maxDiffRatio = 0.05 } = opts;
+  const { page, invariant, context, goldenName, locator } = opts;
 
   const target = locator ? page.locator(locator) : page;
   const screenshotBuffer = await target.screenshot({ type: 'png' });
 
-  await expect(target).toHaveScreenshot(`${goldenName}.png`, {
-    maxDiffPixelRatio: maxDiffRatio,
-    threshold: 0.3,
-  });
+  await expect(target).toHaveScreenshot(`${goldenName}.png`);
   const goldenPassed = true;
 
   let visionResult: VisionResult | null = null;
