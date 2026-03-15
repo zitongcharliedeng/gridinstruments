@@ -4215,15 +4215,15 @@ export const SONGBAR_PROGRESS_4: StateInvariant = {
 
 export const SONGBAR_CAL_1: StateInvariant = {
   id: 'SONGBAR-CAL-1',
-  description: '#calibrate-btn text is "Calibrate"',
+  description: '#calibrate-btn text is "Calibrate Area"',
   check: async (page: Page) => {
     const text = await page.evaluate(() => {
       const btn = document.getElementById('calibrate-btn');
       if (!btn) throw new Error('#calibrate-btn not found');
       return btn.textContent?.trim() ?? '';
     });
-    if (text !== 'Calibrate') {
-      throw new Error(`#calibrate-btn text is "${text}", expected "Calibrate"`);
+    if (text !== 'Calibrate Area') {
+      throw new Error(`#calibrate-btn text is "${text}", expected "Calibrate Area"`);
     }
   },
 };
