@@ -825,7 +825,7 @@
       }
     }
   </style>
-  <script type="module" crossorigin src="./assets/index-B_mgvZGx.js"></script>
+  <script type="module" crossorigin src="./assets/index-CEGhnNzG.js"></script>
   <link rel="stylesheet" crossorigin href="./assets/index-DaTdlIPo.css">
 </head>
 <body>
@@ -853,8 +853,10 @@
       <div id="song-bar">
       <div id="song-bar-search" style="position:relative;display:inline-flex;align-items:center;gap:4px;">
           <button class="slider-info-btn icon-btn icon-lg" data-info="search" style="position:static;transform:none;"><i data-lucide="info"></i></button>
-          <label for="midi-search-input" style="font-family:var(--font);font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:0.06em;white-space:nowrap;">Song Search</label>
-          <input id="midi-search-input" type="text" placeholder="Search or drop .mid file..." title="Search for MIDI songs or drop a .mid file anywhere" style="width:200px;box-sizing:border-box;font-family:var(--font);font-size:10px;background:var(--bg);color:var(--fg);border:1px solid var(--border);padding:2px 6px;">
+          <div style="position:relative;display:inline-flex;align-items:center;">
+            <i data-lucide="search" style="position:absolute;left:6px;width:12px;height:12px;color:var(--dim);pointer-events:none;"></i>
+            <input id="midi-search-input" type="text" placeholder="Search or drop .mid file..." title="Search for MIDI songs or drop a .mid file anywhere" style="width:200px;box-sizing:border-box;font-family:var(--font);font-size:10px;background:var(--bg);color:var(--fg);border:1px solid var(--border);padding:2px 6px 2px 22px;">
+          </div>
           <div id="midi-search-results" style="position:absolute;top:100%;left:0;min-width:280px;max-height:300px;overflow-y:auto;background:var(--bg);border:1px solid var(--border);z-index:25;display:none;"></div>
         </div>
       <div id="song-bar-status" style="display:inline-flex;align-items:center;gap:8px;">
@@ -879,13 +881,11 @@
       <div id="song-bar-calibrate" style="margin-left:auto;">
           <button class="slider-info-btn icon-btn icon-lg" data-info="calibrate" style="position:static;transform:none;"><i data-lucide="info"></i></button>
           <button id="calibrate-btn" style="font-family:var(--font);font-size:9px;background:none;color:var(--dim);border:1px solid var(--border);padding:2px 8px;cursor:pointer;">Calibrate</button>
-          <div id="calibration-banner" style="display:none;flex-direction:column;gap:8px;">
-            <span id="calibration-warning" style="display:none;font-family:var(--font);font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:0.06em;">This will reset your current song progress.</span>
-            <span id="calibration-msg" style="font-family:var(--font);font-size:11px;color:var(--fg);text-transform:uppercase;letter-spacing:0.06em;">Play all reachable notes to set your playable area, then confirm</span>
-            <div style="display:flex;gap:6px;">
-              <button id="calibrate-confirm" class="overlay-btn" style="flex:1;" title="Save calibrated range">Confirm</button>
-              <button id="calibrate-cancel" class="overlay-btn" style="flex:1;color:var(--dim);" title="Cancel calibration">Cancel</button>
-            </div>
+          <div id="calibration-banner" style="display:none;align-items:center;gap:4px;">
+            <span id="calibration-warning" style="display:none;font-family:var(--font);font-size:9px;color:var(--dim);"></span>
+            <span id="calibration-msg" style="font-family:var(--font);font-size:9px;color:var(--fg);">Play all reachable notes</span>
+            <button id="calibrate-confirm" style="font-family:var(--font);font-size:9px;background:none;color:#4f4;border:1px solid #4f4;padding:1px 6px;cursor:pointer;" title="Save calibrated range">&#x2713;</button>
+            <button id="calibrate-cancel" style="font-family:var(--font);font-size:9px;background:none;color:var(--dim);border:1px solid var(--border);padding:1px 6px;cursor:pointer;" title="Cancel calibration">&#x2717;</button>
           </div>
         </div>
     </div>
