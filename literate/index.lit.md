@@ -1127,14 +1127,14 @@ song bar wraps below the title on narrow viewports.
     <!-- Top bar -->
     <header id="top-bar">
       <div class="top-bar-left">
-        <button id="about-btn" class="icon-btn" title="About GridInstruments"><i data-lucide="info"></i></button>
+        <button id="about-btn" class="icon-btn"><i data-lucide="info"></i></button>
         <span class="site-title">GridInstruments</span>
         <div class="gh-actions">
           <span class="gh-mark icon"><svg viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></span>
-          <a class="gh-btn" href="https://github.com/zitongcharliedeng/gridinstruments" target="_blank" rel="noopener" title="Star on GitHub">
+          <a class="gh-btn" href="https://github.com/zitongcharliedeng/gridinstruments" target="_blank" rel="noopener">
             <span class="star-icon icon"><i data-lucide="star"></i></span> Star <span id="star-count-badge"></span>
           </a>
-          <a class="gh-btn gh-suggest" href="https://github.com/zitongcharliedeng/gridinstruments/issues" target="_blank" rel="noopener" title="Report bugs or suggest features">
+          <a class="gh-btn gh-suggest" href="https://github.com/zitongcharliedeng/gridinstruments/issues" target="_blank" rel="noopener">
             <svg class="icon" viewBox="0 0 16 16"><path d="M8 1a4.5 4.5 0 00-1.5 8.74V11.5a1.5 1.5 0 001 1.42V14a.5.5 0 001 0v-1.08a1.5 1.5 0 001-1.42V9.74A4.5 4.5 0 008 1zm0 1.5a3 3 0 012.04 5.2.5.5 0 00-.2.37l-.09 1.43H6.25l-.09-1.43a.5.5 0 00-.2-.37A3 3 0 018 2.5z"/></svg>
             Suggest
           </a>
@@ -1150,7 +1150,7 @@ song bar wraps below the title on narrow viewports.
           <button class="slider-info-btn icon-btn icon-lg" data-info="search" style="position:static;transform:none;"><i data-lucide="info"></i></button>
           <div style="position:relative;display:inline-flex;align-items:center;">
             <i data-lucide="search" style="position:absolute;left:6px;width:12px;height:12px;color:var(--dim);pointer-events:none;"></i>
-            <input id="midi-search-input" type="text" placeholder="Search or drop .mid file..." title="Search for MIDI songs or drop a .mid file anywhere" style="width:200px;box-sizing:border-box;font-family:var(--font);font-size:10px;background:var(--bg);color:var(--fg);border:1px solid var(--border);padding:2px 6px 2px 22px;">
+            <input id="midi-search-input" type="text" placeholder="Search or drop .mid file..." style="width:200px;box-sizing:border-box;font-family:var(--font);font-size:10px;background:var(--bg);color:var(--fg);border:1px solid var(--border);padding:2px 6px 2px 22px;">
           </div>
           <div id="midi-search-results" style="position:absolute;top:100%;left:0;min-width:280px;max-height:300px;overflow-y:auto;background:var(--bg);border:1px solid var(--border);z-index:25;display:none;"></div>
         </div>
@@ -1165,7 +1165,7 @@ revealed by state machine transitions.
           <button class="slider-info-btn icon-btn icon-lg" data-info="quantization" style="position:static;transform:none;"><i data-lucide="info"></i></button>
           <label style="display:inline-flex;align-items:center;gap:4px;font-size:10px;color:var(--dim);">
             Quant
-            <button id="quantization-level" style="font-family:var(--font);font-size:10px;background:var(--bg);color:var(--fg);border:1px solid var(--border);padding:2px 6px;cursor:pointer;" title="Click to cycle quantization level: None → 1/4 → 1/8 → 1/16" value="none">None</button>
+            <button id="quantization-level" style="font-family:var(--font);font-size:10px;background:var(--bg);color:var(--fg);border:1px solid var(--border);padding:2px 6px;cursor:pointer;" value="none">None</button>
           </label>
           <div id="game-status" style="display:none;align-items:center;gap:8px;">
             <div id="game-song-title" style="font-family:var(--font);font-size:10px;color:var(--fg);text-transform:uppercase;letter-spacing:0.06em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:160px;"></div>
@@ -1176,21 +1176,21 @@ revealed by state machine transitions.
               <div id="game-quantization-badge" style="font-family:var(--font);font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:0.06em;"></div>
             </div>
             <span id="game-elapsed-timer" style="font-size:10px;color:var(--dim);font-family:var(--font);min-width:3ch;text-align:right;"></span>
-            <button id="game-reset-btn" class="overlay-btn" style="font-size:10px;padding:2px 6px;" title="Restart the current song from the beginning">⟲ Restart</button>
+            <button id="game-reset-btn" class="overlay-btn" style="font-size:10px;padding:2px 6px;">⟲ Restart</button>
           </div>
         </div>
       <span id="song-bar-hint" style="display:none;"></span>
       <div id="song-bar-calibrate" style="margin-left:auto;">
           <button class="slider-info-btn icon-btn icon-lg" data-info="calibrate" style="position:static;transform:none;"><i data-lucide="info"></i></button>
-          <label style="display:inline-flex;align-items:center;gap:3px;font-family:var(--font);font-size:9px;color:var(--dim);" title="Maximum simultaneous keys your keyboard supports (for chord validation)">
+          <label style="display:inline-flex;align-items:center;gap:3px;font-family:var(--font);font-size:9px;color:var(--dim);">
             Max Keys <input type="number" id="max-keys-input" min="1" max="999" value="8" style="width:3ch;font-family:var(--font);font-size:9px;background:var(--bg);color:var(--fg);border:1px solid var(--border);padding:1px 2px;text-align:center;">
           </label>
           <button id="calibrate-btn" style="font-family:var(--font);font-size:9px;background:none;color:var(--dim);border:1px solid var(--border);padding:2px 8px;cursor:pointer;">Calibrate</button>
           <div id="calibration-banner" style="display:none;align-items:center;gap:4px;">
             <span id="calibration-warning" style="display:none;font-family:var(--font);font-size:9px;color:var(--dim);"></span>
             <span id="calibration-msg" style="font-family:var(--font);font-size:9px;color:var(--fg);">Play all reachable notes</span>
-            <button id="calibrate-confirm" style="font-family:var(--font);font-size:9px;background:none;color:#4f4;border:1px solid #4f4;padding:1px 6px;cursor:pointer;" title="Save calibrated range">&#x2713;</button>
-            <button id="calibrate-cancel" style="font-family:var(--font);font-size:9px;background:none;color:var(--dim);border:1px solid var(--border);padding:1px 6px;cursor:pointer;" title="Cancel calibration">&#x2717;</button>
+            <button id="calibrate-confirm" style="font-family:var(--font);font-size:9px;background:none;color:#4f4;border:1px solid #4f4;padding:1px 6px;cursor:pointer;">&#x2713;</button>
+            <button id="calibrate-cancel" style="font-family:var(--font);font-size:9px;background:none;color:var(--dim);border:1px solid var(--border);padding:1px 6px;cursor:pointer;">&#x2717;</button>
           </div>
         </div>
     </div>
@@ -1209,22 +1209,22 @@ bottom border; `data-*` attributes declare the min/max/default heights and the
     <!-- Visualiser panel -->
     <div id="visualiser-panel">
       <canvas id="history-canvas" height="120"></canvas>
-      <button id="vis-settings-btn" class="grid-cog icon-btn icon-md" style="position:absolute;top:4px;left:4px;z-index:15;" title="Visualiser settings"><i data-lucide="settings"></i></button>
+      <button id="vis-settings-btn" class="grid-cog icon-btn icon-md" style="position:absolute;top:4px;left:4px;z-index:15;"><i data-lucide="settings"></i></button>
       <div id="vis-overlay" class="hidden" style="position:absolute;top:0;left:0;width:200px;height:100%;background:rgba(0,0,0,0.9);z-index:14;padding:8px 8px 8px 36px;overflow-y:auto;">
         <div class="overlay-section-title">VISUALISER</div>
         <div class="slider-track" style="margin-top:8px;">
           <span class="slider-label-overlay">TIME (s)</span>
-          <input type="range" id="vis-time-slider" min="1" max="10" step="0.5" value="3" title="History time window">
+          <input type="range" id="vis-time-slider" min="1" max="10" step="0.5" value="3">
           <span class="slider-value-badge" id="vis-time-badge">3.0</span>
         </div>
         <div class="slider-track" style="margin-top:8px;">
           <span class="slider-label-overlay">RANGE (octaves)</span>
-          <input type="range" id="vis-range-slider" min="2" max="8" step="1" value="5" title="Visible note range in octaves">
+          <input type="range" id="vis-range-slider" min="2" max="8" step="1" value="5">
           <span class="slider-value-badge" id="vis-range-badge">5</span>
         </div>
       </div>
       <div class="panel-resize-handle-wrap">
-         <div class="panel-resize-handle" tabindex="0" role="separator" aria-orientation="horizontal" aria-label="Resize visualiser" title="Drag to resize visualiser panel" data-target="visualiser-panel" data-min="60" data-max="400" data-default="120" data-key="gi_visualiser_h" data-hidden-key="gi_history_hidden"><span class="grip-lines"><span class="grip-line"></span><span class="grip-line"></span><span class="grip-line"></span></span><span class="handle-label">VISUALISER</span><span class="grip-lines"><span class="grip-line"></span><span class="grip-line"></span><span class="grip-line"></span></span></div>
+         <div class="panel-resize-handle" tabindex="0" role="separator" aria-orientation="horizontal" aria-label="Resize visualiser" data-target="visualiser-panel" data-min="60" data-max="400" data-default="120" data-key="gi_visualiser_h" data-hidden-key="gi_history_hidden"><span class="grip-lines"><span class="grip-line"></span><span class="grip-line"></span><span class="grip-line"></span></span><span class="handle-label">VISUALISER</span><span class="grip-lines"><span class="grip-line"></span><span class="grip-line"></span><span class="grip-line"></span></span></div>
       </div>
     </div>
 ```
@@ -1245,7 +1245,7 @@ with pitch bend, velocity, pressure, timbre, and MPE output controls.
     <div id="grid-area">
       <div id="keyboard-container">
         <canvas id="keyboard-canvas"></canvas>
-         <button id="grid-settings-btn" class="grid-cog icon-btn icon-md" title="Open settings overlay"><i data-lucide="settings"></i></button>
+         <button id="grid-settings-btn" class="grid-cog icon-btn icon-md"><i data-lucide="settings"></i></button>
 
         <!-- Grid settings overlay (was sidebar) -->
         <div id="grid-overlay" class="hidden">
@@ -1255,24 +1255,24 @@ with pitch bend, velocity, pressure, timbre, and MPE output controls.
              <div class="slider-track">
                <span class="ctrl-label" style="font-size:9px;text-transform:uppercase;white-space:nowrap;color:#fff;flex-shrink:0">WAVE</span>
               <span id="wave-select-slot"></span>
-              <button class="slider-reset icon-btn icon-md" id="wave-reset" title="Reset waveform to sawtooth (default)"><i data-lucide="rotate-cw"></i></button>
+              <button class="slider-reset icon-btn icon-md" id="wave-reset"><i data-lucide="rotate-cw"></i></button>
             </div>
             <div class="ctrl-group" style="margin-top: 18px">
               <button class="slider-info-btn icon-btn icon-lg" data-info="volume"><i data-lucide="info"></i></button>
               <div class="slider-track">
                <span class="slider-label-overlay">VOL (dB)</span>
-                <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.5" title="Master volume">
+                <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.5">
                 <span class="slider-value-badge" id="volume-thumb-badge">-10.5</span>
-                <button class="slider-reset icon-btn icon-md" id="volume-reset" title="Reset volume to default (0.3)"><i data-lucide="rotate-cw"></i></button>
+                <button class="slider-reset icon-btn icon-md" id="volume-reset"><i data-lucide="rotate-cw"></i></button>
               </div>
             </div>
             <div class="tuning-slider-area" style="margin-top: 18px">
               <button class="slider-info-btn icon-btn icon-lg" data-info="tuning"><i data-lucide="info"></i></button>
               <div class="slider-track">
                 <span class="slider-label-overlay" id="tuning-label">FIFTHS TUNING (cents)</span>
-               <input type="range" id="tuning-slider" min="683" max="722" step="0.01" value="700" title="Fifth interval tuning in cents (683=7-TET … 722=5-TET)">
-               <input type="text" class="badge-input" id="tuning-thumb-badge" value="700" title="Edit fifth interval in cents">
-               <button class="slider-reset icon-btn icon-md" id="tuning-reset" title="Reset to 12-TET (700¢)"><i data-lucide="rotate-cw"></i></button>
+               <input type="range" id="tuning-slider" min="683" max="722" step="0.01" value="700">
+               <input type="text" class="badge-input" id="tuning-thumb-badge" value="700">
+               <button class="slider-reset icon-btn icon-md" id="tuning-reset"><i data-lucide="rotate-cw"></i></button>
              </div>
              <div class="tet-presets" id="tet-presets" data-alternate-ticks></div>
            </div>
@@ -1280,9 +1280,9 @@ with pitch bend, velocity, pressure, timbre, and MPE output controls.
              <button class="slider-info-btn icon-btn icon-lg" data-info="dref"><i data-lucide="info"></i></button>
              <div class="slider-track">
                <span class="slider-label-overlay" id="d-ref-label">D REF (Hz)</span>
-              <input type="range" id="d-ref-slider" min="73.42" max="1174.66" step="0.01" value="293.66" title="Reference pitch slider (D2–D6)">
-              <input type="text" class="badge-input" id="d-ref-input" value="293.66" style="width:80px; text-transform:none;" title="Edit D-ref pitch in Hz or note name (default: 293.66 Hz)">
-              <button id="d-ref-reset" class="slider-reset icon-btn icon-md" title="Reset D-ref to default (293.66 Hz)"><i data-lucide="rotate-cw"></i></button>
+              <input type="range" id="d-ref-slider" min="73.42" max="1174.66" step="0.01" value="293.66">
+              <input type="text" class="badge-input" id="d-ref-input" value="293.66" style="width:80px; text-transform:none;">
+              <button id="d-ref-reset" class="slider-reset icon-btn icon-md"><i data-lucide="rotate-cw"></i></button>
             </div>
           </div>
            </div>
@@ -1302,9 +1302,9 @@ morph), wicked shear, grid zoom, and the QWERTY label overlay toggle.
               <button class="slider-info-btn icon-btn icon-lg" data-info="skew"><i data-lucide="info"></i></button>
               <div class="slider-track">
                 <span class="slider-label-overlay" id="skew-label">MECH SKEW</span>
-                <input type="range" id="skew-slider" min="-0.5" max="1.5" step="0.01" value="0" title="Mech skew: DCompose (0) to MidiMech (1)">
-                <input type="text" class="badge-input" id="skew-thumb-badge" value="0.00" title="Edit skew value.">
-                <button class="slider-reset icon-btn icon-md" id="skew-reset" title="Reset to DCompose (0)"><i data-lucide="rotate-cw"></i></button>
+                <input type="range" id="skew-slider" min="-0.5" max="1.5" step="0.01" value="0">
+                <input type="text" class="badge-input" id="skew-thumb-badge" value="0.00">
+                <button class="slider-reset icon-btn icon-md" id="skew-reset"><i data-lucide="rotate-cw"></i></button>
               </div>
               <div class="slider-presets" id="skew-presets"></div>
             </div>
@@ -1314,8 +1314,8 @@ morph), wicked shear, grid zoom, and the QWERTY label overlay toggle.
               <div class="slider-track">
                 <span class="slider-label-overlay" id="bfact-label">WICKED SHEAR</span>
                 <input type="range" id="bfact-slider" min="-0.5" max="1.5" step="0.01" value="0">
-                <input type="text" class="badge-input" id="bfact-thumb-badge" value="0.00" title="Edit wicked-ness value.">
-                <button class="slider-reset icon-btn icon-md" id="bfact-reset" title="Reset to default (0)"><i data-lucide="rotate-cw"></i></button>
+                <input type="text" class="badge-input" id="bfact-thumb-badge" value="0.00">
+                <button class="slider-reset icon-btn icon-md" id="bfact-reset"><i data-lucide="rotate-cw"></i></button>
               </div>
               <div class="slider-presets" id="bfact-presets"></div>
             </div>
@@ -1326,13 +1326,13 @@ morph), wicked shear, grid zoom, and the QWERTY label overlay toggle.
                 <span class="slider-label-overlay">ZOOM (x)</span>
                 <input type="range" id="zoom-slider" min="0.2" max="3" step="0.01" value="1">
                 <span class="slider-value-badge" id="zoom-thumb-badge">1.00</span>
-                <button class="slider-reset icon-btn icon-md" id="zoom-reset" title="Aims to match keysize to standard keyboard key size"><i data-lucide="rotate-cw"></i></button>
+                <button class="slider-reset icon-btn icon-md" id="zoom-reset"><i data-lucide="rotate-cw"></i></button>
               </div>
             </div>
             <div class="slider-track" style="margin-top: 18px">
               <span class="slider-label-overlay">DPI OVERRIDE</span>
-              <input type="number" id="dpi-override" min="40" max="600" step="1" placeholder="auto" title="Override display DPI if auto-detection is wrong" style="width:72px;background:#111;color:#fff;border:1px solid #444;font-family:inherit;font-size:12px;padding:2px 4px;">
-              <button class="slider-reset icon-btn icon-md" id="dpi-override-reset" title="Reset to auto-detected DPI"><i data-lucide="rotate-cw"></i></button>
+              <input type="number" id="dpi-override" min="40" max="600" step="1" placeholder="auto" style="width:72px;background:#111;color:#fff;border:1px solid #444;font-family:inherit;font-size:12px;padding:2px 4px;">
+              <button class="slider-reset icon-btn icon-md" id="dpi-override-reset"><i data-lucide="rotate-cw"></i></button>
             </div>
            <div class="slider-track" style="margin-top: 18px">
              <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;">
@@ -1357,7 +1357,7 @@ range, velocity, channel pressure, timbre CC mode, and MPE output routing.
              <div class="slider-track">
                <span class="ctrl-label" style="font-size:9px;text-transform:uppercase;white-space:nowrap;color:#fff;flex-shrink:0">KEYBOARD LAYOUT</span>
               <span id="layout-select-slot"></span>
-              <button class="slider-reset icon-btn icon-md" id="layout-reset" title="Reset keyboard layout to ANSI (US QWERTY)"><i data-lucide="rotate-cw"></i></button>
+              <button class="slider-reset icon-btn icon-md" id="layout-reset"><i data-lucide="rotate-cw"></i></button>
             </div>
 
             <div style="margin-top: 18px">
@@ -1370,7 +1370,7 @@ range, velocity, channel pressure, timbre CC mode, and MPE output routing.
                    <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;">
                      <span class="gi-checkbox"><input type="checkbox" id="expr-bend" checked><span class="gi-check"></span></span>
                      <span style="color:#fff">Pitch Bend</span>
-                     <input type="text" inputmode="numeric" pattern="[0-9]*" id="midi-pb-range-expr" value="48" style="width:3ch;text-align:center;font-family:var(--font);font-size:10px;background:var(--bg);color:var(--fg);border:1px solid var(--border);padding:2px 3px;" title="Pitch bend range in semitones">
+                     <input type="text" inputmode="numeric" pattern="[0-9]*" id="midi-pb-range-expr" value="48" style="width:3ch;text-align:center;font-family:var(--font);font-size:10px;background:var(--bg);color:var(--fg);border:1px solid var(--border);padding:2px 3px;">
                      <span style="color:var(--dim);font-size:10px;">semitones</span>
                    </label>
                  </div>
@@ -1401,7 +1401,7 @@ close out the INPUT section.
                      <span class="gi-checkbox"><input type="checkbox" id="expr-timbre" checked><span class="gi-check"></span></span>
                      <span style="color:#fff">Timbre Slide</span>
                    </label>
-                   <button id="timbre-cc-mode" style="font-family:var(--font);font-size:10px;background:var(--bg);color:var(--fg);border:1px solid var(--border);padding:2px 6px;cursor:pointer;" title="Click to cycle timbre CC" value="74">CC74</button>
+                   <button id="timbre-cc-mode" style="font-family:var(--font);font-size:10px;background:var(--bg);color:var(--fg);border:1px solid var(--border);padding:2px 6px;cursor:pointer;" value="74">CC74</button>
                  </div>
                 <div class="midi-panel-row" id="mpe-output-row">
                   <span class="ctrl-label" style="color:#fff">MPE Out:</span>
@@ -1432,10 +1432,10 @@ toggled active/inactive by the state machine on hold/release events.
     <!-- Pedals -->
     <div id="pedals-panel" style="height:44px">
       <div class="panel-resize-handle-wrap pedals-handle-wrap">
-         <div class="panel-resize-handle" tabindex="0" role="separator" aria-orientation="horizontal" aria-label="Resize pedals" title="Drag to resize pedals panel" data-target="pedals-panel" data-min="30" data-max="120" data-default="44" data-key="gi_pedals_h" data-direction="up" data-hidden-key="gi_pedals_hidden"><span class="grip-lines"><span class="grip-line"></span><span class="grip-line"></span><span class="grip-line"></span></span><span class="handle-label">PEDALS</span><span class="grip-lines"><span class="grip-line"></span><span class="grip-line"></span><span class="grip-line"></span></span></div>
+         <div class="panel-resize-handle" tabindex="0" role="separator" aria-orientation="horizontal" aria-label="Resize pedals" data-target="pedals-panel" data-min="30" data-max="120" data-default="44" data-key="gi_pedals_h" data-direction="up" data-hidden-key="gi_pedals_hidden"><span class="grip-lines"><span class="grip-line"></span><span class="grip-line"></span><span class="grip-line"></span></span><span class="handle-label">PEDALS</span><span class="grip-lines"><span class="grip-line"></span><span class="grip-line"></span><span class="grip-line"></span></span></div>
       </div>
-      <button class="pedal-btn" id="sustain-indicator" title="Sustain: hold Space or tap" style="padding-top: 4px;">SUSTAIN</button>
-      <button class="pedal-btn" id="vibrato-indicator" title="Vibrato: hold Shift or tap" style="padding-top: 4px;">VIBRATO</button>
+      <button class="pedal-btn" id="sustain-indicator" style="padding-top: 4px;">SUSTAIN</button>
+      <button class="pedal-btn" id="vibrato-indicator" style="padding-top: 4px;">VIBRATO</button>
     </div>
 
    </div>
@@ -1457,7 +1457,7 @@ strokes a hand-drawn texture.
    <!-- Keyboard rollover warning toast -->
    <div id="ghosting-toast" style="display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:30;background:rgba(0,0,0,0.85);border:1px solid var(--dim);padding:12px 16px;font-family:var(--font);font-size:11px;color:var(--fg);flex-direction:row;align-items:flex-start;gap:12px;max-width:400px;">
      <span style="flex:1;line-height:1.5;">Your keyboard may limit simultaneous notes. For full chords, connect a MIDI controller or use touchscreen.</span>
-     <button id="ghosting-toast-dismiss" style="background:none;border:none;color:var(--dim);font-family:var(--font);font-size:14px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;" title="Dismiss">✕</button>
+     <button id="ghosting-toast-dismiss" style="background:none;border:none;color:var(--dim);font-family:var(--font);font-size:14px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;">✕</button>
    </div>
 
    <dialog id="about-dialog">

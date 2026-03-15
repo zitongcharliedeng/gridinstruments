@@ -39,10 +39,12 @@ if [ "$violations" -gt 0 ]; then
   exit 1
 fi
 
-# Step 1.6: Warn about raw title= tooltips (prefer info button + dialog)
-title_count=$(grep -c 'title="' literate/index.lit.md 2>/dev/null || echo "0")
-if [ "$title_count" -gt 0 ]; then
-  echo "[tangle] WARN: $title_count raw title= tooltips in index.lit.md. Migrate to info button + dialog pattern (#174)."
+# Step 1.6: Error on input/select tooltips (must use info button pattern)
+input_tooltips=$(grep -c '<input[^>]*title="' literate/index.lit.md 2>/dev/null || echo "0")
+if [ "$input_tooltips" -gt 0 ]; then
+  echo "[tangle] ERROR: $input_tooltips <input> elements with title= tooltips. Use info button + dialog instead (#174)."
+  grep -n '<input[^>]*title="' literate/index.lit.md | head -10
+  exit 1
 fi
 
 # Step 1.7: Warn about long code blocks without interweaved prose

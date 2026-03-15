@@ -31,20 +31,16 @@ Structural checks for tooltips, panel handles, overlays, and icon sizes.
 ``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const tooltipCheck: StateInvariant = {
   id: 'BH-TT-1',
+  description: 'No raw title= tooltips — all controls use info button + dialog',
   check: async (page: Page) => {
-    const selectors = [
-      '#tuning-slider', '#tuning-thumb-badge', '#tuning-reset',
-      '#skew-slider', '#skew-thumb-badge', '#skew-reset',
-      '#zoom-reset',
-      '#volume-slider', '#volume-reset',
-      '#d-ref-input', '#d-ref-reset',
-      '#wave-select', '#wave-reset',
-      '#layout-select',
-    ];
-    for (const sel of selectors) {
-      const title = await page.locator(sel).getAttribute('title');
-      if (!title) throw new Error(`${sel} missing title`);
-      expect(title.length, `${sel} empty title`).toBeGreaterThan(0);
+    const titleCount = await page.evaluate(() =>
+      document.querySelectorAll('[title]').length
+    );
+    if (titleCount > 0) {
+      const titles = await page.evaluate(() =>
+        Array.from(document.querySelectorAll('[title]')).map(el => `${el.tagName}#${el.id}: ${el.getAttribute('title')}`).join(', ')
+      );
+      throw new Error(`${titleCount} elements still have title= tooltips: ${titles}`);
     }
   },
 };
