@@ -88,6 +88,7 @@ The second group of private fields covers DOM references and UI state: canvas el
   private midiDeviceList: HTMLElement | null = null;
   private zoomSlider: HTMLInputElement | null = null;
   private defaultZoom = 1.0;
+  private detectedDpi = 96;
   private updateGraffiti: (() => void) | null = null;
   private gameActor: ReturnType<typeof createActor<typeof gameMachine>> | null = null;
   private idleTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -105,6 +106,7 @@ The second group of private fields covers DOM references and UI state: canvas el
     exprBend: 'gi_expr_bend', exprVelocity: 'gi_expr_velocity', exprPressure: 'gi_expr_pressure', exprTimbre: 'gi_expr_timbre',
     timbreCcMode: 'gi_timbre_cc_mode',
     maxKeys: 'gi_max_keys',
+    dpi: 'gi_dpi',
   } as const;
 
   private loadSetting(key: keyof typeof DComposeApp.STORAGE_KEYS, fallback: string): string {
@@ -242,6 +244,36 @@ The history visualizer drives the waterfall display and staff notation in the to
         );
       }).observe(historyContainer);
     }
+
+    this.historyCanvas.addEventListener('wheel', (e: WheelEvent) => {
+      e.preventDefault();
+      const rect = this.historyCanvas.getBoundingClientRect();
+      const xInCanvas = e.clientX - rect.left;
+      const PIANO_W = 52;
+      if (xInCanvas <= PIANO_W) {
+        const visRangeSlider = getElementOrNull('vis-range-slider', HTMLInputElement);
+        const visRangeBadge = document.getElementById('vis-range-badge');
+        if (visRangeSlider) {
+          const delta = e.deltaY > 0 ? 1 : -1;
+          const newVal = Math.min(8, Math.max(2, parseInt(visRangeSlider.value, 10) + delta));
+          visRangeSlider.value = String(newVal);
+          const centerMidi = 62;
+          const halfRange = Math.floor(newVal * 12 / 2);
+          this.historyVisualizer?.setNoteRange(centerMidi - halfRange, centerMidi + halfRange);
+          if (visRangeBadge) visRangeBadge.textContent = String(newVal);
+        }
+      } else {
+        const visTimeSlider = getElementOrNull('vis-time-slider', HTMLInputElement);
+        const visTimeBadge = document.getElementById('vis-time-badge');
+        if (visTimeSlider) {
+          const delta = e.deltaY > 0 ? 0.5 : -0.5;
+          const newVal = Math.min(10, Math.max(1, parseFloat(visTimeSlider.value) + delta));
+          visTimeSlider.value = String(newVal);
+          this.historyVisualizer?.setTimeWindow(newVal);
+          if (visTimeBadge) visTimeBadge.textContent = newVal.toFixed(1);
+        }
+      }
+    }, { passive: false });
   }
 ```
 
@@ -1072,7 +1104,14 @@ if matchMedia is unavailable (headless/CI), and clamp to a sane range.
        return lo;
      };
 
-     const physicalDPI = detectPhysicalDPI();
+     this.detectedDpi = detectPhysicalDPI();
+     const savedDpiOverride = parseFloat(this.loadSetting('dpi', ''));
+     const physicalDPI = (savedDpiOverride >= 40 && savedDpiOverride <= 600)
+       ? savedDpiOverride
+       : this.detectedDpi;
+     if (physicalDPI !== this.detectedDpi) {
+       this.visualizer?.setCssPxPerInch(physicalDPI);
+     }
      const pianoKeyPx = PIANO_KEY_MM * physicalDPI / MM_PER_INCH;
 ```
 
@@ -1105,6 +1144,46 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
      }
      const zoomReset = getElementOrNull('zoom-reset', HTMLButtonElement);
      zoomReset?.addEventListener('click', () => {
+       if (this.zoomSlider) {
+         this.zoomSlider.value = this.defaultZoom.toString();
+         this.zoomSlider.dispatchEvent(new Event('input'));
+       }
+     });
+```
+
+The DPI override input lets users correct auto-detection on non-standard displays. When set, the value is persisted to localStorage and applied to the visualizer's `cssPxPerInch`, then the zoom reset target is recalculated so the physical key size stays accurate. The reset button clears the override and restores the auto-detected value.
+
+``` {.typescript file=_generated/app-core.ts}
+     const dpiOverride = getElementOrNull('dpi-override', HTMLInputElement);
+     const dpiOverrideReset = getElementOrNull('dpi-override-reset', HTMLButtonElement);
+     const savedDpiStr = this.loadSetting('dpi', '');
+     if (dpiOverride && savedDpiStr !== '') {
+       dpiOverride.value = savedDpiStr;
+     }
+     dpiOverride?.addEventListener('change', () => {
+       if (!dpiOverride.value.trim()) {
+         this.saveSetting('dpi', '');
+         this.visualizer?.setCssPxPerInch(this.detectedDpi);
+         if (this.zoomSlider) {
+           this.zoomSlider.value = this.defaultZoom.toString();
+           this.zoomSlider.dispatchEvent(new Event('input'));
+         }
+         return;
+       }
+       const dpiVal = parseFloat(dpiOverride.value);
+       if (dpiVal >= 40 && dpiVal <= 600) {
+         this.saveSetting('dpi', dpiOverride.value);
+         this.visualizer?.setCssPxPerInch(dpiVal);
+         if (this.zoomSlider) {
+           this.zoomSlider.value = this.defaultZoom.toString();
+           this.zoomSlider.dispatchEvent(new Event('input'));
+         }
+       }
+     });
+     dpiOverrideReset?.addEventListener('click', () => {
+       if (dpiOverride) dpiOverride.value = '';
+       this.saveSetting('dpi', '');
+       this.visualizer?.setCssPxPerInch(this.detectedDpi);
        if (this.zoomSlider) {
          this.zoomSlider.value = this.defaultZoom.toString();
          this.zoomSlider.dispatchEvent(new Event('input'));

@@ -334,5 +334,17 @@ ${srcLink('keyboard-layouts.lit.md', 'Source: keyboard-layouts.lit.md — layout
 <li>Optimize game mode note placement</li>
 </ul>
 <p>The calibrated range is saved in localStorage and persists across sessions. Reset by clearing and re-calibrating.</p>`,
+
+  fullscreen: `
+<h2>Fullscreen</h2>
+<p>Expands the app to fill the entire screen, hiding the browser chrome. The keyboard grid scales to the full viewport for a more immersive playing experience.</p>
+<p>Press <strong>Esc</strong> or click the button again to exit fullscreen.</p>
+<p>On iOS Safari, true fullscreen is not available — the app fills the viewport but the browser bar remains.</p>`,
+
+  'reset-layout': `
+<h2>Reset Page Layout</h2>
+<p>Restores the default panel sizes and positions — the visualiser panel height and pedals panel height return to their initial values.</p>
+<p>This does <strong>not</strong> reset any grid settings, tuning, waveform, or other instrument parameters. Only the visual panel layout is affected.</p>
+<p>Panel sizes are saved to <code>localStorage</code> and persist across sessions. Use this button if panels get into an unusable state.</p>`,
 };
 ```

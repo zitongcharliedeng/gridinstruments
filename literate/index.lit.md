@@ -1139,8 +1139,10 @@ song bar wraps below the title on narrow viewports.
             Suggest
           </a>
         </div>
-        <button id="fullscreen-btn" class="icon-btn icon-md" title="Toggle fullscreen" onclick="document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen().catch(()=>{})"><i data-lucide="maximize"></i></button>
-        <button id="reset-layout" title="Reset Page Layout — restores default panel sizes and positions (does not reset grid presets or tuning)"><span class="icon"><i data-lucide="rotate-ccw"></i></span> Reset Page</button>
+        <button class="slider-info-btn icon-btn icon-lg" data-info="fullscreen" style="position:static;transform:none;"><i data-lucide="info"></i></button>
+        <button id="fullscreen-btn" class="icon-btn icon-md" onclick="document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen().catch(()=>{})"><i data-lucide="maximize"></i></button>
+        <button class="slider-info-btn icon-btn icon-lg" data-info="reset-layout" style="position:static;transform:none;"><i data-lucide="info"></i></button>
+        <button id="reset-layout"><span class="icon"><i data-lucide="rotate-ccw"></i></span> Reset Page</button>
       </div>
       <!-- Song/game controls — right side of header, wraps on narrow -->
       <div id="song-bar">
@@ -1318,12 +1320,20 @@ morph), wicked shear, grid zoom, and the QWERTY label overlay toggle.
               <div class="slider-presets" id="bfact-presets"></div>
             </div>
 
+            <div class="tuning-slider-area" style="margin-top: 18px">
+              <button class="slider-info-btn icon-btn icon-lg" data-info="zoom"><i data-lucide="info"></i></button>
+              <div class="slider-track">
+                <span class="slider-label-overlay">ZOOM (x)</span>
+                <input type="range" id="zoom-slider" min="0.2" max="3" step="0.01" value="1">
+                <span class="slider-value-badge" id="zoom-thumb-badge">1.00</span>
+                <button class="slider-reset icon-btn icon-md" id="zoom-reset" title="Aims to match keysize to standard keyboard key size"><i data-lucide="rotate-cw"></i></button>
+              </div>
+            </div>
             <div class="slider-track" style="margin-top: 18px">
-              <span class="slider-label-overlay">ZOOM (x)</span>
-             <input type="range" id="zoom-slider" min="0.2" max="3" step="0.01" value="1" title="Grid zoom level">
-             <span class="slider-value-badge" id="zoom-thumb-badge">1.00</span>
-             <button class="slider-reset icon-btn icon-md" id="zoom-reset" title="Aims to match keysize to standard keyboard key size"><i data-lucide="rotate-cw"></i></button>
-           </div>
+              <span class="slider-label-overlay">DPI OVERRIDE</span>
+              <input type="number" id="dpi-override" min="40" max="600" step="1" placeholder="auto" title="Override display DPI if auto-detection is wrong" style="width:72px;background:#111;color:#fff;border:1px solid #444;font-family:inherit;font-size:12px;padding:2px 4px;">
+              <button class="slider-reset icon-btn icon-md" id="dpi-override-reset" title="Reset to auto-detected DPI"><i data-lucide="rotate-cw"></i></button>
+            </div>
            <div class="slider-track" style="margin-top: 18px">
              <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;">
                <span class="gi-checkbox"><input type="checkbox" id="qwerty-overlay-toggle"><span class="gi-check"></span></span>

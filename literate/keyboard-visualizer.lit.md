@@ -142,9 +142,46 @@ defines 1 CSS pixel as exactly 1/96 of an inch. This is a spec constant, not
 a screen measurement. The `window.devicePixelRatio` property separately handles
 the mapping from CSS pixels to physical device pixels.
 
+In practice, browsers do not guarantee the CSS pixel-to-inch mapping on screen.
+A 27" 1080p monitor has ~82 physical DPI while a 13" MacBook retina has ~227
+physical DPI, yet both use 96 CSS px/inch nominally. To get the real physical
+DPI, we binary-search using `matchMedia('(min-resolution: Ndpi)')`, which is
+how virtual ruler sites achieve accuracy without device databases. The fallback
+chain: matchMedia binary search → `96 * devicePixelRatio` → 96.
+
+The `setCssPxPerInch` method lets external code override the detected value,
+which powers the DPI Override input in the settings overlay.
+
 ``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
 
-  private readonly cssPxPerInch: number = 96;
+  private cssPxPerInch: number = KeyboardVisualizer.detectCssPxPerInch();
+
+  private static detectCssPxPerInch(): number {
+    if (typeof window === 'undefined') return 96;
+    if (typeof window.matchMedia !== 'function') {
+      return Math.max(72, Math.min(300, 96 * (window.devicePixelRatio || 1)));
+    }
+    let lo = 40, hi = 600;
+    while (lo < hi) {
+      const mid = Math.floor((lo + hi + 1) / 2);
+      if (window.matchMedia(`(min-resolution: ${mid}dpi)`).matches) {
+        lo = mid;
+      } else {
+        hi = mid - 1;
+      }
+    }
+    return lo;
+  }
+
+  setCssPxPerInch(dpi: number): void {
+    this.cssPxPerInch = Math.max(40, Math.min(600, dpi));
+    this.generateButtons();
+    this.render();
+  }
+
+  getCssPxPerInch(): number {
+    return this.cssPxPerInch;
+  }
 
 ```
 
