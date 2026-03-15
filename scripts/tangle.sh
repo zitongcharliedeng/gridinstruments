@@ -40,9 +40,8 @@ if [ "$violations" -gt 0 ]; then
 fi
 
 # Step 1.6: Error on input/select tooltips (must use info button pattern)
-input_tooltips=$(grep -c '<input[^>]*title="' literate/index.lit.md 2>/dev/null || echo "0")
-if [ "$input_tooltips" -gt 0 ]; then
-  echo "[tangle] ERROR: $input_tooltips <input> elements with title= tooltips. Use info button + dialog instead (#174)."
+if grep -q '<input[^>]*title="' literate/index.lit.md 2>/dev/null; then
+  echo "[tangle] ERROR: <input> elements with title= tooltips found. Use info button + dialog instead (#174)."
   grep -n '<input[^>]*title="' literate/index.lit.md | head -10
   exit 1
 fi
