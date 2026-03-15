@@ -143,16 +143,9 @@ function pcHue(pc: number): number {
 }
 
 /** OKLCH hue for a circle-of-fifths coordinate (D=0). */
-/**
- * Hue from actual pitch in cents — ensures cells at the same frequency
- * get the same color regardless of grid position. Maps the pitch class
- * (pitch mod 1200 cents) to a 360° hue wheel with 30° per semitone,
- * anchored at D = 29°. See: https://en.wikipedia.org/wiki/Cent_(music)
- */
 function pitchCentsToHue(pitchCents: number): number {
-  const semitonesFromD = ((pitchCents % 1200) + 1200) % 1200 / 100;
-  const pc = ((Math.round(semitonesFromD) + 2) % 12 + 12) % 12;
-  return pcHue(pc);
+  const centsInOctave = ((pitchCents % 1200) + 1200) % 1200;
+  return (centsInOctave / 1200 * 360 + 29) % 360;
 }
 
 function chromaticHue(coordX: number): number {
