@@ -904,17 +904,16 @@ colors for the resolved state.
 ### MPE pressure -- opacity modulation
 
 When MPE expression data is available for an active cell, the pressure value
-(0-1) modulates the cell's opacity. At zero pressure the cell renders at 85%
-opacity; at full pressure it renders at 100%. This creates a subtle visual
-distinction between light and firm touches without making lightly-pressed keys
-invisible.
+(0-1) modulates the cell's opacity across the full visible range: 0.3 at
+minimum pressure to 1.0 at maximum. This makes pressure differences clearly
+visible — light touches appear translucent while firm presses are fully opaque.
 
 ``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
 
     const mpeExpr = this.mpeExpression.get(noteId);
     let cellAlpha = 1.0;
     if (mpeExpr && isActive) {
-      cellAlpha = 0.85 + mpeExpr.pressure * 0.15;
+      cellAlpha = 0.3 + mpeExpr.pressure * 0.7;
     }
 ```
 
@@ -966,7 +965,8 @@ their pitch bend is heading on the
     if (mpeExpr && isActive && Math.abs(mpeExpr.pitchBend) > 0.01) {
       const bendSteps = Math.round(mpeExpr.pitchBend * 2);
       if (bendSteps !== 0) {
-        const { fill: bendFill } = cellColors(coordX + bendSteps, 'active');
+        const bendPitchCents = button.pitchCents + mpeExpr.pitchBend * this.options.generator[0];
+        const { fill: bendFill } = cellColors(coordX + bendSteps, 'active', bendPitchCents);
         this.ctx.globalAlpha = Math.min(0.75, Math.abs(mpeExpr.pitchBend) * 0.8);
         this.ctx.fillStyle = bendFill;
         this.ctx.beginPath();
