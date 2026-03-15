@@ -86,6 +86,11 @@ export const panelMachine = setup({
         { target: 'idle' },
       ],
     },
+```
+
+The `idle` state is the primary interactive state — it accepts drag-start (capturing the y-anchor and height snapshot), toggle (collapsing immediately), double-click (restoring the default height), and resize-step (keyboard ±10 px increments).
+
+``` {.typescript file=_generated/machines/panelMachine.ts}
     idle: {
       on: {
         DRAG_START: {

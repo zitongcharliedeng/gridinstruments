@@ -2,6 +2,8 @@
 
 Parameterized slider reset machine factory — produces tuning, skew, volume, and zoom instances that each model the 2-state (default/modified) lifecycle with SET_VALUE and RESET events.
 
+The module imports XState and Playwright utilities, then defines the `SliderResetConfig` interface that parameterizes the factory and the two-variant `SliderEvent` union type.
+
 ``` {.typescript file=_generated/tests/machines/sliderResetMachine.ts}
 import { setup } from 'xstate';
 import { type Page, expect } from '@playwright/test';
@@ -22,7 +24,11 @@ interface SliderResetConfig {
 }
 
 type SliderEvent = { type: 'SET_VALUE' } | { type: 'RESET' };
+```
 
+`createSliderResetMachine` is the factory that takes a config and returns a fully wired machine, Playwright action map, invariant strings, and DOM assertions — all four named by the config so callers can destructure cleanly.
+
+``` {.typescript file=_generated/tests/machines/sliderResetMachine.ts}
 function createSliderResetMachine(config: SliderResetConfig) {
   const fillDefault = createSliderFillDefaultInvariant(config.sliderId);
   const fillModified = createSliderFillModifiedInvariant(config.sliderId);
@@ -106,7 +112,11 @@ function createSliderResetMachine(config: SliderResetConfig) {
 
   return { machine, playwrightActions, domAssertions, invariants };
 }
+```
 
+The tuning, skew, and volume slider instances are straightforward factory calls — each with its own slider ID, badge ID, reset button ID, default display string, and badge read mode.
+
+``` {.typescript file=_generated/tests/machines/sliderResetMachine.ts}
 export const {
   machine: tuningSliderMachine,
   playwrightActions: tuningSliderPlaywrightActions,
@@ -151,7 +161,11 @@ export const {
   modifiedValue: '0.8',
   badgeReadMode: 'textContent',
 });
+```
 
+The zoom slider requires a patched default assertion because its default position is viewport-dependent — the factory assertion is replaced with a range check before the final exports are destructured.
+
+``` {.typescript file=_generated/tests/machines/sliderResetMachine.ts}
 const zoomSliderBase = createSliderResetMachine({
   name: 'zoomSlider',
   sliderId: 'zoom-slider',

@@ -77,7 +77,11 @@ export const midiInputListener = fromCallback<
   const { midi } = input;
 
   let disposed = false;
+```
 
+Note on/off and device status changes are forwarded unthrottled — they are low-frequency and must arrive immediately. The `disposed` flag guards the expression callbacks below.
+
+``` {.typescript file=_generated/machines/midiActor.ts}
   const onNoteOn: MidiNoteCallback = (note, velocity, channel, deviceId) => {
     sendBack({ type: 'MIDI_NOTE_ON', note, velocity, channel, deviceId });
   };
@@ -93,7 +97,11 @@ export const midiInputListener = fromCallback<
   let lastPitchBendTime = 0;
   let lastSlideTime = 0;
   let lastPressureTime = 0;
+```
 
+Expression CCs (pitch bend, slide, pressure) can arrive above 100 Hz from hardware. Each is throttled independently at ~30 fps using a per-type timestamp. The `disposed` check is necessary because `MidiInput` has no `removePitchBend`/`removeSlide`/`removePressure` methods.
+
+``` {.typescript file=_generated/machines/midiActor.ts}
   const onPitchBend: MidiExpressionCallback = (channel, value) => {
     if (disposed) return;
     const now = performance.now();
@@ -124,7 +132,11 @@ export const midiInputListener = fromCallback<
   midi.onPitchBend(onPitchBend);
   midi.onSlide(onSlide);
   midi.onPressure(onPressure);
+```
 
+Dual-cleanup pattern per XState `fromCallback` bug #5433: `receive` covers explicit early teardown from the parent machine; the returned function covers normal actor stop. Both paths call the same `cleanup`.
+
+``` {.typescript file=_generated/machines/midiActor.ts}
   const cleanup = (): void => {
     disposed = true;
     midi.removeNoteOn(onNoteOn);

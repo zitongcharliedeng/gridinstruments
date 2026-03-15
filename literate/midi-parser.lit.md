@@ -109,7 +109,7 @@ Tick time is converted to wall-clock milliseconds by walking the sorted tempo ma
 `readUint24` reads a big-endian 24-bit integer — the wire format for tempo values. `closePending` finalises an open note by moving it from the pending map into the completed notes array.
 
 ``` {.typescript file=_generated/lib/midi-parser.ts}
-function tickToMs(tick: number, tempoMap: ReadonlyArray<TempoEntry>, ppq: number): number {
+function tickToMs(tick: number, tempoMap: readonly TempoEntry[], ppq: number): number {
   let ms = 0;
   let prevTick = 0;
   let tempoUs = 500000;
@@ -211,7 +211,6 @@ Three meta types matter here. `FF 51` (Set Tempo) updates the tempo map — coll
       }
 
       if (metaType === 0x2f) {
-        offset += len.value;
         break;
       }
 
@@ -243,7 +242,11 @@ Channel voice messages occupy the lower nybble of the status byte for channel (0
       }
       continue;
     }
+```
 
+Channel voice messages decode the upper nybble as message type and the lower nybble as channel. Note On with velocity 0 is treated as Note Off per the MIDI 1.0 spec.
+
+``` {.typescript file=_generated/lib/midi-parser.ts}
     runningStatus = statusByte;
     const msgType = statusByte & 0xf0;
     const channel = statusByte & 0x0f;
@@ -286,7 +289,11 @@ Channel voice messages occupy the lower nybble of the status byte for channel (0
         break;
     }
   }
+```
 
+Any notes still open when the track data ends are closed at the final tick, ensuring every pending note event produces a complete `NoteEvent` in the output.
+
+``` {.typescript file=_generated/lib/midi-parser.ts}
   for (const [key] of pending) {
     closePending(pending, key, tick, notes);
   }

@@ -2349,7 +2349,7 @@ export const gameCalibrationVisualApi: StateInvariant = {
 export const gameCalibrationVisualDim: StateInvariant = {
   id: 'GAME-CAL-4',
   check: async (page: Page) => {
-    const sampleGreyscale = async (): Promise<Array<{ r: number; g: number; b: number }>> => {
+    const sampleGreyscale = async (): Promise<{ r: number; g: number; b: number }[]> => {
       const result = await page.evaluate(() => {
         const canvas = document.getElementById('keyboard-canvas');
         if (!(canvas instanceof HTMLCanvasElement)) return null;
@@ -2357,7 +2357,7 @@ export const gameCalibrationVisualDim: StateInvariant = {
         if (!ctx) return null;
         const w = canvas.width;
         const h = canvas.height;
-        const samples: Array<{ r: number; g: number; b: number }> = [];
+        const samples: { r: number; g: number; b: number }[] = [];
         for (let i = 0; i < 10; i++) {
           const x = Math.floor(w * (i + 1) / 11);
           const y = Math.floor(h / 2);
@@ -2370,7 +2370,7 @@ export const gameCalibrationVisualDim: StateInvariant = {
       return result;
     };
 
-    const before = await sampleGreyscale();
+    const _before = await sampleGreyscale();
 
     await page.locator('#calibrate-btn').click();
     await page.waitForTimeout(500);
@@ -3017,7 +3017,7 @@ export const gameSearch2: StateInvariant = {
       try {
         const out = await searchAllAdapters('bach');
         isArray = Array.isArray(out.results);
-      } catch (_err) {
+      } catch {
         threw = true;
       }
       return { threw, isArray };
@@ -3034,11 +3034,10 @@ export const gameSearch3: StateInvariant = {
     const violations = await page.evaluate(async () => {
       const { GitHubMidiAdapter } = await import('/_generated/lib/midi-search.ts');
       const adapter = new GitHubMidiAdapter();
-      let results: Array<{ title: unknown; source: unknown; fetchUrl: unknown }> = [];
+      let results: { title: unknown; source: unknown; fetchUrl: unknown }[] = [];
       try {
         results = await adapter.search('bach');
-      } catch (_err) {
-        results = [];
+      } catch {
       }
       return results.filter(
         r => typeof r.title !== 'string' || typeof r.source !== 'string' || typeof r.fetchUrl !== 'string',
@@ -3229,7 +3228,7 @@ export const gameQuant5: StateInvariant = {
       try {
         const quantized = quantizeNotes(events, tempoMap, timeSigMap, '1/4');
         return { ok: true, count: quantized.length };
-      } catch (e) {
+      } catch {
         return { ok: false, count: 0 };
       }
     });
@@ -3336,7 +3335,7 @@ export const gameQuant9: StateInvariant = {
           count: quantized.length,
           allFinite: quantized.every(e => Number.isFinite(e.startMs)),
         };
-      } catch (e) {
+      } catch {
         return { ok: false, count: 0, allFinite: false };
       }
     });

@@ -2,6 +2,8 @@
 
 XState machine modeling the about dialog — closed and open states with content, links, and footer invariants.
 
+The module imports XState and Playwright utilities, then defines three `StateInvariant` constants that verify the dialog's open state: the content must mention "isomorphic", the credits links must include Wicki/Striso/MIDImech/WickiSynth, and no bare "GitHub" link or author profile link should appear in the footer.
+
 ``` {.typescript file=_generated/tests/machines/aboutDialogMachine.ts}
 import { setup } from 'xstate';
 import { type Page, expect } from '@playwright/test';
@@ -43,7 +45,11 @@ const aboutFooterCheck: StateInvariant = {
     expect(allLinks.every(t => !(/^GitHub$/i.exec(t)))).toBe(true);
   },
 };
+```
 
+The XState machine models the two dialog states. The `open` state carries all three invariant checks; the `closed` state has no invariants since the dialog is not rendered.
+
+``` {.typescript file=_generated/tests/machines/aboutDialogMachine.ts}
 type AboutEvent = { type: 'CLICK_ABOUT' } | { type: 'CLOSE' };
 
 export const aboutDialogMachine = setup({
@@ -69,7 +75,11 @@ export const aboutDialogMachine = setup({
     },
   },
 });
+```
 
+The Playwright actions, string invariants, and DOM assertion functions complete the module — clicking `#about-btn` opens the dialog, clicking `#about-close` closes it, and each state's assertion checks visibility of `#about-dialog`.
+
+``` {.typescript file=_generated/tests/machines/aboutDialogMachine.ts}
 export const aboutDialogPlaywrightActions: Record<AboutEvent['type'], (page: Page) => Promise<void>> = {
   CLICK_ABOUT: async (page) => {
     await page.locator('#about-btn').click();

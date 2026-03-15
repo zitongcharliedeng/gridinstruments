@@ -47,7 +47,7 @@ Generates a small footer link pointing to the literate source file on GitHub.
 
 ``` {.typescript file=_generated/app-constants.ts}
 const SRC = 'https://github.com/zitongcharliedeng/gridinstruments/blob/main/literate';
-const srcLink = (file: string, label = 'Source') =>
+const srcLink = (file: string, label = 'Source'): string =>
   `<p style="margin-top:16px;padding-top:8px;border-top:1px solid #222;font-size:10px;"><a href="${SRC}/${file}" target="_blank" rel="noopener" style="color:var(--dim);">📄 ${label}</a></p>`;
 ```
 

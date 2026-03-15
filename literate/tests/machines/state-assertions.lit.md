@@ -2,6 +2,8 @@
 
 Unified state assertion registry for XState graph test generation — single lookup interface for DOM assertions, LLM invariants, and Playwright actions for any (machine, state) or (machine, event) pair.
 
+The module imports all per-machine assertion triples (actions, invariants, domAssertions) from the central uiMachine barrel, plus the shared Page type from Playwright.
+
 ``` {.typescript file=_generated/tests/machines/state-assertions.ts}
 import type { Page } from '@playwright/test';
 
@@ -68,7 +70,11 @@ import {
   songBarInvariants,
   songBarDomAssertions,
 } from './uiMachine';
+```
 
+`MachineAssertionKit` bundles the three assertion surfaces for one machine. The `registry` object maps each machine name to its kit, providing O(1) lookup by name string.
+
+``` {.typescript file=_generated/tests/machines/state-assertions.ts}
 export interface MachineAssertionKit {
   actions: Partial<Record<string, (page: Page) => Promise<void>>>;
   invariants: Partial<Record<string, string>>;
@@ -177,7 +183,11 @@ const registry: Partial<Record<string, MachineAssertionKit>> = {
     domAssertions: songBarDomAssertions,
   },
 };
+```
 
+The four exported lookup functions provide the public API consumed by the graph-generated test runner — `getKit` for bulk access, `getAction` for event dispatch, `assertDomState` for state verification, and `getInvariant` for LLM prompt text.
+
+``` {.typescript file=_generated/tests/machines/state-assertions.ts}
 export function getKit(machineName: string): MachineAssertionKit {
   const kit = registry[machineName];
   if (!kit) throw new Error(`Unknown machine: ${machineName}`);

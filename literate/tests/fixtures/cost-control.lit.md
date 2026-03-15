@@ -23,7 +23,11 @@ export function isVisionEnabled(): boolean {
 export function getScreenshotHash(buffer: Buffer): string {
   return createHash('sha256').update(buffer).digest('hex');
 }
+```
 
+The `VisionCache` class persists results to disk, keyed by screenshot hash, to avoid redundant API calls across test runs.
+
+``` {.typescript file=_generated/tests/fixtures/cost-control.ts}
 const CACHE_FILENAME = '.vision-cache.json';
 
 export class VisionCache {

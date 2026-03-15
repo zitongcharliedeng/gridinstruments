@@ -67,7 +67,11 @@ export class DComposeApp {
   private arrowRightHeld = false;
   private arrowVibratoInterval: ReturnType<typeof setInterval> | null = null;
   private arrowVibratoPhase = 0;
+```
 
+The second group of private fields covers DOM references and UI state: canvas elements, all slider inputs, pedal/game actors, idle detection, and the calibration range used by game mode to restrict playable notes.
+
+``` {.typescript file=_generated/app-core.ts}
   private cachedCanvasRect: DOMRect | null = null;
   private renderScheduled = false;
   private canvas: HTMLCanvasElement;

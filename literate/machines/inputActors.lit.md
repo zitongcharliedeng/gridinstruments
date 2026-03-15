@@ -92,7 +92,11 @@ export const pointerListener = fromCallback<CleanupEvent, PointerListenerInput>(
         y: e.clientY - rect.top,
       };
     };
+```
 
+`pointerdown` records the initial position in `lastSent` so subsequent move throttling has a reference point. `pointermove` is only forwarded when the pointer has crossed the cell-size threshold or pressure changed enough — preventing the >30 Hz XState event flood anti-pattern.
+
+``` {.typescript file=_generated/machines/inputActors.ts}
     const onPointerDown = (e: PointerEvent): void => {
       const { x, y } = getCanvasCoords(e);
       lastSent.set(e.pointerId, { x, y, pressure: e.pressure });
@@ -132,7 +136,11 @@ export const pointerListener = fromCallback<CleanupEvent, PointerListenerInput>(
         sendBack(event);
       }
     };
+```
 
+`pointerleave` and `pointercancel` are both mapped to `POINTER_UP` so the machine always receives a clean terminal event for every active pointer, even when the pointer exits the canvas boundary.
+
+``` {.typescript file=_generated/machines/inputActors.ts}
     const onPointerUp = (e: PointerEvent): void => {
       lastSent.delete(e.pointerId);
       const event: PointerUpEvent = { type: 'POINTER_UP', pointerId: e.pointerId };
@@ -156,7 +164,11 @@ export const pointerListener = fromCallback<CleanupEvent, PointerListenerInput>(
     canvas.addEventListener('pointerup', onPointerUp);
     canvas.addEventListener('pointerleave', onPointerLeave);
     canvas.addEventListener('pointercancel', onPointerCancel);
+```
 
+Dual-cleanup mirrors the `midiInputListener` pattern — `receive` covers parent-initiated teardown, the return function covers normal actor stop.
+
+``` {.typescript file=_generated/machines/inputActors.ts}
     const removeListeners = (): void => {
       canvas.removeEventListener('pointerdown', onPointerDown);
       canvas.removeEventListener('pointermove', onPointerMove);

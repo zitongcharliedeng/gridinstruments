@@ -17,7 +17,11 @@ function getClient(): Anthropic {
   client ??= new Anthropic();
   return client;
 }
+```
 
+The system prompt instructs the model to evaluate a single visual invariant and return structured JSON.
+
+``` {.typescript file=_generated/tests/fixtures/llm-vision.ts}
 const SYSTEM_PROMPT = `You are a visual QA tester for a browser-based music synthesizer called GridInstruments. Given a screenshot and an invariant description, determine whether the invariant holds in the screenshot.
 
 Rules:
@@ -28,7 +32,11 @@ Rules:
 
 Respond with ONLY valid JSON (no markdown, no explanation outside JSON):
 {"pass": boolean, "confidence": "high"|"medium"|"low", "reason": "one sentence explanation"}`;
+```
 
+The exported function sends the screenshot and invariant text to Claude, returning a fail-open result if the API is unavailable.
+
+``` {.typescript file=_generated/tests/fixtures/llm-vision.ts}
 export async function assertWithVision(
   screenshot: Buffer,
   context?: string,

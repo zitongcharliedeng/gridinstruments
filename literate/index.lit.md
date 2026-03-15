@@ -447,6 +447,13 @@ buttons that invert on hover.
       100% { background-position: -100% 0; }
     }
     #grid-overlay.hidden { display: none; }
+```
+
+The overlay sections use `.overlay-section` as a vertical flex column for labelled control
+groups, and `.overlay-btn` as the standard action button style — uppercase, high-contrast,
+inverting on hover.
+
+``` {.html file=index.html}
     .overlay-section {
       display: flex;
       flex-direction: column;
@@ -534,7 +541,13 @@ machine.
       color: var(--dim);
       padding: 4px 0;
     }
+```
 
+The pedals panel stacks two full-width `.pedal-btn` elements separated by a 1px gap.
+Each button inverts to white-on-black when held, driven by the `.active` class toggled
+by the state machine.
+
+``` {.html file=index.html}
 
     #pedals-panel {
       flex-shrink: 0;

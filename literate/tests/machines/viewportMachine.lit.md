@@ -2,6 +2,8 @@
 
 XState machine modeling responsive viewport states — desktop 1280, tablet 768, mobile 390, and mobile 375 — with canvas resize and overflow invariants.
 
+The module imports XState and Playwright utilities, then defines four `StateInvariant` constants that encode the structural requirements for each viewport class: canvas must remain visible and sized after resize, tablet must keep all header elements visible, mobile must have the overlay hidden and canvas filling the full width, and the smallest phone must produce no horizontal scroll.
+
 ``` {.typescript file=_generated/tests/machines/viewportMachine.ts}
 import { setup } from 'xstate';
 import { type Page, expect } from '@playwright/test';
@@ -59,7 +61,11 @@ const mobileCanvasFillsWidth: StateInvariant = {
     expect(canvasWidth).toBeGreaterThanOrEqual(vpWidth - 10);
   },
 };
+```
 
+The XState machine models the four viewport states. Each state lists the invariants that must hold after the viewport is set, and each carries transitions to all other states via the corresponding `SET_VIEWPORT_*` events.
+
+``` {.typescript file=_generated/tests/machines/viewportMachine.ts}
 type ViewportEvent =
   | { type: 'SET_VIEWPORT_375' }
   | { type: 'SET_VIEWPORT_390' }
@@ -122,7 +128,11 @@ export const viewportMachine = setup({
     },
   },
 });
+```
 
+`viewportPlaywrightActions` resizes the Playwright browser viewport and waits for layout to settle before the test runner evaluates invariants.
+
+``` {.typescript file=_generated/tests/machines/viewportMachine.ts}
 export const viewportPlaywrightActions: Record<ViewportEvent['type'], (page: Page) => Promise<void>> = {
   SET_VIEWPORT_375: async (page) => {
     await page.setViewportSize({ width: 375, height: 667 });
@@ -141,7 +151,11 @@ export const viewportPlaywrightActions: Record<ViewportEvent['type'], (page: Pag
     await page.waitForTimeout(500);
   },
 };
+```
 
+The string invariants and DOM assertion functions complete the module — the invariants provide human-readable descriptions and the assertions perform concrete element visibility and geometry checks for each state.
+
+``` {.typescript file=_generated/tests/machines/viewportMachine.ts}
 export const viewportInvariants: Record<string, string> = {
   desktop_1280: 'Standard desktop viewport — all UI elements visible.',
   tablet_768: 'Tablet viewport — all UI elements including GitHub actions visible.',

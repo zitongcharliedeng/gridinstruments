@@ -2,6 +2,8 @@
 
 XState machine modeling compound modifier key states — idle, vibratoOnly, sustainOnly, and bothActive — with focus return and Ctrl passthrough invariants.
 
+The module imports XState and Playwright utilities, then defines two `StateInvariant` constants: `ctrlPassthroughCheck` verifies that `Ctrl+key` combinations never activate modifiers, and `focusReturnCheck` verifies that Shift-triggered vibrato works after clicking the keyboard container.
+
 ``` {.typescript file=_generated/tests/machines/modifierCompoundMachine.ts}
 import { setup } from 'xstate';
 import { type Page, expect } from '@playwright/test';
@@ -32,7 +34,11 @@ export const focusReturnCheck: StateInvariant = {
     await expect(page.locator('#vibrato-indicator')).not.toHaveClass(/active/);
   },
 };
+```
 
+The XState machine models the four modifier-key states. The `idle` state carries the `ctrlPassthroughCheck` invariant; all states clear back to `idle` on `WINDOW_BLUR` to ensure modifiers are never stuck when focus leaves the window.
+
+``` {.typescript file=_generated/tests/machines/modifierCompoundMachine.ts}
 type ModifierEvent =
   | { type: 'PRESS_SHIFT' }
   | { type: 'RELEASE_SHIFT' }
@@ -97,7 +103,11 @@ export const modifierCompoundMachine = setup({
     },
   },
 });
+```
 
+`modifierCompoundPlaywrightActions` dispatches synthetic keyboard events directly on `document.body` so they reach the app's global keydown/keyup listeners regardless of which element has focus.
+
+``` {.typescript file=_generated/tests/machines/modifierCompoundMachine.ts}
 export const modifierCompoundPlaywrightActions: Record<ModifierEvent['type'], (page: Page) => Promise<void>> = {
   PRESS_SHIFT: async (page) => {
     await page.evaluate(() => document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Shift', code: 'ShiftLeft', shiftKey: true, bubbles: true, cancelable: true })));
@@ -124,7 +134,11 @@ export const modifierCompoundPlaywrightActions: Record<ModifierEvent['type'], (p
     await page.waitForTimeout(200);
   },
 };
+```
 
+The string invariants and DOM assertion functions complete the module — the invariants provide human-readable descriptions and the assertions check the `#vibrato-indicator` and `#sustain-indicator` class lists for each state.
+
+``` {.typescript file=_generated/tests/machines/modifierCompoundMachine.ts}
 export const modifierCompoundInvariants: Record<string, string> = {
   idle: 'No modifier keys active — vibrato and sustain both off.',
   vibratoOnly: 'Vibrato active, sustain inactive.',

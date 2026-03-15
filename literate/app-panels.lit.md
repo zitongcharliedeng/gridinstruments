@@ -41,7 +41,11 @@ export function setupPanelHandles(): void {
         startCollapsed,
       },
     });
+```
 
+The subscriber translates machine snapshots into DOM mutations: collapsed class, dragging class, inline height, and localStorage persistence. Height is not written during drag (only on the `idle` → `dragging` trailing edge) to avoid excessive storage writes. The `routing` state is a trampoline and is skipped.
+
+``` {.typescript file=_generated/app-panels.ts}
     let prevState = '';
     actor.subscribe((snapshot) => {
       const state = snapshot.value as string;

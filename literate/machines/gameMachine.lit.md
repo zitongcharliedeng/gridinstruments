@@ -101,6 +101,11 @@ export const gameMachine = setup({
       }
       return { pressedMidiNotes: [...context.pressedMidiNotes, event.midiNote] };
     }),
+```
+
+The remaining actions advance to the next chord group, record the finish timestamp, and provide reset and restart variants that zero or preserve the loaded song data respectively.
+
+``` {.typescript file=_generated/machines/gameMachine.ts}
     advanceGroup: assign(({ context }) => {
       const nextIndex = context.currentGroupIndex + 1;
       return {
@@ -157,6 +162,8 @@ would exhaust the groups array.
 
 ### States
 
+The initial context zeroes all runtime fields. `idle` and `loading` are waiting states before any song data is available.
+
 ``` {.typescript file=_generated/machines/gameMachine.ts}
 }).createMachine({
   id: 'game',
@@ -184,6 +191,11 @@ would exhaust the groups array.
         GAME_RESET: { target: 'idle', actions: 'resetGame' },
       },
     },
+```
+
+`playing` handles `NOTE_PRESSED` with a priority-ordered guard chain: completing the last chord group wins over completing a non-last group, which wins over simply accumulating the note. Wrong notes fall through all guards and are silently ignored.
+
+``` {.typescript file=_generated/machines/gameMachine.ts}
     playing: {
       on: {
         NOTE_PRESSED: [

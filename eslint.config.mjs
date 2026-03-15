@@ -24,9 +24,10 @@ export default tseslint.config(
 
   // Test files use tsconfig.test.json (projectService disabled for this config)
   {
-    files: ['tests/**/*.ts'],
+    files: ['_generated/tests/**/*.ts'],
     languageOptions: {
       parserOptions: {
+        projectService: false,
         project: './tsconfig.test.json',
         tsconfigRootDir: import.meta.dirname,
       },
@@ -102,7 +103,7 @@ export default tseslint.config(
   // - no-empty-function: mock MIDIOutput.clear() methods are intentionally empty.
   // This override MUST come after the global rules block.
   {
-    files: ['tests/**/*.ts'],
+    files: ['_generated/tests/**/*.ts'],
     rules: {
       '@typescript-eslint/no-unsafe-call': 'off',
       '@typescript-eslint/no-unsafe-member-access': 'off',
@@ -111,6 +112,16 @@ export default tseslint.config(
       '@typescript-eslint/no-unsafe-argument': 'off',
       '@typescript-eslint/require-await': 'off',
       '@typescript-eslint/no-empty-function': 'off',
+      '@typescript-eslint/strict-boolean-expressions': 'off',
+      '@typescript-eslint/no-unnecessary-condition': 'off',
+      '@typescript-eslint/dot-notation': 'off',
+      '@typescript-eslint/restrict-template-expressions': 'off',
+      '@typescript-eslint/explicit-function-return-type': 'off',
+      '@typescript-eslint/prefer-optional-chain': 'off',
+      '@typescript-eslint/no-unused-vars': ['error', {
+        argsIgnorePattern: '^_',
+        varsIgnorePattern: '^_',
+      }],
       'no-empty': 'off',
     },
   },

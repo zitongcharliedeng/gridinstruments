@@ -15,7 +15,11 @@ function getCache(): VisionCache {
   cacheInstance ??= new VisionCache();
   return cacheInstance;
 }
+```
 
+The `VisualAssertOptions` and `VisualAssertResult` interfaces define the contract for the assertion function.
+
+``` {.typescript file=_generated/tests/fixtures/visual-assert.ts}
 export interface VisualAssertOptions {
   invariant: string;
   context?: string;
@@ -30,7 +34,11 @@ export interface VisualAssertResult {
   visionResult: VisionResult | null;
   passed: boolean;
 }
+```
 
+The main assertion function orchestrates golden screenshot comparison and optional LLM vision checks.
+
+``` {.typescript file=_generated/tests/fixtures/visual-assert.ts}
 export async function assertVisualState(
   opts: VisualAssertOptions,
 ): Promise<VisualAssertResult> {

@@ -2,6 +2,8 @@
 
 XState machine modeling the D-reference frequency input — idle, focused, validValue, invalidValue, and emptyValue states with bracket annotation and red border invariants.
 
+The file opens with imports and three `StateInvariant` constants that capture the structural requirements: the bracket annotation must always show "D REF" and "Hz", the idle state must display a valid positive number, and the invalid state must show a red border.
+
 ``` {.typescript file=_generated/tests/machines/drefInputMachine.ts}
 import { setup } from 'xstate';
 import { type Page, expect } from '@playwright/test';
@@ -36,7 +38,11 @@ const redBorderCheck: StateInvariant = {
     expect(borderColor).toBe('rgb(204, 51, 51)');
   },
 };
+```
 
+The XState machine models the five input lifecycle states. Each state carries `meta` with `reason`, `designIntent`, and where applicable the `invariants` array that the test runner evaluates on entry.
+
+``` {.typescript file=_generated/tests/machines/drefInputMachine.ts}
 type DrefEvent =
   | { type: 'CLICK_INPUT' }
   | { type: 'TYPE_NOTE_NAME' }
@@ -120,7 +126,11 @@ export const drefInputMachine = setup({
     },
   },
 });
+```
 
+`drefInputPlaywrightActions` maps each event type to a Playwright async function that drives the browser to produce that transition — clicking, filling, dispatching input events, and using the reset button.
+
+``` {.typescript file=_generated/tests/machines/drefInputMachine.ts}
 export const drefInputPlaywrightActions: Record<DrefEvent['type'], (page: Page) => Promise<void>> = {
   CLICK_INPUT: async (page) => {
     await page.locator('#d-ref-input').click();
@@ -163,7 +173,11 @@ export const drefInputPlaywrightActions: Record<DrefEvent['type'], (page: Page) 
     await page.waitForTimeout(200);
   },
 };
+```
 
+The string invariants provide human-readable descriptions for test output, and the DOM assertion functions verify the actual browser state for each named state.
+
+``` {.typescript file=_generated/tests/machines/drefInputMachine.ts}
 export const drefInputInvariants: Record<string, string> = {
   idle: 'D-ref input is unfocused, showing default or last valid frequency with D4 annotation.',
   focused: 'D-ref input has keyboard focus, ready for user input.',

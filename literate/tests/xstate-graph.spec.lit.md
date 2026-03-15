@@ -2,6 +2,8 @@
 
 Model-based test suite — enumerates all (state, event) pairs from 10+ XState UI machines via adjacency map traversal, generating Playwright tests for each transition plus structural invariant checks.
 
+The import block pulls in the Playwright test harness, XState graph utilities, all machine definitions, and every `StateInvariant` object from `invariant-checks.ts`. The sheer length of this import list reflects how many independently verifiable invariants the suite currently tracks.
+
 ``` {.typescript file=_generated/tests/xstate-graph.spec.ts}
 import { test, expect } from '@playwright/test';
 import { type AnyStateMachine } from 'xstate';
@@ -189,7 +191,11 @@ import {
        qwertyGoldenCheck,
      } from './machines/invariant-checks';
 import { focusReturnCheck } from './machines/modifierCompoundMachine';
+```
 
+These two interfaces describe the shape of a single recorded transition — its source state, triggering event, target state, and the BFS path needed to reach the source state from the machine's initial state.
+
+``` {.typescript file=_generated/tests/xstate-graph.spec.ts}
 interface TransitionTest {
   machineName: string;
   sourceState: string;
@@ -207,7 +213,11 @@ interface AdjTransition {
 interface AdjNode {
   transitions: Record<string, AdjTransition>;
 }
+```
 
+`computeShortestPaths` runs a BFS over the XState adjacency map to find the minimum-event path from the initial state to every reachable state. These paths are used later so each graph-generated test can navigate to the correct source state before firing its event.
+
+``` {.typescript file=_generated/tests/xstate-graph.spec.ts}
 function computeShortestPaths(machine: AnyStateMachine): Map<string, string[]> {
   const adj = getAdjacencyMap(machine, {
     serializeState: (state) => JSON.stringify(state.value),
@@ -246,7 +256,11 @@ function computeShortestPaths(machine: AnyStateMachine): Map<string, string[]> {
 
   return paths;
 }
+```
 
+`enumerateTransitions` walks every entry in the adjacency map and produces one `TransitionTest` record per `(source, event, target)` triple. The resulting array drives the `test.describe([Graph] …)` loop at the bottom of the file — one Playwright test per record.
+
+``` {.typescript file=_generated/tests/xstate-graph.spec.ts}
 function enumerateTransitions(
   machineName: string,
   machine: AnyStateMachine,
@@ -281,11 +295,21 @@ function enumerateTransitions(
 
   return tests;
 }
+```
 
+`NEEDS_OVERLAY_OPEN` lists the machine names whose states are only reachable after the grid-settings overlay is open. `SKIP_MACHINES` is a safety valve for temporarily excluding a machine from graph traversal without deleting its definition.
+
+``` {.typescript file=_generated/tests/xstate-graph.spec.ts}
 const NEEDS_OVERLAY_OPEN = new Set(['waveform', 'mpe', 'textInputFocus', 'skewLabel', 'midiPanel', 'tuningSlider', 'skewSlider', 'volumeSlider', 'zoomSlider', 'drefInput']);
 
 const SKIP_MACHINES = new Set<string>([]);
+```
 
+The `[Structural]` describe block contains state-independent invariants — checks that must pass on every page load regardless of machine state. The `beforeEach` navigates to the app root and waits for network idle plus a short settle delay before each test.
+
+Panel handle placement and ARIA attributes are tested first because they are pure DOM-structure invariants that must hold before any interaction.
+
+``` {.typescript file=_generated/tests/xstate-graph.spec.ts}
 test.describe('[Structural] state-independent invariants', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
@@ -304,7 +328,11 @@ test.describe('[Structural] state-independent invariants', () => {
   test('BH-FOCUS-RETURN-1: keyboard works after clicking neutral element', async ({ page }) => {
     await focusReturnCheck.check(page);
   });
+```
 
+The mobile smart-zoom test verifies that on a 390px touch viewport the app's `getDefaultZoom()` returns a value in the range `(0.5, 1.0]` — ensuring the grid is neither invisible nor oversized on phones.
+
+``` {.typescript file=_generated/tests/xstate-graph.spec.ts}
   test('BH-MOB-2: smart zoom on 390px touch device ≤ 1.0', async ({ browser }) => {
     const ctx = await browser.newContext({
       viewport: { width: 390, height: 844 },
@@ -325,11 +353,19 @@ test.describe('[Structural] state-independent invariants', () => {
 
     await ctx.close();
   });
+```
 
+`SM-APP-LOADED` checks that the app uses `#000` background, `#fff` text, JetBrains Mono, correct DPR scaling, and zero border-radius on interactive elements — the full design-language invariant in one shot.
+
+``` {.typescript file=_generated/tests/xstate-graph.spec.ts}
   test('SM-APP-LOADED: app colors, font, DPR scaling, no rounded corners', async ({ page }) => {
     await appLoadedCheck.check(page);
   });
+```
 
+Golden screenshot tests compare rendered pixels against stored reference images. They catch unintentional visual regressions in the overlay, full page, keyboard canvas, and TET notch label rendering.
+
+``` {.typescript file=_generated/tests/xstate-graph.spec.ts}
   test('GOLDEN-1: Grid overlay snapshot', async ({ page }) => {
     await page.locator('#grid-settings-btn').click();
     await page.waitForTimeout(300);
@@ -349,7 +385,11 @@ test.describe('[Structural] state-independent invariants', () => {
     await page.waitForTimeout(300);
     await tetNotchGoldenCheck.check(page);
   });
+```
 
+The OverlayScrollbars tests verify that the overlay panel uses a 12px-wide custom scrollbar and actually overflows at a small viewport height — confirming that the scrollbar is both visually sized correctly and functionally necessary.
+
+``` {.typescript file=_generated/tests/xstate-graph.spec.ts}
   test('ISS-62-1: OverlayScrollbars scrollbar has 12px width when content overflows (#62)', async ({ page }) => {
     await scrollbarWidthCheck.check(page);
   });
@@ -361,7 +401,11 @@ test.describe('[Structural] state-independent invariants', () => {
   test('ISS-84-1: rapid keyboard clicks do not change D-ref value (#84)', async ({ page }) => {
     await drefDriftCheck.check(page);
   });
+```
 
+The coordinate theory (CT) tests verify the mathematical correctness of the pitch lattice, note naming, and OKLCH color system without playing any audio. They test `TUNING_MARKERS` ordering, `coordToMidi`, `pitchClassFromCoordX`, note name strings, hue assignments, round-trip fidelity, and cents-deviation at different fifth sizes.
+
+``` {.typescript file=_generated/tests/xstate-graph.spec.ts}
   test('CT-MARKERS-1: TUNING_MARKERS sorted descending by fifth', async ({ page }) => {
     await ctMarkers1Check.check(page);
   });
@@ -441,7 +485,11 @@ test.describe('[Structural] state-independent invariants', () => {
   test('BH-DOUBLEACCIDENTAL-1: Note naming includes double sharps and flats', async ({ page }) => {
     await bhDoubleAccidental1Check.check(page);
   });
+```
 
+The MPE protocol tests (ISC-MPE-* and ISC-SVC-*) verify the MIDI Polyphonic Expression implementation: correct status bytes, valid 14-bit pitch bend encoding, CC74 normalization, FIFO channel allocation, MCM transmission, and the full MPEService lifecycle including settings updates, panic, dispose, pressure mode, and custom CC numbers.
+
+``` {.typescript file=_generated/tests/xstate-graph.spec.ts}
   test('ISC-MPE-1: noteOn sends correct status byte on member channel 2–16', async ({ page }) => {
     await iscMpe1Check.check(page);
   });
@@ -505,7 +553,11 @@ test.describe('[Structural] state-independent invariants', () => {
   test('ISC-SVC-10: configurable timbreCC uses custom CC number', async ({ page }) => {
     await iscSvc10Check.check(page);
   });
+```
 
+The ISS-* tests are regression guards for specific GitHub issues: skew notch label text (ISS-81), cog button layout overlap (ISS-87), wave selector UI (ISS-96), keyboard layout reset button (ISS-97), slider-track right-edge alignment (ISS-98), and overlay category heading styles (ISS-92).
+
+``` {.typescript file=_generated/tests/xstate-graph.spec.ts}
   test('ISS-81-1: skew notch at DCompose shows "DCompose / Wicki-Hayden"', async ({ page }) => {
     await iss81SkewNotchCheck.check(page);
   });
@@ -529,7 +581,11 @@ test.describe('[Structural] state-independent invariants', () => {
    test('ISS-92-1: overlay has organized category headings in correct style', async ({ page }) => {
      await iss92OverlayHeadingsCheck.check(page);
    });
+```
 
+These tests verify that the game mode infrastructure exists in the DOM and exposes the required JavaScript APIs on `KeyboardVisualizer`. They confirm target-note glow, ghost-note rendering on the history canvas, pointer-event acceptance on the keyboard canvas, the score overlay, calibration button, localStorage calibration key, and the game overlay UI elements.
+
+``` {.typescript file=_generated/tests/xstate-graph.spec.ts}
   test('GAME-TGT-1: target note glow API exists', async ({ page }) => {
     await targetNoteApiExists.check(page);
   });
@@ -557,7 +613,11 @@ test.describe('[Structural] state-independent invariants', () => {
   test('GAME-UI-1: game overlay UI elements exist in DOM', async ({ page }) => {
     await gameOverlayUiExists.check(page);
   });
+```
 
+The game integration tests exercise the full pipeline from MIDI parsing through `buildNoteGroups` and into `gameMachine` state transitions. They verify that a well-formed fixture produces valid `NoteEvent` and `NoteGroup` arrays, that `gameMachine` transitions correctly on `SONG_LOADED`, and that a `GAME_RESET` fully clears the context.
+
+``` {.typescript file=_generated/tests/xstate-graph.spec.ts}
   test('GAME-INT-1: MIDI parser produces valid NoteEvent array from fixture', async ({ page }) => {
     await gameMidiParserIntegration.check(page);
   });
@@ -573,7 +633,11 @@ test.describe('[Structural] state-independent invariants', () => {
   test('GAME-INT-4: game reset returns to idle with cleared context', async ({ page }) => {
     await gameMachineReset.check(page);
   });
+```
 
+These tests cover the game's note-matching logic: frequency-based acceptance ignores `cellId` mismatch, `cellId`-only matches are rejected when `midiNote` is wrong, chord groups require all constituent notes, single-note groups advance immediately, and the `pressedMidiNotes` accumulator clears on group advance.
+
+``` {.typescript file=_generated/tests/xstate-graph.spec.ts}
   test('GAME-FREQ-1: correct midiNote with wrong cellId is accepted', async ({ page }) => {
     await gameFreqMatch.check(page);
   });
@@ -593,7 +657,11 @@ test.describe('[Structural] state-independent invariants', () => {
   test('GAME-CHORD-3: pressedMidiNotes clears on group advance', async ({ page }) => {
     await gameChordClear.check(page);
   });
+```
 
+The remaining game UI tests confirm that progress and multi-cell highlight APIs exist and behave correctly: instructions text is present in the game overlay, `setGameState`/`setGameProgress` exist on `KeyboardVisualizer`, `getCellIdsForMidiNotes` returns multiple positions per pitch (isomorphic mirroring), the tuning slider is unlocked when no game is playing, and the calibration visual API dims uncalibrated cells.
+
+``` {.typescript file=_generated/tests/xstate-graph.spec.ts}
   test('GAME-UI-2: instructions text exists in GAME overlay section', async ({ page }) => {
     await gameInstructionsText.check(page);
   });
@@ -625,7 +693,11 @@ test.describe('[Structural] state-independent invariants', () => {
   test('GAME-RESTART-1: GAME_RESTART event exists in playing and complete states', async ({ page }) => {
     await gameRestart1.check(page);
   });
+```
 
+The game engine unit tests verify the pure algorithmic functions in `game-engine.ts` in isolation. They cover chord-grouping windowing, `cellId` deduplication within a chord, semitone transposition, range cropping, optimal transposition search, median MIDI note calculation, and the empty-input edge case.
+
+``` {.typescript file=_generated/tests/xstate-graph.spec.ts}
   test('GAME-ENG-1: buildNoteGroups groups notes within 20ms window into one chord group', async ({ page }) => {
     await gameEngBuildNoteGroups1.check(page);
   });
@@ -653,7 +725,11 @@ test.describe('[Structural] state-independent invariants', () => {
   test('GAME-ENG-7: buildNoteGroups returns empty array for empty NoteEvent input', async ({ page }) => {
     await gameEngBuildNoteGroupsEmpty.check(page);
   });
+```
 
+The MIDI parser tests exercise the binary MIDI parsing layer: multi-track Type 1 files, running status encoding, velocity-0 note-on as note-off, drum channel (ch9) filtering, empty note arrays, corrupt headers, and drum-only files. These invariants protect against regressions in the raw byte-level parser without requiring actual MIDI hardware.
+
+``` {.typescript file=_generated/tests/xstate-graph.spec.ts}
   test('GAME-MIDI-1: Type 1 multi-track MIDI parsed into merged NoteEvent array', async ({ page }) => {
     await gameMidi1.check(page);
   });
@@ -681,7 +757,11 @@ test.describe('[Structural] state-independent invariants', () => {
   test('GAME-MIDI-7: MIDI with only drum channel (ch9) events returns empty array after filtering', async ({ page }) => {
     await gameMidi7.check(page);
   });
+```
 
+The game state machine (GAME-SM-*) tests exercise every major transition in `gameMachine`: idle → loading on file drop, loading → playing with context initialization, loading → error with stored error message, error reset and retry paths, complete → new game and reset, playing → new song and reset, wrong-note no-op guard, and the tuning-warn acknowledgement flag.
+
+``` {.typescript file=_generated/tests/xstate-graph.spec.ts}
   test('GAME-SM-1: idle → FILE_DROPPED → loading', async ({ page }) => {
     await gameSm1IdleToLoading.check(page);
   });
@@ -725,7 +805,11 @@ test.describe('[Structural] state-independent invariants', () => {
   test('GAME-SM-11: TUNING_WARN_ACK sets tuningWarnAcknowledged flag in context', async ({ page }) => {
     await gameSm11TuningWarnAck.check(page);
   });
+```
 
+The game input tests verify the `NOTE_PRESSED` event handler: a correct `midiNote` advances `currentGroupIndex` regardless of `cellId`, a wrong `midiNote` is silently rejected, and the frequency-only matching rule applies even with an arbitrary `cellId`.
+
+``` {.typescript file=_generated/tests/xstate-graph.spec.ts}
   test('GAME-INPUT-1: NOTE_PRESSED with correct midiNote field advances currentGroupIndex', async ({ page }) => {
     await gameInput1.check(page);
   });
@@ -737,7 +821,11 @@ test.describe('[Structural] state-independent invariants', () => {
   test('GAME-INPUT-3: NOTE_PRESSED matches by midiNote only — arbitrary cellId with correct midiNote advances group', async ({ page }) => {
     await gameInput3.check(page);
   });
+```
 
+The game edge-case tests handle unusual but valid scenarios: non-MIDI file rejection, drum-only MIDI producing an empty song, same correct note pressed twice (deduplication), `cropToRange` removing all groups, and immediate single-note group advancement. Each test confirms the machine reaches the correct terminal state without hanging.
+
+``` {.typescript file=_generated/tests/xstate-graph.spec.ts}
   test('GAME-EDGE-1: Non-MIDI file: machine enters loading then error (file type validation is in main.ts, not machine)', async ({ page }) => {
     await gameEdge1.check(page);
   });
@@ -757,7 +845,11 @@ test.describe('[Structural] state-independent invariants', () => {
   test('GAME-EDGE-5: Single-note group advances immediately on correct press (no chord accumulation phase)', async ({ page }) => {
     await gameEdge5.check(page);
   });
+```
 
+The MIDI search tests confirm that the search UI exists in the DOM inside `#grid-overlay`, that `searchAllAdapters` returns an array without throwing, that GitHub adapter results carry the required `title/source/fetchUrl` fields, that typing in `#midi-search-input` triggers the search pipeline, that all three adapters implement the `MidiSearchAdapter` interface, and that the input/results elements have the correct types and IDs.
+
+``` {.typescript file=_generated/tests/xstate-graph.spec.ts}
   test('GAME-SEARCH-1: #midi-search-input exists in DOM inside #grid-overlay', async ({ page }) => {
     await gameSearch1.check(page);
   });
@@ -781,7 +873,11 @@ test.describe('[Structural] state-independent invariants', () => {
   test('GAME-SEARCH-6: #midi-search-input is type=text and #midi-search-results exists', async ({ page }) => {
     await gameSearch6.check(page);
   });
+```
 
+The quantization tests verify `quantizeNotes` at each supported resolution: `none` passes events through unchanged, `1/4` snaps to quarter-note grid, long notes split into repeated events, tempo changes adjust grid spacing, time signature changes do not throw, duplicate midi notes at the same grid point are deduplicated, the MIDI parser returns `tempoMap` and `timeSigMap`, the default time signature is 4/4, and odd meters like 7/8 do not break quantization.
+
+``` {.typescript file=_generated/tests/xstate-graph.spec.ts}
   test('GAME-QUANT-1: quantizeNotes with none returns events unchanged', async ({ page }) => {
     await gameQuant1.check(page);
   });
@@ -817,7 +913,11 @@ test.describe('[Structural] state-independent invariants', () => {
    test('GAME-QUANT-9: odd meter (7/8) does not break quantization', async ({ page }) => {
      await gameQuant9.check(page);
    });
+```
 
+The SongBar state machine tests confirm that the machine's states are defined, that `#song-bar-hint` is accessible, that the search input lives inside `#song-bar-search`, that the calibrate button is inside `#song-bar-calibrate`, and that calibration confirm/cancel buttons exist inside `#calibration-banner`. The mirror-highlight test confirms that a single MIDI note maps to multiple isomorphic grid positions.
+
+``` {.typescript file=_generated/tests/xstate-graph.spec.ts}
   test('SONGBAR-SM-1: songBarMachine states exist', async ({ page }) => {
     await songBarSm1.check(page);
   });
@@ -841,7 +941,11 @@ test.describe('[Structural] state-independent invariants', () => {
    test('MIRROR-HIGHLIGHT-1: getCellIdsForMidiNotes returns >1 cell for MIDI 62 at multiple isomorphic positions', async ({ page }) => {
     await mirrorHighlight1.check(page);
   });
+```
 
+The canvas-clean tests verify that the keyboard canvas renders without any game-mode HUD elements when the app is idle — no hint text, no progress bar, no elapsed timer — while still confirming that the `setGameState` and `setGameProgress` API methods exist on `KeyboardVisualizer` for when game mode is active.
+
+``` {.typescript file=_generated/tests/xstate-graph.spec.ts}
   test('CANVAS-CLEAN-1: canvas has no hint text at center-bottom when idle', async ({ page }) => {
     await CANVAS_CLEAN_1.check(page);
   });
@@ -861,7 +965,11 @@ test.describe('[Structural] state-independent invariants', () => {
   test('CANVAS-CLEAN-5: KeyboardVisualizer.setGameProgress method still exists', async ({ page }) => {
     await CANVAS_CLEAN_5.check(page);
   });
+```
 
+The SongBar hint tests verify that `#song-bar-hint` is right-aligned via `margin-left: auto`, that its right edge tracks the song-bar container, and that it hides (becomes invisible) both when the search input is focused and when the user types in it — confirming the idle→active visibility transition for the hint element.
+
+``` {.typescript file=_generated/tests/xstate-graph.spec.ts}
   test('SONGBAR-HINT-1: #song-bar-hint has margin-left: auto (right-aligned)', async ({ page }) => {
     await SONGBAR_HINT_1.check(page);
   });
@@ -881,7 +989,11 @@ test.describe('[Structural] state-independent invariants', () => {
   test('SONGBAR-SEARCH-LABEL-1: A visible "SEARCH" label exists adjacent to #midi-search-input', async ({ page }) => {
     await SONGBAR_SEARCH_LABEL_1.check(page);
   });
+```
 
+The SongBar progress and calibration tests verify that the in-game status elements (`#game-elapsed-timer`, `#game-progress`, `#game-song-title`, `#game-reset-btn`) exist inside `#game-status` and have the correct text content, and that the calibrate button is enabled, correctly labelled, and reachable in the song-bar area.
+
+``` {.typescript file=_generated/tests/xstate-graph.spec.ts}
   test('SONGBAR-PROGRESS-1: #game-elapsed-timer element exists inside #game-status', async ({ page }) => {
     await SONGBAR_PROGRESS_1.check(page);
   });
@@ -913,7 +1025,11 @@ test.describe('[Structural] state-independent invariants', () => {
   test('SONGBAR-CAL-4: #calibrate-btn exists in the song-bar area', async ({ page }) => {
     await SONGBAR_CAL_4.check(page);
   });
+```
 
+The info popup tests verify the `SLIDER_INFO` popup system: that info buttons exist for quantization and calibration, that clicking the quantization button opens `#info-dialog`, that `#info-dialog` uses `position: fixed`, that the `SLIDER_INFO` map has non-empty entries for both keys, and that the quantization label reads "QUANTIZE" rather than the legacy "DIFF".
+
+``` {.typescript file=_generated/tests/xstate-graph.spec.ts}
   test('INFO-POPUP-1: .slider-info-btn[data-info="quantization"] exists in song-bar area', async ({ page }) => {
     await INFO_POPUP_1.check(page);
   });
@@ -937,7 +1053,11 @@ test.describe('[Structural] state-independent invariants', () => {
   test('INFO-POPUP-LABEL-1: Quantization label text is "QUANTIZE" (not "DIFF")', async ({ page }) => {
     await INFO_POPUP_LABEL_1.check(page);
   });
+```
 
+The EXPRESSION section tests confirm that info buttons for all four expression parameters (bend, velocity, pressure, timbre) exist in the correct overlay section, and that the timbre row includes a CC mode selector. The pitch-bend style tests confirm the range input uses `type="text"` (no native spinner arrows) and matches the project's design-language rules (no border-radius, JetBrains Mono).
+
+``` {.typescript file=_generated/tests/xstate-graph.spec.ts}
   test('EXPR-JOINT-1: .slider-info-btn[data-info="bend"] exists in EXPRESSION section', async ({ page }) => {
     await EXPR_JOINT_1.check(page);
   });
@@ -969,7 +1089,11 @@ test.describe('[Structural] state-independent invariants', () => {
   test('IDLE-FADE-2: #song-bar-hint is visible (opacity > 0) on page load when idle', async ({ page }) => {
     await IDLE_FADE_2.check(page);
   });
+```
 
+The ideal-state invariants (IDEAL-* prefix) define the project's "done" criteria: zero duplicate element IDs, no "D4" text in non-grid UI elements, MIDI settings contains an EXPRESSION subtitle, and exactly one flat-sound-toggle checkbox. If all four pass the project is structurally complete. The section also includes three additional golden screenshots (overlay, mobile viewport, QWERTY labels) plus UI-completeness and design-vow checks.
+
+``` {.typescript file=_generated/tests/xstate-graph.spec.ts}
   test('IDEAL-NO-DUP-IDS: Zero duplicate element IDs', async ({ page }) => {
     await NO_DUPLICATE_IDS.check(page);
   });
@@ -1026,7 +1150,11 @@ test.describe('[Structural] state-independent invariants', () => {
     await VOW_NO_BORDER_RADIUS.check(page);
   });
  });
+```
 
+The graph-generated transition loop is the core model-based testing engine. For each machine not in `SKIP_MACHINES`, `enumerateTransitions` produces one test per `(source, event, target)` triple. Each test navigates to the source state via the shortest BFS path, fires the event, asserts the DOM reflects the target state, checks any `meta.invariants` attached to the target state node, and optionally runs an LLM vision check if the state has a registered visual invariant.
+
+``` {.typescript file=_generated/tests/xstate-graph.spec.ts}
 for (const { name: machineName, machine } of allMachines) {
   if (SKIP_MACHINES.has(machineName)) continue;
 

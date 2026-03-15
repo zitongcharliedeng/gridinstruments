@@ -72,6 +72,11 @@ export const appMachine = setup({
     }),
   },
   actions: {
+```
+
+Slider actions recompute the full `SliderState` — value, badge text, and label text — in one `assign`. `handleSliderReset` treats zoom specially: its default comes from `context.defaultZoom` (caller-supplied) rather than the compile-time constants.
+
+``` {.typescript file=_generated/machines/appMachine.ts}
     handleSliderInput: assign(({ context, event }) => {
       assertEvent(event, 'SLIDER_INPUT');
       const newSliders = { ...context.sliders };
@@ -113,7 +118,11 @@ export const appMachine = setup({
       } satisfies SliderState;
       return { sliders: newSliders };
     }),
+```
 
+The remaining actions cover MIDI panel, MPE, waveform, layout, and window blur. `handleWindowBlur` resets all transient note and pointer state so no notes get stuck when the app loses focus.
+
+``` {.typescript file=_generated/machines/appMachine.ts}
     handleMidiPanelToggle: assign(({ context }) => ({
       midiPanelOpen: !context.midiPanelOpen,
     })),

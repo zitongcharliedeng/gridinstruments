@@ -2,10 +2,11 @@
 
 XState machine modeling song-bar behavior — idle, searching, and calibrating states with hint visibility and calibration banner invariants.
 
+The machine models three states in the song bar UI lifecycle. The `idle` state shows the search input with the game status and calibration banner hidden; `searching` keeps the input focused; `calibrating` reveals the calibration banner for the confirm/cancel flow.
+
 ``` {.typescript file=_generated/tests/machines/songBarMachine.ts}
 import { setup } from 'xstate';
 import { type Page, expect } from '@playwright/test';
-import type { StateInvariant } from './types';
 
 type SongBarEvent =
   | { type: 'SEARCH_FOCUS' }
@@ -51,7 +52,11 @@ export const songBarMachine = setup({
     },
   },
 });
+```
 
+The Playwright actions, DOM assertions, and string invariants complete the module — each action targets the relevant button or input, and the assertions check visibility and focus state for each machine state.
+
+``` {.typescript file=_generated/tests/machines/songBarMachine.ts}
 export const songBarPlaywrightActions: Record<SongBarEvent['type'], (page: Page) => Promise<void>> = {
   SEARCH_FOCUS: async (page) => {
     await page.locator('#midi-search-input').click();

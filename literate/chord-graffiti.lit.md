@@ -177,7 +177,11 @@ function renderChord(
     if (!nb) return;
     notePositions.push({ x: nb.x, y: nb.y });
   }
+```
 
+With positions resolved, rough.js draws the hachure polygon connecting those grid cells. If any cell in the shape is off-screen the function returns early above, so `notePositions` is always complete here.
+
+``` {.typescript file=_generated/lib/chord-graffiti.ts}
   const rc = rough.svg(svg);
 
   const triPoints: [number, number][] = notePositions.map(p => [p.x, p.y]);
@@ -201,7 +205,11 @@ function renderChord(
   const cy = notePositions.reduce((s, p) => s + p.y, 0) / notePositions.length;
 
   const labelY = cy + (hint ? 14 : 8);
+```
 
+The main label is centred at the polygon centroid. When a `hint` line is present it appears 14 px below the main label at reduced size and opacity.
+
+``` {.typescript file=_generated/lib/chord-graffiti.ts}
   const textEl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
   textEl.setAttribute('x', String(Math.round(cx)));
   textEl.setAttribute('y', String(Math.round(labelY)));

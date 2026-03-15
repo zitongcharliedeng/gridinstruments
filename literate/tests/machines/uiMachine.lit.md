@@ -2,6 +2,8 @@
 
 Ten independent XState v5 machines modelling user-visible UI state transitions — overlay, visualiser, pedals, waveform, sustain, vibrato, midiPanel, mpe, textInputFocus, and skewLabel — plus slider reset, about dialog, D-ref input, modifier compound, layout persistence, viewport, and song bar machines.
 
+The module opens by importing all invariant check functions from `invariant-checks` — each check is a `StateInvariant` object that Playwright evaluates when the machine enters that state.
+
 ``` {.typescript file=_generated/tests/machines/uiMachine.ts}
 import { setup } from 'xstate';
 import { type Page, expect } from '@playwright/test';
@@ -33,7 +35,11 @@ import {
   drefRangeCheck,
   rKeyNotSustainCheck,
 } from './invariant-checks';
+```
 
+Two shared Playwright helpers power all the panel drag and keyboard-focus tests. `tabUntil` cycles through focusable elements until the target selector is active; `dragHandle` simulates a pointer drag on a resize handle by the given pixel delta.
+
+``` {.typescript file=_generated/tests/machines/uiMachine.ts}
 async function tabUntil(page: Page, selector: string, maxTabs = 30): Promise<void> {
   for (let i = 0; i < maxTabs; i++) {
     const focused = await page.evaluate((sel) => document.activeElement?.matches(sel) ?? false, selector);
@@ -58,7 +64,11 @@ async function dragHandle(
   await page.mouse.move(cx, cy + deltaY, { steps: 5 });
   await page.mouse.up();
 }
+```
 
+The overlay machine models the grid settings panel toggled by the cog button. In `visible` state it runs the full battery of overlay invariants — background, shimmer, section layout, preset selector, MPE controls, focus preservation, icon sizing, slider badge positions, and color checks.
+
+``` {.typescript file=_generated/tests/machines/uiMachine.ts}
 type OverlayEvent =
   | { type: 'CLICK_COG' }
   | { type: 'CLICK_BACKDROP' }
@@ -118,7 +128,11 @@ export const overlayDomAssertions: Record<string, (page: Page) => Promise<void>>
     await expect(page.locator('#grid-overlay')).toBeVisible();
   },
 };
+```
 
+The visualiser machine models the note-history panel above the keyboard grid. It has three states — `default` (standard height), `expanded` (taller, triggered by dragging the handle down), and `collapsed` (zero height, toggled by Enter on the handle or double-click to restore).
+
+``` {.typescript file=_generated/tests/machines/uiMachine.ts}
 type VisualiserEvent =
   | { type: 'DRAG_VIS_EXPAND' }
   | { type: 'DRAG_VIS_FROM_COLLAPSED' }
@@ -213,7 +227,11 @@ export const visualiserDomAssertions: Record<string, (page: Page) => Promise<voi
     expect(box.height).toBeLessThan(4);
   },
 };
+```
 
+The pedals machine mirrors the visualiser pattern for the bottom panel containing sustain and vibrato buttons. The `DRAG_PED_FROM_COLLAPSED` action uses raw pointer events rather than the `dragHandle` helper because the collapsed panel needs pointer dispatch at precise coordinates.
+
+``` {.typescript file=_generated/tests/machines/uiMachine.ts}
 type PedalsEvent =
   | { type: 'DRAG_PED_EXPAND' }
   | { type: 'DRAG_PED_FROM_COLLAPSED' }
@@ -311,7 +329,11 @@ export const pedalsDomAssertions: Record<string, (page: Page) => Promise<void>> 
     expect(box.height).toBeLessThan(4);
   },
 };
+```
 
+The waveform machine tracks which oscillator waveform is active in the synth. The `selectWaveform` helper clicks the slim-select dropdown (the native `<select>` is hidden per project rules) and waits for the DOM to settle.
+
+``` {.typescript file=_generated/tests/machines/uiMachine.ts}
 type WaveformEvent =
   | { type: 'SELECT_SAWTOOTH' }
   | { type: 'SELECT_SINE' }
@@ -411,7 +433,11 @@ export const waveformDomAssertions: Record<string, (page: Page) => Promise<void>
     await expect(page.locator('#wave-select')).toHaveValue('triangle');
   },
 };
+```
 
+The sustain machine models the Space-bar hold modifier. Sustain is hold-on/release-off — `PRESS_SPACE` activates it, `RELEASE_SPACE` deactivates it. The `inactive` state carries the `rKeyNotSustainCheck` invariant verifying that `R` is never bound to sustain.
+
+``` {.typescript file=_generated/tests/machines/uiMachine.ts}
 type SustainEvent =
   | { type: 'PRESS_SPACE' }
   | { type: 'RELEASE_SPACE' }
@@ -481,7 +507,11 @@ export const sustainDomAssertions: Record<string, (page: Page) => Promise<void>>
     await expect(page.locator('#sustain-indicator')).toHaveClass(/active/);
   },
 };
+```
 
+The vibrato machine is structurally identical to the sustain machine but models the Shift-key hold modifier. Both are hold-on/release-off — there is no toggle; pressing and then releasing the key always returns to `inactive`.
+
+``` {.typescript file=_generated/tests/machines/uiMachine.ts}
 type VibratoEvent =
   | { type: 'PRESS_SHIFT' }
   | { type: 'RELEASE_SHIFT' }
@@ -550,7 +580,11 @@ export const vibratoDomAssertions: Record<string, (page: Page) => Promise<void>>
     await expect(page.locator('#vibrato-indicator')).toHaveClass(/active/);
   },
 };
+```
 
+The MIDI panel machine models the collapsible MIDI settings section inside the overlay. A single `TOGGLE_MIDI` event cycles between `closed` and `open`; the DOM assertion checks for the `open` CSS class on `#midi-settings-panel`.
+
+``` {.typescript file=_generated/tests/machines/uiMachine.ts}
 interface MidiPanelEvent { type: 'TOGGLE_MIDI' }
 
 export const midiPanelMachine = setup({
@@ -595,7 +629,11 @@ export const midiPanelDomAssertions: Record<string, (page: Page) => Promise<void
     await expect(page.locator('#midi-settings-panel')).toHaveClass(/open/);
   },
 };
+```
 
+The MPE machine models the enabled/disabled state of the MPE output dropdown. When `disabled`, the `#mpe-output-select` element is greyed out; when `enabled`, it becomes interactive and accepts device selection.
+
+``` {.typescript file=_generated/tests/machines/uiMachine.ts}
 interface MpeEvent { type: 'TOGGLE_MPE' }
 
 export const mpeMachine = setup({
@@ -640,7 +678,11 @@ export const mpeDomAssertions: Record<string, (page: Page) => Promise<void>> = {
     await expect(page.locator('#mpe-output-select')).not.toBeDisabled();
   },
 };
+```
 
+The text input focus machine tracks whether the D-ref frequency input (`#d-ref-input`) is focused. When focused, keyboard events go to the input for numeric entry rather than to the keyboard grid for note triggering; Enter or Escape returns focus to the grid.
+
+``` {.typescript file=_generated/tests/machines/uiMachine.ts}
 type TextInputFocusEvent =
   | { type: 'CLICK_INPUT' }
   | { type: 'PRESS_ENTER' }
@@ -697,7 +739,11 @@ export const textInputFocusDomAssertions: Record<string, (page: Page) => Promise
     await expect(page.locator('#d-ref-input')).toBeFocused();
   },
 };
+```
 
+The skew label machine tracks the layout mode annotation shown next to the skew slider. At minimum skew the label reads "DCompose / Wicki-Hayden"; at maximum skew it reads "MidiMech". The Playwright actions set the slider value programmatically and fire an `input` event to trigger the label update.
+
+``` {.typescript file=_generated/tests/machines/uiMachine.ts}
 type SkewLabelEvent =
   | { type: 'SET_SKEW_MAX' }
   | { type: 'SET_SKEW_MIN' };
@@ -756,7 +802,11 @@ export const skewLabelDomAssertions: Record<string, (page: Page) => Promise<void
     await expect(page.locator('#skew-label')).toContainText('MidiMech');
   },
 };
+```
 
+The remaining machines live in dedicated sub-modules and are re-exported here so the test spec can import everything from a single entry point. The `allMachines` array is the canonical list consumed by the graph-traversal test harness — every machine registered here gets automatic `(state, event)` coverage.
+
+``` {.typescript file=_generated/tests/machines/uiMachine.ts}
 import {
   tuningSliderMachine, tuningSliderPlaywrightActions, tuningSliderDomAssertions, tuningSliderInvariants,
   skewSliderMachine, skewSliderPlaywrightActions, skewSliderDomAssertions, skewSliderInvariants,

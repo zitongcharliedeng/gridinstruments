@@ -2,6 +2,8 @@
 
 Reusable UI component wrapping an existing slider DOM structure. Handles value get/set, badge positioning, fill gradient (Firefox workaround), reset button, and editable vs non-editable badges. Does not create new DOM elements — all elements are passed in via constructor.
 
+The config interface and class fields. All DOM elements are injected via the constructor — the class never queries the DOM itself.
+
 ``` {.typescript file=_generated/components/NumericSlider.ts}
 export interface SliderComponentConfig {
   name: string;
@@ -22,7 +24,11 @@ export class NumericSlider {
   private readonly _resetCbs: (() => void)[] = [];
 
   private readonly _attached: [EventTarget, string, EventListener][] = [];
+```
 
+The constructor wires up three event groups: range `input` (fires on every drag), reset button `click` (restores the default value and re-dispatches `input` so callers see it), and optional badge editing when `config.editable` is true. Badge update is skipped during typing so the user's in-progress value is not clobbered.
+
+``` {.typescript file=_generated/components/NumericSlider.ts}
   constructor(
     rangeInput: HTMLInputElement,
     badge: HTMLElement,
@@ -87,8 +93,11 @@ export class NumericSlider {
     this.updateFill();
     this.updateBadge();
   }
+```
 
+`_attach` is a thin registration helper that adds a listener and records it for `dispose` cleanup. All listeners registered through `_attach` are guaranteed to be removed on `dispose`.
 
+``` {.typescript file=_generated/components/NumericSlider.ts}
   private _attach(
     target: EventTarget,
     type: string,
@@ -97,8 +106,11 @@ export class NumericSlider {
     target.addEventListener(type, listener);
     this._attached.push([target, type, listener]);
   }
+```
 
+Public read/write API and callback registration. `setValue` with `skipBadgeUpdate = true` is used by callers that will immediately reposition the badge themselves to avoid a redundant layout measurement.
 
+``` {.typescript file=_generated/components/NumericSlider.ts}
   getValue(): number {
     return parseFloat(this.rangeInput.value);
   }
@@ -122,7 +134,11 @@ export class NumericSlider {
   onReset(cb: () => void): void {
     this._resetCbs.push(cb);
   }
+```
 
+`updateFill` computes the exact pixel position of the thumb centre using `offsetWidth` (when available) to produce a pixel-accurate fill gradient. The Firefox workaround: `-webkit-appearance: none` removes the native fill, so a CSS `linear-gradient` background is set directly on the range input.
+
+``` {.typescript file=_generated/components/NumericSlider.ts}
   updateFill(): void {
     const min = Number.isFinite(parseFloat(this.rangeInput.min)) ? parseFloat(this.rangeInput.min) : 0;
     const max = Number.isFinite(parseFloat(this.rangeInput.max)) ? parseFloat(this.rangeInput.max) : 100;
@@ -141,7 +157,11 @@ export class NumericSlider {
         `linear-gradient(to right, var(--fg) ${pct.toFixed(2)}%, #000 ${pct.toFixed(2)}%)`;
     }
   }
+```
 
+`updateBadge` repositions the floating badge to track the thumb and updates its text. When the badge is an `<input>` element its `.value` is set directly; otherwise `.textContent` is used.
+
+``` {.typescript file=_generated/components/NumericSlider.ts}
   updateBadge(): void {
     const value = parseFloat(this.rangeInput.value);
     const min = Number.isFinite(parseFloat(this.rangeInput.min)) ? parseFloat(this.rangeInput.min) : 0;

@@ -319,7 +319,11 @@ export function quantizeNotes(
 
   const grid = buildBeatGrid(tempoMap, timeSigMap, level, endMs);
   if (grid.length === 0) return events;
+```
 
+`snapToGrid` is a binary search over the sorted grid array. It finds the closest grid point to a given millisecond value in O(log N) time, checking both the upper-bound candidate and its predecessor.
+
+``` {.typescript file=_generated/lib/game-engine.ts}
   const snapToGrid = (ms: number): number => {
     let lo = 0;
     let hi = grid.length - 1;
@@ -338,7 +342,11 @@ export function quantizeNotes(
   };
 
   const result: NoteEvent[] = [];
+```
 
+For each event, snapping finds the start grid point. Long notes spanning multiple grid points are split into one event per grid point, each with an equal share of the original duration.
+
+``` {.typescript file=_generated/lib/game-engine.ts}
   for (const event of events) {
     const snappedStart = snapToGrid(event.startMs);
     const noteEndMs = event.startMs + event.durationMs;
@@ -366,7 +374,11 @@ export function quantizeNotes(
       }
     }
   }
+```
 
+Deduplication removes double-hits where two source events snap to the same grid point with the same pitch. The key uses `toFixed(2)` to absorb floating-point noise without treating genuinely distinct times as equal.
+
+``` {.typescript file=_generated/lib/game-engine.ts}
   const seen = new Set<string>();
   const deduped: NoteEvent[] = [];
   for (const event of result) {

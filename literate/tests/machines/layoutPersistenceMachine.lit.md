@@ -2,6 +2,8 @@
 
 XState machine modeling panel layout persistence — pristine, customized, reloaded, insaneRestored, and reset states with localStorage-backed height persistence.
 
+The module imports XState and Playwright utilities, then defines two `StateInvariant` constants: `resetClearsCustomValues` checks that `gi_zoom` and `gi_visualiser_h` are cleared after reset, and `insaneHeightDiscarded` checks that a 9999-pixel stored height is clamped to at most 60% of the viewport height on load.
+
 ``` {.typescript file=_generated/tests/machines/layoutPersistenceMachine.ts}
 import { setup } from 'xstate';
 import { type Page, expect } from '@playwright/test';
@@ -31,7 +33,11 @@ const insaneHeightDiscarded: StateInvariant = {
     expect(panelBox.height).toBeLessThanOrEqual(viewport.height * 0.61);
   },
 };
+```
 
+The XState machine models the five layout-persistence states. The `insaneRestored` state carries the height-clamping invariant, and the `reset` state carries the localStorage-cleared invariant — both guard against conditions that would hide the grid from the user.
+
+``` {.typescript file=_generated/tests/machines/layoutPersistenceMachine.ts}
 type LayoutEvent =
   | { type: 'DRAG_PANEL' }
   | { type: 'RELOAD' }
@@ -96,7 +102,11 @@ export const layoutPersistenceMachine = setup({
     },
   },
 });
+```
 
+`dragVisualiserHandle` is a shared helper that performs a mouse drag on the visualiser panel's resize handle — it is extracted separately so the `DRAG_PANEL` and future drag-related actions can reuse it cleanly.
+
+``` {.typescript file=_generated/tests/machines/layoutPersistenceMachine.ts}
 async function dragVisualiserHandle(page: Page, deltaY: number): Promise<void> {
   const handle = page.locator('#visualiser-panel .panel-resize-handle');
   const box = await handle.boundingBox();
@@ -131,7 +141,11 @@ export const layoutPersistencePlaywrightActions: Record<LayoutEvent['type'], (pa
     await page.waitForTimeout(1500);
   },
 };
+```
 
+The string invariants and DOM assertion functions complete the module — invariants provide human-readable descriptions for test output, and the assertions verify panel heights against localStorage values and viewport dimensions for each state.
+
+``` {.typescript file=_generated/tests/machines/layoutPersistenceMachine.ts}
 export const layoutPersistenceInvariants: Record<string, string> = {
   pristine: 'Default layout — no custom localStorage, panels at factory heights.',
   customized: 'Panel dragged — custom height in localStorage.',

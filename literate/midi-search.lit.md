@@ -11,16 +11,16 @@ Adapters use module-level in-memory caching for GitHub tree responses. No localS
 The [GitHub Trees API](https://docs.github.com/en/rest/git/trees) returns a flat array of tree items when called with `?recursive=1`. Each item carries its repo-relative path, type (`blob` or `tree`), SHA, and API URL. Only `blob` items with a `.mid` extension are retained.
 
 ``` {.typescript file=_generated/lib/midi-search.ts}
-type GitHubTreeItem = {
+interface GitHubTreeItem {
   path: string;
   type: string;
   sha: string;
   url: string;
-};
+}
 
-type GitHubTreeResponse = {
+interface GitHubTreeResponse {
   tree: GitHubTreeItem[];
-};
+}
 
 ```
 
@@ -31,12 +31,12 @@ type GitHubTreeResponse = {
 `MidiSearchAdapter` is the interface every adapter must satisfy. The `id` field is a stable dot-free identifier (e.g. `github:mutopia`) used for display attribution and deduplication. Both `search` and `fetch` return Promises; `search` must never throw — it returns an empty array on failure. `fetch` may throw on network error.
 
 ``` {.typescript file=_generated/lib/midi-search.ts}
-export type MidiSearchResult = {
+export interface MidiSearchResult {
   title: string;
   source: string;
   sourceId: string;
   fetchUrl: string;
-};
+}
 
 export interface MidiSearchAdapter {
   id: string;
@@ -205,10 +205,14 @@ The adapter handles the unstable API gracefully: a list failure returns empty re
 export class MidishareMidiAdapter implements MidiSearchAdapter {
   readonly id = 'midishare';
   readonly name = 'Midishare';
-  private _cache: { midis: Array<{ id: string; title?: string; name?: string }> | null } = {
+  private _cache: { midis: { id: string; title?: string; name?: string }[] | null } = {
     midis: null,
   };
+```
 
+`search` lazy-loads the full catalogue on the first call, caching it for subsequent queries. A failed list request returns an empty array rather than throwing, so a network error degrades gracefully without breaking the other adapters.
+
+``` {.typescript file=_generated/lib/midi-search.ts}
   async search(query: string): Promise<MidiSearchResult[]> {
     if (this._cache.midis === null) {
       try {
@@ -219,11 +223,7 @@ export class MidishareMidiAdapter implements MidiSearchAdapter {
           );
           return [];
         }
-        this._cache.midis = await response.json() as Array<{
-          id: string;
-          title?: string;
-          name?: string;
-        }>;
+        this._cache.midis = await response.json() as { id: string; title?: string; name?: string }[];
       } catch (err) {
         console.warn('[midi-search] midishare.dev fetch failed:', err);
         return [];
@@ -234,7 +234,7 @@ export class MidishareMidiAdapter implements MidiSearchAdapter {
     const results: MidiSearchResult[] = [];
 
     for (const midi of this._cache.midis) {
-      const displayName = midi.title || midi.name || midi.id;
+      const displayName = midi.title ?? midi.name ?? midi.id;
       if (!displayName.toLowerCase().includes(q)) continue;
 
       results.push({
@@ -247,7 +247,11 @@ export class MidishareMidiAdapter implements MidiSearchAdapter {
 
     return results;
   }
+```
 
+`fetch` retrieves the raw MIDI bytes for a single search result. Errors are re-thrown after logging so the caller can surface them in the UI.
+
+``` {.typescript file=_generated/lib/midi-search.ts}
   async fetch(result: MidiSearchResult): Promise<ArrayBuffer> {
     try {
       const response = await fetch(result.fetchUrl);
@@ -277,10 +281,10 @@ const adapters: MidiSearchAdapter[] = [
   new MidishareMidiAdapter(),
 ];
 
-export type SearchResult = {
+export interface SearchResult {
   results: MidiSearchResult[];
   errors: string[];
-};
+}
 
 export async function searchAllAdapters(query: string): Promise<SearchResult> {
   const errors: string[] = [];
