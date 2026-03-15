@@ -306,28 +306,25 @@ for MPE pressure visualization once calibration is complete.
 export function cellColors(
   coordX: number,
   state: 'active' | 'target' | 'target-pressed' | 'sustained' | 'uncalibrated-white' | 'uncalibrated-black' | 'white' | 'black',
-  coordY = 0
 ): { fill: string; text: string } {
   const h = chromaticHue(coordX);
-
-  const octShift = coordY * 0.02;
   switch (state) {
     case 'active':
-      return { fill: oklch(0.72 + octShift, 0.19, h), text: '#ffffff' };
+      return { fill: oklch(0.72, 0.19, h), text: '#ffffff' };
     case 'target':
       return { fill: oklch(0.96, 0.03, h), text: '#000000' };
     case 'target-pressed':
       return { fill: oklch(0.55, 0.01, h), text: oklch(0.80, 0.01, h) };
     case 'sustained':
-      return { fill: oklch(0.38 + octShift, 0.11, h), text: oklch(0.82, 0.16, h) };
+      return { fill: oklch(0.38, 0.11, h), text: oklch(0.82, 0.16, h) };
     case 'uncalibrated-white':
       return { fill: oklch(0.24, 0, h), text: oklch(0.50, 0, h) };
     case 'uncalibrated-black':
       return { fill: oklch(0.24, 0, h), text: oklch(0.50, 0, h) };
     case 'white':
-      return { fill: oklch(0.24 + octShift * 0.5, 0.055, h), text: oklch(0.75, 0.14, h) };
+      return { fill: oklch(0.24, 0.055, h), text: oklch(0.75, 0.14, h) };
     case 'black':
-      return { fill: oklch(0.24 + octShift * 0.5, 0.055, h), text: oklch(0.75, 0.14, h) };
+      return { fill: oklch(0.24, 0.055, h), text: oklch(0.75, 0.14, h) };
   }
 }
 ```

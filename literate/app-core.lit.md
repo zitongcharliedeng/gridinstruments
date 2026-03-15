@@ -1980,9 +1980,13 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
     requestAnimationFrame(() => {
       this.renderScheduled = false;
       if (!this.visualizer) return;
-      const activeNoteIds = Array.from(this.activeNotes.values()).map(
-        ({ coordX, coordY }) => `${coordX}_${coordY}`
+      const fifth = this.synth.getFifth();
+      const activePitchCents = new Set(
+        Array.from(this.activeNotes.values()).map(({ coordX, coordY }) =>
+          Math.round(coordX * fifth + coordY * 1200)
+        )
       );
+      const activeNoteIds = this.visualizer.getCellIdsForPitchCents(activePitchCents, fifth);
       this.visualizer.setActiveNotes(activeNoteIds);
       this.visualizer.render();
     });

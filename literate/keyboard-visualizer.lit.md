@@ -583,6 +583,15 @@ each fifth = 7 semitones, each octave = 12).
     return result;
   }
 
+  getCellIdsForPitchCents(pitchCentsSet: ReadonlySet<number>, fifth: number): string[] {
+    const result: string[] = [];
+    for (const b of this.buttons) {
+      const pc = Math.round(b.coordX * fifth + b.coordY * 1200);
+      if (pitchCentsSet.has(pc)) result.push(`${b.coordX}_${b.coordY}`);
+    }
+    return result;
+  }
+
   setSustainedNotes(noteIds: string[]): void {
     this.sustainedNotes = new Set(noteIds);
   }
@@ -919,7 +928,7 @@ colors for the resolved state.
       : isUncalibrated ? (isBlackKey ? 'uncalibrated-black' : 'uncalibrated-white')
       : isBlackKey ? 'black'
       : 'white';
-    const { fill: fillColor, text: textColor } = cellColors(coordX, state, coordY);
+    const { fill: fillColor, text: textColor } = cellColors(coordX, state);
 ```
 
 ### MPE pressure -- opacity modulation
@@ -1028,11 +1037,26 @@ The sub-label renders at 60% of the main font size and 60% opacity.
     const deviation = getCentDeviation(coordX, fifth);
     const hasBracket = noteName !== tetName || Math.abs(deviation) >= 0.5;
 
-    const octSuffix = coordY === 0 ? '' : (coordY > 0 ? '+' : '') + coordY;
+    const midi = 62 + coordX * 7 + coordY * 12;
+    const dRefOctave = Math.floor((midi - 62) / 12);
+    const octNum = Math.abs(dRefOctave);
+    const octStr = dRefOctave === 0 ? '' : String(octNum);
 
     if (hasBracket && cellMin > 30) {
       this.ctx.textBaseline = 'bottom';
-      this.ctx.fillText(noteName + octSuffix, x, y);
+      if (octStr) {
+        const nameW = this.ctx.measureText(noteName).width;
+        const octFont = Math.max(6, fontSize * 0.45);
+        this.ctx.font = `${octFont}px "JetBrains Mono", monospace`;
+        this.ctx.textAlign = 'right';
+        const octY = dRefOctave > 0
+          ? y - fontSize * 0.85
+          : y + octFont * 0.15;
+        this.ctx.fillText(octStr, x - nameW / 2 - 1, octY);
+        this.ctx.font = `bold ${fontSize}px "JetBrains Mono", monospace`;
+        this.ctx.textAlign = 'center';
+      }
+      this.ctx.fillText(noteName, x, y);
       const subSize = Math.max(7, fontSize * 0.6);
       this.ctx.font = `${subSize}px "JetBrains Mono", monospace`;
       this.ctx.fillStyle = textColor;
@@ -1049,7 +1073,19 @@ The sub-label renders at 60% of the main font size and 60% opacity.
       this.ctx.fillText(bracket, x, y + 1);
     } else {
       this.ctx.textBaseline = 'middle';
-      this.ctx.fillText(noteName + octSuffix, x, y);
+      if (octStr) {
+        const nameW = this.ctx.measureText(noteName).width;
+        const octFont = Math.max(6, fontSize * 0.45);
+        this.ctx.font = `${octFont}px "JetBrains Mono", monospace`;
+        this.ctx.textAlign = 'right';
+        const octY = dRefOctave > 0
+          ? y - fontSize * 0.35
+          : y + fontSize * 0.15;
+        this.ctx.fillText(octStr, x - nameW / 2 - 1, octY);
+        this.ctx.font = `bold ${fontSize}px "JetBrains Mono", monospace`;
+        this.ctx.textAlign = 'center';
+      }
+      this.ctx.fillText(noteName, x, y);
     }
     this.ctx.globalAlpha = 1;
 ```
