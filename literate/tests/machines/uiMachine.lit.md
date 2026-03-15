@@ -111,7 +111,7 @@ export const overlayPlaywrightActions: Record<OverlayEvent['type'], (page: Page)
     await page.locator('#grid-settings-btn').click();
   },
   CLICK_BACKDROP: async (page) => {
-    await page.mouse.click(10, 500);
+    await page.locator('#grid-settings-btn').click();
   },
   PRESS_ESCAPE: async (page) => {
     await page.keyboard.press('Escape');
