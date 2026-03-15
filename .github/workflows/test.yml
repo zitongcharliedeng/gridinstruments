@@ -62,8 +62,7 @@ jobs:
             echo ""
             echo "First 20 violations:"
             echo "$violations" | head -20
-            echo ""
-            echo "This check will become blocking once existing comments are cleaned up."
+            exit 1
           fi
 
       - name: Lint (informational)
