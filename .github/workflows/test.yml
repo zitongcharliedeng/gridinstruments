@@ -11,33 +11,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
-
-      - name: Set up Python 3.13
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.13'
-
-      - name: Install Entangled
-        run: pip install entangled-cli==2.4.2
-
+      - run: pip install entangled-cli==2.4.2
       - run: npm ci
-
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps firefox
-
-      - name: Tangle and build
-        run: npm run build
-
-      - name: Test (structural only — fast)
-        run: npx playwright test --project=firefox --workers=1 -g "Structural"
-
-      - name: Upload test results
-        uses: actions/upload-artifact@v4
+      - run: npx playwright install --with-deps firefox
+      - run: npm run verify
+      - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: playwright-report

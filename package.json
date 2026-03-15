@@ -13,7 +13,8 @@
     "lint": "eslint _generated/",
     "lint:ast": "ast-grep scan",
     "test": "playwright test",
-    "test:update": "playwright test --update-snapshots"
+    "test:update": "playwright test --update-snapshots",
+    "verify": "npm run build && npm run lint && npx ast-grep scan && npx playwright test --project=firefox --workers=1"
   },
   "keywords": [
     "isomorphic",

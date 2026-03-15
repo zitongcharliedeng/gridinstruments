@@ -20,18 +20,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
-
       - uses: actions/setup-python@v5
         with:
           python-version: '3.13'
-
       - run: pip install entangled-cli==2.4.2
       - run: npm ci
+      - run: npx playwright install --with-deps firefox
 
       - name: Determine deploy target
         id: target
@@ -42,20 +40,12 @@ jobs:
             echo "is_stable=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Build (tangle → tsc → vite)
-        run: npm run build
-        env:
-          VITE_BASE: ${{ steps.target.outputs.is_stable == 'true' && '/' || '/dev/' }}
+      - name: Verify (tangle → build → lint → test)
+        run: npm run verify
 
       - name: Rebuild with /dev base (if dev deploy)
         if: steps.target.outputs.is_stable == 'false'
         run: npx vite build --base /dev/
-
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps firefox
-
-      - name: Test (full suite for deploys)
-        run: npx playwright test --project=firefox --workers=1
 
       - name: Deploy stable to GitHub Pages root
         if: steps.target.outputs.is_stable == 'true'
