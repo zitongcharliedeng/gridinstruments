@@ -928,7 +928,7 @@ colors for the resolved state.
       : isUncalibrated ? (isBlackKey ? 'uncalibrated-black' : 'uncalibrated-white')
       : isBlackKey ? 'black'
       : 'white';
-    const { fill: fillColor, text: textColor } = cellColors(coordX, state);
+    const { fill: fillColor, text: textColor } = cellColors(coordX, state, button.pitchCents);
 ```
 
 ### MPE pressure -- opacity modulation
@@ -1037,10 +1037,8 @@ The sub-label renders at 60% of the main font size and 60% opacity.
     const deviation = getCentDeviation(coordX, fifth);
     const hasBracket = noteName !== tetName || Math.abs(deviation) >= 0.5;
 
-    const midi = 62 + coordX * 7 + coordY * 12;
-    const dRefOctave = Math.floor((midi - 62) / 12);
-    const octNum = Math.abs(dRefOctave);
-    const octStr = dRefOctave === 0 ? '' : String(octNum);
+    const octNum = Math.abs(coordY);
+    const octStr = coordY === 0 ? '' : String(octNum);
 
     if (hasBracket && cellMin > 30) {
       this.ctx.textBaseline = 'bottom';
@@ -1049,7 +1047,7 @@ The sub-label renders at 60% of the main font size and 60% opacity.
         const octFont = Math.max(6, fontSize * 0.45);
         this.ctx.font = `${octFont}px "JetBrains Mono", monospace`;
         this.ctx.textAlign = 'right';
-        const octY = dRefOctave > 0
+        const octY = coordY > 0
           ? y - fontSize * 0.85
           : y + octFont * 0.15;
         this.ctx.fillText(octStr, x - nameW / 2 - 1, octY);
@@ -1078,7 +1076,7 @@ The sub-label renders at 60% of the main font size and 60% opacity.
         const octFont = Math.max(6, fontSize * 0.45);
         this.ctx.font = `${octFont}px "JetBrains Mono", monospace`;
         this.ctx.textAlign = 'right';
-        const octY = dRefOctave > 0
+        const octY = coordY > 0
           ? y - fontSize * 0.35
           : y + fontSize * 0.15;
         this.ctx.fillText(octStr, x - nameW / 2 - 1, octY);

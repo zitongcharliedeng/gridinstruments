@@ -143,6 +143,18 @@ function pcHue(pc: number): number {
 }
 
 /** OKLCH hue for a circle-of-fifths coordinate (D=0). */
+/**
+ * Hue from actual pitch in cents — ensures cells at the same frequency
+ * get the same color regardless of grid position. Maps the pitch class
+ * (pitch mod 1200 cents) to a 360° hue wheel with 30° per semitone,
+ * anchored at D = 29°. See: https://en.wikipedia.org/wiki/Cent_(music)
+ */
+function pitchCentsToHue(pitchCents: number): number {
+  const semitones = ((pitchCents % 1200) + 1200) % 1200 / 100;
+  const pc = ((Math.round(semitones) + 10) % 12 + 12) % 12;
+  return pcHue(pc);
+}
+
 function chromaticHue(coordX: number): number {
   const pc = ((2 + coordX * 7) % 12 + 12) % 12;
   return pcHue(pc);
@@ -306,8 +318,9 @@ for MPE pressure visualization once calibration is complete.
 export function cellColors(
   coordX: number,
   state: 'active' | 'target' | 'target-pressed' | 'sustained' | 'uncalibrated-white' | 'uncalibrated-black' | 'white' | 'black',
+  pitchCents = 0,
 ): { fill: string; text: string } {
-  const h = chromaticHue(coordX);
+  const h = pitchCents !== 0 ? pitchCentsToHue(pitchCents) : chromaticHue(coordX);
   switch (state) {
     case 'active':
       return { fill: oklch(0.72, 0.19, h), text: '#ffffff' };
