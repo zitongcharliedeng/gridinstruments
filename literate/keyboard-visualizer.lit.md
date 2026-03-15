@@ -1007,7 +1007,9 @@ The sub-label renders at 60% of the main font size and 60% opacity.
     const deviation = getCentDeviation(coordX, fifth);
     const hasBracket = noteName !== tetName || Math.abs(deviation) >= 0.5;
 
-    const octStr = '';
+    const midi = 62 + coordX * 7 + coordY * 12;
+    const dRefOctave = Math.floor((midi - 62) / 12);
+    const octStr = dRefOctave === 0 ? '' : String(Math.abs(dRefOctave));
 
     if (hasBracket && cellMin > 30) {
       this.ctx.textBaseline = 'bottom';
@@ -1069,23 +1071,23 @@ key label width.
 
     const qLabel = this.qwertyLabels.get(noteId);
     if (qLabel) {
-      const qSize = Math.max(10, fontSize * 0.5);
+      const qSize = Math.max(8, fontSize * 0.4);
       this.ctx.font = `bold ${qSize}px "JetBrains Mono", monospace`;
       const metrics = this.ctx.measureText(qLabel);
-      const pad = 2;
+      const pad = 1;
       const corners = [
         { x: hv1.x + hv2.x, y: hv1.y + hv2.y },
         { x: hv1.x - hv2.x, y: hv1.y - hv2.y },
         { x: -hv1.x + hv2.x, y: -hv1.y + hv2.y },
         { x: -hv1.x - hv2.x, y: -hv1.y - hv2.y },
       ];
-      corners.sort((a, b) => a.y - b.y || a.x - b.x);
-      const top = corners[0];
-      const lx = x + top.x + pad + 2;
-      const ly = y + top.y + pad + 2;
-      this.ctx.fillStyle = 'rgba(0,0,0,0.7)';
+      corners.sort((a, b) => b.y - a.y || a.x - b.x);
+      const bl = corners[0];
+      const lx = x + bl.x + pad + 1;
+      const ly = y + bl.y - qSize - pad;
+      this.ctx.fillStyle = 'rgba(255,255,255,0.85)';
       this.ctx.fillRect(lx - pad, ly - pad, metrics.width + pad * 2, qSize + pad * 2);
-      this.ctx.fillStyle = '#ffff00';
+      this.ctx.fillStyle = '#000000';
       this.ctx.globalAlpha = 1;
       this.ctx.textAlign = 'left';
       this.ctx.textBaseline = 'top';

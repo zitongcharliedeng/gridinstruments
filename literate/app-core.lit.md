@@ -1563,8 +1563,7 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
           const pitchDirLen = Math.sqrt(cellHv2.x * cellHv2.x + cellHv2.y * cellHv2.y);
           const pitchOffset = (dx * cellHv2.x + dy * cellHv2.y) / pitchDirLen;
           const cellHeight = pitchDirLen * 2; // cellHv2 is a half-vector
-          const rawSemitones = -pitchOffset / cellHeight * 2; // ±2 semitones per cell
-          const semitones = Math.max(-2, Math.min(2, rawSemitones)); // Clamp to ±2 — prevents wild bends on fast gestures
+          const semitones = -pitchOffset / cellHeight * 2;
 
           const timbreDirLen = Math.sqrt(cellHv1.x * cellHv1.x + cellHv1.y * cellHv1.y);
           const timbreOffset = (dx * cellHv1.x + dy * cellHv1.y) / timbreDirLen;
