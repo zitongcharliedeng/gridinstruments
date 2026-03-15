@@ -1211,10 +1211,14 @@ The QWERTY overlay toggle renders physical key labels (Q, W, E, R...) on the gri
     }
 
     const visSettingsBtn = document.getElementById('vis-settings-btn');
-    const visOverlay = document.getElementById('vis-overlay');
-    visSettingsBtn?.addEventListener('click', () => {
-      visOverlay?.classList.toggle('hidden');
-    });
+    const visOverlayMount = document.getElementById('vis-overlay');
+    if (visSettingsBtn && visOverlayMount) {
+      let visVisible = false;
+      visSettingsBtn.addEventListener('click', () => {
+        visVisible = !visVisible;
+        visOverlayMount.classList.toggle('hidden', !visVisible);
+      });
+    }
     const visTimeSlider = getElementOrNull('vis-time-slider', HTMLInputElement);
     const visTimeBadge = document.getElementById('vis-time-badge');
     visTimeSlider?.addEventListener('input', () => {
