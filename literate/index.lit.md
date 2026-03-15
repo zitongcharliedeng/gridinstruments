@@ -458,7 +458,7 @@ buttons that invert on hover.
       0% { background-position: 200% 0; }
       100% { background-position: -100% 0; }
     }
-    #grid-overlay.hidden { display: none; }
+    .hidden { display: none; }
 ```
 
 The overlay sections use `.overlay-section` as a vertical flex column for labelled control
@@ -1328,11 +1328,6 @@ morph), wicked shear, grid zoom, and the QWERTY label overlay toggle.
                 <span class="slider-value-badge" id="zoom-thumb-badge">1.00</span>
                 <button class="slider-reset icon-btn icon-md" id="zoom-reset"><i data-lucide="rotate-cw"></i></button>
               </div>
-            </div>
-            <div class="slider-track" style="margin-top: 18px">
-              <span class="slider-label-overlay">DPI OVERRIDE</span>
-              <input type="number" id="dpi-override" min="40" max="600" step="1" placeholder="auto" style="width:72px;background:#111;color:#fff;border:1px solid #444;font-family:inherit;font-size:12px;padding:2px 4px;">
-              <button class="slider-reset icon-btn icon-md" id="dpi-override-reset"><i data-lucide="rotate-cw"></i></button>
             </div>
            <div class="slider-track" style="margin-top: 18px">
              <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;">
