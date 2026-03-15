@@ -1001,6 +1001,10 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
 
     const qwertyToggle = document.getElementById('qwerty-overlay-toggle') as HTMLInputElement | null;
     if (qwertyToggle) {
+      if (qwertyToggle.checked) {
+        this.visualizer?.setQwertyLabels(this.buildQwertyLabels());
+        this.visualizer?.render();
+      }
       qwertyToggle.addEventListener('change', () => {
         if (qwertyToggle.checked) {
           this.visualizer?.setQwertyLabels(this.buildQwertyLabels());
