@@ -58,8 +58,7 @@ export class DComposeApp {
 
   private pointerDown = new Map<number, { coordX: number; coordY: number } | null>();
 
-  private maxSimultaneousKeys = 0;
-  private ghostingWarningShown = false;
+  private maxSimultaneousKeys = 6;
 
   private vibratoRAF: number | null = null;
   private vibratoPhase = 0;
@@ -105,6 +104,7 @@ The second group of private fields covers DOM references and UI state: canvas el
     midiPbRange: 'gi_midi_pb_range',
     exprBend: 'gi_expr_bend', exprVelocity: 'gi_expr_velocity', exprPressure: 'gi_expr_pressure', exprTimbre: 'gi_expr_timbre',
     timbreCcMode: 'gi_timbre_cc_mode',
+    maxKeys: 'gi_max_keys',
   } as const;
 
   private loadSetting(key: keyof typeof DComposeApp.STORAGE_KEYS, fallback: string): string {
@@ -1283,6 +1283,19 @@ Sustain and vibrato pedals are modeled as `pedalMachine` actors (activate/deacti
 Calibration mode lets MIDI controller users define their playable range by pressing all reachable keys. The game actor (`gameMachine`) manages the Piano Tiles game lifecycle -- idle, loading, playing, complete, error. Its subscription drives all game UI updates: target notes, progress bar, elapsed timer, and score overlay.
 
 ``` {.typescript file=_generated/app-core.ts}
+    const maxKeysInput = getElementOrNull('max-keys-input', HTMLInputElement);
+    if (maxKeysInput) {
+      const savedMax = this.loadSetting('maxKeys', '6');
+      maxKeysInput.value = savedMax;
+      this.maxSimultaneousKeys = parseInt(savedMax, 10);
+      maxKeysInput.addEventListener('change', () => {
+        const val = Math.max(1, Math.min(20, parseInt(maxKeysInput.value, 10) || 6));
+        maxKeysInput.value = String(val);
+        this.maxSimultaneousKeys = val;
+        this.saveSetting('maxKeys', String(val));
+      });
+    }
+
     const calibrateBtn = document.getElementById('calibrate-btn');
     const calibrateConfirm = document.getElementById('calibrate-confirm');
     const calibrateCancel = document.getElementById('calibrate-cancel');
@@ -1295,11 +1308,7 @@ Calibration mode lets MIDI controller users define their playable range by press
        this.gameActor?.send({ type: 'GAME_RESTART' });
      });
 
-     const toastDismiss = document.getElementById('ghosting-toast-dismiss');
-     toastDismiss?.addEventListener('click', () => {
-       const toast = document.getElementById('ghosting-toast');
-       if (toast) toast.style.display = 'none';
-     });
+
 
     this.gameActor = createActor(gameMachine);
     this.gameActor.start();
@@ -1348,10 +1357,6 @@ the tuning slider and calibrate button to prevent mid-game tuning changes.
             this.visualizer.setPressedTargetNotes(pressedCellIds);
           } else {
             this.visualizer.setPressedTargetNotes([]);
-          }
-          if (!this.ghostingWarningShown && currentGroup.midiNotes.length >= 4 && this.maxSimultaneousKeys < 4) {
-            this.ghostingWarningShown = true;
-            this.showGhostingToast();
           }
         } else {
           this.visualizer?.setTargetNotes(ctx.targetCellIds);
@@ -2037,14 +2042,6 @@ Game UI overlays are created programmatically rather than in HTML because they a
      document.body.appendChild(banner);
    }
 
-   private showGhostingToast(): void {
-     const toast = document.getElementById('ghosting-toast');
-     if (!toast) return;
-     toast.style.display = 'flex';
-     setTimeout(() => {
-       toast.style.display = 'none';
-     }, 10000);
-   }
 ```
 
 MPE vibrato uses `requestAnimationFrame` to oscillate pitch bend at approximately 5Hz across all active notes. Arrow-key vibrato uses `setInterval` instead because it runs at a fixed tick rate independent of frame rendering. Both systems track phase to produce smooth sinusoidal bends.
