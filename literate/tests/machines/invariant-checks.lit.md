@@ -4242,15 +4242,15 @@ Continuing with `SONGBAR_CAL_3` and related invariants.
 ``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const SONGBAR_CAL_3: StateInvariant = {
   id: 'SONGBAR-CAL-3',
-  description: 'Calibration message text mentions "playable area"',
+  description: 'Calibration message text mentions "reachable notes"',
   check: async (page: Page) => {
     const text = await page.evaluate(() => {
       const banner = document.getElementById('calibration-banner');
       if (!banner) throw new Error('#calibration-banner not found');
       return banner.textContent ?? '';
     });
-    if (!text.toLowerCase().includes('playable area')) {
-      throw new Error(`Calibration banner text does not mention "playable area": "${text.substring(0, 100)}"`);
+    if (!text.toLowerCase().includes('reachable notes')) {
+      throw new Error(`Calibration banner text does not mention "reachable notes": "${text.substring(0, 100)}"`);
     }
   },
 };
