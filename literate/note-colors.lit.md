@@ -133,6 +133,11 @@ function chromaticHue(coordX: number): number {
   const pc = ((2 + coordX * 7) % 12 + 12) % 12;
   return pcHue(pc);
 }
+
+function pitchCentsToHue(pitchCents: number): number {
+  const centsInOctave = ((pitchCents % 1200) + 1200) % 1200;
+  return (centsInOctave / 1200 * 360 + 29) % 360;
+}
 ```
 
 
@@ -250,10 +255,12 @@ can be in. The design constraint: parallelogram key shapes must always be visibl
 against the pure-black canvas background, and sharp/flat vs natural distinction
 is conveyed by the note name label, not by brightness differences.
 
-Color is always derived from the circle-of-fifths coordinate (`coordX`) via
-`chromaticHue`, never from the actual pitch frequency. This ensures that
-enharmonically equivalent notes — and notes that sound the same pitch class
-across octaves — always share the same color regardless of tuning.
+When `pitchCents` is provided (non-zero), color is derived from the actual pitch
+frequency via `pitchCentsToHue` — a continuous mapping where cents position
+within the octave maps linearly to hue. This ensures that cells producing the
+same frequency always share the same color, even in non-12-TET tunings where
+enharmonic equivalence breaks down. When `pitchCents` is 0 or unavailable, it
+falls back to the circle-of-fifths coordinate via `chromaticHue`.
 
 The OKLCH parameters for each state:
 
@@ -276,8 +283,9 @@ for MPE pressure visualization once calibration is complete.
 export function cellColors(
   coordX: number,
   state: 'active' | 'target' | 'target-pressed' | 'sustained' | 'uncalibrated-white' | 'uncalibrated-black' | 'white' | 'black',
+  pitchCents = 0,
 ): { fill: string; text: string } {
-  const h = chromaticHue(coordX);
+  const h = pitchCents !== 0 ? pitchCentsToHue(pitchCents) : chromaticHue(coordX);
   switch (state) {
     case 'active':
       return { fill: oklch(0.72, 0.19, h), text: '#ffffff' };
