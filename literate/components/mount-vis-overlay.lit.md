@@ -29,7 +29,7 @@ export function mountVisOverlay(
           label: 'TIME (s)',
           min: 1, max: 10, step: 0.5, defaultValue: 3,
           formatBadge: (v: number) => v.toFixed(1),
-          onChange: (v: number) => historyVis.setTimeWindow(v),
+          onChange: (v: number) => { historyVis.setTimeWindow(v); },
         },
         {
           id: 'vis-range-slider',

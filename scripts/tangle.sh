@@ -60,14 +60,19 @@ else
   exit 0
 fi
 
-# Step 2.5: Strip entangled block markers from index.html
-# Entangled inserts <!-- ~~ begin/end --> comments between multi-block targets.
-# These are harmless in .ts files but break CSS inside <style> tags in HTML.
+# Step 2.5: Strip entangled block markers from ALL generated files
+# Entangled inserts comment markers between multi-block targets:
+# - HTML: <!-- ~~ begin/end --> (breaks CSS in <style>)
+# - TS/TSX: // ~~ begin/end (violates no-comments rule, breaks ESLint)
 if [ -f "index.html" ]; then
   chmod 644 index.html 2>/dev/null || true
   sed -i '/^<!-- ~~.*-->$/d' index.html
-  echo "[tangle] Stripped entangled markers from index.html"
 fi
+find _generated/ -name '*.ts' -o -name '*.tsx' 2>/dev/null | while read f; do
+  chmod 644 "$f" 2>/dev/null || true
+  sed -i '/^\/\/ ~~.*$/d' "$f"
+done
+echo "[tangle] Stripped entangled markers from all generated files"
 
 # Step 3: Lock generated files (chmod 444 — read-only)
 if [ -f "$FILEDB" ] && command -v python3 &>/dev/null; then

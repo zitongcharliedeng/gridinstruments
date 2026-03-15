@@ -13,7 +13,7 @@ export default tseslint.config(
 
   // Project-wide settings for _generated/
   {
-    files: ['_generated/**/*.ts'],
+    files: ['_generated/**/*.ts', '_generated/**/*.tsx'],
     languageOptions: {
       parserOptions: {
         projectService: true,
