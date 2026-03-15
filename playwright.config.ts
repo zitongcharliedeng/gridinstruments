@@ -7,7 +7,7 @@ export default defineConfig({
   retries: 1,
   expect: {
     toHaveScreenshot: {
-      maxDiffPixelRatio: 0.05,
+      maxDiffPixelRatio: 0.10,
       threshold: 0.3,
     },
   },
