@@ -42,6 +42,15 @@ The page is a vertical flex layout (`#app`) with these major sections:
   (`/_generated/main.ts`), inline GitHub star-count fetch, and an SVG `<defs>`
   block defining the spray-paint roughen filter for chord graffiti.
 
+## Head — doctype, meta tags, font import, and CSS reset
+
+The document head declares the viewport, page title, SEO description, and loads
+JetBrains Mono from Google Fonts. The CSS resets all margin/padding and sets
+`box-sizing: border-box` globally. The `:root` block defines the complete
+design-token set — background, foreground, dim, border, accent, gap, font
+family, and icon sizes — so every component references variables rather than
+hard-coded values.
+
 ``` {.html file=index.html}
 <!DOCTYPE html>
 <html lang="en">
@@ -73,7 +82,16 @@ The page is a vertical flex layout (`#app`) with these major sections:
       --icon-md: 16px;
       --icon-lg: 18px;
     }
+```
 
+## Icon system
+
+The `.icon` and `.icon-btn` utility classes make SVG icons behave like inline
+text: they respect the surrounding `font-size`, flex-shrink to zero so they
+never collapse, and render at exactly the declared size. Three size modifiers
+(`-sm`, `-md`, `-lg`) map to the root token values above.
+
+``` {.html file=index.html}
 
     .icon {
       display: inline-flex;
@@ -121,6 +139,16 @@ The page is a vertical flex layout (`#app`) with these major sections:
       display: block;
       flex-shrink: 0;
     }
+```
+
+## Base layout — html, body, and app container
+
+The page never scrolls: `overflow: hidden` on both `html`/`body` and `#app`
+locks everything inside the viewport. `#app` is a vertical flex column that
+fills `100dvh` (dynamic viewport height for mobile), creating the stacked
+layout of top bar → song bar → visualiser → grid → pedals.
+
+``` {.html file=index.html}
 
     html, body {
       background: var(--bg);
@@ -140,7 +168,17 @@ The page is a vertical flex layout (`#app`) with these major sections:
       height: 100dvh;
       overflow: hidden;
     }
+```
 
+## Top bar styles
+
+`#top-bar` is a flex row that wraps on narrow screens. The left side groups the
+site title, GitHub badge (star + suggest), fullscreen, and reset-layout
+buttons. The `.gh-actions` badge mimics a GitHub badge widget with a mark,
+star count, and suggest link as adjacent inline-flex children separated by
+`var(--border)` lines.
+
+``` {.html file=index.html}
 
     #top-bar {
       display: flex;
@@ -196,7 +234,16 @@ The page is a vertical flex layout (`#app`) with these major sections:
       padding: 2px 6px; cursor: pointer; margin-left: 4px;
     }
     #reset-layout:hover { color: var(--fg); border-color: var(--accent); }
+```
 
+## Song bar styles
+
+`#song-bar` floats on the right side of the header and wraps below the site
+title on narrow screens. Its three child sections — search, status/game, and
+calibrate — each use `inline-flex` to keep their controls tight. The
+`.dropping` outline flashes when a `.mid` file is dragged over the bar.
+
+``` {.html file=index.html}
 
     #song-bar {
       display: inline-flex;
@@ -229,7 +276,17 @@ The page is a vertical flex layout (`#app`) with these major sections:
     .graffiti-overlay {
       transition: opacity 1.5s ease;
     }
+```
 
+## Visualiser panel and resize handle
+
+`#visualiser-panel` is a fixed-height flex child that collapses to zero when
+hidden. The resize handle wraps below the panel's bottom border and uses
+`transform: translate(-50%, 100%)` to straddle the seam between the visualiser
+and the grid below it. Grip lines are three thin horizontal bars that turn
+white on hover to signal draggability.
+
+``` {.html file=index.html}
 
     #visualiser-panel {
       flex-shrink: 0;
@@ -290,7 +347,17 @@ The page is a vertical flex layout (`#app`) with these major sections:
       width: 100%;
       height: 100%;
     }
+```
 
+## Grid area and keyboard canvas
+
+`#grid-area` takes all remaining vertical space via `flex: 1` and clips any
+overflow. The keyboard container fills it completely and suppresses all default
+touch behaviour so pointer events reach the canvas unmodified. The `.grid-cog`
+button sits in the top-left corner at `z-index: 15`, above the canvas but below
+the overlay, and inverts to black-on-white while the overlay is open.
+
+``` {.html file=index.html}
 
     #grid-area {
       flex: 1;
@@ -337,7 +404,18 @@ The page is a vertical flex layout (`#app`) with these major sections:
      }
      .grid-cog:hover { color: var(--fg); border-color: var(--accent); }
       .grid-cog.active { color: var(--bg); background: var(--fg); border-color: var(--fg); }
+```
 
+## Grid settings overlay
+
+`#grid-overlay` covers the entire keyboard area with a semi-transparent
+frosted background. A slow CSS `shimmer` animation sweeps a subtle highlight
+across it to make the overlay feel alive. The `hidden` class toggles visibility
+via `display: none`. Overlay sections use `.overlay-section-title` for
+uppercase, letter-spaced category headings and `.overlay-btn` for action
+buttons that invert on hover.
+
+``` {.html file=index.html}
 
     #grid-overlay {
       position: absolute;
@@ -352,7 +430,7 @@ The page is a vertical flex layout (`#app`) with these major sections:
       scrollbar-width: thin;
       scrollbar-color: var(--dim) transparent;
     }
-    
+
     #grid-overlay::before {
       content: '';
       position: absolute;
@@ -412,6 +490,18 @@ The page is a vertical flex layout (`#app`) with these major sections:
     }
     .overlay-btn:hover { border-color: var(--fg); }
     .overlay-btn:active { background: var(--subtle); }
+```
+
+## Search results and pedals panel
+
+`.search-result` rows are used inside the MIDI song search dropdown: each row
+shows a truncated title on the left and a dimmed source label on the right. The
+`#pedals-panel` is a fixed-height flex row that collapses to zero height when
+hidden. Each `.pedal-btn` occupies half the row and inverts to white-on-black
+while held, matching the sustain and vibrato active states managed by the state
+machine.
+
+``` {.html file=index.html}
 
     .search-result {
       display: flex;
@@ -479,7 +569,18 @@ The page is a vertical flex layout (`#app`) with these major sections:
       .pedal-btn:hover { color: var(--fg); background: var(--subtle); }
     }
     .pedal-btn.active { color: var(--bg); background: var(--fg); }
+```
 
+## Control group and form input styles
+
+`.ctrl-group` and `.ctrl-label` are the base layout primitives for labelled
+control rows throughout the overlay and top bar. All `<select>`, `<input
+type="range">`, `<input type="number">`, and `<input type="text">` elements
+inherit the monospace font and the design token colour scheme. The custom
+`.gi-checkbox` replaces the native checkbox with a 14×14 block that inverts to
+white when checked and draws a CSS-only checkmark via a pseudo-element.
+
+``` {.html file=index.html}
 
     .ctrl-group {
       display: flex;
@@ -517,7 +618,6 @@ The page is a vertical flex layout (`#app`) with these major sections:
     select:focus, input:focus { border-color: var(--accent); }
     select option { background: var(--bg); }
 
-    
 
 
     .gi-checkbox { position: relative; display: inline-block; width: 14px; height: 14px; cursor: pointer; vertical-align: middle; }
@@ -526,6 +626,19 @@ The page is a vertical flex layout (`#app`) with these major sections:
     .gi-checkbox input:checked + .gi-check { background: var(--fg); border-color: var(--fg); }
     .gi-checkbox input:checked + .gi-check::after { content: ''; position: absolute; left: 4px; top: 1px; width: 4px; height: 8px; border: solid var(--bg); border-width: 0 2px 2px 0; transform: rotate(45deg); }
     .gi-checkbox input:focus-visible + .gi-check { border-color: var(--accent); }
+```
+
+## Slider track and value badge
+
+The `<input type="range">` thumb is a 6×18px white vertical bar with no
+border-radius, matching the sharp-corners design language. `.slider-track`
+wraps a range input with optional label overlay and value badge in a relative
+container so the badge can be positioned absolutely above the thumb. The editable
+`input.badge-input` allows direct numeric entry and shows a red border when the
+value is invalid. The `.slider-reset` button is a compact 22×18px target that
+appears to the right of every slider.
+
+``` {.html file=index.html}
 
     input[type="range"] {
       padding: 0;
@@ -563,6 +676,14 @@ The page is a vertical flex layout (`#app`) with these major sections:
     }
     input[type="range"]::-moz-range-thumb:active { cursor: grabbing; }
 
+```
+
+The `.slider-track` container uses flexbox to align the range input, label overlay,
+value badge, and reset button in a single row. The label overlay floats above the
+track via absolute positioning with `mix-blend-mode: difference` so it stays readable
+against the filled portion. The badge sits above the thumb for live feedback.
+
+``` {.html file=index.html}
     .slider-track {
       position: relative;
       display: flex;
@@ -636,6 +757,12 @@ The page is a vertical flex layout (`#app`) with these major sections:
     input.badge-input:invalid {
       border-color: #cc3333;
     }
+```
+
+The slider reset button is a compact 22×18px icon placed at the end of each slider
+track. It uses the dim color at rest and brightens on hover to signal interactivity.
+
+``` {.html file=index.html}
      .slider-reset {
        color: var(--dim);
        background: var(--bg); border: 1px solid var(--border);
@@ -643,7 +770,19 @@ The page is a vertical flex layout (`#app`) with these major sections:
        flex-shrink: 0; margin-left: 2px;
      }
     .slider-reset:hover { color: var(--fg); border-color: var(--accent); }
+```
 
+## TET preset marks and slider info button
+
+The TET preset marks and `.slider-presets` container sit below a slider track
+using absolute positioning relative to `.tuning-slider-area`. Each mark
+consists of a vertical tick (short or staggered-tall to avoid label collisions)
+and a small clickable `.slider-preset-btn` that snaps the slider to the named
+EDO. Active marks turn green (`#4f4`) to indicate the current temperament. The
+`.slider-info-btn` is an inline info-circle icon that opens the contextual help
+dialog for that parameter.
+
+``` {.html file=index.html}
 
     .tuning-slider-area .slider-track { width: 100%; }
     .tet-presets, .slider-presets {
@@ -707,7 +846,18 @@ The page is a vertical flex layout (`#app`) with these major sections:
      }
     .slider-info-btn:hover { opacity: 1; color: var(--accent, #4af); }
     .tuning-slider-area .slider-track { margin-left: 18px; width: calc(100% - 18px); }
+```
 
+## Dialog and about content styles
+
+The `.about-content` typography stack styles the rich text inside both the
+About and Info dialogs: heading hierarchy, paragraph spacing, inline code
+highlights, and a simple table style for the controls reference. The native
+`<dialog>` element gets the design-token colour scheme, a max-height scroll,
+and a darkened backdrop. The close button is absolutely positioned in the
+top-right corner.
+
+``` {.html file=index.html}
 
     .about-content h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent, #4af); margin: 24px 0 8px; border-bottom: 1px solid #222; padding-bottom: 4px; }
     .about-content h3 { font-size: 12px; color: #aaa; margin: 16px 0 4px; }
@@ -742,7 +892,17 @@ The page is a vertical flex layout (`#app`) with these major sections:
        color: var(--dim);
      }
     dialog button:hover { color: var(--fg); }
+```
 
+## Chord graffiti overlay and instructions block
+
+The `.graffiti-overlay` is an SVG layer that sits above the keyboard canvas at
+`z-index: 5` with `mix-blend-mode: screen`, making the yellow roughjs chord
+shapes blend additively against the dark grid background. The `#instructions`
+block renders a compact keyboard shortcut reference with monospace `<kbd>`
+styling.
+
+``` {.html file=index.html}
 
     .graffiti-overlay {
       position: absolute;
@@ -777,7 +937,16 @@ The page is a vertical flex layout (`#app`) with these major sections:
       font-family: var(--font);
       font-size: 10px;
     }
+```
 
+## Responsive breakpoints
+
+Three `@media` breakpoints progressively compact the top bar and song bar for
+tablet (≤768 px), phone (≤480 px), and small phone (≤375 px) viewports. The
+star count badge is hidden below 480 px, and the reset-layout button disappears
+entirely below 375 px to recover horizontal space for the essential controls.
+
+``` {.html file=index.html}
 
     @media (max-width: 768px) {
       #top-bar {
@@ -877,6 +1046,16 @@ The page is a vertical flex layout (`#app`) with these major sections:
     }
   </style>
 </head>
+```
+
+## Body — top bar DOM
+
+The `<body>` contains a single `#app` flex column. The top bar header holds the
+site title, GitHub badge, fullscreen toggle, and reset-layout button on the
+left, and the song bar (search, game status, calibration) on the right. The
+song bar wraps below the title on narrow viewports.
+
+``` {.html file=index.html}
 <body>
   <div id="app">
 
@@ -900,8 +1079,9 @@ The page is a vertical flex layout (`#app`) with these major sections:
       </div>
       <!-- Song/game controls — right side of header, wraps on narrow -->
       <div id="song-bar">
-      <div id="song-bar-search" style="position:relative;">
+      <div id="song-bar-search" style="position:relative;display:inline-flex;align-items:center;gap:4px;">
           <button class="slider-info-btn icon-btn icon-lg" data-info="search" style="position:static;transform:none;"><i data-lucide="info"></i></button>
+          <label for="midi-search-input" style="font-family:var(--font);font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:0.06em;white-space:nowrap;">Song Search</label>
           <input id="midi-search-input" type="text" placeholder="Search or drop .mid file..." title="Search for MIDI songs or drop a .mid file anywhere" style="width:200px;box-sizing:border-box;font-family:var(--font);font-size:10px;background:var(--bg);color:var(--fg);border:1px solid var(--border);padding:2px 6px;">
           <div id="midi-search-results" style="position:absolute;top:100%;left:0;min-width:280px;max-height:300px;overflow-y:auto;background:var(--bg);border:1px solid var(--border);z-index:25;display:none;"></div>
         </div>
@@ -938,6 +1118,16 @@ The page is a vertical flex layout (`#app`) with these major sections:
         </div>
     </div>
     </header>
+```
+
+## Visualiser panel DOM
+
+The visualiser panel holds the `#history-canvas` that the note-history
+visualiser renders into. Its resize handle widget is injected below the panel's
+bottom border; `data-*` attributes declare the min/max/default heights and the
+`localStorage` keys used to persist the panel size across sessions.
+
+``` {.html file=index.html}
 
     <!-- Visualiser panel -->
     <div id="visualiser-panel">
@@ -946,6 +1136,19 @@ The page is a vertical flex layout (`#app`) with these major sections:
          <div class="panel-resize-handle" tabindex="0" role="separator" aria-orientation="horizontal" aria-label="Resize visualiser" title="Drag to resize visualiser panel" data-target="visualiser-panel" data-min="60" data-max="400" data-default="120" data-key="gi_visualiser_h" data-hidden-key="gi_history_hidden"><span class="grip-lines"><span class="grip-line"></span><span class="grip-line"></span><span class="grip-line"></span></span><span class="handle-label">VISUALISER</span><span class="grip-lines"><span class="grip-line"></span><span class="grip-line"></span><span class="grip-line"></span></span></div>
       </div>
     </div>
+```
+
+## Grid area DOM — keyboard canvas and settings overlay
+
+The grid area contains the keyboard canvas and the full-coverage settings
+overlay. The overlay is divided into three collapsible sections — SOUND, VISUAL,
+and INPUT — each with an `.overlay-section-title` heading. The SOUND section
+holds waveform select, volume, tuning, and D-ref sliders. The VISUAL section
+holds mech skew, wicked shear, zoom, and QWERTY labels. The INPUT section holds
+keyboard layout select, the MIDI device list, and the EXPRESSION subsection
+with pitch bend, velocity, pressure, timbre, and MPE output controls.
+
+``` {.html file=index.html}
 
     <!-- Grid area -->
     <div id="grid-area">
@@ -993,6 +1196,15 @@ The page is a vertical flex layout (`#app`) with these major sections:
           </div>
            </div>
 
+```
+
+### Visual settings
+
+The VISUAL section provides geometry controls — mech skew (DCompose↔MidiMech
+morph), wicked shear, grid zoom, and the QWERTY label overlay toggle.
+
+``` {.html file=index.html}
+
            <div class="overlay-section-title">VISUAL</div>
            <div class="overlay-section">
             <div class="tuning-slider-area">
@@ -1030,6 +1242,16 @@ The page is a vertical flex layout (`#app`) with these major sections:
              </label>
            </div>
            </div>
+
+```
+
+### Input settings
+
+The INPUT section handles keyboard layout selection (ANSI, ISO, JIS), MIDI device
+enumeration, and the EXPRESSION subsection for per-note MPE controls — pitch bend
+range, velocity, channel pressure, timbre CC mode, and MPE output routing.
+
+``` {.html file=index.html}
 
            <div class="overlay-section-title">INPUT</div>
            <div class="overlay-section">
@@ -1089,6 +1311,16 @@ The page is a vertical flex layout (`#app`) with these major sections:
          </div>
       </div>
     </div>
+```
+
+## Pedals panel DOM
+
+The pedals panel sits at the bottom of the app column. Its resize handle
+projects upward into the grid area seam via the `.pedals-handle-wrap` modifier.
+The two pedal buttons — sustain and vibrato — each occupy half the row and are
+toggled active/inactive by the state machine on hold/release events.
+
+``` {.html file=index.html}
 
     <!-- Pedals -->
     <div id="pedals-panel" style="height:44px">
@@ -1100,6 +1332,20 @@ The page is a vertical flex layout (`#app`) with these major sections:
     </div>
 
    </div>
+```
+
+## Toast, dialogs, scripts, and SVG filter
+
+The ghosting toast appears at the bottom-centre of the screen when keyboard
+rollover is detected, prompting the player to switch to MIDI or touchscreen for
+polyphonic chords. The two `<dialog>` elements use `showModal()` and carry their
+content in dynamically-populated `<div>` children. The module script entry
+point loads `_generated/main.ts`; a small inline script fetches the live GitHub
+star count without blocking page load. The SVG `<defs>` block defines the
+`spray-roughen` displacement filter used by chord graffiti to give roughjs
+strokes a hand-drawn texture.
+
+``` {.html file=index.html}
 
    <!-- Keyboard rollover warning toast -->
    <div id="ghosting-toast" style="display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:30;background:rgba(0,0,0,0.85);border:1px solid var(--dim);padding:12px 16px;font-family:var(--font);font-size:11px;color:var(--fg);flex-direction:row;align-items:flex-start;gap:12px;max-width:400px;">

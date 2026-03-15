@@ -253,6 +253,32 @@ export function coordToFrequency(
 }
 ```
 
+## D-relative Note Name — Single Source of Truth
+
+`midiToDRefNoteName` is the canonical formatter for human-readable note names
+in D-relative octave notation. It is the single source of truth used by the
+grid, the note history waterfall, the chord panel, and any other UI that
+needs to display a note name.
+
+The format: pitch class name followed by an octave suffix. One apostrophe `'`
+per octave above D-ref; one comma `,` per octave below. D-ref itself (MIDI 62)
+has no suffix. Examples: `D` = D-ref, `D'` = one octave above, `D,,` = two
+octaves below, `A'` = A one octave above D-ref.
+
+The note names use standard accidentals: `C#`, `Eb`, etc. This matches the
+standard musical convention and is consistent with the chord detector output.
+
+``` {.typescript file=_generated/lib/keyboard-layouts.ts}
+export function midiToDRefNoteName(midi: number): string {
+  const names = ['C','C#','D','Eb','E','F','F#','G','Ab','A','Bb','B'];
+  const noteName = names[((midi % 12) + 12) % 12];
+  const dOctave = Math.floor((midi - 62) / 12);
+  if (dOctave === 0) return noteName;
+  const suffix = dOctave > 0 ? "'".repeat(dOctave) : ','.repeat(-dOctave);
+  return noteName + suffix;
+}
+```
+
 ## Key Mapping Queries and Display Labels
 
 `getAllMappedKeys` and `isKeyMapped` query the default (ANSI) layout. `codeToLabel` converts a W3C key code to a short display string for the QWERTY overlay — letter keys become single uppercase letters, digit keys become the digit character, and punctuation keys use their printed symbol.

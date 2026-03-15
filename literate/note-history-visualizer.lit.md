@@ -14,11 +14,12 @@ Three-panel canvas strip rendered at 60fps. The layout from left to right:
 
 ## Imports and Types
 
-The visualizer imports `noteColor` for per-pitch-class OKLCH colors and `detectChord` for Tonal.js-backed chord detection. Two interfaces describe the note lifecycle: `ActiveNote` for held notes (no end time yet) and `HistoryNote` for released notes (with an end time for fade-out).
+The visualizer imports `noteColor` for per-pitch-class OKLCH colors, `detectChord` for Tonal.js-backed chord detection, and `midiToDRefNoteName` from `keyboard-layouts` — the single source of truth for D-relative note name formatting. Two interfaces describe the note lifecycle: `ActiveNote` for held notes (no end time yet) and `HistoryNote` for released notes (with an end time for fade-out).
 
 ``` {.typescript file=_generated/lib/note-history-visualizer.ts}
 import { noteColor } from './note-colors';
 import { detectChord } from './chord-detector';
+import { midiToDRefNoteName } from './keyboard-layouts';
 
 interface ActiveNote {
   coordX: number;
@@ -300,7 +301,11 @@ The piano strip draws white keys at full width then black keys on top at 60% wid
     const ghostMidi = (this.ghostNote !== null && !activeMidis.has(this.ghostNote))
       ? this.ghostNote
       : null;
+```
 
+White keys are drawn first as a base layer. Active notes receive a bright fill overlay; the ghost note (the hovered-but-not-played suggestion) gets a white outline instead.
+
+``` {.typescript file=_generated/lib/note-history-visualizer.ts}
     for (let midi = this.midiMin; midi <= this.midiMax; midi++) {
       if (isBlackKey(midi)) continue;
       const ky = midiToY(midi);
@@ -325,7 +330,11 @@ The piano strip draws white keys at full width then black keys on top at 60% wid
         ctx.strokeRect(x + 1, ky + 1, w - 2, noteH - 2);
       }
     }
+```
 
+Black keys are drawn in a second pass at 60% width, on top of the white key layer. The same active/ghost treatment applies.
+
+``` {.typescript file=_generated/lib/note-history-visualizer.ts}
     for (let midi = this.midiMin; midi <= this.midiMax; midi++) {
       if (!isBlackKey(midi)) continue;
       const ky = midiToY(midi);
@@ -348,7 +357,11 @@ The piano strip draws white keys at full width then black keys on top at 60% wid
         ctx.strokeRect(x + 1, ky + 1, bw - 2, noteH - 2);
       }
     }
+```
 
+C notes are labelled right-aligned using D-relative octave notation. A thin bright vertical line marks the right edge as the "now" boundary where notes enter the roll.
+
+``` {.typescript file=_generated/lib/note-history-visualizer.ts}
     ctx.font = `bold ${Math.max(6, noteH * 0.75)}px 'JetBrains Mono', monospace`;
     ctx.fillStyle = '#666666';
     ctx.textAlign = 'right';
@@ -357,7 +370,7 @@ The piano strip draws white keys at full width then black keys on top at 60% wid
       const pc = ((midi % 12) + 12) % 12;
       if (pc !== 0) continue;
       const ky = midiToY(midi) + noteH / 2;
-      ctx.fillText(this.midiToDRelativeNoteName(midi), x + w - 2, ky);
+      ctx.fillText(midiToDRefNoteName(midi), x + w - 2, ky);
     }
 
     ctx.strokeStyle = '#ffffff55';
@@ -385,7 +398,11 @@ Background stripes alternate between a slightly darker shade for black-key rows,
     const isBlackKey = (midi: number): boolean => this.BLACK_KEYS.includes(((midi % 12) + 12) % 12);
     const midiToY = (midi: number): number => h - (midi - this.midiMin + 1) * noteH;
     const timeToX = (t: number): number => x + (now - t) / this.historyWindowMs * w;
+```
 
+Background stripes alternate between a slightly darker shade for black-key rows. Horizontal lines at each C note mark octave boundaries.
+
+``` {.typescript file=_generated/lib/note-history-visualizer.ts}
     for (let midi = this.midiMin; midi <= this.midiMax; midi++) {
       const ky = midiToY(midi);
       ctx.fillStyle = isBlackKey(midi) ? '#0a0808' : '#0d0d0d';
@@ -405,7 +422,11 @@ Background stripes alternate between a slightly darker shade for black-key rows,
     }
 
     if (this.history.length === 0 && this.activeNotes.size === 0) return;
+```
 
+Released notes scroll rightward and fade out linearly with age over the history window. Active (still-held) notes are anchored to the left "now" edge and grow rightward; bars wide enough to show a label get the pitch-class name printed inside.
+
+``` {.typescript file=_generated/lib/note-history-visualizer.ts}
     for (const note of this.history) {
       const age = now - note.endTime;
       if (age > this.historyWindowMs) continue;
@@ -451,20 +472,12 @@ Background stripes alternate between a slightly darker shade for black-key rows,
 
 ## Note Name Helpers
 
-Two private name formatters. `midiToNoteName` returns a plain pitch class name (e.g. "F#"). `midiToDRelativeNoteName` returns the same name decorated with apostrophes or commas to indicate octave relative to D4 (MIDI 62): `'` suffixes for octaves above D-ref, `,` suffixes for octaves below.
+One private name formatter for the waterfall. `midiToNoteName` returns a plain pitch class name (e.g. "F#") used for bar labels inside the waterfall where octave context is provided by vertical position. For the chord panel note list, `midiToDRefNoteName` from `keyboard-layouts` is the canonical single source of truth for D-relative names.
 
 ``` {.typescript file=_generated/lib/note-history-visualizer.ts}
   private midiToNoteName(midi: number): string {
     const names = ['C','C#','D','Eb','E','F','F#','G','Ab','A','Bb','B'];
     return names[((midi % 12) + 12) % 12];
-  }
-
-  private midiToDRelativeNoteName(midi: number): string {
-    const names = ['C','C#','D','Eb','E','F','F#','G','Ab','A','Bb','B'];
-    const noteName = names[((midi % 12) + 12) % 12];
-    const dOctave = Math.floor((midi - 62) / 12);
-    if (dOctave === 0) return noteName;
-    return noteName + Math.abs(dOctave);
   }
 ```
 
@@ -512,7 +525,7 @@ The chord panel occupies the leftmost 25% of the canvas. When notes are active, 
     const noteNames: string[] = [];
     const sortedNotes = [...this.activeNotes.values()].sort((a, b) => b.midiNote - a.midiNote);
     for (const n of sortedNotes) {
-      noteNames.push(this.midiToDRelativeNoteName(n.midiNote));
+      noteNames.push(midiToDRefNoteName(n.midiNote));
     }
 
     const noteListY = h * 0.58;
