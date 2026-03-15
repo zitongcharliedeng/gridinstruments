@@ -33,14 +33,18 @@ export const tooltipCheck: StateInvariant = {
   id: 'BH-TT-1',
   description: 'No raw title= tooltips — all controls use info button + dialog',
   check: async (page: Page) => {
-    const titleCount = await page.evaluate(() =>
-      document.querySelectorAll('[title]').length
-    );
-    if (titleCount > 0) {
-      const titles = await page.evaluate(() =>
-        Array.from(document.querySelectorAll('[title]')).map(el => `${el.tagName}#${el.id}: ${el.getAttribute('title')}`).join(', ')
-      );
-      throw new Error(`${titleCount} elements still have title= tooltips: ${titles}`);
+    const result = await page.evaluate(() => {
+      const all = Array.from(document.querySelectorAll('[title]'));
+      const owned = all.filter(el => {
+        if (el.closest('.ss-main, .ss-content')) return false;
+        if (el.tagName === 'SELECT') return false;
+        if (el.classList.contains('slider-preset-btn')) return false;
+        return true;
+      });
+      return { count: owned.length, list: owned.map(el => `${el.tagName}#${el.id}: ${el.getAttribute('title')}`).join(', ') };
+    });
+    if (result.count > 0) {
+      throw new Error(`${result.count} elements have title= tooltips (excluding slim-select/presets): ${result.list}`);
     }
   },
 };

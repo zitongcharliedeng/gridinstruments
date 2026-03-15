@@ -2220,7 +2220,7 @@ MPE vibrato uses `requestAnimationFrame` to oscillate pitch bend at approximatel
       btn.className = 'slider-preset-btn';
       btn.dataset.value = preset.value.toString();
       btn.textContent = preset.label;
-      btn.title = preset.description;
+      btn.dataset.description = preset.description;
       btn.addEventListener('click', () => {
         slider.value = preset.value.toString();
         slider.dispatchEvent(new Event('input'));
