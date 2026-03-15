@@ -163,7 +163,9 @@ The channel mode controls how multi-channel MIDI data is routed. In `omni` and `
 
 ## Message Handling
 
-`handleMessage` decodes the raw MIDI status byte into type and channel, applies channel-mode filtering, then dispatches to the appropriate callback arrays. Pitch bend uses the standard 14-bit encoding (LSB in byte 1, MSB in byte 2) normalized to −1…+1. CC74 (slide/timbre) and channel pressure (0xD0) are normalized to 0…1. Note-on with velocity 0 is treated as note-off per the MIDI spec.
+`handleMessage` decodes the raw MIDI status byte into type and channel, applies channel-mode filtering, then dispatches to the appropriate callback arrays. Pitch bend uses the standard 14-bit encoding (LSB in byte 1, MSB in byte 2) normalized to −1…+1. CC74 (slide/timbre), channel pressure (0xD0), and polyphonic aftertouch (0xA0) are normalized to 0…1. Note-on with velocity 0 is treated as note-off per the MIDI spec.
+
+Polyphonic Aftertouch (0xA0) is the per-note pressure message used by MPE instruments (LinnStrument, Seaboard, etc.). It carries the note number in byte 1 and the pressure value in byte 2. Channel Aftertouch (0xD0) is a channel-wide pressure message with only one data byte. Both are routed to `pressureCallbacks` because in MPE mode each note is on its own channel, making channel aftertouch functionally per-note. Supporting both ensures compatibility with instruments that send either message type.
 
 ``` {.typescript file=_generated/lib/midi-input.ts}
   private handleMessage(deviceId: string, event: MIDIMessageEvent): void {
@@ -196,6 +198,10 @@ The channel mode controls how multi-channel MIDI data is routed. In `omni` and `
     } else if (type === 0xB0 && note === 74) {
       const normalized = velocity / 127;
       for (const cb of this.slideCallbacks) cb(channel, normalized, deviceId);
+    } else if (type === 0xA0) {
+      if (data.length < 3) return;
+      const normalized = data[2] / 127;
+      for (const cb of this.pressureCallbacks) cb(channel, normalized, deviceId);
     } else if (type === 0xD0) {
       const normalized = data[1] / 127;
       for (const cb of this.pressureCallbacks) cb(channel, normalized, deviceId);
