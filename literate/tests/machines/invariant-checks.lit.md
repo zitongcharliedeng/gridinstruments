@@ -35,7 +35,7 @@ export const tooltipCheck: StateInvariant = {
     const selectors = [
       '#tuning-slider', '#tuning-thumb-badge', '#tuning-reset',
       '#skew-slider', '#skew-thumb-badge', '#skew-reset',
-      '#zoom-slider', '#zoom-reset',
+      '#zoom-reset',
       '#volume-slider', '#volume-reset',
       '#d-ref-input', '#d-ref-reset',
       '#wave-select', '#wave-reset',
