@@ -248,31 +248,22 @@ The history visualizer drives the waterfall display and staff notation in the to
 
     this.historyCanvas.addEventListener('wheel', (e: WheelEvent) => {
       e.preventDefault();
+      if (!this.historyVisualizer) return;
       const rect = this.historyCanvas.getBoundingClientRect();
       const xInCanvas = e.clientX - rect.left;
       const PIANO_W = 52;
       if (xInCanvas <= PIANO_W) {
-        const visRangeSlider = getElementOrNull('vis-range-slider', HTMLInputElement);
-        const visRangeBadge = document.getElementById('vis-range-badge');
-        if (visRangeSlider) {
-          const delta = e.deltaY > 0 ? 1 : -1;
-          const newVal = Math.min(8, Math.max(2, parseInt(visRangeSlider.value, 10) + delta));
-          visRangeSlider.value = String(newVal);
-          const centerMidi = 62;
-          const halfRange = Math.floor(newVal * 12 / 2);
-          this.historyVisualizer?.setNoteRange(centerMidi - halfRange, centerMidi + halfRange);
-          if (visRangeBadge) visRangeBadge.textContent = String(newVal);
-        }
+        const delta = e.deltaY > 0 ? 1 : -1;
+        const current = this.historyVisualizer.getTimeWindow();
+        const octaves = Math.round(current);
+        const newVal = Math.min(8, Math.max(2, octaves + delta));
+        const half = Math.floor(newVal * 12 / 2);
+        this.historyVisualizer.setNoteRange(62 - half, 62 + half);
       } else {
-        const visTimeSlider = getElementOrNull('vis-time-slider', HTMLInputElement);
-        const visTimeBadge = document.getElementById('vis-time-badge');
-        if (visTimeSlider) {
-          const delta = e.deltaY > 0 ? 0.5 : -0.5;
-          const newVal = Math.min(10, Math.max(1, parseFloat(visTimeSlider.value) + delta));
-          visTimeSlider.value = String(newVal);
-          this.historyVisualizer?.setTimeWindow(newVal);
-          if (visTimeBadge) visTimeBadge.textContent = newVal.toFixed(1);
-        }
+        const delta = e.deltaY > 0 ? 0.5 : -0.5;
+        const current = this.historyVisualizer.getTimeWindow();
+        const newVal = Math.min(10, Math.max(1, current + delta));
+        this.historyVisualizer.setTimeWindow(newVal);
       }
     }, { passive: false });
   }
