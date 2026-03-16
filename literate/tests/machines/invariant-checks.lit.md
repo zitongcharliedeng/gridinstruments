@@ -654,7 +654,7 @@ Continuing with `scrollbarOverflowCheck` and related invariants.
 export const scrollbarOverflowCheck: StateInvariant = {
   id: 'ISS-62-2',
   check: async (page: Page) => {
-    await page.setViewportSize({ width: 1280, height: 500 });
+    await page.setViewportSize({ width: 1280, height: 250 });
     await page.waitForTimeout(500);
     await page.click('#grid-settings-btn');
     await page.waitForTimeout(800);

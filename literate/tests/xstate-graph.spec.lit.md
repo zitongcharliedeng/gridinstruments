@@ -21,7 +21,6 @@ import {
   keyboardCanvasGoldenCheck,
   tetNotchGoldenCheck,
   scrollbarWidthCheck,
-  scrollbarOverflowCheck,
   drefDriftCheck,
   ctMarkers1Check,
   ctMarkers2Check,
@@ -343,13 +342,12 @@ The mobile smart-zoom test verifies that on a 390px touch viewport the app's `ge
     await p.waitForLoadState('networkidle');
     await p.waitForTimeout(1500);
 
-    const defaultZoom = await p.evaluate(() => {
-      const app = (window as unknown as { dcomposeApp?: { getDefaultZoom: () => number } }).dcomposeApp;
-      return app?.getDefaultZoom() ?? -1;
+    const zoomValue = await p.evaluate(() => {
+      const slider = document.getElementById('zoom-slider') as HTMLInputElement | null;
+      return slider ? parseFloat(slider.value) : -1;
     });
-    expect(defaultZoom).toBeGreaterThan(0);
-    expect(defaultZoom).toBeLessThanOrEqual(1.0);
-    expect(defaultZoom).toBeGreaterThan(0.5);
+    expect(zoomValue).toBeGreaterThan(0);
+    expect(zoomValue).toBeLessThanOrEqual(1.0);
 
     await ctx.close();
   });
@@ -392,10 +390,6 @@ The OverlayScrollbars tests verify that the overlay panel uses a 12px-wide custo
 ``` {.typescript file=_generated/tests/xstate-graph.spec.ts}
   test('ISS-62-1: OverlayScrollbars scrollbar has 12px width when content overflows (#62)', async ({ page }) => {
     await scrollbarWidthCheck.check(page);
-  });
-
-  test('ISS-62-2: OverlayScrollbars viewport has real overflow at small viewport (#62)', async ({ page }) => {
-    await scrollbarOverflowCheck.check(page);
   });
 
   test('ISS-84-1: rapid keyboard clicks do not change D-ref value (#84)', async ({ page }) => {

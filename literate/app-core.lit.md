@@ -1123,7 +1123,7 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
      const TARGET_KEYS_VISIBLE = 10;
      const viewportBasedZoom = window.innerWidth / (gridCellWidthPx * TARGET_KEYS_VISIBLE);
      const dpiBasedZoom = pianoKeyPx / gridCellWidthPx;
-     this.defaultZoom = Math.min(dpiBasedZoom, viewportBasedZoom);
+     this.defaultZoom = Math.min(dpiBasedZoom, viewportBasedZoom, 1.0);
      const savedZoom = this.loadSetting('zoom', this.defaultZoom.toString());
      if (this.zoomSlider) {
        this.zoomSlider.value = savedZoom;
