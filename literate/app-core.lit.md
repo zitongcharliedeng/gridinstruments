@@ -13,7 +13,10 @@ import { midiToCoord, coordToMidiNote } from './lib/note-colors';
 import { createChordGraffiti } from './lib/chord-graffiti';
 import { createIcons, Info, Search, Star, Maximize, RotateCcw, RotateCw, Settings, X } from 'lucide';
 import { mountVisOverlay } from './components/mount-vis-overlay';
-import { overlayMachine } from './machines/overlayMachine';
+import { mountGridOverlay } from './components/mount-grid-overlay';
+import { mountPedals } from './components/mount-pedals';
+import { mountTopBar } from './components/mount-topbar';
+import { mountSongBar } from './components/mount-songbar';
 import { waveformMachine } from './machines/waveformMachine';
 import { pedalMachine } from './machines/pedalMachines';
 import { mpeMachine } from './machines/mpeMachine';
@@ -24,12 +27,11 @@ import type { QuantizationLevel } from './lib/game-engine';
 import { loadCalibratedRange, saveCalibratedRange } from './lib/calibration';
 import { searchAllAdapters, type MidiSearchResult } from './lib/midi-search';
 import { createActor } from 'xstate';
-import { OverlayScrollbars, ClickScrollPlugin } from 'overlayscrollbars';
 import SlimSelect from 'slim-select';
 
 import { isWaveformType, parseNum, formatSliderAnnotation, noteNameToHz } from './app-helpers';
 import { getElement, getElementOrNull, setupCyclingButton } from './app-dom';
-import { thumbCenterPx, clampBadgePosition, applySliderFill, refreshAllSliderUI } from './app-slider';
+import { thumbCenterPx, clampBadgePosition, applySliderFill } from './app-slider';
 import { SHEAR_PRESETS, TUNING_LABEL_PRESETS } from './app-constants';
 ```
 
@@ -1212,6 +1214,18 @@ The QWERTY overlay toggle renders physical key labels (Q, W, E, R...) on the gri
       mountVisOverlay(visOverlayMount, visSettingsBtn, this.historyVisualizer);
     }
 
+    const topbarMountEl = document.getElementById('topbar-mount');
+    if (topbarMountEl) {
+      mountTopBar(
+        topbarMountEl,
+        () => { /* about dialog wired in main.ts via #about-btn id */ },
+        () => {
+          Object.keys(localStorage).filter(k => k.startsWith('gi_')).forEach(k => { localStorage.removeItem(k); });
+          location.reload();
+        },
+      );
+    }
+
     window.addEventListener('blur', () => { this.stopAllNotes(); });
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'hidden') this.stopAllNotes();
@@ -1237,64 +1251,23 @@ Focus management prevents UI controls from capturing keyboard input after intera
     });
 ```
 
-The grid settings overlay is a scrollable panel toggled by the cog button. An `overlayMachine` state machine manages open/close transitions. OverlayScrollbars provides a custom scrollbar theme, and a `ResizeObserver` re-measures slider fill positions whenever the overlay resizes.
+The grid settings overlay is a SolidJS component mounted into `#grid-overlay-mount`.
+`mountGridOverlay` wires the cog button toggle and returns a `setVisible` handle.
+After mounting, the existing slider event listeners attach to the rendered DOM elements
+as before, since all IDs are preserved.
 
 ``` {.typescript file=_generated/app-core.ts}
 
     const gridCog = getElementOrNull('grid-settings-btn', HTMLButtonElement);
-    const gridOverlay = document.getElementById('grid-overlay');
-    if (gridCog && gridOverlay) {
-      OverlayScrollbars.plugin(ClickScrollPlugin);
-      let osInstance: ReturnType<typeof OverlayScrollbars> | null = null;
-
-      const overlayActor = createActor(overlayMachine);
-      overlayActor.subscribe((snapshot) => {
-        const visible = snapshot.matches('visible');
-        gridOverlay.classList.toggle('hidden', !visible);
-        gridCog.classList.toggle('active', visible);
-        if (visible) {
-          osInstance ??= OverlayScrollbars(gridOverlay, {
-            overflow: { x: 'hidden', y: 'scroll' },
-            scrollbars: {
-              theme: 'gi-scrollbar',
-              visibility: 'visible',
-              autoHide: 'never',
-              dragScroll: true,
-              clickScroll: true,
-            },
-          });
-          requestAnimationFrame(() => requestAnimationFrame(refreshAllSliderUI));
-        }
-      });
-      overlayActor.start();
-
-      new ResizeObserver(() => {
-        if (!gridOverlay.classList.contains('hidden')) {
-          requestAnimationFrame(refreshAllSliderUI);
-        }
-      }).observe(gridOverlay);
-      gridCog.addEventListener('click', () => { overlayActor.send({ type: 'TOGGLE' }); });
-      gridOverlay.addEventListener('click', (e) => {
-        const target = e.target instanceof Element ? e.target : null;
-        if (!target) return;
-        if (target === gridOverlay ||
-            (!target.closest('.overlay-section') &&
-             !target.closest('.overlay-section-title') &&
-             !target.closest('.os-scrollbar') &&
-             !target.closest('.ss-content'))) {
-          overlayActor.send({ type: 'CLOSE' });
-        }
-      });
-      (window as unknown as { overlayActor?: unknown }).overlayActor = overlayActor;
+    const gridOverlayMount = document.getElementById('grid-overlay-mount');
+    if (gridCog && gridOverlayMount) {
+      mountGridOverlay(gridOverlayMount, gridCog);
     }
 ```
 
-Sustain and vibrato pedals are modeled as `pedalMachine` actors (activate/deactivate state). Both the on-screen pedal buttons (pointer events) and keyboard modifiers (Space/Shift) drive these actors. The actors' subscriptions toggle CSS classes and synth behavior in lockstep.
+Sustain and vibrato pedals are modeled as `pedalMachine` actors (activate/deactivate state). Keyboard modifiers (Space/Shift) drive the actors directly; the on-screen pedal buttons are handled by the `PedalsPanel` SolidJS component mounted into `#pedals-mount`. The actors' subscriptions toggle CSS classes and synth behavior in lockstep.
 
 ``` {.typescript file=_generated/app-core.ts}
-    const sustainPedal = getElementOrNull('sustain-indicator', HTMLButtonElement);
-    const vibratoPedal = getElementOrNull('vibrato-indicator', HTMLButtonElement);
-
     this.sustainActor = createActor(pedalMachine);
     this.sustainActor.subscribe((snapshot) => {
       const active = snapshot.matches('active');
@@ -1311,63 +1284,52 @@ Sustain and vibrato pedals are modeled as `pedalMachine` actors (activate/deacti
     });
     this.vibratoActor.start();
 
-    if (sustainPedal) {
-      const susRef = this.sustainActor;
-      sustainPedal.addEventListener('pointerdown', (e) => {
-        e.preventDefault();
-        susRef.send({ type: 'ACTIVATE' });
-      });
-      sustainPedal.addEventListener('pointerup', () => {
-        susRef.send({ type: 'DEACTIVATE' });
-      });
-      sustainPedal.addEventListener('pointerleave', () => {
-        susRef.send({ type: 'DEACTIVATE' });
-      });
-    }
-    if (vibratoPedal) {
-      const vibRef = this.vibratoActor;
-      vibratoPedal.addEventListener('pointerdown', (e) => {
-        e.preventDefault();
-        vibRef.send({ type: 'ACTIVATE' });
-      });
-      vibratoPedal.addEventListener('pointerup', () => {
-        vibRef.send({ type: 'DEACTIVATE' });
-      });
-      vibratoPedal.addEventListener('pointerleave', () => {
-        vibRef.send({ type: 'DEACTIVATE' });
-      });
+    const pedalsMountEl = document.getElementById('pedals-mount');
+    if (pedalsMountEl && this.sustainActor && this.vibratoActor) {
+      mountPedals(pedalsMountEl, this.sustainActor, this.vibratoActor);
     }
 ```
 
-Calibration mode lets MIDI controller users define their playable range by pressing all reachable keys. The game actor (`gameMachine`) manages the Piano Tiles game lifecycle -- idle, loading, playing, complete, error. Its subscription drives all game UI updates: target notes, progress bar, elapsed timer, and score overlay.
+The SolidJS SongBar component mounts into `#songbar-mount` and owns all song bar UI.
+Callbacks delegate back into the app for calibration, game reset, max-keys persistence,
+and search. The game actor (`gameMachine`) manages the Piano Tiles game lifecycle --
+idle, loading, playing, complete, error. Its subscription drives all game UI updates:
+target notes, progress bar, elapsed timer, and score overlay.
 
 ``` {.typescript file=_generated/app-core.ts}
-    const maxKeysInput = getElementOrNull('max-keys-input', HTMLInputElement);
-    if (maxKeysInput) {
-      const savedMax = this.loadSetting('maxKeys', '8');
-      maxKeysInput.value = savedMax;
-      this.maxSimultaneousKeys = parseInt(savedMax, 10);
-      maxKeysInput.addEventListener('change', () => {
-        const val = Math.max(1, parseInt(maxKeysInput.value, 10) || 8);
-        maxKeysInput.value = String(val);
-        this.maxSimultaneousKeys = val;
-        this.saveSetting('maxKeys', String(val));
+    const savedMax = this.loadSetting('maxKeys', '8');
+    this.maxSimultaneousKeys = parseInt(savedMax, 10);
+
+    const songbarMountEl = document.getElementById('songbar-mount');
+    if (songbarMountEl) {
+      mountSongBar(songbarMountEl, {
+        onSearch: () => { /* value read imperatively below via #midi-search-input */ },
+        onSearchFocus: () => {
+          const hint = document.querySelector<HTMLElement>('#song-bar-hint');
+          if (hint) hint.style.display = 'none';
+        },
+        onSearchBlur: () => {
+          const searchInput = document.querySelector<HTMLInputElement>('#midi-search-input');
+          const hint = document.querySelector<HTMLElement>('#song-bar-hint');
+          if (searchInput && hint && searchInput.value.trim() === '') {
+            const gameState = this.gameActor ? String(this.gameActor.getSnapshot().value) : undefined;
+            if (!gameState || gameState === 'idle' || gameState === 'error') {
+              hint.style.display = '';
+            }
+          }
+        },
+        onQuantizationCycle: () => { /* value read on-demand by loadMidiFromBuffer */ },
+        onGameReset: () => { this.gameActor?.send({ type: 'GAME_RESTART' }); },
+        onCalibrateStart: () => { this.enterCalibrationMode(); },
+        onCalibrateConfirm: () => { this.exitCalibrationMode(true); },
+        onCalibrateCancel: () => { this.exitCalibrationMode(false); },
+        onMaxKeysChange: (n: number) => {
+          this.maxSimultaneousKeys = n;
+          this.saveSetting('maxKeys', String(n));
+        },
+        initialMaxKeys: parseInt(savedMax, 10),
       });
     }
-
-    const calibrateBtn = document.getElementById('calibrate-btn');
-    const calibrateConfirm = document.getElementById('calibrate-confirm');
-    const calibrateCancel = document.getElementById('calibrate-cancel');
-    calibrateBtn?.addEventListener('click', () => { this.enterCalibrationMode(); });
-    calibrateConfirm?.addEventListener('click', () => { this.exitCalibrationMode(true); });
-    calibrateCancel?.addEventListener('click', () => { this.exitCalibrationMode(false); });
-
-     const gameResetBtn = document.getElementById('game-reset-btn');
-     gameResetBtn?.addEventListener('click', () => {
-       this.gameActor?.send({ type: 'GAME_RESTART' });
-     });
-
-
 
     this.gameActor = createActor(gameMachine);
     this.gameActor.start();
@@ -1599,34 +1561,7 @@ The MIDI search input queries multiple online MIDI repositories via `searchAllAd
     }
 ```
 
-The song bar hint ("drop a MIDI file or search") fades in when idle and hides when the search input is focused or a game is active. This keeps the hint visible only when it is useful.
-
 ``` {.typescript file=_generated/app-core.ts}
-    const songBarHintEl = document.querySelector<HTMLElement>('#song-bar-hint');
-    if (searchInput && songBarHintEl) {
-      searchInput.addEventListener('focus', () => {
-        songBarHintEl.style.display = 'none';
-      });
-      searchInput.addEventListener('blur', (_e: FocusEvent) => {
-        if (searchInput.value.trim() === '') {
-          const gameState = this.gameActor ? String(this.gameActor.getSnapshot().value) : undefined;
-          if (!gameState || gameState === 'idle' || gameState === 'error') {
-            songBarHintEl.style.display = '';
-          }
-        }
-      });
-      searchInput.addEventListener('input', () => {
-        if (searchInput.value.trim() !== '') {
-          songBarHintEl.style.display = 'none';
-        } else if (document.activeElement !== searchInput) {
-          const gameState = this.gameActor ? String(this.gameActor.getSnapshot().value) : undefined;
-          if (!gameState || gameState === 'idle' || gameState === 'error') {
-            songBarHintEl.style.display = '';
-          }
-        }
-      });
-    }
-
     document.querySelectorAll<HTMLInputElement>('input[type="range"]').forEach(s => { this.updateSliderFill(s); });
   }
 ```

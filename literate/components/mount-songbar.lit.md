@@ -1,0 +1,48 @@
+# Mount SongBar
+
+Mounts the SolidJS `SongBar` component into `#songbar-mount`. This is the
+bridge between the vanilla TS app and the Solid component. All callbacks wire
+back into the existing `DComposeApp` imperative handlers so no game-engine or
+MIDI logic moves into the component.
+
+The `mountSongBar` function is called once during app initialization, before
+the game actor starts, so all DOM ids the actor subscription queries are
+present by the time transitions fire.
+
+``` {.typescript file=_generated/components/mount-songbar.tsx}
+import { render } from 'solid-js/web';
+import { SongBar } from './SongBar';
+
+export interface SongBarCallbacks {
+  onSearch: (query: string) => void;
+  onSearchFocus: () => void;
+  onSearchBlur: () => void;
+  onQuantizationCycle: (value: string) => void;
+  onGameReset: () => void;
+  onCalibrateStart: () => void;
+  onCalibrateConfirm: () => void;
+  onCalibrateCancel: () => void;
+  onMaxKeysChange: (n: number) => void;
+  initialMaxKeys?: number;
+}
+
+export function mountSongBar(mountEl: HTMLElement, callbacks: SongBarCallbacks): void {
+  render(
+    () => (
+      <SongBar
+        onSearch={callbacks.onSearch}
+        onSearchFocus={callbacks.onSearchFocus}
+        onSearchBlur={callbacks.onSearchBlur}
+        onQuantizationCycle={callbacks.onQuantizationCycle}
+        onGameReset={callbacks.onGameReset}
+        onCalibrateStart={callbacks.onCalibrateStart}
+        onCalibrateConfirm={callbacks.onCalibrateConfirm}
+        onCalibrateCancel={callbacks.onCalibrateCancel}
+        onMaxKeysChange={callbacks.onMaxKeysChange}
+        initialMaxKeys={callbacks.initialMaxKeys}
+      />
+    ),
+    mountEl,
+  );
+}
+```

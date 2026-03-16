@@ -50,17 +50,6 @@ document.addEventListener('DOMContentLoaded', () => {
   if (parseInt(localStorage.getItem('gi_pedals_h') ?? '0', 10) > window.innerHeight * 0.6) localStorage.removeItem('gi_pedals_h');
 ```
 
-### Reset layout button
-
-Clears all `gi_*` localStorage keys and reloads the page.
-
-``` {.typescript file=_generated/main.ts}
-  document.getElementById('reset-layout')?.addEventListener('click', () => {
-    Object.keys(localStorage).filter(k => k.startsWith('gi_')).forEach(k => { localStorage.removeItem(k); });
-    location.reload();
-  });
-```
-
 ### Panel resize handles and zoom prevention
 
 ``` {.typescript file=_generated/main.ts}

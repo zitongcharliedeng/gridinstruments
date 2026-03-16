@@ -1,0 +1,31 @@
+# Mount Pedals
+
+Mounts the SolidJS `PedalsPanel` component into `#pedals-mount`. This is the
+bridge between the vanilla TS app and the Solid component. The `mountPedals`
+function is called from app-core during initialization, after the `pedalMachine`
+actors have been created and started.
+
+``` {.typescript file=_generated/components/mount-pedals.tsx}
+import { render } from 'solid-js/web';
+import { PedalsPanel } from './PedalsPanel';
+import type { Actor } from 'xstate';
+import type { pedalMachine } from '../machines/pedalMachines';
+
+export function mountPedals(
+  mountEl: HTMLElement,
+  sustainActor: Actor<typeof pedalMachine>,
+  vibratoActor: Actor<typeof pedalMachine>,
+): void {
+  render(
+    () => (
+      <PedalsPanel
+        onSustainDown={() => { sustainActor.send({ type: 'ACTIVATE' }); }}
+        onSustainUp={() => { sustainActor.send({ type: 'DEACTIVATE' }); }}
+        onVibratoDown={() => { vibratoActor.send({ type: 'ACTIVATE' }); }}
+        onVibratoUp={() => { vibratoActor.send({ type: 'DEACTIVATE' }); }}
+      />
+    ),
+    mountEl,
+  );
+}
+```
