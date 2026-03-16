@@ -12,9 +12,10 @@
     "preview": "vite preview",
     "lint": "eslint _generated/",
     "lint:ast": "ast-grep scan",
+    "verify:lsmw": "nix build .#checks.x86_64-linux.verify-lsmw --print-build-logs",
     "test": "playwright test",
     "test:update": "playwright test --update-snapshots",
-    "verify": "npm run build && npm run lint && npx ast-grep scan && npx playwright test --project=firefox --workers=1"
+    "verify": "npm run verify:lsmw && npm run build && npm run lint && npx ast-grep scan && npx playwright test --project=firefox --workers=1"
   },
   "keywords": [
     "isomorphic",
