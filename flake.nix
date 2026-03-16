@@ -10,6 +10,14 @@
     let
       system = "x86_64-linux";
       pkgs   = nixpkgs.legacyPackages.${system};
+      lsmwTangle = lsmw.lib.mkLocalTangleApp {
+        inherit pkgs;
+        name = "gridinstruments-tangle";
+        sourceDir = "literate";
+        forbidTsComments = true;
+        tooltipCheckFile = "literate/index.lit.md";
+        warnLongBlocks = true;
+      };
       lsmwChecks = lsmw.lib.makeChecks {
         inherit pkgs;
         src = ./.;
@@ -37,18 +45,18 @@
             '';
           }
         ];
-        postTangleChecks = [
-          {
-            name = "long-blocks";
-            mode = "warn";
-            nativeBuildInputs = [ pkgs.python313 ];
-            command = "python3 scripts/check-long-blocks.py";
-          }
-        ];
+        postTangleChecks = [ ];
       };
     in {
       checks.${system} = lsmwChecks // {
         verify-lsmw = lsmwChecks.verify;
+      };
+
+      packages.${system}.tangle = lsmwTangle;
+
+      apps.${system}.tangle = {
+        type = "app";
+        program = "${lsmwTangle}/bin/gridinstruments-tangle";
       };
 
       devShells.${system}.default = lsmw.lib.mkDevShell {
@@ -60,7 +68,7 @@
           PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD = "1";
           PLAYWRIGHT_NODEJS_PATH = "${pkgs.nodejs_22}/bin/node";
         };
-        tangleCommand = ''bash "$PWD/scripts/tangle.sh"'';
+        tangleCommand = ''${lsmwTangle}/bin/gridinstruments-tangle'';
         shellHook = ''
           echo "[devshell] PLAYWRIGHT_BROWSERS_PATH=$PLAYWRIGHT_BROWSERS_PATH"
           echo "[devshell] Firefox: $(ls "$PLAYWRIGHT_BROWSERS_PATH/" | grep firefox)"

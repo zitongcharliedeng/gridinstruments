@@ -4,7 +4,7 @@
   "description": "Web-based isomorphic grid keyboard synthesizer — GridInstruments",
   "type": "module",
   "scripts": {
-    "tangle": "bash scripts/tangle.sh",
+    "tangle": "nix run .#tangle",
     "prebuild": "npm run tangle",
     "build": "tsc && vite build",
     "pretest": "npm run tangle",
