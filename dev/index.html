@@ -167,7 +167,7 @@
       gap: 6px;
     }
     #song-bar #calibrate-btn { font-size: 10px; padding: 2px 8px; }
-    #song-bar #calibration-banner { flex-direction: column; gap: 4px; }
+    #song-bar #calibration-banner { gap: 2px; }
     #song-bar.dropping {
       outline: 2px solid rgba(255, 255, 255, 0.7);
       outline-offset: -2px;
@@ -288,21 +288,19 @@
      .grid-cog:hover { color: var(--fg); border-color: var(--accent); }
       .grid-cog.active { color: var(--bg); background: var(--fg); border-color: var(--fg); }
 
-    #grid-overlay {
+    .settings-overlay {
       position: absolute;
       top: 0; left: 0; right: 0; bottom: 0;
       background: rgba(30, 30, 32, 0.78);
       z-index: 12;
-      padding: 48px 24px 24px 24px;
-      padding-left: 48px;
-      padding-right: 36px;
+      padding: 48px 24px 24px 48px;
       overflow-y: auto;
       overflow-x: hidden;
       scrollbar-width: thin;
       scrollbar-color: var(--dim) transparent;
     }
 
-    #grid-overlay::before {
+    .settings-overlay::before {
       content: '';
       position: absolute;
       inset: 0;
@@ -317,7 +315,7 @@
       0% { background-position: 200% 0; }
       100% { background-position: -100% 0; }
     }
-    #grid-overlay.hidden { display: none; }
+    .hidden { display: none; }
     .overlay-section {
       display: flex;
       flex-direction: column;
@@ -825,7 +823,7 @@
       }
     }
   </style>
-  <script type="module" crossorigin src="/dev/assets/index-CDQ7cZdp.js"></script>
+  <script type="module" crossorigin src="/dev/assets/index-YtI2DZyy.js"></script>
   <link rel="stylesheet" crossorigin href="/dev/assets/index-DaTdlIPo.css">
 </head>
 <body>
@@ -882,16 +880,16 @@
       <span id="song-bar-hint" style="display:none;"></span>
       <div id="song-bar-calibrate" style="margin-left:auto;">
           <button class="slider-info-btn icon-btn icon-lg" data-info="calibrate" style="position:static;transform:none;"><i data-lucide="info"></i></button>
-          <label style="display:inline-flex;align-items:center;gap:3px;font-family:var(--font);font-size:9px;color:var(--dim);">
-            Max Keys <input type="number" id="max-keys-input" min="1" max="999" value="8" style="width:3ch;font-family:var(--font);font-size:9px;background:var(--bg);color:var(--fg);border:1px solid var(--border);padding:1px 2px;text-align:center;">
+          <label style="display:inline-flex;align-items:center;gap:2px;font-family:var(--font);font-size:9px;color:var(--dim);">
+            Keys<input type="number" id="max-keys-input" min="1" value="8" style="width:3ch;font-family:var(--font);font-size:9px;background:var(--bg);color:var(--fg);border:1px solid var(--border);padding:1px 2px;text-align:center;">
           </label>
-          <button id="calibrate-btn" style="font-family:var(--font);font-size:9px;background:none;color:var(--dim);border:1px solid var(--border);padding:2px 8px;cursor:pointer;">Calibrate</button>
-          <div id="calibration-banner" style="display:none;align-items:center;gap:4px;">
-            <span id="calibration-warning" style="display:none;font-family:var(--font);font-size:9px;color:var(--dim);"></span>
-            <span id="calibration-msg" style="font-family:var(--font);font-size:9px;color:var(--fg);">Play all reachable notes</span>
-            <button id="calibrate-confirm" style="font-family:var(--font);font-size:9px;background:none;color:#4f4;border:1px solid #4f4;padding:1px 6px;cursor:pointer;">&#x2713;</button>
-            <button id="calibrate-cancel" style="font-family:var(--font);font-size:9px;background:none;color:var(--dim);border:1px solid var(--border);padding:1px 6px;cursor:pointer;">&#x2717;</button>
-          </div>
+          <button id="calibrate-btn" style="font-family:var(--font);font-size:9px;background:none;color:var(--dim);border:1px solid var(--border);padding:2px 8px;cursor:pointer;">Calibrate Area</button>
+          <span id="calibration-banner" style="display:none;font-family:var(--font);font-size:9px;gap:2px;align-items:center;">
+            <span id="calibration-warning" style="display:none;"></span>
+            <span id="calibration-msg" style="color:var(--fg);">Play notes</span>
+            <button id="calibrate-confirm" style="font-family:var(--font);font-size:9px;background:none;color:#4f4;border:1px solid #4f4;padding:1px 4px;cursor:pointer;line-height:1;">&#x2713;</button>
+            <button id="calibrate-cancel" style="font-family:var(--font);font-size:9px;background:none;color:var(--dim);border:1px solid var(--border);padding:1px 4px;cursor:pointer;line-height:1;">&#x2717;</button>
+          </span>
         </div>
     </div>
     </header>
@@ -900,19 +898,7 @@
     <div id="visualiser-panel">
       <canvas id="history-canvas" height="120"></canvas>
       <button id="vis-settings-btn" class="grid-cog icon-btn icon-md" style="position:absolute;top:4px;left:4px;z-index:15;"><i data-lucide="settings"></i></button>
-      <div id="vis-overlay" class="hidden" style="position:absolute;top:0;left:0;width:200px;height:100%;background:rgba(0,0,0,0.9);z-index:14;padding:8px 8px 8px 36px;overflow-y:auto;">
-        <div class="overlay-section-title">VISUALISER</div>
-        <div class="slider-track" style="margin-top:8px;">
-          <span class="slider-label-overlay">TIME (s)</span>
-          <input type="range" id="vis-time-slider" min="1" max="10" step="0.5" value="3">
-          <span class="slider-value-badge" id="vis-time-badge">3.0</span>
-        </div>
-        <div class="slider-track" style="margin-top:8px;">
-          <span class="slider-label-overlay">RANGE (octaves)</span>
-          <input type="range" id="vis-range-slider" min="2" max="8" step="1" value="5">
-          <span class="slider-value-badge" id="vis-range-badge">5</span>
-        </div>
-      </div>
+      <div id="vis-overlay-mount"></div>
       <div class="panel-resize-handle-wrap">
          <div class="panel-resize-handle" tabindex="0" role="separator" aria-orientation="horizontal" aria-label="Resize visualiser" data-target="visualiser-panel" data-min="60" data-max="400" data-default="120" data-key="gi_visualiser_h" data-hidden-key="gi_history_hidden"><span class="grip-lines"><span class="grip-line"></span><span class="grip-line"></span><span class="grip-line"></span></span><span class="handle-label">VISUALISER</span><span class="grip-lines"><span class="grip-line"></span><span class="grip-line"></span><span class="grip-line"></span></span></div>
       </div>
@@ -925,7 +911,7 @@
          <button id="grid-settings-btn" class="grid-cog icon-btn icon-md"><i data-lucide="settings"></i></button>
 
         <!-- Grid settings overlay (was sidebar) -->
-        <div id="grid-overlay" class="hidden">
+        <div id="grid-overlay" class="settings-overlay hidden">
 
            <div class="overlay-section-title">SOUND</div>
            <div class="overlay-section">
@@ -998,15 +984,10 @@
                 <button class="slider-reset icon-btn icon-md" id="zoom-reset"><i data-lucide="rotate-cw"></i></button>
               </div>
             </div>
-            <div class="slider-track" style="margin-top: 18px">
-              <span class="slider-label-overlay">DPI OVERRIDE</span>
-              <input type="number" id="dpi-override" min="40" max="600" step="1" placeholder="auto" style="width:72px;background:#111;color:#fff;border:1px solid #444;font-family:inherit;font-size:12px;padding:2px 4px;">
-              <button class="slider-reset icon-btn icon-md" id="dpi-override-reset"><i data-lucide="rotate-cw"></i></button>
-            </div>
            <div class="slider-track" style="margin-top: 18px">
              <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;">
-               <span class="gi-checkbox"><input type="checkbox" id="qwerty-overlay-toggle"><span class="gi-check"></span></span>
-               <span style="color:#fff">QWERTY LABELS</span>
+               <span class="gi-checkbox"><input type="checkbox" id="qwerty-overlay-toggle" checked><span class="gi-check"></span></span>
+               <span style="color:#fff">KEY LABELS</span>
              </label>
            </div>
            </div>
@@ -1043,10 +1024,8 @@
                  </div>
                  <div class="midi-panel-row" id="expr-pressure-row" style="gap:6px">
                    <button class="slider-info-btn icon-btn icon-lg" data-info="pressure" style="position:static;transform:none;"><i data-lucide="info"></i></button>
-                   <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;">
-                     <span class="gi-checkbox"><input type="checkbox" id="expr-pressure" checked><span class="gi-check"></span></span>
-                     <span style="color:#fff">Channel Pressure</span>
-                   </label>
+                   <span style="color:#fff;font-size:12px;">Pressure</span>
+                   <button id="pressure-mode" style="font-family:var(--font);font-size:10px;background:var(--bg);color:var(--fg);border:1px solid var(--border);padding:2px 6px;cursor:pointer;" value="channel">Channel</button>
                  </div>
                  <div class="midi-panel-row" id="expr-timbre-row" style="gap:6px">
                    <button class="slider-info-btn icon-btn icon-lg" data-info="timbre" style="position:static;transform:none;"><i data-lucide="info"></i></button>
