@@ -2276,8 +2276,15 @@ Calibration mode shows a banner instructing the user to play all reachable notes
     if (banner) banner.style.display = 'flex';
     if (msg) msg.textContent = 'Play all reachable notes to set your playable area, then confirm';
     const gameState = this.gameActor ? String(this.gameActor.getSnapshot().value) : undefined;
-    const songActive = gameState === 'playing' || gameState === 'loading' || gameState === 'complete';
-    if (warning) warning.style.display = songActive ? '' : 'none';
+    if (gameState === 'playing' || gameState === 'loading') {
+      this.gameActor?.send({ type: 'GAME_RESET' });
+    }
+    if (warning && (gameState === 'playing' || gameState === 'loading' || gameState === 'complete')) {
+      warning.style.display = '';
+      warning.textContent = 'Song stopped — calibration changes the playable range';
+    } else if (warning) {
+      warning.style.display = 'none';
+    }
     const btn = document.getElementById('calibrate-btn');
     if (btn) btn.style.display = 'none';
     this.render();
