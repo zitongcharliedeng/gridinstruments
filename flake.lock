@@ -102,11 +102,11 @@
         "nixpkgs": "nixpkgs_4"
       },
       "locked": {
-        "lastModified": 1773705502,
-        "narHash": "sha256-qd5aViCNuTyX0Aj3njIF5/hq4PM6VpvPadKnpvnld9s=",
+        "lastModified": 1773717939,
+        "narHash": "sha256-6g6erqshyR6HL8DYcIBVlK4JKwCBSKOlh5JdstdvsQM=",
         "owner": "zitongcharliedeng",
         "repo": "build-state-machines-from-literate-wiki",
-        "rev": "79ee46e37f0bdf2e1cc5bfb99ef327d16969fa12",
+        "rev": "a7fb90e0440911ae31d65498b0aa6e1dacd04ffe",
         "type": "github"
       },
       "original": {
