@@ -24,7 +24,7 @@ The visualizer depends on two sibling modules:
   [note-colors.lit.md](note-colors.lit.md) for the full color system.
 
 ``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
-import { getNoteNameFromCoord, get12TETName, getCentDeviation, formatNoteWithOctavePrefix } from './keyboard-layouts';
+import { getNoteNameFromCoord, get12TETName, getCentDeviation, relativeOctave, D_REF_MIDI } from './keyboard-layouts';
 import { cellColors } from './note-colors';
 ```
 
@@ -1054,19 +1054,34 @@ The sub-label renders at 60% of the main font size and 60% opacity.
     const hasBracket = noteName !== tetName || Math.abs(deviation) >= 0.5;
 
     const midi = 62 + coordX * 7 + coordY * 12;
-    const fullLabel = formatNoteWithOctavePrefix(midi);
+    const octave = relativeOctave(midi, D_REF_MIDI);
+    const octStr = octave !== 0 ? String(Math.abs(octave)) : '0';
 ```
 
-The note label uses `formatNoteWithOctavePrefix` — the single source of truth
-for D-ref pitch notation. Unicode super/subscript characters in the string
-handle octave sizing natively in JetBrains Mono. When `hasBracket` is true
-and the cell is large enough, the label renders flush to the baseline with
-a sub-label (12-TET name and/or cent deviation) below at 60% size/opacity.
+The note label uses `pitchClassName` and `relativeOctave` from
+keyboard-layouts — the same modular functions that `formatNoteWithOctavePrefix`
+composes for string contexts. On canvas, the octave digit renders at a smaller
+font size with controlled Y positioning: raised for positive octaves, lowered
+for negative, and **vertically centered** for octave zero.
 
 ``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
+    const drawOctavePrefix = (): void => {
+      const nameW = this.ctx.measureText(noteName).width;
+      const octFont = Math.max(6, fontSize * 0.45);
+      this.ctx.save();
+      this.ctx.font = `${octFont}px "JetBrains Mono", monospace`;
+      this.ctx.textAlign = 'right';
+      const baseY = this.ctx.textBaseline === 'bottom' ? y - fontSize * 0.5 : y;
+      const octY = octave > 0 ? baseY - fontSize * 0.35 : octave < 0 ? baseY + fontSize * 0.15 : baseY;
+      this.ctx.fillText(octStr, x - nameW / 2 - 1, octY);
+      this.ctx.restore();
+    };
+
     if (hasBracket && cellMin > 30) {
       this.ctx.textBaseline = 'bottom';
-      this.ctx.fillText(fullLabel, x, y);
+      this.ctx.textAlign = 'center';
+      drawOctavePrefix();
+      this.ctx.fillText(noteName, x, y);
       const subSize = Math.max(7, fontSize * 0.6);
       this.ctx.font = `${subSize}px "JetBrains Mono", monospace`;
       this.ctx.fillStyle = textColor;
@@ -1084,11 +1099,14 @@ a sub-label (12-TET name and/or cent deviation) below at 60% size/opacity.
     } else {
 ```
 
-Without a bracket sub-label the full label is simply vertically centred.
+Without a bracket sub-label the note name is vertically centred, with the
+octave prefix drawn at controlled position using the same modular functions.
 
 ``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
       this.ctx.textBaseline = 'middle';
-      this.ctx.fillText(fullLabel, x, y);
+      this.ctx.textAlign = 'center';
+      drawOctavePrefix();
+      this.ctx.fillText(noteName, x, y);
     }
     this.ctx.globalAlpha = 1;
 ```
