@@ -1093,6 +1093,8 @@ save horizontal space, and the song bar reduces its gap and font size for phone 
         gap: 4px;
         min-width: 0;
       }
+      .top-bar-left .slider-info-btn { display: none; }
+      #song-bar .slider-info-btn { display: none; }
       .site-title {
         font-size: 10px;
       }
