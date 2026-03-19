@@ -193,7 +193,7 @@ Polyphonic Aftertouch (0xA0) is the per-note pressure message used by MPE instru
       const raw = (data[2] << 7) | data[1];
       const normalized = raw / 8191.5 - 1; // range -1..+1
       for (const cb of this.pitchBendCallbacks) cb(channel, normalized, deviceId);
-    } else if (type === 0xB0 && note === 74) {
+    } else if (type === 0xB0 && (note === 74 || note === 1 || note === 11)) {
       const normalized = velocity / 127;
       for (const cb of this.slideCallbacks) cb(channel, normalized, deviceId);
     } else if (type === 0xA0) {
