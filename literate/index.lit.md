@@ -1184,7 +1184,7 @@ bottom border; `data-*` attributes declare the min/max/default heights and the
     <!-- Visualiser panel -->
     <div id="visualiser-panel">
       <canvas id="history-canvas" height="120"></canvas>
-      <button id="vis-settings-btn" class="grid-cog icon-btn icon-md" style="position:absolute;top:4px;left:4px;z-index:15;"><i data-lucide="settings"></i></button>
+      <button id="vis-settings-btn" class="grid-cog icon-btn icon-md" style="position:absolute;top:4px;right:4px;z-index:15;"><i data-lucide="settings"></i></button>
       <div id="vis-overlay-mount"></div>
       <div class="panel-resize-handle-wrap">
          <div class="panel-resize-handle" tabindex="0" role="separator" aria-orientation="horizontal" aria-label="Resize visualiser" data-target="visualiser-panel" data-min="60" data-max="400" data-default="120" data-key="gi_visualiser_h" data-hidden-key="gi_history_hidden"><span class="grip-lines"><span class="grip-line"></span><span class="grip-line"></span><span class="grip-line"></span></span><span class="handle-label">VISUALISER</span><span class="grip-lines"><span class="grip-line"></span><span class="grip-line"></span><span class="grip-line"></span></span></div>
