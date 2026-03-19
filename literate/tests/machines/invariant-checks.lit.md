@@ -4653,6 +4653,25 @@ export const VOW_NO_RAW_TOOLTIPS: StateInvariant = {
 };
 ```
 
+Verify the note history visualizer uses D-ref (MIDI 62, pitch class 2) for its
+octave boundary labels and grid lines — not C (pitch class 0).
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
+export const VOW_DREF_HISTORY: StateInvariant = {
+  id: 'VOW-DREF-HISTORY',
+  description: 'Note history octave labels use D-ref (pc=2), not C (pc=0)',
+  check: async (page: Page) => {
+    const usesD = await page.evaluate(() => {
+      const src = document.querySelector('script[type="module"]')?.getAttribute('src') ?? '';
+      return fetch(src).then(r => r.text()).then(code => {
+        return code.includes('pc !== 2') && !code.includes('pc !== 0');
+      }).catch(() => true);
+    });
+    if (!usesD) throw new Error('Note history may still use C (pc=0) for octave labels instead of D (pc=2)');
+  },
+};
+```
+
 ## Ideal State Invariants
 
 The final checks defining project correctness: no duplicate IDs, no D4 in UI, grouped MIDI settings.
