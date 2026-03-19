@@ -24,7 +24,7 @@ import { gameMachine } from './machines/gameMachine';
 import { parseMidi } from './lib/midi-parser';
 import { buildNoteGroups, computeMedianMidiNote, findOptimalTransposition, transposeSong, cropToRange, quantizeNotes } from './lib/game-engine';
 import type { QuantizationLevel } from './lib/game-engine';
-import { loadCalibratedRange, saveCalibratedRange } from './lib/calibration';
+import { loadCalibratedRange, saveCalibratedRange, clearCalibratedRange } from './lib/calibration';
 import { searchAllAdapters, type MidiSearchResult } from './lib/midi-search';
 import { createActor } from 'xstate';
 import SlimSelect from 'slim-select';
