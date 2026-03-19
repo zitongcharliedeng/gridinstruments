@@ -551,9 +551,9 @@ The MIDI device panel renders a list of connected controllers with enable/disabl
         },
       });
       gridCog?.addEventListener('click', () => {
-        requestAnimationFrame(() => {
+        setTimeout(() => {
           overlayScrollbars.update();
-        });
+        }, 50);
       });
     }
     const savedWaveform = this.loadSetting('waveform', 'sawtooth');
