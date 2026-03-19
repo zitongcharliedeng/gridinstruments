@@ -65,3 +65,7 @@ _generated/
 # index.html is also tangled from literate/index.lit.md:
 index.html
 MEMORY/
+.omx/
+.opencode/
+.continues-handoff.md
+ISSUE_PRIORITY_ORDER.md

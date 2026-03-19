@@ -1,9 +1,0 @@
-{
-  "active": false,
-  "iteration": 9,
-  "current_phase": "cancelled",
-  "task_description": "Diagnose why active loop work does not appear as a visible background terminal/task in the Codex UI, even when exec sessions are running.",
-  "last_turn_at": "2026-03-17T09:22:01.988Z",
-  "completed_at": "2026-03-17T09:22:01.988Z",
-  "stale_session_recovered": true
-}

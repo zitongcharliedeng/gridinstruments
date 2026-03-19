@@ -1,8 +1,0 @@
-{
-  "$schema": "https://opencode.ai/config.json",
-  "plugin": ["oh-my-opencode@latest"],
-  "snapshot": false,
-  "permission": {
-    "todowrite": "deny"
-  }
-}
