@@ -10,6 +10,7 @@ import { createSignal } from 'solid-js';
 import { SettingsOverlay } from './SettingsOverlay';
 import type { SectionDef } from './SettingsOverlay';
 import type { NoteHistoryVisualizer } from '../lib/note-history-visualizer';
+import { D_REF_MIDI } from '../lib/keyboard-layouts';
 
 export function mountVisOverlay(
   mountEl: HTMLElement,
@@ -38,7 +39,7 @@ export function mountVisOverlay(
           formatBadge: (v: number) => String(v),
           onChange: (v: number) => {
             const half = Math.floor(v * 12 / 2);
-            historyVis.setNoteRange(62 - half, 62 + half);
+            historyVis.setNoteRange(D_REF_MIDI - half, D_REF_MIDI + half);
           },
         },
       ],

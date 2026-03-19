@@ -14,6 +14,7 @@ The engine depends on three modules: the MIDI parser for event types, the game m
 import { NoteEvent, TempoEvent, TimeSigEvent } from './midi-parser';
 import { NoteGroup } from '../machines/gameMachine';
 import { midiToCoord } from './note-colors';
+import { D_REF_MIDI } from './keyboard-layouts';
 
 const CHORD_THRESHOLD_MS = 20;
 
@@ -74,7 +75,7 @@ The game grid is anchored at D (MIDI 62). To auto-center a song's pitch content 
 
 ``` {.typescript file=_generated/lib/game-engine.ts}
 export function computeMedianMidiNote(events: NoteEvent[]): number {
-  if (events.length === 0) return 62;
+  if (events.length === 0) return D_REF_MIDI;
   const sorted = [...events].map(e => e.midiNote).sort((a, b) => a - b);
   return sorted[Math.floor(sorted.length / 2)];
 }

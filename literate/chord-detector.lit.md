@@ -8,7 +8,7 @@ Tonal.js provides `Chord` for detection and `Note` for pitch sorting. Note namin
 
 ``` {.typescript file=_generated/lib/chord-detector.ts}
 import { Chord, Note } from 'tonal';
-import { getNoteNameFromCoord, formatNoteWithOctavePrefix } from './keyboard-layouts';
+import { getNoteNameFromCoord, formatNoteWithOctavePrefix, D_REF_MIDI } from './keyboard-layouts';
 ```
 
 ## Coordinate to Note Name
@@ -17,7 +17,7 @@ import { getNoteNameFromCoord, formatNoteWithOctavePrefix } from './keyboard-lay
 
 ``` {.typescript file=_generated/lib/chord-detector.ts}
 export function coordToNoteName(x: number, y: number, octaveOffset = 0): string {
-  const midi = 62 + x * 7 + y * 12 + octaveOffset * 12;
+  const midi = D_REF_MIDI + x * 7 + y * 12 + octaveOffset * 12;
   return formatNoteWithOctavePrefix(midi);
 }
 ```
