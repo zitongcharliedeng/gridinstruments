@@ -160,6 +160,10 @@ export function mountGridOverlay(
                   <span style="color:#fff">Timbre Slide</span>
                 </label>
                 <button id="timbre-cc-mode" style="font-family:var(--font);font-size:10px;background:var(--bg);color:var(--fg);border:1px solid var(--border);padding:2px 6px;cursor:pointer;" value="74">CC74</button>
+                <label style="display:inline-flex;align-items:center;gap:3px;cursor:pointer;font-size:10px;">
+                  <span class="gi-checkbox"><input type="checkbox" id="timbre-reverse" /><span class="gi-check"></span></span>
+                  <span style="color:var(--dim)">Rev</span>
+                </label>
               </div>
               <div class="midi-panel-row" id="mpe-output-row">
                 <span class="ctrl-label" style="color:#fff">MPE Out:</span>

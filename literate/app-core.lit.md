@@ -59,6 +59,7 @@ export class DComposeApp {
   private expressionVelocity = true;
   private expressionPressure = true;
   private expressionTimbre = true;
+  private timbreReverse = false;
 
   private pointerDown = new Map<number, { coordX: number; coordY: number } | null>();
 
@@ -111,6 +112,7 @@ The second group of private fields covers DOM references and UI state: canvas el
     timbreCcMode: 'gi_timbre_cc_mode',
     maxKeys: 'gi_max_keys',
     pressureMode: 'gi_pressure_mode',
+    timbreReverse: 'gi_timbre_reverse',
     dpi: 'gi_dpi',
   } as const;
 
@@ -160,6 +162,7 @@ The constructor initializes the core subsystems (synth, MIDI, MPE, layout) and g
     this.expressionVelocity = this.loadSetting('exprVelocity', 'true') === 'true';
     this.expressionPressure = this.loadSetting('exprPressure', 'true') === 'true';
     this.expressionTimbre = this.loadSetting('exprTimbre', 'true') === 'true';
+    this.timbreReverse = this.loadSetting('timbreReverse', 'false') === 'true';
 
     void this.init();
   }
@@ -322,9 +325,10 @@ MIDI listener setup wires incoming note-on, note-off, pitch bend, slide (CC74), 
       }
     });
     this.midi.onSlide((channel, value, deviceId) => {
+      const v = this.timbreReverse ? 1 - value : value;
       for (const audioNoteId of getVoicesForChannel(deviceId, channel)) {
-        if (this.expressionTimbre) this.synth.setTimbre(audioNoteId, value);
-        this.mpe.sendSlide(audioNoteId, value);
+        if (this.expressionTimbre) this.synth.setTimbre(audioNoteId, v);
+        this.mpe.sendSlide(audioNoteId, v);
       }
     });
     this.midi.onPressure((channel, value, deviceId) => {
@@ -1094,6 +1098,15 @@ button component.
       exprTimbreCb.addEventListener('change', () => {
         this.expressionTimbre = exprTimbreCb.checked;
         this.saveSetting('exprTimbre', exprTimbreCb.checked.toString());
+      });
+    }
+
+    const timbreRevCb = getElementOrNull('timbre-reverse', HTMLInputElement);
+    if (timbreRevCb) {
+      timbreRevCb.checked = this.timbreReverse;
+      timbreRevCb.addEventListener('change', () => {
+        this.timbreReverse = timbreRevCb.checked;
+        this.saveSetting('timbreReverse', timbreRevCb.checked.toString());
       });
     }
 
