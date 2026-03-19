@@ -122,6 +122,16 @@ export function setupInfoDialogs(): void {
       const content = (key && SLIDER_INFO[key]) ?? '';
       infoDialogActor.send({ type: 'OPEN', content });
     });
+    const key = btn.dataset.info;
+    const content = (key && SLIDER_INFO[key]) ?? '';
+    if (content) {
+      const preview = document.createElement('span');
+      preview.className = 'info-preview';
+      const tmp = document.createElement('div');
+      tmp.innerHTML = content;
+      preview.textContent = (tmp.textContent ?? '').slice(0, 60) + '…';
+      btn.appendChild(preview);
+    }
   });
 
   closeBtn?.addEventListener('click', () => { infoDialogActor.send({ type: 'CLOSE' }); });

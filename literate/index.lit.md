@@ -901,6 +901,26 @@ label+input pairs in the INPUT section.
        cursor: pointer;
      }
     .slider-info-btn:hover { opacity: 1; color: var(--accent, #4af); border-color: var(--accent, #4af); }
+    .slider-info-btn .info-preview {
+      display: none;
+      position: absolute;
+      left: 100%;
+      top: 50%;
+      transform: translateY(-50%);
+      margin-left: 6px;
+      background: rgba(20, 20, 22, 0.95);
+      border: 1px solid var(--border);
+      padding: 6px 8px;
+      font-size: 9px;
+      color: var(--dim);
+      white-space: nowrap;
+      max-width: 200px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      z-index: 30;
+      pointer-events: none;
+    }
+    .slider-info-btn:hover .info-preview { display: block; }
     .tuning-slider-area .slider-track { margin-left: 18px; width: calc(100% - 18px); }
 ```
 
