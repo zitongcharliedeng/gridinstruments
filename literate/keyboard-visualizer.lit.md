@@ -1066,15 +1066,17 @@ for negative, and **vertically centered** for octave zero.
 
 ``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
     const drawOctavePrefix = (): void => {
+      const savedFont = this.ctx.font;
+      this.ctx.font = `bold ${fontSize}px "JetBrains Mono", monospace`;
       const nameW = this.ctx.measureText(noteName).width;
       const octFont = Math.max(6, fontSize * 0.45);
-      this.ctx.save();
       this.ctx.font = `${octFont}px "JetBrains Mono", monospace`;
       this.ctx.textAlign = 'right';
-      const baseY = this.ctx.textBaseline === 'bottom' ? y - fontSize * 0.5 : y;
-      const octY = octave > 0 ? baseY - fontSize * 0.35 : octave < 0 ? baseY + fontSize * 0.15 : baseY;
+      this.ctx.textBaseline = 'middle';
+      const octY = octave > 0 ? y - fontSize * 0.3 : octave < 0 ? y + fontSize * 0.3 : y;
       this.ctx.fillText(octStr, x - nameW / 2 - 1, octY);
-      this.ctx.restore();
+      this.ctx.font = savedFont;
+      this.ctx.textAlign = 'center';
     };
 
     if (hasBracket && cellMin > 30) {
