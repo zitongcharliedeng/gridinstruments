@@ -165,9 +165,10 @@ range. The banner with confirm/cancel actions appears when calibration is active
         <label style="display:inline-flex;align-items:center;gap:2px;font-family:var(--font);font-size:9px;color:var(--dim);">
           Max Keys
           <input
-            type="number"
+            type="text"
+            inputmode="numeric"
+            pattern="[0-9]*"
             id="max-keys-input"
-            min="1"
             value={maxKeys()}
             style="width:3ch;font-family:var(--font);font-size:9px;background:var(--bg);color:var(--fg);border:1px solid var(--border);padding:1px 2px;text-align:center;"
             onChange={handleMaxKeysChange}
