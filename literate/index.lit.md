@@ -350,9 +350,9 @@ thicken and fully brighten so they remain visible without a hover state.
     }
     .panel-resize-handle:hover .handle-label { color: var(--fg); }
     @media (hover: none) and (pointer: coarse) {
-      .panel-resize-handle { min-height: 28px; touch-action: none; }
+      .panel-resize-handle { min-height: 36px; touch-action: none; border-color: #444; }
       .grip-line { height: 2px; background: var(--fg); }
-      .handle-label { color: var(--fg); opacity: 1; }
+      .handle-label { color: var(--fg); opacity: 1; font-size: 10px; }
     }
     #history-canvas {
       display: block;
@@ -457,6 +457,18 @@ buttons that invert on hover.
       100% { background-position: -100% 0; }
     }
     .hidden { display: none; }
+
+    #mpe-output-select {
+      position: absolute !important;
+      width: 1px !important;
+      height: 1px !important;
+      opacity: 0 !important;
+      overflow: hidden !important;
+      pointer-events: none !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      border-width: 0 !important;
+    }
 ```
 
 The overlay sections use `.overlay-section` as a vertical flex column for labelled control
@@ -468,6 +480,7 @@ inverting on hover.
       display: flex;
       flex-direction: column;
       gap: 5px;
+      margin-left: 40px;
       margin-bottom: 8px;
     }
     .overlay-section .ctrl-label { color: #fff; }
@@ -618,6 +631,7 @@ white when checked and draws a CSS-only checkmark via a pseudo-element.
       text-transform: uppercase;
       letter-spacing: 0.06em;
       white-space: nowrap;
+      pointer-events: none;
     }
 
     select, input[type="range"], input[type="number"], input[type="text"] {

@@ -335,6 +335,12 @@ ${srcLink('keyboard-layouts.lit.md', 'Source: keyboard-layouts.lit.md — layout
 </ul>
 <p>The calibrated range is saved in localStorage and persists across sessions. Reset by clearing and re-calibrating.</p>`,
 
+  maxkeys: `
+<h2>Max Simultaneous Keys</h2>
+<p>The maximum number of keys your keyboard can register at once (keyboard rollover). Most laptop keyboards support 3-6 simultaneous keys. Gaming keyboards support 10+. MIDI controllers have no limit.</p>
+<p>The game engine uses this to validate chord difficulty — chords requiring more keys than your max will be flagged. Default is 8 (ten fingers minus thumbs).</p>
+<p>Changing this during a song will restart the beatmap to recalculate note groupings.</p>`,
+
   fullscreen: `
 <h2>Fullscreen</h2>
 <p>Expands the app to fill the entire screen, hiding the browser chrome. The keyboard grid scales to the full viewport for a more immersive playing experience.</p>

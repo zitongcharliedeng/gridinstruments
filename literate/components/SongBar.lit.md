@@ -39,6 +39,10 @@ layout.
 export function SongBar(props: SongBarProps): JSX.Element {
   const [maxKeys, setMaxKeys] = createSignal(props.initialMaxKeys ?? 8);
 
+  const handleSearchInput = (e: Event): void => {
+    props.onSearch((e.target as HTMLInputElement).value);
+  };
+
   const handleMaxKeysChange = (e: Event): void => {
     const val = Math.max(1, parseInt((e.target as HTMLInputElement).value, 10) || 8);
     setMaxKeys(val);
@@ -66,9 +70,9 @@ export function SongBar(props: SongBarProps): JSX.Element {
             type="text"
             placeholder="Search or drop .mid file..."
             style="width:200px;box-sizing:border-box;font-family:var(--font);font-size:10px;background:var(--bg);color:var(--fg);border:1px solid var(--border);padding:2px 6px 2px 22px;"
-            onInput={(e) => props.onSearch((e.target as HTMLInputElement).value)}
-            onFocus={() => props.onSearchFocus()}
-            onBlur={() => props.onSearchBlur()}
+            onInput={handleSearchInput}
+            onFocus={() => { props.onSearchFocus(); }}
+            onBlur={() => { props.onSearchBlur(); }}
           />
         </div>
         <div
@@ -131,7 +135,7 @@ active — the song title, progress bar, elapsed timer, and restart button.
             id="game-reset-btn"
             class="overlay-btn"
             style="font-size:10px;padding:2px 6px;"
-            onClick={() => props.onGameReset()}
+            onClick={() => { props.onGameReset(); }}
           >
             &#x27F2; Restart
           </button>
@@ -157,8 +161,9 @@ range. The banner with confirm/cancel actions appears when calibration is active
         >
           <i data-lucide="info" />
         </button>
+        <button class="slider-info-btn icon-btn icon-lg" data-info="maxkeys" style="position:static;transform:none;"><i data-lucide="info" /></button>
         <label style="display:inline-flex;align-items:center;gap:2px;font-family:var(--font);font-size:9px;color:var(--dim);">
-          Keys
+          Max Keys
           <input
             type="number"
             id="max-keys-input"
@@ -171,7 +176,7 @@ range. The banner with confirm/cancel actions appears when calibration is active
         <button
           id="calibrate-btn"
           style="font-family:var(--font);font-size:9px;background:none;color:var(--dim);border:1px solid var(--border);padding:2px 8px;cursor:pointer;"
-          onClick={() => props.onCalibrateStart()}
+          onClick={() => { props.onCalibrateStart(); }}
         >
           Calibrate Area
         </button>
@@ -184,14 +189,14 @@ range. The banner with confirm/cancel actions appears when calibration is active
           <button
             id="calibrate-confirm"
             style="font-family:var(--font);font-size:9px;background:none;color:#4f4;border:1px solid #4f4;padding:1px 4px;cursor:pointer;line-height:1;"
-            onClick={() => props.onCalibrateConfirm()}
+            onClick={() => { props.onCalibrateConfirm(); }}
           >
             &#x2713;
           </button>
           <button
             id="calibrate-cancel"
             style="font-family:var(--font);font-size:9px;background:none;color:var(--dim);border:1px solid var(--border);padding:1px 4px;cursor:pointer;line-height:1;"
-            onClick={() => props.onCalibrateCancel()}
+            onClick={() => { props.onCalibrateCancel(); }}
           >
             &#x2717;
           </button>
