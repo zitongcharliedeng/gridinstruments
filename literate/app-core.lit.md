@@ -285,7 +285,7 @@ The history visualizer drives the waterfall display and staff notation in the to
         const octaves = Math.round(current);
         const newVal = Math.min(8, Math.max(2, octaves + delta));
         const half = Math.floor(newVal * 12 / 2);
-        this.historyVisualizer.setNoteRange(62 - half, 62 + half);
+        this.historyVisualizer.setNoteRange(coordToMidiNote(0, 0) - half, coordToMidiNote(0, 0) + half);
       } else {
         const delta = e.deltaY > 0 ? 0.5 : -0.5;
         const current = this.historyVisualizer.getTimeWindow();
@@ -1742,7 +1742,7 @@ Keyboard input handling maps physical key codes to grid coordinates through the 
     const effectiveCoordX = coordX + this.transposeOffset;
     const effectiveCoordY = coordY + this.octaveOffset;
     const audioNoteId = `key_${code}_${effectiveCoordX}_${effectiveCoordY}`;
-    const midiNote = 62 + effectiveCoordX * 7 + effectiveCoordY * 12;
+    const midiNote = coordToMidiNote(effectiveCoordX, effectiveCoordY);
     if (this.calibrating) {
       this.calibratedCells.add(`${effectiveCoordX}_${effectiveCoordY}`);
       this.visualizer?.setCalibratedRange(new Set(this.calibratedCells));
@@ -1807,7 +1807,7 @@ Key-up mirrors key-down: arrow releases clear pitch bend (or switch from vibrato
     const effectiveCoordX = coordX + this.transposeOffset;
     const effectiveCoordY = coordY + this.octaveOffset;
     const audioNoteId = `key_${code}_${effectiveCoordX}_${effectiveCoordY}`;
-    const midiNote = 62 + effectiveCoordX * 7 + effectiveCoordY * 12;
+    const midiNote = coordToMidiNote(effectiveCoordX, effectiveCoordY);
     this.synth.stopNote(audioNoteId);
     this.mpe.noteOff(audioNoteId, midiNote);
     this.activeNotes.delete(code);
@@ -1934,7 +1934,7 @@ Pointer input (touch and mouse) uses the Pointer Events API for unified handling
       this.visualizer?.setCalibratedRange(new Set(this.calibratedCells));
     }
     this.synth.playNote(audioNoteId, effectiveCoordX, coordY, this.octaveOffset);
-    const midiNote = 62 + effectiveCoordX * 7 + effectiveCoordY * 12;
+    const midiNote = coordToMidiNote(effectiveCoordX, effectiveCoordY);
     this.mpe.noteOn(audioNoteId, midiNote, Math.max(0.01, pressure));
     this.activeNotes.set(`ptr_${pointerId}`, { coordX, coordY });
     this.trackNoteOn(effectiveCoordX, effectiveCoordY, midiNote);
@@ -1948,7 +1948,7 @@ Pointer input (touch and mouse) uses the Pointer Events API for unified handling
     const effectiveCoordX = coordX + this.transposeOffset;
     const effectiveCoordY = coordY + this.octaveOffset;
     const audioNoteId = `ptr_${pointerId}_${effectiveCoordX}_${effectiveCoordY}`;
-    const midiNote = 62 + effectiveCoordX * 7 + effectiveCoordY * 12;
+    const midiNote = coordToMidiNote(effectiveCoordX, effectiveCoordY);
     this.synth.stopNote(audioNoteId);
     this.mpe.noteOff(audioNoteId, midiNote);
     this.activeNotes.delete(`ptr_${pointerId}`);
