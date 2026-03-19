@@ -129,7 +129,7 @@ export function mountGridOverlay(
           </div>
           <div style="margin-top: 18px">
             <div id="midi-settings-panel">
-              <span class="overlay-section-title">MIDI</span>
+              <span class="overlay-section-title">MIDI</span> <button class="slider-info-btn" data-info="midi"><i data-lucide="info"></i></button>
               <div id="midi-device-list"></div>
               <span class="overlay-section-title">EXPRESSION</span>
               <div class="midi-panel-row" id="expr-bend-row" style="gap:6px">

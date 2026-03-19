@@ -325,6 +325,18 @@ ${srcLink('synth.lit.md', 'Source: synth.lit.md — oscillator waveforms')}`,
 </table>
 <p>Auto-detected via Keyboard API on Chrome/Edge. Falls back to ANSI.</p>
 ${srcLink('keyboard-layouts.lit.md', 'Source: keyboard-layouts.lit.md — layout definitions')}`,
+  midi: `
+<h2>MIDI Input</h2>
+<p>External MIDI controllers send <strong>note numbers</strong> (0–127), not grid coordinates. The app maps each MIDI note to the closest grid cell, but enharmonic equivalents (e.g., C♭♭ vs B♭) share the same MIDI note number and cannot be distinguished.</p>
+<h3>Limitations</h3>
+<ul>
+<li><strong>12-note constraint</strong>: MIDI encodes pitch as integers mod 12. Microtonal tunings wider than 12-TET produce duplicate mappings — two grid cells with different fifths-positions but the same MIDI note.</li>
+<li><strong>Mirror notes</strong>: The isomorphic grid has horizontal mirrors — the same pitch appears in multiple rows. MIDI input highlights <em>all</em> matching cells (shown with dashed outlines).</li>
+<li><strong>Workaround</strong>: Use <strong>Calibrate Playable Area</strong> to restrict the active range, reducing ambiguity.</li>
+</ul>
+<h3>MPE Mode</h3>
+<p>In <a href="https://www.midi.org/midi-articles/midi-polyphonic-expression-mpe" target="_blank" rel="noopener">MPE mode</a>, each note gets a dedicated MIDI channel with independent pitch bend, pressure, and timbre. This enables per-note expression on supported controllers.</p>`,
+
   calibrate: `
 <h2>Calibrate Playable Area</h2>
 <p>Set which notes your controller can reach. Press <strong>Calibrate</strong>, then play every reachable note on your MIDI controller or keyboard. The app records the range and uses it to:</p>
