@@ -348,6 +348,14 @@ MIDI note-on maps the incoming MIDI note number to grid coordinates using `midiT
     const [coordX, coordY] = midiToCoord(midiNote);
     const noteKey = `midi_${deviceId}_${channel}_${midiNote}`;
     const audioNoteId = `midi_${deviceId}_${channel}_${midiNote}_${coordX}_${coordY}`;
+    const existing = this.activeNotes.get(noteKey);
+    if (existing) {
+      const oldAudioId = this.midiChannelVoice.get(`${deviceId}_${channel}_${midiNote}`);
+      if (oldAudioId) {
+        this.synth.stopNote(oldAudioId);
+        this.mpe.noteOff(oldAudioId, midiNote);
+      }
+    }
     if (this.calibrating) {
       this.calibratedCells.add(`${coordX}_${coordY}`);
       this.visualizer?.setCalibratedRange(new Set(this.calibratedCells));
