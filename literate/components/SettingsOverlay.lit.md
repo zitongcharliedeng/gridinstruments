@@ -38,7 +38,7 @@ export interface SettingsOverlayProps {
   overlayId?: string;
   sectionClass?: string;
   sections: SectionDef[];
-  visible: boolean;
+  visible: () => boolean;
   onToggle: () => void;
 }
 ```
@@ -101,7 +101,7 @@ before the user opens the panel.
 export function SettingsOverlay(props: SettingsOverlayProps): JSX.Element {
   const sectionClass = props.sectionClass ?? 'overlay-section';
   return (
-    <div id={props.overlayId} class="settings-overlay" classList={{ hidden: !props.visible }}>
+    <div id={props.overlayId} class="settings-overlay" style={{ display: props.visible() ? 'block' : 'none' }}>
       <For each={props.sections}>
         {(section) => (
           <div class={sectionClass}>

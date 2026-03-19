@@ -181,7 +181,7 @@ export function mountGridOverlay(
   ];
 
   render(
-    () => <SettingsOverlay overlayId="grid-overlay" sections={sections} visible={visible()} onToggle={toggle} />,
+    () => <SettingsOverlay overlayId="grid-overlay" sections={sections} visible={visible} onToggle={toggle} />,
     mountEl,
   );
 
