@@ -355,6 +355,7 @@ MIDI note-on maps the incoming MIDI note number to grid coordinates using `midiT
         this.synth.stopNote(oldAudioId);
         this.mpe.noteOff(oldAudioId, midiNote);
       }
+      this.trackNoteOff(existing.coordX, existing.coordY);
     }
     if (this.calibrating) {
       this.calibratedCells.add(`${coordX}_${coordY}`);
