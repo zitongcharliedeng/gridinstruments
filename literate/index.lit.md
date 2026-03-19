@@ -891,11 +891,16 @@ label+input pairs in the INPUT section.
        left: 0; top: 50%;
        transform: translateY(-50%);
        z-index: 3;
-       color: #fff;
-       padding: 2px;
-       opacity: 0.8;
+       color: var(--dim);
+       width: 18px; height: 18px;
+       padding: 0;
+       display: flex; align-items: center; justify-content: center;
+       border: 1px solid var(--border);
+       background: var(--bg);
+       opacity: 0.7;
+       cursor: pointer;
      }
-    .slider-info-btn:hover { opacity: 1; color: var(--accent, #4af); }
+    .slider-info-btn:hover { opacity: 1; color: var(--accent, #4af); border-color: var(--accent, #4af); }
     .tuning-slider-area .slider-track { margin-left: 18px; width: calc(100% - 18px); }
 ```
 
