@@ -999,34 +999,31 @@ computed as center +/- (hv1 * s) +/- (hv2 * s).
 ### MPE pitch bend -- color slide
 
 When an active cell has a pitch bend value exceeding 0.01 (in semitone units),
-the cell is overlaid with the OKLCH color of the target pitch. The bend is
-quantized to whole steps (rounded to nearest `bendSteps = round(pitchBend * 2)`)
-and the target color is fetched from `cellColors(coordX + bendSteps, 'active')`.
-
-The overlay alpha is proportional to the bend magnitude (capped at 0.75), so a
-small bend produces a subtle color tint while a full-semitone bend produces a
-strong overlay. This gives the player real-time visual feedback of where
-their pitch bend is heading on the
+the cell is overlaid with a **continuous** OKLCH color representing the bent
+pitch. Instead of snapping to discrete grid steps, the target pitch in cents
+is computed continuously and mapped through `cellColors` with the exact bent
+frequency. The overlay alpha scales smoothly with bend magnitude (capped at
+0.85), so subtle bends produce a faint tint while large bends produce a vivid
+color shift — real-time visual feedback of where the pitch is heading on the
 [circle of fifths](https://en.wikipedia.org/wiki/Circle_of_fifths) color wheel.
 
 ``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
 
     if (mpeExpr && isActive && Math.abs(mpeExpr.pitchBend) > 0.01) {
+      const bendPitchCents = button.pitchCents + mpeExpr.pitchBend * this.options.generator[0];
       const bendSteps = Math.round(mpeExpr.pitchBend * 2);
-      if (bendSteps !== 0) {
-        const bendPitchCents = button.pitchCents + mpeExpr.pitchBend * this.options.generator[0];
-        const { fill: bendFill } = cellColors(coordX + bendSteps, 'active', bendPitchCents);
-        this.ctx.globalAlpha = Math.min(0.75, Math.abs(mpeExpr.pitchBend) * 0.8);
-        this.ctx.fillStyle = bendFill;
-        this.ctx.beginPath();
-        this.ctx.moveTo(px(-1, -1), py(-1, -1));
-        this.ctx.lineTo(px( 1, -1), py( 1, -1));
-        this.ctx.lineTo(px( 1,  1), py( 1,  1));
-        this.ctx.lineTo(px(-1,  1), py(-1,  1));
-        this.ctx.closePath();
-        this.ctx.fill();
-        this.ctx.globalAlpha = 1;
-      }
+      const targetCoordX = coordX + (bendSteps !== 0 ? bendSteps : (mpeExpr.pitchBend > 0 ? 1 : -1));
+      const { fill: bendFill } = cellColors(targetCoordX, 'active', bendPitchCents);
+      this.ctx.globalAlpha = Math.min(0.85, Math.abs(mpeExpr.pitchBend) * 1.2);
+      this.ctx.fillStyle = bendFill;
+      this.ctx.beginPath();
+      this.ctx.moveTo(px(-1, -1), py(-1, -1));
+      this.ctx.lineTo(px( 1, -1), py( 1, -1));
+      this.ctx.lineTo(px( 1,  1), py( 1,  1));
+      this.ctx.lineTo(px(-1,  1), py(-1,  1));
+      this.ctx.closePath();
+      this.ctx.fill();
+      this.ctx.globalAlpha = 1;
     }
 ```
 
