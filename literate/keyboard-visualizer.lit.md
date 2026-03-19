@@ -24,7 +24,7 @@ The visualizer depends on two sibling modules:
   [note-colors.lit.md](note-colors.lit.md) for the full color system.
 
 ``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
-import { getNoteNameFromCoord, get12TETName, getCentDeviation } from './keyboard-layouts';
+import { getNoteNameFromCoord, get12TETName, getCentDeviation, formatNoteWithOctavePrefix } from './keyboard-layouts';
 import { cellColors } from './note-colors';
 ```
 
@@ -1054,26 +1054,19 @@ The sub-label renders at 60% of the main font size and 60% opacity.
     const hasBracket = noteName !== tetName || Math.abs(deviation) >= 0.5;
 
     const midi = 62 + coordX * 7 + coordY * 12;
-    const dRefOctave = Math.floor((midi - 62) / 12);
-    const octStr = String(Math.abs(dRefOctave));
+    const fullLabel = formatNoteWithOctavePrefix(midi);
 ```
 
-When `hasBracket` is true and the cell is large enough, the note name renders flush to the baseline and the sub-label (showing 12-TET name and/or cent deviation) appears below it at 60% size and 60% opacity.
+The note label uses `formatNoteWithOctavePrefix` — the single source of truth
+for D-ref pitch notation. Unicode super/subscript characters in the string
+handle octave sizing natively in JetBrains Mono. When `hasBracket` is true
+and the cell is large enough, the label renders flush to the baseline with
+a sub-label (12-TET name and/or cent deviation) below at 60% size/opacity.
 
 ``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
     if (hasBracket && cellMin > 30) {
       this.ctx.textBaseline = 'bottom';
-      {
-        const nameW = this.ctx.measureText(noteName).width;
-        const octFont = Math.max(6, fontSize * 0.45);
-        this.ctx.font = `${octFont}px "JetBrains Mono", monospace`;
-        this.ctx.textAlign = 'right';
-        const octY = dRefOctave > 0 ? y - fontSize * 0.85 : dRefOctave < 0 ? y + octFont * 0.15 : y - fontSize * 0.35;
-        this.ctx.fillText(octStr, x - nameW / 2 - 1, octY);
-        this.ctx.font = `bold ${fontSize}px "JetBrains Mono", monospace`;
-        this.ctx.textAlign = 'center';
-      }
-      this.ctx.fillText(noteName, x, y);
+      this.ctx.fillText(fullLabel, x, y);
       const subSize = Math.max(7, fontSize * 0.6);
       this.ctx.font = `${subSize}px "JetBrains Mono", monospace`;
       this.ctx.fillStyle = textColor;
@@ -1091,21 +1084,11 @@ When `hasBracket` is true and the cell is large enough, the note name renders fl
     } else {
 ```
 
-Without a bracket sub-label the note name is simply vertically centred. The octave superscript, when present, is positioned relative to the measured text width so it sits just left of the note name.
+Without a bracket sub-label the full label is simply vertically centred.
 
 ``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
       this.ctx.textBaseline = 'middle';
-      {
-        const nameW = this.ctx.measureText(noteName).width;
-        const octFont = Math.max(6, fontSize * 0.45);
-        this.ctx.font = `${octFont}px "JetBrains Mono", monospace`;
-        this.ctx.textAlign = 'right';
-        const octY = dRefOctave > 0 ? y - fontSize * 0.35 : dRefOctave < 0 ? y + fontSize * 0.15 : y;
-        this.ctx.fillText(octStr, x - nameW / 2 - 1, octY);
-        this.ctx.font = `bold ${fontSize}px "JetBrains Mono", monospace`;
-        this.ctx.textAlign = 'center';
-      }
-      this.ctx.fillText(noteName, x, y);
+      this.ctx.fillText(fullLabel, x, y);
     }
     this.ctx.globalAlpha = 1;
 ```

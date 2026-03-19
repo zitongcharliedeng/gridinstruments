@@ -8,27 +8,27 @@ Tonal.js provides `Chord` for detection and `Note` for pitch sorting. Note namin
 
 ``` {.typescript file=_generated/lib/chord-detector.ts}
 import { Chord, Note } from 'tonal';
-import { getNoteNameFromCoord, midiToDRefNoteName } from './keyboard-layouts';
+import { getNoteNameFromCoord, formatNoteWithOctavePrefix } from './keyboard-layouts';
 ```
 
 ## Coordinate to Note Name
 
-`coordToNoteName` maps an isomorphic grid coordinate `(x, y)` to a D-relative note name with numeric octave suffix (e.g. `"D"`, `"A1"`, `"C1"`). It delegates pitch-class naming to `getNoteNameFromCoord` and octave computation to `midiToDRefNoteName` — both from `keyboard-layouts.ts`, the single source of truth.
+`coordToNoteName` maps an isomorphic grid coordinate `(x, y)` to a D-relative note name with numeric octave suffix (e.g. `"D"`, `"A1"`, `"C1"`). It delegates pitch-class naming to `getNoteNameFromCoord` and octave computation to `formatNoteWithOctavePrefix` — both from `keyboard-layouts.ts`, the single source of truth.
 
 ``` {.typescript file=_generated/lib/chord-detector.ts}
 export function coordToNoteName(x: number, y: number, octaveOffset = 0): string {
   const midi = 62 + x * 7 + y * 12 + octaveOffset * 12;
-  return midiToDRefNoteName(midi);
+  return formatNoteWithOctavePrefix(midi);
 }
 ```
 
 ## MIDI Note Number to Note Name
 
-Delegates to `midiToDRefNoteName` from keyboard-layouts — the single source of truth for D-relative note names with numeric octave suffixes.
+Delegates to `formatNoteWithOctavePrefix` from keyboard-layouts — the single source of truth for D-relative note names with numeric octave suffixes.
 
 ``` {.typescript file=_generated/lib/chord-detector.ts}
 export function midiToNoteName(midi: number): string {
-  return midiToDRefNoteName(midi);
+  return formatNoteWithOctavePrefix(midi);
 }
 ```
 

@@ -14,12 +14,12 @@ Three-panel canvas strip rendered at 60fps. The layout from left to right:
 
 ## Imports and Types
 
-The visualizer imports `noteColor` for per-pitch-class OKLCH colors, `detectChord` for Tonal.js-backed chord detection, and `midiToDRefNoteName` from `keyboard-layouts` — the single source of truth for D-relative note name formatting. Two interfaces describe the note lifecycle: `ActiveNote` for held notes (no end time yet) and `HistoryNote` for released notes (with an end time for fade-out).
+The visualizer imports `noteColor` for per-pitch-class OKLCH colors, `detectChord` for Tonal.js-backed chord detection, and `formatNoteWithOctavePrefix` from `keyboard-layouts` — the single source of truth for D-relative note name formatting. Two interfaces describe the note lifecycle: `ActiveNote` for held notes (no end time yet) and `HistoryNote` for released notes (with an end time for fade-out).
 
 ``` {.typescript file=_generated/lib/note-history-visualizer.ts}
 import { noteColor } from './note-colors';
 import { detectChord } from './chord-detector';
-import { midiToDRefNoteName } from './keyboard-layouts';
+import { formatNoteWithOctavePrefix } from './keyboard-layouts';
 
 interface ActiveNote {
   coordX: number;
@@ -370,7 +370,7 @@ C notes are labelled right-aligned using D-relative octave notation. A thin brig
       const pc = ((midi % 12) + 12) % 12;
       if (pc !== 0) continue;
       const ky = midiToY(midi) + noteH / 2;
-      ctx.fillText(midiToDRefNoteName(midi), x + w - 2, ky);
+      ctx.fillText(formatNoteWithOctavePrefix(midi), x + w - 2, ky);
     }
 
     ctx.strokeStyle = '#ffffff55';
@@ -472,7 +472,7 @@ Released notes scroll rightward and fade out linearly with age over the history 
 
 ## Note Name Helpers
 
-One private name formatter for the waterfall. `midiToNoteName` returns a plain pitch class name (e.g. "F#") used for bar labels inside the waterfall where octave context is provided by vertical position. For the chord panel note list, `midiToDRefNoteName` from `keyboard-layouts` is the canonical single source of truth for D-relative names.
+One private name formatter for the waterfall. `midiToNoteName` returns a plain pitch class name (e.g. "F#") used for bar labels inside the waterfall where octave context is provided by vertical position. For the chord panel note list, `formatNoteWithOctavePrefix` from `keyboard-layouts` is the canonical single source of truth for D-relative names.
 
 ``` {.typescript file=_generated/lib/note-history-visualizer.ts}
   private midiToNoteName(midi: number): string {
@@ -525,7 +525,7 @@ The chord panel occupies the leftmost 25% of the canvas. When notes are active, 
     const noteNames: string[] = [];
     const sortedNotes = [...this.activeNotes.values()].sort((a, b) => b.midiNote - a.midiNote);
     for (const n of sortedNotes) {
-      noteNames.push(midiToDRefNoteName(n.midiNote));
+      noteNames.push(formatNoteWithOctavePrefix(n.midiNote));
     }
 
     const noteListY = h * 0.58;

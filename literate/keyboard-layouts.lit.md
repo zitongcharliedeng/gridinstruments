@@ -234,11 +234,18 @@ export function getCentDeviation(x: number, fifth: number): number {
 
 ## Coordinate to MIDI and Frequency
 
-`coordToMidi` converts a grid position to a MIDI note number, anchored at D4 = MIDI 62. `coordToFrequency` converts to Hz using a configurable generator interval pair (default: 700¢ fifth, 1200¢ octave) and base frequency.
+The D-ref anchor — MIDI note 62 — is defined once as `D_REF_MIDI`. Every
+function that needs to know where D-ref sits in MIDI space uses this constant.
+
+`coordToMidi` converts a grid position to a MIDI note number, anchored at
+D-ref. `coordToFrequency` converts to Hz using a configurable generator
+interval pair (default: 700¢ fifth, 1200¢ octave) and base frequency.
 
 ``` {.typescript file=_generated/lib/keyboard-layouts.ts}
+export const D_REF_MIDI = 62;
+
 export function coordToMidi(x: number, y: number, octaveOffset = 0): number {
-  return 62 + x * 7 + y * 12 + octaveOffset * 12;
+  return D_REF_MIDI + x * 7 + y * 12 + octaveOffset * 12;
 }
 
 export function coordToFrequency(
@@ -263,16 +270,16 @@ needs to display a note name.
 The format: Unicode superscript or subscript octave number as a **prefix**
 to the left of the note name. The octave goes left so it never collides with
 accidentals (♯/♭) on the right side. D-ref (MIDI 62, octave 0) has no
-prefix. Octave 0 (D-ref) uses a regular `0` prefix — neither super nor sub,
-just a normal middle-positioned zero. Octaves above D-ref use Unicode
-superscript digits as prefix (e.g., `¹D`, `²A`). Octaves below use Unicode
-subscript digits as prefix (e.g., `₁C`, `₃G`).
+prefix. Octave 0 (D-ref) has **no prefix** — just the bare note name. Octaves
+above use Unicode superscript digits (e.g., `¹D`, `²A`). Octaves below use
+Unicode subscript digits (e.g., `₁C`, `₃G`).
 
-Examples: `0D` = D-ref, `¹D` = one octave above, `₂C` = C two octaves below,
+Examples: `D` = D-ref, `¹D` = one octave above, `₂C` = C two octaves below,
 `¹A` = A one octave above D-ref, `³F#` = F-sharp three octaves above.
 
-The note names use standard accidentals: `C#`, `Eb`, etc. This matches the
-standard musical convention and is consistent with the chord detector output.
+`midiToDRefOctave` is the shared octave computation used by both this string
+formatter AND the grid canvas renderer — one function, one source of truth
+for determining octave distance from D-ref.
 
 ``` {.typescript file=_generated/lib/keyboard-layouts.ts}
 const SUPERSCRIPT_DIGITS = '\u2070\u00B9\u00B2\u00B3\u2074\u2075\u2076\u2077\u2078\u2079';
@@ -286,13 +293,24 @@ function toSubscript(n: number): string {
   return String(n).split('').map(d => SUBSCRIPT_DIGITS[parseInt(d, 10)]).join('');
 }
 
-export function midiToDRefNoteName(midi: number): string {
-  const names = ['C','C#','D','Eb','E','F','F#','G','Ab','A','Bb','B'];
-  const noteName = names[((midi % 12) + 12) % 12];
-  const dOctave = Math.floor((midi - 62) / 12);
-  if (dOctave === 0) return '0' + noteName;
-  if (dOctave > 0) return toSuperscript(dOctave) + noteName;
-  return toSubscript(-dOctave) + noteName;
+const NOTE_NAMES_12 = ['C','C#','D','Eb','E','F','F#','G','Ab','A','Bb','B'];
+
+export function pitchClassName(midi: number): string {
+  return NOTE_NAMES_12[((midi % 12) + 12) % 12];
+}
+
+export function relativeOctave(midi: number, refMidi: number): number {
+  return Math.floor((midi - refMidi) / 12);
+}
+
+export function octavePrefix(octave: number): string {
+  if (octave === 0) return '\u2070';
+  if (octave > 0) return toSuperscript(octave);
+  return toSubscript(-octave);
+}
+
+export function formatNoteWithOctavePrefix(midi: number): string {
+  return octavePrefix(relativeOctave(midi, D_REF_MIDI)) + pitchClassName(midi);
 }
 ```
 
