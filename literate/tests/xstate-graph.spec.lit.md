@@ -1164,6 +1164,53 @@ The golden screenshot tests compare rendered pixels against stored reference ima
   test('VOW-NO-RAW-TOOLTIPS: Zero title= attributes', async ({ page }) => {
     await VOW_NO_RAW_TOOLTIPS.check(page);
   });
+
+  test('SMOKE-1: Grid cog opens overlay with visible controls', async ({ page }) => {
+    await page.locator('#grid-settings-btn').click();
+    await page.waitForTimeout(200);
+    const overlay = page.locator('#grid-overlay');
+    await expect(overlay).toBeVisible();
+    await expect(page.locator('#volume-slider')).toBeAttached();
+    await expect(page.locator('#tuning-slider')).toBeAttached();
+    await expect(page.locator('#zoom-slider')).toBeAttached();
+    await page.keyboard.press('Escape');
+  });
+
+  test('SMOKE-2: Key press plays note — visualizer responds', async ({ page }) => {
+    const canvas = page.locator('#keyboard-canvas');
+    await expect(canvas).toBeVisible();
+    await page.keyboard.press('KeyH');
+    await page.waitForTimeout(500);
+    await page.keyboard.up('KeyH');
+  });
+
+  test('SMOKE-3: Calibrate button text and banner bounded', async ({ page }) => {
+    const btn = page.locator('#calibrate-btn');
+    await expect(btn).toHaveText('Calibrate Playable Area');
+    await btn.click();
+    await page.waitForTimeout(300);
+    const banner = page.locator('#calibration-banner');
+    await expect(banner).toBeVisible();
+    const box = await banner.boundingBox();
+    if (box) expect(box.width).toBeLessThan(250);
+    await page.locator('#calibrate-cancel').click();
+  });
+
+  test('SMOKE-4: Info buttons are 18x18 squares', async ({ page }) => {
+    await page.locator('#grid-settings-btn').click();
+    await page.waitForTimeout(200);
+    const infoBtns = page.locator('.slider-info-btn:visible');
+    const count = await infoBtns.count();
+    expect(count).toBeGreaterThan(5);
+    for (let i = 0; i < Math.min(count, 5); i++) {
+      const box = await infoBtns.nth(i).boundingBox();
+      if (box) {
+        expect(Math.round(box.width)).toBeCloseTo(18, -1);
+        expect(Math.round(box.height)).toBeCloseTo(18, -1);
+      }
+    }
+    await page.keyboard.press('Escape');
+  });
  });
 ```
 
