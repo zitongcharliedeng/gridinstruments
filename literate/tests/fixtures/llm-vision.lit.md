@@ -39,6 +39,7 @@ The exported function sends the screenshot and invariant text to Claude, returni
 ``` {.typescript file=_generated/tests/fixtures/llm-vision.ts}
 export async function assertWithVision(
   screenshot: Buffer,
+  invariant: string,
   context?: string,
 ): Promise<VisionAssertionResult> {
   const userText = context

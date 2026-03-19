@@ -17,7 +17,8 @@ export interface VisionResult {
 type CacheStore = Record<string, VisionResult>;
 
 export function isVisionEnabled(): boolean {
-  return process.env.LLM_VISION_ENABLED === 'true';
+  if (process.env.LLM_VISION_ENABLED === 'false') return false;
+  return Boolean(process.env.ANTHROPIC_API_KEY);
 }
 
 export function getScreenshotHash(buffer: Buffer): string {
