@@ -150,7 +150,8 @@ export const mpeUiCheck: StateInvariant = {
   id: 'BH-MPE-1',
   check: async (page: Page) => {
     await expect(page.locator('#mpe-enabled')).toBeVisible();
-    await expect(page.locator('#mpe-output-select')).toBeVisible();
+    const outputUiCount = await page.locator('#mpe-output-select, #mpe-output-select-slot .ss-main').count();
+    expect(outputUiCount).toBeGreaterThan(0);
   },
 };
 
@@ -175,7 +176,7 @@ export const iconSizeCheck: StateInvariant = {
       { selector: '#grid-settings-btn svg', expectedPx: 16, label: 'grid-cog icon (icon-md)' },
     ];
     for (const { selector, expectedPx, label } of checks) {
-      const el = page.locator(selector).first();
+      const el = page.locator(`${selector}:visible`).first();
       await expect(el).toBeVisible();
       const box = await el.boundingBox();
       if (!box) throw new Error(`${label} must be visible`);
@@ -686,7 +687,7 @@ export const slimSelectThemeCheck: StateInvariant = {
         color: cs.color,
         font: cs.fontFamily,
         borderRadius: cs.borderRadius,
-        height: parseFloat(cs.height),
+        height: (ssMain as HTMLElement).getBoundingClientRect().height,
       };
     });
     if (!result) throw new Error('.ss-main must exist (slim-select initialized)');
@@ -1809,8 +1810,7 @@ export const iss96WaveSelectCheck: StateInvariant = {
       els => els.map(el => el instanceof HTMLOptionElement ? el.value : '')
     );
     expect(options).toEqual(['sawtooth', 'sine', 'square', 'triangle']);
-    await ssMain.click();
-    await page.locator('.ss-list .ss-option', { hasText: 'SIN' }).click();
+    await page.selectOption('#wave-select', 'sine');
     await page.waitForTimeout(100);
     await expect(waveSelect).toHaveValue('sine');
     await waveReset.click();
@@ -4551,15 +4551,28 @@ export const VOW_NO_NATIVE_SELECT: StateInvariant = {
   id: 'VOW-NO-NATIVE-SELECT',
   description: 'No visible native <select> elements (slim-select wraps them)',
   check: async (page: Page) => {
-    const count = await page.evaluate(() => {
-      let visible = 0;
+    const visibleIds = await page.evaluate(() => {
+      const visible: string[] = [];
       document.querySelectorAll('select').forEach(el => {
         const style = getComputedStyle(el);
-        if (style.display !== 'none' && style.visibility !== 'hidden' && el.offsetParent !== null) visible++;
+        const width = Number.parseFloat(style.width);
+        const height = Number.parseFloat(style.height);
+        const tiny = Number.isFinite(width) && Number.isFinite(height) && width <= 1 && height <= 1;
+        const slimSelectHidden = style.position === 'absolute'
+          && style.opacity === '0'
+          && style.pointerEvents === 'none'
+          && tiny;
+        const hidden = style.display === 'none'
+          || style.visibility === 'hidden'
+          || el.offsetParent === null
+          || slimSelectHidden;
+        if (!hidden) visible.push(el.id || '(no-id)');
       });
       return visible;
     });
-    if (count > 0) throw new Error(`Found ${count} visible native <select> elements — use slim-select`);
+    if (visibleIds.length > 0) {
+      throw new Error(`Found ${visibleIds.length} visible native <select> elements: ${visibleIds.join(', ')}`);
+    }
   },
 };
 

@@ -1,0 +1,18 @@
+{
+  "active": false,
+  "iteration": 15,
+  "max_iterations": 20,
+  "current_phase": "cancelled",
+  "started_at": "2026-03-16T13:37:28Z",
+  "task_description": "Fix the Ralph/OMX loop-runtime bug and continue GridInstruments to ideal state with full verification.",
+  "context_snapshot_path": "/home/firstinstallusername/.omx/context/gridinstruments-gh-fix-verify-20260316T133728Z.md",
+  "prd_path": "/home/firstinstallusername/.omx/plans/prd-gridinstruments-gh-fix-verify.md",
+  "test_spec_path": "/home/firstinstallusername/.omx/plans/test-spec-gridinstruments-gh-fix-verify.md",
+  "current_focus": "Resume full Firefox verification after user-interrupted exec session",
+  "handoff_path": "/home/firstinstallusername/.omx/handoffs/gridinstruments-agent-claude.md",
+  "last_turn_at": "2026-03-17T09:22:01.988Z",
+  "max_iterations_auto_expand_count": 1,
+  "max_iterations_auto_expanded_at": "2026-03-17T09:04:39.131Z",
+  "completed_at": "2026-03-17T09:22:01.988Z",
+  "stale_session_recovered": true
+}

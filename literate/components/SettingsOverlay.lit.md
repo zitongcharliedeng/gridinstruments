@@ -35,6 +35,8 @@ export interface SectionDef {
 }
 
 export interface SettingsOverlayProps {
+  overlayId?: string;
+  sectionClass?: string;
   sections: SectionDef[];
   visible: boolean;
   onToggle: () => void;
@@ -90,32 +92,32 @@ function SliderRow(props: { def: SliderDef }): JSX.Element {
 
 The overlay container uses the shared `.settings-overlay` CSS class for the
 frosted background with shimmer animation. Sections render as titled groups
-with their slider rows. The `Show` component conditionally renders — when
-hidden, no DOM exists (better than `display:none` for performance).
+with their slider rows. The overlay stays mounted even when hidden so legacy
+DOM lookups and structural tests can still find controls like `#zoom-slider`
+before the user opens the panel.
 
 ``` {.typescript file=_generated/components/SettingsOverlay.tsx}
 
 export function SettingsOverlay(props: SettingsOverlayProps): JSX.Element {
+  const sectionClass = props.sectionClass ?? 'overlay-section';
   return (
-    <Show when={props.visible}>
-      <div class="settings-overlay">
-        <For each={props.sections}>
-          {(section) => (
-            <>
-              <div class="overlay-section-title">{section.title}</div>
-              <Show when={section.sliders}>
-                <For each={section.sliders}>
-                  {(slider) => <SliderRow def={slider} />}
-                </For>
-              </Show>
-              <Show when={section.children}>
-                {section.children?.()}
-              </Show>
-            </>
-          )}
-        </For>
-      </div>
-    </Show>
+    <div id={props.overlayId} class="settings-overlay" classList={{ hidden: !props.visible }}>
+      <For each={props.sections}>
+        {(section) => (
+          <div class={sectionClass}>
+            <div class="overlay-section-title">{section.title}</div>
+            <Show when={section.sliders}>
+              <For each={section.sliders}>
+                {(slider) => <SliderRow def={slider} />}
+              </For>
+            </Show>
+            <Show when={section.children}>
+              {section.children?.()}
+            </Show>
+          </div>
+        )}
+      </For>
+    </div>
   );
 }
 ```

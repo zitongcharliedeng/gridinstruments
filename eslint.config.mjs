@@ -1,7 +1,7 @@
 // @ts-check
 import eslint from '@eslint/js';
 import tseslint from 'typescript-eslint';
-import solid from 'eslint-plugin-solid/configs/typescript.js';
+import solid from 'eslint-plugin-solid/configs/typescript';
 
 export default tseslint.config(
   // Base JS recommended rules

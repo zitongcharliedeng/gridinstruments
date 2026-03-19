@@ -1,0 +1,45 @@
+# Issue Priority Order
+
+Use this order to avoid 16-20 minute loops on every change.
+
+## Tier 0 - System Gate (always first)
+
+Run only build/type/lint/static checks:
+
+```bash
+nix develop --command npm run verify
+```
+
+This is the default `verify` command and does **not** run Playwright.
+
+## Tier 1 - Core Contract Invariants
+
+Run design and structural contract checks before broad feature tests:
+
+```bash
+nix develop --command npx playwright test --project=firefox --workers=1 -g "VOW-|IDEAL-|ISS-|SM-|BH-|CT-|ISC-"
+```
+
+## Tier 2 - Snapshot/Golden Stability
+
+Run visual-golden checks after core contracts are stable:
+
+```bash
+nix develop --command npx playwright test --project=firefox --workers=1 -g "GOLDEN-"
+```
+
+## Tier 3 - Feature/Integration Buckets
+
+Run feature-specific groups after upstream tiers are green:
+
+```bash
+nix develop --command npx playwright test --project=firefox --workers=1 -g "GAME-|SONGBAR-"
+```
+
+## Tier 4 - Full Suite
+
+Run full suite only when Tier 0-3 are green, or before release:
+
+```bash
+nix develop --command npm run verify:full
+```

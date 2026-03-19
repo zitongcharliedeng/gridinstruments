@@ -14,7 +14,10 @@
     "lint:ast": "ast-grep scan",
     "test": "playwright test",
     "test:update": "playwright test --update-snapshots",
-    "verify": "npm run build && npm run lint && npx ast-grep scan && npx playwright test --project=firefox --workers=1"
+    "verify": "npm run verify:quick",
+    "verify:quick": "npm run build && npm run lint && npm run lint:ast",
+    "verify:structural": "npx playwright test --project=firefox --workers=1 -g Structural",
+    "verify:full": "npm run verify:quick && npx playwright test --project=firefox --workers=1"
   },
   "keywords": [
     "isomorphic",

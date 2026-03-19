@@ -32,9 +32,17 @@ call in app-core after mount.
 ``` {.typescript file=_generated/components/TopBar.tsx}
 
 export function TopBar(props: TopBarProps): JSX.Element {
+  const onAboutClick = (): void => {
+    props.onAbout();
+  };
+
+  const onResetClick = (): void => {
+    props.onReset();
+  };
+
   const onFullscreen = (): void => {
     if (document.fullscreenElement) {
-      document.exitFullscreen();
+      void document.exitFullscreen();
     } else {
       document.documentElement.requestFullscreen().catch(() => { /* ignored */ });
     }
@@ -42,7 +50,7 @@ export function TopBar(props: TopBarProps): JSX.Element {
 
   return (
     <>
-      <button id="about-btn" class="icon-btn" onClick={props.onAbout}>
+      <button id="about-btn" class="icon-btn" onClick={onAboutClick}>
         <i data-lucide="info" />
       </button>
       <span class="site-title">GridInstruments</span>
@@ -71,7 +79,7 @@ export function TopBar(props: TopBarProps): JSX.Element {
       <button class="slider-info-btn icon-btn icon-lg" data-info="reset-layout" style="position:static;transform:none;">
         <i data-lucide="info" />
       </button>
-      <button id="reset-layout" onClick={props.onReset}>
+      <button id="reset-layout" onClick={onResetClick}>
         <span class="icon"><i data-lucide="rotate-ccw" /></span> Reset Page
       </button>
     </>

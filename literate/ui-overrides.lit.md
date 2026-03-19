@@ -96,4 +96,12 @@ OverlayScrollbars overrides apply the `gi-scrollbar` class. The 12 px track widt
 .os-scrollbar.gi-scrollbar .os-scrollbar-handle {
   min-height: 40px;
 }
+
+#grid-overlay {
+  padding: 0;
+}
+
+#grid-overlay [data-overlayscrollbars-viewport] {
+  padding: 48px 24px 24px 48px;
+}
 ```

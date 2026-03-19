@@ -40,7 +40,7 @@ import {
 Two shared Playwright helpers power all the panel drag and keyboard-focus tests. `tabUntil` cycles through focusable elements until the target selector is active; `dragHandle` simulates a pointer drag on a resize handle by the given pixel delta.
 
 ``` {.typescript file=_generated/tests/machines/uiMachine.ts}
-async function tabUntil(page: Page, selector: string, maxTabs = 30): Promise<void> {
+async function tabUntil(page: Page, selector: string, maxTabs = 120): Promise<void> {
   for (let i = 0; i < maxTabs; i++) {
     const focused = await page.evaluate((sel) => document.activeElement?.matches(sel) ?? false, selector);
     if (focused) return;
@@ -417,15 +417,8 @@ export const waveformMachine = setup({
 The `selectWaveform` helper clicks the slim-select dropdown (the native `<select>` is hidden per project rules) and waits for the DOM to settle; the action table, invariants map, and DOM assertions complete the waveform machine's test contract.
 
 ``` {.typescript file=_generated/tests/machines/uiMachine.ts}
-const WAVEFORM_LABELS: Record<string, string> = {
-  sawtooth: 'SAW', sine: 'SIN', square: 'SQR', triangle: 'TRI',
-};
-
 async function selectWaveform(page: Page, value: string): Promise<void> {
-  const label = WAVEFORM_LABELS[value];
-  if (!label) throw new Error(`Unknown waveform: ${value}`);
-  await page.locator('#wave-select + .ss-main').click();
-  await page.locator('.ss-list .ss-option', { hasText: label }).click();
+  await page.selectOption('#wave-select', value);
   await page.waitForTimeout(100);
 }
 

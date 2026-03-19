@@ -27,7 +27,6 @@ Internal machine and app module imports.
 import { dialogMachine } from './machines/dialogMachine';
 
 import { renderMarkdown } from './app-helpers';
-import { createSelectAtSlot, setupCyclingButton } from './app-dom';
 import { setupInfoDialogs } from './app-slider';
 import { DComposeApp } from './app-core';
 import { setupPanelHandles } from './app-panels';
@@ -81,6 +80,9 @@ Uses the `dialogMachine` XState actor. The `AGENTS.md` file is imported as raw t
 rendered to HTML once at startup.
 
 ``` {.typescript file=_generated/main.ts}
+  const app = new DComposeApp();
+  setupAppActor(app);
+
   const aboutBtn = document.getElementById('about-btn');
   const aboutDialog = document.getElementById('about-dialog');
   const aboutClose = document.getElementById('about-close');
@@ -114,43 +116,8 @@ rendered to HTML once at startup.
   setupInfoDialogs();
 ```
 
-### Dynamic `<select>` elements
-
-`<select>` elements are created in JS rather than HTML to satisfy the ast-grep
-`no-raw-select-in-html` rule.
+Finish the `DOMContentLoaded` block after the app and dialogs are fully wired.
 
 ``` {.typescript file=_generated/main.ts}
-  createSelectAtSlot('wave-select-slot', 'wave-select', [
-    { value: 'sawtooth', text: 'SAW' },
-    { value: 'sine', text: 'SIN' },
-    { value: 'square', text: 'SQR' },
-    { value: 'triangle', text: 'TRI' },
-  ], { title: 'Select waveform (sawtooth/sine/square/triangle)' });
-
-  createSelectAtSlot('layout-select-slot', 'layout-select', [], {
-    title: 'Select keyboard physical layout',
-  });
-
-  createSelectAtSlot('mpe-output-select-slot', 'mpe-output-select', [
-    { value: '', text: 'No MIDI outputs' },
-  ], { style: 'min-width:120px;', disabled: '' });
-```
-
-### Quantization cycling button
-
-``` {.typescript file=_generated/main.ts}
-  setupCyclingButton('quantization-level', [
-    { value: 'none', label: 'None' },
-    { value: '1/4', label: '1/4' },
-    { value: '1/8', label: '1/8' },
-    { value: '1/16', label: '1/16' },
-  ], 'none', () => { /* value read on-demand by loadMidiFromBuffer */ });
-```
-
-### App creation and actor wiring
-
-``` {.typescript file=_generated/main.ts}
-  const app = new DComposeApp();
-  setupAppActor(app);
 });
 ```
