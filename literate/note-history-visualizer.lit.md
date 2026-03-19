@@ -19,7 +19,7 @@ The visualizer imports `noteColor` for per-pitch-class OKLCH colors, `detectChor
 ``` {.typescript file=_generated/lib/note-history-visualizer.ts}
 import { noteColor } from './note-colors';
 import { detectChord } from './chord-detector';
-import { formatNoteWithOctavePrefix } from './keyboard-layouts';
+import { formatNoteWithOctavePrefix, pitchClassName } from './keyboard-layouts';
 
 interface ActiveNote {
   coordX: number;
@@ -476,8 +476,7 @@ One private name formatter for the waterfall. `midiToNoteName` returns a plain p
 
 ``` {.typescript file=_generated/lib/note-history-visualizer.ts}
   private midiToNoteName(midi: number): string {
-    const names = ['C','C#','D','Eb','E','F','F#','G','Ab','A','Bb','B'];
-    return names[((midi % 12) + 12) % 12];
+    return pitchClassName(midi);
   }
 ```
 
