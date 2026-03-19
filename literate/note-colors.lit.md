@@ -55,6 +55,7 @@ The conversion pipeline is: **OKLCH -> OKLAB -> LMS -> linear sRGB -> gamma sRGB
    [sRGB transfer function](https://en.wikipedia.org/wiki/SRGB#Transfer_function_(%22gamma%22))
 
 ``` {.typescript file=_generated/lib/note-colors.ts}
+import { D_REF_MIDI } from './keyboard-layouts';
 
 function oklchToRgb(L: number, C: number, H: number): [number, number, number] {
   const hRad = H * Math.PI / 180;
@@ -341,13 +342,13 @@ export function pitchClassFromCoordX(coordX: number): number {
 
 export function coordToMidiNote(coordX: number, coordY: number): number {
 
-  return 62 + coordX * 7 + coordY * 12;
+  return D_REF_MIDI + coordX * 7 + coordY * 12;
 }
 
 export function midiToCoord(midi: number): [number, number] {
   const pitchClass = ((midi % 12) + 12) % 12;
   const x = COF_FROM_PC[pitchClass];
-  const pitchCents = (midi - 62) * 100;
+  const pitchCents = (midi - D_REF_MIDI) * 100;
   const y = Math.round((pitchCents - x * 700) / 1200);
   return [x, y];
 }

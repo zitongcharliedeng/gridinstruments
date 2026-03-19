@@ -575,7 +575,7 @@ state. Note IDs use the format `"coordX_coordY"` (e.g. `"0_0"` for D4,
 `getCellIdsForMidiNotes` maps MIDI note numbers back to cell IDs. Because the
 isomorphic grid has multiple positions for the same pitch (enharmonic
 equivalents at different octave offsets), this returns ALL matching cells.
-The MIDI formula is: `midi = 62 + coordX * 7 + coordY * 12` (D4 = MIDI 62,
+The MIDI formula is: `midi = D_REF_MIDI + coordX * 7 + coordY * 12` (D4 = MIDI 62,
 each fifth = 7 semitones, each octave = 12).
 
 ``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
@@ -587,7 +587,7 @@ each fifth = 7 semitones, each octave = 12).
   getCellIdsForMidiNotes(midiNotes: ReadonlySet<number>): string[] {
     const result: string[] = [];
     for (const b of this.buttons) {
-      const midi = 62 + b.coordX * 7 + b.coordY * 12;
+      const midi = D_REF_MIDI + b.coordX * 7 + b.coordY * 12;
       if (midiNotes.has(midi)) result.push(`${b.coordX}_${b.coordY}`);
     }
     return result;
@@ -1053,7 +1053,7 @@ The sub-label renders at 60% of the main font size and 60% opacity.
     const deviation = getCentDeviation(coordX, fifth);
     const hasBracket = noteName !== tetName || Math.abs(deviation) >= 0.5;
 
-    const midi = 62 + coordX * 7 + coordY * 12;
+    const midi = D_REF_MIDI + coordX * 7 + coordY * 12;
     const octave = relativeOctave(midi, D_REF_MIDI);
     const octStr = octave !== 0 ? String(Math.abs(octave)) : '0';
 ```
