@@ -37,7 +37,7 @@ export function mountGridOverlay(
 
   const sections: SectionDef[] = [
     {
-      title: 'SOUND',
+      title: 'SOUND (global)',
       children: () => (
         <div>
           <div class="slider-track">
@@ -77,7 +77,7 @@ export function mountGridOverlay(
       ),
     },
     {
-      title: 'VISUAL',
+      title: 'VISUAL (per grid)',
       children: () => (
         <div>
           <div class="tuning-slider-area">
@@ -119,7 +119,7 @@ export function mountGridOverlay(
       ),
     },
     {
-      title: 'INPUT',
+      title: 'INPUT (global)',
       children: () => (
         <div>
           <div class="slider-track">
