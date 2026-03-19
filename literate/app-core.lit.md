@@ -2369,12 +2369,17 @@ Calibration mode shows a banner instructing the user to play all reachable notes
   private exitCalibrationMode(confirm: boolean): void {
     this.calibrating = false;
     if (confirm) {
-      saveCalibratedRange(this.calibratedCells);
-      this.calibratedRange = new Set(this.calibratedCells);
+      if (this.calibratedCells.size === 0) {
+        clearCalibratedRange();
+        this.calibratedRange = null;
+      } else {
+        saveCalibratedRange(this.calibratedCells);
+        this.calibratedRange = new Set(this.calibratedCells);
+      }
       const count = this.calibratedCells.size;
       const msg = document.getElementById('calibration-msg');
       if (msg) {
-        msg.textContent = `Range saved (${count} keys)`;
+        msg.textContent = count > 0 ? `Range saved (${count} keys)` : 'Range cleared';
         setTimeout(() => { msg.textContent = 'Play all reachable notes to set your playable area, then confirm'; }, 2000);
       }
     }
@@ -2384,7 +2389,7 @@ Calibration mode shows a banner instructing the user to play all reachable notes
     if (banner) banner.style.display = 'none';
     const btn = document.getElementById('calibrate-btn');
     if (btn) {
-      btn.textContent = 'Calibrate Area';
+      btn.textContent = 'Calibrate Playable Area';
       btn.style.display = '';
     }
     this.render();
