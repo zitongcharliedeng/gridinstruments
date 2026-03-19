@@ -62,6 +62,7 @@ export class DComposeApp {
   private timbreReverse = false;
 
   private pointerDown = new Map<number, { coordX: number; coordY: number } | null>();
+  private pointerWiggle = new Map<number, { xs: number[]; times: number[]; lastDir: number; changes: number }>();
 
   private maxSimultaneousKeys = 8;
 
@@ -1830,6 +1831,34 @@ Pointer input (touch and mouse) uses the Pointer Events API for unified handling
       this.stopPointerNote(event.pointerId, currentButton.coordX, currentButton.coordY);
       if (newButton) this.playPointerNote(event.pointerId, newButton.coordX, newButton.coordY, event.pressure);
       this.pointerDown.set(event.pointerId, newButton);
+    } else if (!this.mpe.isEnabled()) {
+      const now = performance.now();
+      let wg = this.pointerWiggle.get(event.pointerId);
+      if (!wg) {
+        wg = { xs: [event.clientX], times: [now], lastDir: 0, changes: 0 };
+        this.pointerWiggle.set(event.pointerId, wg);
+      } else {
+        const prevX = wg.xs[wg.xs.length - 1];
+        const dx = event.clientX - prevX;
+        wg.xs.push(event.clientX);
+        wg.times.push(now);
+        while (wg.times.length > 1 && now - wg.times[0] > 500) {
+          wg.times.shift();
+          wg.xs.shift();
+          wg.changes = Math.max(0, wg.changes - 1);
+        }
+        if (Math.abs(dx) > 3) {
+          const dir = dx > 0 ? 1 : -1;
+          if (wg.lastDir !== 0 && dir !== wg.lastDir) wg.changes++;
+          wg.lastDir = dir;
+        }
+      }
+      const wiggling = wg.changes >= 3;
+      if (wiggling && !this.synth.getVibrato()) {
+        this.synth.setVibrato(true);
+      } else if (!wiggling && this.synth.getVibrato() && !this.arrowLeftHeld && !this.arrowRightHeld) {
+        this.synth.setVibrato(false);
+      }
     } else if (this.mpe.isEnabled()) {
       const effectiveCoordX = currentButton.coordX + this.transposeOffset;
       const effectiveCoordY = currentButton.coordY + this.octaveOffset;
@@ -1864,6 +1893,12 @@ Pointer input (touch and mouse) uses the Pointer Events API for unified handling
     const currentButton = this.pointerDown.get(event.pointerId);
     if (currentButton) this.stopPointerNote(event.pointerId, currentButton.coordX, currentButton.coordY);
     this.pointerDown.delete(event.pointerId);
+    if (this.pointerWiggle.has(event.pointerId)) {
+      this.pointerWiggle.delete(event.pointerId);
+      if (this.pointerWiggle.size === 0 && this.synth.getVibrato() && !this.arrowLeftHeld && !this.arrowRightHeld) {
+        this.synth.setVibrato(false);
+      }
+    }
     try { this.canvas.releasePointerCapture(event.pointerId); } catch { /* iOS Safari */ }
   }
 
