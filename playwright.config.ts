@@ -4,7 +4,9 @@ export default defineConfig({
   snapshotDir: './tests',
   testMatch: ['**/xstate-graph.spec.ts'],
   timeout: 60_000,
+  globalTimeout: 15 * 60_000,
   retries: 1,
+  workers: 1,
   expect: {
     toHaveScreenshot: {
       maxDiffPixelRatio: 0.15,
