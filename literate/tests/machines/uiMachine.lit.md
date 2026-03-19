@@ -7,34 +7,7 @@ The module opens by importing all invariant check functions from `invariant-chec
 ``` {.typescript file=_generated/tests/machines/uiMachine.ts}
 import { setup } from 'xstate';
 import { type Page, expect } from '@playwright/test';
-import {
-  tooltipCheck,
-  visHandlePosition,
-  pianoRollVisible,
-  pedHandlePosition,
-  overlayBgCheck,
-  overlayShimmerCheck,
-  overlaySectionsCheck,
-  overlayPresetCheck,
-  mpeUiCheck,
-  focusPreserveCheck,
-  visCap60Check,
-  iconSizeCheck,
-  sliderBadgePositionCheck,
-  badgePointerEventsCheck,
-  sliderLabelPositionCheck,
-  sliderValuesCheck,
-  tetBelowTrackCheck,
-  overlayColorsCheck,
-  drefAnnotationCheck,
-  overlayControlsCheck,
-  slimSelectThemeCheck,
-  nativeSelectHiddenCheck,
-  customCheckboxCheck,
-  noWhiteBackgroundCheck,
-  drefRangeCheck,
-  rKeyNotSustainCheck,
-} from './invariant-checks';
+import type { StateInvariant } from './types';
 ```
 
 Two shared Playwright helpers power all the panel drag and keyboard-focus tests. `tabUntil` cycles through focusable elements until the target selector is active; `dragHandle` simulates a pointer drag on a resize handle by the given pixel delta.
@@ -91,7 +64,7 @@ export const overlayMachine = setup({
       meta: {
         reason: 'A settings overlay panel is visible over the keyboard grid, showing sliders and controls.',
         designIntent: 'Semi-transparent overlay lets musicians see grid while adjusting settings',
-        invariants: [tooltipCheck, overlayBgCheck, overlayShimmerCheck, overlaySectionsCheck, overlayPresetCheck, mpeUiCheck, focusPreserveCheck, iconSizeCheck, sliderBadgePositionCheck, badgePointerEventsCheck, sliderLabelPositionCheck, sliderValuesCheck, tetBelowTrackCheck, overlayColorsCheck, drefAnnotationCheck, overlayControlsCheck, slimSelectThemeCheck, nativeSelectHiddenCheck, customCheckboxCheck, noWhiteBackgroundCheck, drefRangeCheck],
+        invariants: [],
       },
       on: {
         CLICK_COG: 'hidden',
@@ -153,7 +126,7 @@ export const visualiserMachine = setup({
       meta: {
         reason: 'The visualiser panel is at its default height (~120px), showing note history. The keyboard grid fills the remaining space below it with no black gap.',
         designIntent: 'Balanced split between note history and keyboard grid',
-        invariants: [visHandlePosition, pianoRollVisible],
+        invariants: [],
       },
       on: {
         DRAG_VIS_EXPAND: 'expanded',
@@ -164,7 +137,7 @@ export const visualiserMachine = setup({
       meta: {
         reason: 'The visualiser panel is expanded taller than default, showing more note history. The keyboard grid fills the remaining space below with no black gap.',
         designIntent: 'More vertical space for note history review',
-        invariants: [pianoRollVisible, visCap60Check],
+        invariants: [],
       },
       on: {
         DBLCLICK_VIS_HANDLE: 'default',
@@ -256,7 +229,7 @@ export const pedalsMachine = setup({
       meta: {
         reason: 'The pedals panel is at its default height (~44px), showing sustain and vibrato buttons. No black gap anywhere.',
         designIntent: 'Compact pedal controls at bottom of screen',
-        invariants: [pedHandlePosition],
+        invariants: [],
       },
       on: {
         DRAG_PED_EXPAND: 'expanded',
@@ -472,7 +445,7 @@ export const sustainMachine = setup({
       meta: {
         reason: 'The sustain pedal indicator is in its default/inactive state.',
         designIntent: 'Notes play and release normally',
-        invariants: [rKeyNotSustainCheck],
+        invariants: [],
       },
       on: {
         PRESS_SPACE: 'active',

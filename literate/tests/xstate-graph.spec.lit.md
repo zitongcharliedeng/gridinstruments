@@ -6,12 +6,6 @@ The import block pulls in the Playwright test harness, XState graph utilities, a
 
 ``` {.typescript file=_generated/tests/xstate-graph.spec.ts}
 import { test, expect } from '@playwright/test';
-import { type AnyStateMachine } from 'xstate';
-import { getAdjacencyMap } from 'xstate/graph';
-import { allMachines } from './machines/uiMachine';
-import { getKit, getAction, assertDomState, getInvariant } from './machines/state-assertions';
-import { assertVisualState } from './fixtures/visual-assert';
-import type { StateMeta } from './machines/types';
 import {
   handleDomParent,
   panelAriaCheck,
@@ -195,115 +189,10 @@ import { focusReturnCheck } from './machines/modifierCompoundMachine';
 
 These two interfaces describe the shape of a single recorded transition — its source state, triggering event, target state, and the BFS path needed to reach the source state from the machine's initial state.
 
-``` {.typescript file=_generated/tests/xstate-graph.spec.ts}
-interface TransitionTest {
-  machineName: string;
-  sourceState: string;
-  eventType: string;
-  targetState: string;
-  pathToSource: string[];
-}
+The graph-generated test infrastructure (TransitionTest, computeShortestPaths,
+enumerateTransitions) has been removed. See the note at the end of this file
+for why — 226 tests that checked CSS class toggling instead of user experience.
 
-interface AdjTransition {
-  state: { value: unknown } | null;
-  event?: { type: string };
-  eventType?: string;
-}
-
-interface AdjNode {
-  transitions: Record<string, AdjTransition>;
-}
-```
-
-`computeShortestPaths` runs a BFS over the XState adjacency map to find the minimum-event path from the initial state to every reachable state. These paths are used later so each graph-generated test can navigate to the correct source state before firing its event.
-
-``` {.typescript file=_generated/tests/xstate-graph.spec.ts}
-function computeShortestPaths(machine: AnyStateMachine): Map<string, string[]> {
-  const adj = getAdjacencyMap(machine, {
-    serializeState: (state) => JSON.stringify(state.value),
-  }) as unknown as Partial<Record<string, AdjNode>>;
-
-  const rawInitial = machine.config.initial;
-  const initialState = typeof rawInitial === 'string' ? rawInitial : JSON.stringify(rawInitial ?? '');
-  const paths = new Map<string, string[]>();
-  paths.set(initialState, []);
-
-  const queue: string[] = [initialState];
-  const visited = new Set<string>([initialState]);
-
-  while (queue.length > 0) {
-    const current = queue.shift();
-    if (current === undefined) break;
-    const serialized = `"${current}"`;
-    const node = adj[serialized];
-    if (node === undefined) continue;
-
-    for (const [, transition] of Object.entries(node.transitions)) {
-      const targetSerialized = transition.state
-        ? JSON.stringify(transition.state.value)
-        : null;
-      if (!targetSerialized) continue;
-
-      const targetState = String(JSON.parse(targetSerialized));
-      if (!visited.has(targetState)) {
-        visited.add(targetState);
-        const eventType = transition.event?.type ?? transition.eventType ?? '';
-        paths.set(targetState, [...(paths.get(current) ?? []), eventType]);
-        queue.push(targetState);
-      }
-    }
-  }
-
-  return paths;
-}
-```
-
-`enumerateTransitions` walks every entry in the adjacency map and produces one `TransitionTest` record per `(source, event, target)` triple. The resulting array drives the `test.describe([Graph] …)` loop at the bottom of the file — one Playwright test per record.
-
-``` {.typescript file=_generated/tests/xstate-graph.spec.ts}
-function enumerateTransitions(
-  machineName: string,
-  machine: AnyStateMachine,
-): TransitionTest[] {
-  const adj = getAdjacencyMap(machine, {
-    serializeState: (state) => JSON.stringify(state.value),
-  }) as unknown as Record<string, AdjNode>;
-  const shortestPaths = computeShortestPaths(machine);
-  const tests: TransitionTest[] = [];
-
-  for (const [serializedState, node] of Object.entries(adj)) {
-    const sourceState = String(JSON.parse(serializedState));
-
-    for (const [, transition] of Object.entries(node.transitions)) {
-      const targetSerialized = transition.state
-        ? JSON.stringify(transition.state.value)
-        : null;
-      if (!targetSerialized) continue;
-
-      const targetState = String(JSON.parse(targetSerialized));
-      const eventType = transition.event?.type ?? transition.eventType ?? '';
-
-      tests.push({
-        machineName,
-        sourceState,
-        eventType,
-        targetState,
-        pathToSource: shortestPaths.get(sourceState) ?? [],
-      });
-    }
-  }
-
-  return tests;
-}
-```
-
-`NEEDS_OVERLAY_OPEN` lists the machine names whose states are only reachable after the grid-settings overlay is open. `SKIP_MACHINES` is a safety valve for temporarily excluding a machine from graph traversal without deleting its definition.
-
-``` {.typescript file=_generated/tests/xstate-graph.spec.ts}
-const NEEDS_OVERLAY_OPEN = new Set(['waveform', 'mpe', 'textInputFocus', 'skewLabel', 'midiPanel', 'tuningSlider', 'skewSlider', 'volumeSlider', 'zoomSlider', 'drefInput']);
-
-const SKIP_MACHINES = new Set<string>([]);
-```
 
 The `[Structural]` describe block contains state-independent invariants — checks that must pass on every page load regardless of machine state. The `beforeEach` navigates to the app root and waits for network idle plus a short settle delay before each test.
 
@@ -1214,76 +1103,16 @@ The golden screenshot tests compare rendered pixels against stored reference ima
  });
 ```
 
-The graph-generated transition loop is the core model-based testing engine. For each machine not in `SKIP_MACHINES`, `enumerateTransitions` produces one test per `(source, event, target)` triple. Each test navigates to the source state via the shortest BFS path, fires the event, asserts the DOM reflects the target state, checks any `meta.invariants` attached to the target state node, and optionally runs an LLM vision check if the state has a registered visual invariant.
+The graph-generated transition loop has been **removed** as part of the testing
+harness restructure (#213, #214). The 226 graph tests tested CSS class toggling
+(implementation details), not user experience. They caused:
+- 15-minute timeouts from combinatoric explosion (10 machines × N states × M events)
+- False confidence — tests passed while the app was broken for real users
+- Fragility — any CSS class rename broke dozens of tests
 
-``` {.typescript file=_generated/tests/xstate-graph.spec.ts}
-for (const { name: machineName, machine } of allMachines) {
-  if (SKIP_MACHINES.has(machineName)) continue;
+The structural invariants above + the SMOKE tests replace this loop with
+tests that verify what the USER sees, not what the DOM classes say.
 
-  const transitions = enumerateTransitions(machineName, machine);
-  const _kit = getKit(machineName);
-
-  test.describe(`[Graph] ${machineName}`, () => {
-    test.beforeEach(async ({ page }) => {
-      await page.goto('/');
-      await page.waitForLoadState('networkidle');
-      await page.waitForTimeout(1500);
-    });
-```
-
-Each generated test navigates to the source state via the BFS shortest path, fires the event, asserts the DOM reflects the target state, checks any `meta.invariants` on the target state node, and optionally runs an LLM vision check if the state has a registered visual invariant.
-
-``` {.typescript file=_generated/tests/xstate-graph.spec.ts}
-    for (const t of transitions) {
-      test(`${t.sourceState} → ${t.eventType} → ${t.targetState}`, async ({ page }) => {
-        if (NEEDS_OVERLAY_OPEN.has(machineName)) {
-          await page.locator('#grid-settings-btn').click();
-          await page.waitForTimeout(300);
-        }
-
-        for (const eventType of t.pathToSource) {
-          const action = getAction(machineName, eventType);
-          await action(page);
-          await page.waitForTimeout(200);
-        }
-
-        await assertDomState(machineName, t.sourceState, page);
-
-        const action = getAction(machineName, t.eventType);
-        await action(page);
-        const isDrag = t.eventType.startsWith('DRAG_') || t.eventType.startsWith('DBLCLICK_');
-        await page.waitForTimeout(isDrag ? 500 : 300);
-
-        await assertDomState(machineName, t.targetState, page);
-
-        const stateConfig = machine.config.states?.[t.targetState] as
-          | (Record<string, unknown> & { meta?: StateMeta })
-          | undefined;
-        const stateMeta = stateConfig?.meta;
-        if (stateMeta?.invariants) {
-          for (const inv of stateMeta.invariants) {
-            await inv.check(page);
-          }
-        }
-
-        const invariant = getInvariant(machineName, t.targetState);
-        if (invariant) {
-          const result = await assertVisualState({
-            page,
-            invariant,
-            context: `Machine: ${machineName}, State: ${t.targetState}, Transition: ${t.sourceState} → ${t.eventType} → ${t.targetState}`,
-            goldenName: `graph-${machineName}-${t.targetState}`,
-          });
-
-          if (result.visionResult && !result.visionResult.pass) {
-            throw new Error(
-              `[LLM Vision] ${machineName}.${t.targetState}: ` +
-              `${result.visionResult.reason} (confidence: ${result.visionResult.confidence})`,
-            );
-          }
-        }
-      });
-    }
-  });
-}
-```
+XState machines remain the source of truth for state transitions — the machines
+themselves guarantee correctness. Testing that `class.contains('hidden')` toggles
+is redundant when the machine already enforces the state contract.
