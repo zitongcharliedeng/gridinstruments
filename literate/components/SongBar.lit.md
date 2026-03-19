@@ -171,10 +171,10 @@ range. The banner with confirm/cancel actions appears when calibration is active
         </button>
         <span
           id="calibration-banner"
-          style="display:none;font-family:var(--font);font-size:9px;gap:2px;align-items:center;"
+          style="display:none;font-family:var(--font);font-size:9px;gap:2px;align-items:center;max-width:200px;white-space:nowrap;overflow:hidden;"
         >
           <span id="calibration-warning" style="display:none;" />
-          <span id="calibration-msg" style="color:var(--fg);">Play notes</span>
+          <span id="calibration-msg" style="color:var(--fg);overflow:hidden;text-overflow:ellipsis;">Play notes</span>
           <button
             id="calibrate-confirm"
             style="font-family:var(--font);font-size:9px;background:none;color:#4f4;border:1px solid #4f4;padding:1px 4px;cursor:pointer;line-height:1;"
