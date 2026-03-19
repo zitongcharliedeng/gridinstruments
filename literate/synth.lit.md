@@ -40,6 +40,7 @@ interface Voice {
   oscillator: OscillatorNode;
   timbreFilter: BiquadFilterNode;
   gainNode: GainNode;
+  velocityGain: number;
   coordX: number;
   coordY: number;
   octaveOffset: number;
@@ -531,10 +532,12 @@ input through a per-voice gain node.
       this.vibratoLFO.connect(vibratoGainNode);
       vibratoGainNode.connect(oscillator.frequency);
     }
+    const velGain = Math.max(0.01, Math.pow(clampedVel, 0.5));
     this.voices.set(noteId, {
       oscillator,
       timbreFilter,
       gainNode,
+      velocityGain: velGain,
       coordX: x,
       coordY: y,
       octaveOffset,
@@ -631,7 +634,8 @@ initial strike velocity.
     const voice = this.voices.get(noteId);
     if (!voice) return;
     const clamped = Math.max(0, Math.min(1, value));
-    const gain = Math.max(0.01, Math.pow(clamped, 0.5));
+    const pressureFactor = 0.5 + clamped * 0.5;
+    const gain = voice.velocityGain * pressureFactor;
     voice.gainNode.gain.setTargetAtTime(gain, this.context.currentTime, 0.01);
   }
 
