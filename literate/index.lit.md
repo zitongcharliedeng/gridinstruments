@@ -262,6 +262,7 @@ calibrate — each use `inline-flex` to keep their controls tight. The
       font-size: 11px;
       flex-wrap: wrap;
       margin-left: auto;
+      max-width: 700px;
     }
     #song-bar-calibrate,
     #song-bar-search,
