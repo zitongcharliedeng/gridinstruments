@@ -70,7 +70,7 @@ export async function assertWithVision(
           ]}],
         }),
       });
-      const json = await res.json() as { content: Array<{ type: string; text: string }> };
+      const json = await res.json() as { content: { type: string; text: string }[] };
       text = json.content[0].type === 'text' ? json.content[0].text : '';
     } else {
       const res = await fetch(`${config.url}/v1/chat/completions`, {
@@ -87,7 +87,7 @@ export async function assertWithVision(
           ],
         }),
       });
-      const json = await res.json() as { choices: Array<{ message: { content: string } }> };
+      const json = await res.json() as { choices: { message: { content: string } }[] };
       text = json.choices[0].message.content;
     }
 ```
