@@ -53,11 +53,7 @@ export function SongBar(props: SongBarProps): JSX.Element {
     <div id="song-bar">
 
       <div id="song-bar-search" style="position:relative;display:inline-flex;align-items:center;gap:4px;">
-        <button
-          class="slider-info-btn icon-btn icon-lg"
-          data-info="search"
-          style="position:static;transform:none;"
-        >
+        <button class="slider-info-btn" data-info="search">
           <i data-lucide="info" />
         </button>
         <div style="position:relative;display:inline-flex;align-items:center;">
@@ -90,11 +86,7 @@ active — the song title, progress bar, elapsed timer, and restart button.
 ``` {.typescript file=_generated/components/SongBar.tsx}
 
       <div id="song-bar-status" style="display:inline-flex;align-items:center;gap:8px;">
-        <button
-          class="slider-info-btn icon-btn icon-lg"
-          data-info="quantization"
-          style="position:static;transform:none;"
-        >
+        <button class="slider-info-btn" data-info="quantization">
           <i data-lucide="info" />
         </button>
         <label style="display:inline-flex;align-items:center;gap:4px;font-size:10px;color:var(--dim);">
@@ -153,15 +145,11 @@ range. The banner with confirm/cancel actions appears when calibration is active
 
       <span id="song-bar-hint" style="display:none;" />
 
-      <div id="song-bar-calibrate" style="margin-left:auto;max-width:280px;">
-        <button
-          class="slider-info-btn icon-btn icon-lg"
-          data-info="calibrate"
-          style="position:static;transform:none;"
-        >
+      <div id="song-bar-calibrate" style="margin-left:auto;max-width:320px;display:inline-flex;align-items:center;gap:4px;">
+        <button class="slider-info-btn" data-info="calibrate">
           <i data-lucide="info" />
         </button>
-        <button class="slider-info-btn icon-btn icon-lg" data-info="maxkeys" style="position:static;transform:none;"><i data-lucide="info" /></button>
+        <button class="slider-info-btn" data-info="maxkeys"><i data-lucide="info" /></button>
         <label style="display:inline-flex;align-items:center;gap:2px;font-family:var(--font);font-size:9px;color:var(--dim);">
           Max Keys
           <input
@@ -179,7 +167,7 @@ range. The banner with confirm/cancel actions appears when calibration is active
           style="font-family:var(--font);font-size:9px;background:none;color:var(--dim);border:1px solid var(--border);padding:2px 8px;cursor:pointer;"
           onClick={() => { props.onCalibrateStart(); }}
         >
-          Calibrate Area
+          Calibrate Playable Area
         </button>
         <span
           id="calibration-banner"

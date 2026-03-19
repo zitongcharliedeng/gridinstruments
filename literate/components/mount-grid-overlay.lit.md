@@ -46,7 +46,7 @@ export function mountGridOverlay(
             <button class="slider-reset icon-btn icon-md" id="wave-reset"><i data-lucide="rotate-cw"></i></button>
           </div>
           <div class="ctrl-group" style="margin-top: 18px">
-            <button class="slider-info-btn icon-btn icon-lg" data-info="volume"><i data-lucide="info"></i></button>
+            <button class="slider-info-btn" data-info="volume"><i data-lucide="info"></i></button>
             <div class="slider-track">
               <span class="slider-label-overlay">VOL (dB)</span>
               <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.5" />
@@ -55,7 +55,7 @@ export function mountGridOverlay(
             </div>
           </div>
           <div class="tuning-slider-area" style="margin-top: 18px">
-            <button class="slider-info-btn icon-btn icon-lg" data-info="tuning"><i data-lucide="info"></i></button>
+            <button class="slider-info-btn" data-info="tuning"><i data-lucide="info"></i></button>
             <div class="slider-track">
               <span class="slider-label-overlay" id="tuning-label">FIFTHS TUNING (cents)</span>
               <input type="range" id="tuning-slider" min="683" max="722" step="0.01" value="700" />
@@ -65,7 +65,7 @@ export function mountGridOverlay(
             <div class="tet-presets" id="tet-presets" data-alternate-ticks></div>
           </div>
           <div class="overlay-section d-ref-group" style="margin-top: 18px">
-            <button class="slider-info-btn icon-btn icon-lg" data-info="dref"><i data-lucide="info"></i></button>
+            <button class="slider-info-btn" data-info="dref"><i data-lucide="info"></i></button>
             <div class="slider-track">
               <span class="slider-label-overlay" id="d-ref-label">D REF (Hz)</span>
               <input type="range" id="d-ref-slider" min="73.42" max="1174.66" step="0.01" value="293.66" />
@@ -81,7 +81,7 @@ export function mountGridOverlay(
       children: () => (
         <div>
           <div class="tuning-slider-area">
-            <button class="slider-info-btn icon-btn icon-lg" data-info="skew"><i data-lucide="info"></i></button>
+            <button class="slider-info-btn" data-info="skew"><i data-lucide="info"></i></button>
             <div class="slider-track">
               <span class="slider-label-overlay" id="skew-label">MECH SKEW</span>
               <input type="range" id="skew-slider" min="-0.5" max="1.5" step="0.01" value="0" />
@@ -91,7 +91,7 @@ export function mountGridOverlay(
             <div class="slider-presets" id="skew-presets"></div>
           </div>
           <div class="tuning-slider-area" style="margin-top: 18px">
-            <button class="slider-info-btn icon-btn icon-lg" data-info="shear"><i data-lucide="info"></i></button>
+            <button class="slider-info-btn" data-info="shear"><i data-lucide="info"></i></button>
             <div class="slider-track">
               <span class="slider-label-overlay" id="bfact-label">WICKED SHEAR</span>
               <input type="range" id="bfact-slider" min="-0.5" max="1.5" step="0.01" value="0" />
@@ -101,7 +101,7 @@ export function mountGridOverlay(
             <div class="slider-presets" id="bfact-presets"></div>
           </div>
           <div class="tuning-slider-area" style="margin-top: 18px">
-            <button class="slider-info-btn icon-btn icon-lg" data-info="zoom"><i data-lucide="info"></i></button>
+            <button class="slider-info-btn" data-info="zoom"><i data-lucide="info"></i></button>
             <div class="slider-track">
               <span class="slider-label-overlay">ZOOM (x)</span>
               <input type="range" id="zoom-slider" min="0.2" max="3" step="0.01" value="1" />
@@ -133,7 +133,7 @@ export function mountGridOverlay(
               <div id="midi-device-list"></div>
               <span class="overlay-section-title">EXPRESSION</span>
               <div class="midi-panel-row" id="expr-bend-row" style="gap:6px">
-                <button class="slider-info-btn icon-btn icon-lg" data-info="bend" style="position:static;transform:none;"><i data-lucide="info"></i></button>
+                <button class="slider-info-btn" data-info="bend"><i data-lucide="info"></i></button>
                 <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;">
                   <span class="gi-checkbox"><input type="checkbox" id="expr-bend" checked /><span class="gi-check"></span></span>
                   <span style="color:#fff">Pitch Bend</span>
@@ -142,19 +142,20 @@ export function mountGridOverlay(
                 </label>
               </div>
               <div class="midi-panel-row" id="expr-velocity-row" style="gap:6px">
-                <button class="slider-info-btn icon-btn icon-lg" data-info="velocity" style="position:static;transform:none;"><i data-lucide="info"></i></button>
+                <button class="slider-info-btn" data-info="velocity"><i data-lucide="info"></i></button>
                 <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;">
                   <span class="gi-checkbox"><input type="checkbox" id="expr-velocity" checked /><span class="gi-check"></span></span>
                   <span style="color:#fff">Note Velocity</span>
                 </label>
               </div>
               <div class="midi-panel-row" id="expr-pressure-row" style="gap:6px">
-                <button class="slider-info-btn icon-btn icon-lg" data-info="pressure" style="position:static;transform:none;"><i data-lucide="info"></i></button>
-                <span style="color:#fff;font-size:12px;">Pressure</span>
+                <button class="slider-info-btn" data-info="pressure"><i data-lucide="info"></i></button>
+                <span style="color:#fff;font-size:12px;">Pressure Mode</span>
                 <button id="pressure-mode" style="font-family:var(--font);font-size:10px;background:var(--bg);color:var(--fg);border:1px solid var(--border);padding:2px 6px;cursor:pointer;" value="channel">Channel</button>
+                <span style="color:var(--dim);font-size:9px;">(click to cycle)</span>
               </div>
               <div class="midi-panel-row" id="expr-timbre-row" style="gap:6px">
-                <button class="slider-info-btn icon-btn icon-lg" data-info="timbre" style="position:static;transform:none;"><i data-lucide="info"></i></button>
+                <button class="slider-info-btn" data-info="timbre"><i data-lucide="info"></i></button>
                 <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;">
                   <span class="gi-checkbox"><input type="checkbox" id="expr-timbre" checked /><span class="gi-check"></span></span>
                   <span style="color:#fff">Timbre Slide</span>

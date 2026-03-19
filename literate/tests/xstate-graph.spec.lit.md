@@ -181,6 +181,7 @@ import {
        VOW_NO_SCROLL,
        VOW_SINGLE_FONT,
        VOW_NO_BORDER_RADIUS,
+       VOW_NO_RAW_TOOLTIPS,
        NO_DUPLICATE_IDS,
        NO_D4_IN_UI,
        MIDI_SETTINGS_GROUPED,
@@ -1158,6 +1159,10 @@ The golden screenshot tests compare rendered pixels against stored reference ima
 
   test('VOW-NO-BORDER-RADIUS: Sharp corners (dialogs excepted)', async ({ page }) => {
     await VOW_NO_BORDER_RADIUS.check(page);
+  });
+
+  test('VOW-NO-RAW-TOOLTIPS: Zero title= attributes', async ({ page }) => {
+    await VOW_NO_RAW_TOOLTIPS.check(page);
   });
  });
 ```

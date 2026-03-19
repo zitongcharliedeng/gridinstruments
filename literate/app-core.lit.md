@@ -515,9 +515,7 @@ The MIDI device panel renders a list of connected controllers with enable/disabl
       { value: 'warm', text: 'WARM' },
     ], {});
 
-    createSelectAtSlot('layout-select-slot', 'layout-select', [], {
-      title: 'Select keyboard physical layout',
-    });
+    createSelectAtSlot('layout-select-slot', 'layout-select', [], {});
 
     createSelectAtSlot('mpe-output-select-slot', 'mpe-output-select', [
       { value: '', text: 'No MIDI outputs' },

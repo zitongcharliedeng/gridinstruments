@@ -256,26 +256,43 @@ export function coordToFrequency(
 ## D-relative Note Name — Single Source of Truth
 
 `midiToDRefNoteName` is the canonical formatter for human-readable note names
-in D-relative octave notation. It is the single source of truth used by the
+in D-relative octave notation. It is the **single source of truth** used by the
 grid, the note history waterfall, the chord panel, and any other UI that
 needs to display a note name.
 
-The format: pitch class name followed by a numeric octave suffix. The number
-indicates octaves away from D-ref (MIDI 62). Octaves above D-ref show as
-superscript-positioned numbers; octaves below as subscript-positioned. D-ref
-itself has no suffix. Examples: `D` = D-ref, `D1` = one octave above, `D2` =
-two octaves below (rendered as subscript by the visualizer), `A1` = A one
-octave above D-ref.
+The format: Unicode superscript or subscript octave number as a **prefix**
+to the left of the note name. The octave goes left so it never collides with
+accidentals (♯/♭) on the right side. D-ref (MIDI 62, octave 0) has no
+prefix. Octave 0 (D-ref) uses a regular `0` prefix — neither super nor sub,
+just a normal middle-positioned zero. Octaves above D-ref use Unicode
+superscript digits as prefix (e.g., `¹D`, `²A`). Octaves below use Unicode
+subscript digits as prefix (e.g., `₁C`, `₃G`).
+
+Examples: `0D` = D-ref, `¹D` = one octave above, `₂C` = C two octaves below,
+`¹A` = A one octave above D-ref, `³F#` = F-sharp three octaves above.
 
 The note names use standard accidentals: `C#`, `Eb`, etc. This matches the
 standard musical convention and is consistent with the chord detector output.
 
 ``` {.typescript file=_generated/lib/keyboard-layouts.ts}
+const SUPERSCRIPT_DIGITS = '\u2070\u00B9\u00B2\u00B3\u2074\u2075\u2076\u2077\u2078\u2079';
+const SUBSCRIPT_DIGITS = '\u2080\u2081\u2082\u2083\u2084\u2085\u2086\u2087\u2088\u2089';
+
+function toSuperscript(n: number): string {
+  return String(n).split('').map(d => SUPERSCRIPT_DIGITS[parseInt(d, 10)]).join('');
+}
+
+function toSubscript(n: number): string {
+  return String(n).split('').map(d => SUBSCRIPT_DIGITS[parseInt(d, 10)]).join('');
+}
+
 export function midiToDRefNoteName(midi: number): string {
   const names = ['C','C#','D','Eb','E','F','F#','G','Ab','A','Bb','B'];
   const noteName = names[((midi % 12) + 12) % 12];
   const dOctave = Math.floor((midi - 62) / 12);
-  return `${Math.abs(dOctave)}${noteName}`;
+  if (dOctave === 0) return '0' + noteName;
+  if (dOctave > 0) return toSuperscript(dOctave) + noteName;
+  return toSubscript(-dOctave) + noteName;
 }
 ```
 

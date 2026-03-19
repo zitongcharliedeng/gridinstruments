@@ -459,6 +459,12 @@ buttons that invert on hover.
       0% { background-position: 200% 0; }
       100% { background-position: -100% 0; }
     }
+    #vis-overlay {
+      padding: 8px 12px 8px 12px;
+      bottom: auto;
+      min-height: 100%;
+    }
+    #vis-overlay .overlay-section { margin-left: 0; }
     .hidden { display: none; }
 
     #mpe-output-select {
@@ -880,8 +886,11 @@ dialog for that parameter.
      .slider-preset-mark.active .slider-preset-btn { color: #4f4; }
 ```
 
-The `.slider-info-btn` is an absolute-positioned info-circle icon at the left edge of
-each `.tuning-slider-area`, and `.midi-panel-row` provides a flex row for MIDI control
+`.slider-info-btn` is an inline square icon that opens contextual help for its
+adjacent control. By default it flows inline (static position) so it sits
+naturally to the left of whatever component it accompanies. Inside
+`.tuning-slider-area`, it switches to absolute positioning at the left edge
+of the slider track. `.midi-panel-row` provides a flex row for MIDI control
 label+input pairs in the INPUT section.
 
 ``` {.html file=index.html}
@@ -890,20 +899,27 @@ label+input pairs in the INPUT section.
       font-size: 11px; flex-wrap: wrap;
     }
      .slider-info-btn {
-       position: absolute;
-       left: 0; top: 50%;
-       transform: translateY(-50%);
+       position: static;
+       transform: none;
        z-index: 3;
        color: var(--dim);
        width: 18px; height: 18px;
        padding: 0;
-       display: flex; align-items: center; justify-content: center;
+       display: inline-flex; align-items: center; justify-content: center;
        border: 1px solid var(--border);
        background: var(--bg);
        opacity: 0.7;
        cursor: pointer;
+       flex-shrink: 0;
+       vertical-align: middle;
      }
+    .slider-info-btn svg { width: var(--icon-lg); height: var(--icon-lg); display: block; flex-shrink: 0; }
     .slider-info-btn:hover { opacity: 1; color: var(--accent, #4af); border-color: var(--accent, #4af); }
+    .tuning-slider-area .slider-info-btn {
+      position: absolute;
+      left: 0; top: 50%;
+      transform: translateY(-50%);
+    }
     .slider-info-btn .info-preview {
       display: none;
       position: absolute;

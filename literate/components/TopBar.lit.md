@@ -70,13 +70,13 @@ export function TopBar(props: TopBarProps): JSX.Element {
           Suggest
         </a>
       </div>
-      <button class="slider-info-btn icon-btn icon-lg" data-info="fullscreen" style="position:static;transform:none;">
+      <button class="slider-info-btn" data-info="fullscreen">
         <i data-lucide="info" />
       </button>
       <button id="fullscreen-btn" class="icon-btn icon-md" onClick={onFullscreen}>
         <i data-lucide="maximize" />
       </button>
-      <button class="slider-info-btn icon-btn icon-lg" data-info="reset-layout" style="position:static;transform:none;">
+      <button class="slider-info-btn" data-info="reset-layout">
         <i data-lucide="info" />
       </button>
       <button id="reset-layout" onClick={onResetClick}>

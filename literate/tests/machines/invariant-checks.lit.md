@@ -4199,15 +4199,15 @@ export const SONGBAR_PROGRESS_4: StateInvariant = {
 
 export const SONGBAR_CAL_1: StateInvariant = {
   id: 'SONGBAR-CAL-1',
-  description: '#calibrate-btn text is "Calibrate Area"',
+  description: '#calibrate-btn text is "Calibrate Playable Area"',
   check: async (page: Page) => {
     const text = await page.evaluate(() => {
       const btn = document.getElementById('calibrate-btn');
       if (!btn) throw new Error('#calibrate-btn not found');
       return btn.textContent?.trim() ?? '';
     });
-    if (text !== 'Calibrate Area') {
-      throw new Error(`#calibrate-btn text is "${text}", expected "Calibrate Area"`);
+    if (text !== 'Calibrate Playable Area') {
+      throw new Error(`#calibrate-btn text is "${text}", expected "Calibrate Playable Area"`);
     }
   },
 };
@@ -4630,6 +4630,27 @@ export const VOW_NO_BORDER_RADIUS: StateInvariant = {
 };
 
 
+```
+
+Enforce zero raw `title=` tooltip attributes in the DOM — all contextual help
+must use the info-button + dialog pattern instead (#174).
+
+``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
+export const VOW_NO_RAW_TOOLTIPS: StateInvariant = {
+  id: 'VOW-NO-RAW-TOOLTIPS',
+  description: 'Zero title= attributes in DOM (use info-button+dialog pattern)',
+  check: async (page: Page) => {
+    const titles = await page.evaluate(() => {
+      const results: string[] = [];
+      document.querySelectorAll('[title]').forEach(el => {
+        if (el.closest('.ss-main')) return;
+        results.push(`<${el.tagName.toLowerCase()} title="${el.getAttribute('title')}">`);
+      });
+      return results;
+    });
+    if (titles.length > 0) throw new Error(`Found ${titles.length} elements with title= attribute: ${titles.join(', ')}`);
+  },
+};
 ```
 
 ## Ideal State Invariants

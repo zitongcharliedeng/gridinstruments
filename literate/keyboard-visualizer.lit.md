@@ -1124,9 +1124,10 @@ note name while remaining readable at any skew angle.
 
     const qLabel = this.qwertyLabels.get(noteId);
     if (qLabel) {
+      this.ctx.font = `bold ${fontSize}px "JetBrains Mono", monospace`;
+      const nameW = this.ctx.measureText(noteName).width;
       const qSize = Math.max(8, fontSize * 0.4);
       this.ctx.font = `${qSize}px "JetBrains Mono", monospace`;
-      const nameW = this.ctx.measureText(noteName).width;
       this.ctx.fillStyle = '#ffff00';
       this.ctx.globalAlpha = 0.6;
       this.ctx.textAlign = 'left';

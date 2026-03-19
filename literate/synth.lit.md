@@ -625,8 +625,10 @@ range from 500 Hz to 18 000 Hz.
 ### MPE Pressure (Channel Aftertouch)
 
 Pressure controls per-voice gain with a square-root curve (`value^0.5`),
-matching the velocity response so that MPE pressure feels continuous with the
-initial strike velocity.
+Velocity sets the ceiling (initial attack brightness), while pressure
+controls the ongoing sustained volume across the full range — near-silent
+at pressure=0, full velocity gain at pressure=1. A small floor (0.01)
+prevents total silence so release transients remain audible.
 
 ``` {.typescript file=_generated/lib/synth.ts}
   setPressure(noteId: string, value: number): void {
@@ -634,8 +636,7 @@ initial strike velocity.
     const voice = this.voices.get(noteId);
     if (!voice) return;
     const clamped = Math.max(0, Math.min(1, value));
-    const pressureFactor = 0.5 + clamped * 0.5;
-    const gain = voice.velocityGain * pressureFactor;
+    const gain = Math.max(0.01, voice.velocityGain * clamped);
     voice.gainNode.gain.setTargetAtTime(gain, this.context.currentTime, 0.01);
   }
 
