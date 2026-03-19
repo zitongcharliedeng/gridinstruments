@@ -29,6 +29,10 @@ export function mountGridOverlay(
   const [visible, setVisible] = createSignal(false);
 
   const toggle = (): void => { setVisible(v => !v); };
+  const onEscape = (e: KeyboardEvent): void => {
+    if (e.key === 'Escape' && visible()) setVisible(false);
+  };
+  document.addEventListener('keydown', onEscape);
   cogBtn.addEventListener('click', toggle);
 
   const sections: SectionDef[] = [
@@ -133,7 +137,7 @@ export function mountGridOverlay(
                 <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;">
                   <span class="gi-checkbox"><input type="checkbox" id="expr-bend" checked /><span class="gi-check"></span></span>
                   <span style="color:#fff">Pitch Bend</span>
-                  <input type="text" inputmode="numeric" pattern="[0-9]*" id="midi-pb-range-expr" value="48" style="width:3ch;text-align:center;font-family:var(--font);font-size:10px;background:var(--bg);color:var(--fg);border:1px solid var(--border);padding:2px 3px;" />
+                  <input type="text" inputmode="numeric" pattern="[0-9]*" id="midi-pb-range-expr" value="24" style="width:3ch;text-align:center;font-family:var(--font);font-size:10px;background:var(--bg);color:var(--fg);border:1px solid var(--border);padding:2px 3px;" />
                   <span style="color:var(--dim);font-size:10px;">semitones</span>
                 </label>
               </div>
@@ -173,9 +177,15 @@ export function mountGridOverlay(
   ];
 
   render(
-    () => <SettingsOverlay sections={sections} visible={visible()} onToggle={toggle} />,
+    () => <SettingsOverlay overlayId="grid-overlay" sections={sections} visible={visible()} onToggle={toggle} />,
     mountEl,
   );
+
+  mountEl.addEventListener('click', (e) => {
+    const target = e.target;
+    if (!(target instanceof HTMLElement)) return;
+    if (target.id === 'grid-overlay') setVisible(false);
+  });
 
   return { toggle, setVisible };
 }

@@ -19,7 +19,22 @@ oscillator, timbre filter, gain envelope, grid coordinates (for live re-tuning),
 and a per-voice vibrato gain node.
 
 ``` {.typescript file=_generated/lib/synth.ts}
-export type WaveformType = 'sine' | 'square' | 'sawtooth' | 'triangle';
+export type WaveformType = 'sine' | 'square' | 'sawtooth' | 'triangle' | 'pluck' | 'organ' | 'brass' | 'pad' | 'bell' | 'bass' | 'bright' | 'warm';
+
+const CUSTOM_WAVES: Record<string, { real: number[]; imag: number[] }> = {
+  pluck:  { real: [0,0,0,0,0,0,0,0], imag: [0,1,0.5,0.3,0.15,0.08,0.04,0.02] },
+  organ:  { real: [0,0,0,0,0,0,0,0], imag: [0,1,0,0.5,0,0.25,0,0.125] },
+  brass:  { real: [0,0,0,0,0,0,0,0,0,0,0], imag: [0,0.7,0.9,1,0.8,0.5,0.3,0.2,0.15,0.1,0.05] },
+  pad:    { real: [0,0,0,0,0,0], imag: [0,1,0.3,0.1,0.05,0.02] },
+  bell:   { real: [0,0,0,0,0,0,0,0,0], imag: [0,1,0.6,0.4,0.8,0.3,0.1,0.5,0.2] },
+  bass:   { real: [0,0,0,0,0], imag: [0,1,0.8,0.4,0.1] },
+  bright: { real: [0,0,0,0,0,0,0,0,0,0,0,0,0], imag: [0,1,0.9,0.8,0.7,0.6,0.5,0.4,0.3,0.2,0.15,0.1,0.05] },
+  warm:   { real: [0,0,0,0,0,0], imag: [0,1,0.5,0.15,0.04,0.01] },
+};
+
+function isNativeWaveform(w: string): w is OscillatorType {
+  return w === 'sine' || w === 'square' || w === 'sawtooth' || w === 'triangle';
+}
 
 interface Voice {
   oscillator: OscillatorNode;
@@ -200,7 +215,22 @@ immediately -- no click, no gap.
   setWaveform(waveform: WaveformType): void {
     this.waveform = waveform;
     for (const voice of this.voices.values()) {
-      voice.oscillator.type = waveform;
+      this.applyWaveform(voice.oscillator, waveform);
+    }
+  }
+
+  private applyWaveform(osc: OscillatorNode, waveform: WaveformType): void {
+    if (isNativeWaveform(waveform)) {
+      osc.type = waveform;
+    } else {
+      const spec = CUSTOM_WAVES[waveform];
+      if (spec && this.context) {
+        const wave = this.context.createPeriodicWave(
+          new Float32Array(spec.real),
+          new Float32Array(spec.imag),
+        );
+        osc.setPeriodicWave(wave);
+      }
     }
   }
   
@@ -476,7 +506,7 @@ input through a per-voice gain node.
     if (this.voices.has(noteId)) return;
     const frequency = this.getFrequency(x, y, octaveOffset);
     const oscillator = this.context.createOscillator();
-    oscillator.type = this.waveform;
+    this.applyWaveform(oscillator, this.waveform);
     oscillator.frequency.value = frequency;
 
     const timbreFilter = this.context.createBiquadFilter();

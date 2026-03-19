@@ -28,9 +28,10 @@ import { loadCalibratedRange, saveCalibratedRange } from './lib/calibration';
 import { searchAllAdapters, type MidiSearchResult } from './lib/midi-search';
 import { createActor } from 'xstate';
 import SlimSelect from 'slim-select';
+import { OverlayScrollbars } from 'overlayscrollbars';
 
 import { isWaveformType, parseNum, formatSliderAnnotation, noteNameToHz } from './app-helpers';
-import { getElement, getElementOrNull, setupCyclingButton } from './app-dom';
+import { createSelectAtSlot, getElement, getElementOrNull, hideNativeSelect, setupCyclingButton } from './app-dom';
 import { thumbCenterPx, clampBadgePosition, applySliderFill } from './app-slider';
 import { SHEAR_PRESETS, TUNING_LABEL_PRESETS } from './app-constants';
 ```
@@ -53,7 +54,7 @@ export class DComposeApp {
   private noteHoldCounts = new Map<string, number>();
   private keyRepeat = new Set<string>();
   private midiChannelVoice = new Map<string, string>();
-  private midiPitchBendRange = 48;
+  private midiPitchBendRange = 24;
   private expressionBend = true;
   private expressionVelocity = true;
   private expressionPressure = true;
@@ -142,25 +143,43 @@ The constructor initializes the core subsystems (synth, MIDI, MPE, layout) and g
 
     this.canvas = getElement('keyboard-canvas', HTMLCanvasElement);
     this.historyCanvas = getElement('history-canvas', HTMLCanvasElement);
-    this.layoutSelect = getElementOrNull('layout-select', HTMLSelectElement);
-    this.skewSlider = getElement('skew-slider', HTMLInputElement);
-    this.bfactSlider = getElement('bfact-slider', HTMLInputElement);
-    this.tuningSlider = getElement('tuning-slider', HTMLInputElement);
+    this.layoutSelect = null;
+    this.skewSlider = null;
+    this.bfactSlider = null;
+    this.tuningSlider = null;
 
-    this.volumeSlider = getElement('volume-slider', HTMLInputElement);
-    this.vibratoIndicator = getElement('vibrato-indicator', HTMLElement);
-    this.sustainIndicator = getElement('sustain-indicator', HTMLElement);
-    this.midiDeviceList = getElement('midi-device-list', HTMLElement);
-    this.zoomSlider = getElement('zoom-slider', HTMLInputElement);
+    this.volumeSlider = null;
+    this.vibratoIndicator = null;
+    this.sustainIndicator = null;
+    this.midiDeviceList = null;
+    this.zoomSlider = null;
 
-    const savedPbRange = parseInt(this.loadSetting('midiPbRange', '48'), 10);
-    this.midiPitchBendRange = (savedPbRange >= 2 && savedPbRange <= 48) ? savedPbRange : 48;
+    const savedPbRange = parseInt(this.loadSetting('midiPbRange', '24'), 10);
+    this.midiPitchBendRange = (savedPbRange >= 2 && savedPbRange <= 96) ? savedPbRange : 24;
     this.expressionBend = this.loadSetting('exprBend', 'true') === 'true';
     this.expressionVelocity = this.loadSetting('exprVelocity', 'true') === 'true';
     this.expressionPressure = this.loadSetting('exprPressure', 'true') === 'true';
     this.expressionTimbre = this.loadSetting('exprTimbre', 'true') === 'true';
 
     void this.init();
+  }
+```
+
+The component migration renders several controls only after Solid mounts, so the
+constructor cannot safely query them yet. `bindMountedControls` refreshes the
+cached element references once the shell components and dynamic selects exist.
+
+``` {.typescript file=_generated/app-core.ts}
+  private bindMountedControls(): void {
+    this.layoutSelect = getElementOrNull('layout-select', HTMLSelectElement);
+    this.skewSlider = getElementOrNull('skew-slider', HTMLInputElement);
+    this.bfactSlider = getElementOrNull('bfact-slider', HTMLInputElement);
+    this.tuningSlider = getElementOrNull('tuning-slider', HTMLInputElement);
+    this.volumeSlider = getElementOrNull('volume-slider', HTMLInputElement);
+    this.vibratoIndicator = getElementOrNull('vibrato-indicator', HTMLElement);
+    this.sustainIndicator = getElementOrNull('sustain-indicator', HTMLElement);
+    this.midiDeviceList = getElementOrNull('midi-device-list', HTMLElement);
+    this.zoomSlider = getElementOrNull('zoom-slider', HTMLInputElement);
   }
 ```
 
@@ -176,6 +195,7 @@ Initialization is async because MIDI and MPE both require browser permission gra
     }
     this.setupHistoryVisualizer();
     this.setupEventListeners();
+    createIcons({ icons: { Info, Search, Star, Maximize, RotateCcw, RotateCw, Settings, X } });
     await this.midi.init();
     await this.mpe.init();
     this.mpe.subscribe((voices) => {
@@ -411,6 +431,113 @@ The MIDI device panel renders a list of connected controllers with enable/disabl
     this.canvas.addEventListener('pointerleave', this.handlePointerUp.bind(this));
     this.canvas.addEventListener('pointercancel', this.handlePointerUp.bind(this));
     this.canvas.addEventListener('contextmenu', (e) => { e.preventDefault(); });
+
+    const visSettingsBtn = document.getElementById('vis-settings-btn');
+    const visOverlayMount = document.getElementById('vis-overlay-mount');
+    if (visSettingsBtn && visOverlayMount && this.historyVisualizer) {
+      mountVisOverlay(visOverlayMount, visSettingsBtn, this.historyVisualizer);
+    }
+
+    const topbarMountEl = document.getElementById('topbar-mount');
+    if (topbarMountEl) {
+      mountTopBar(
+        topbarMountEl,
+        () => { /* about dialog wired in main.ts via #about-btn id */ },
+        () => {
+          Object.keys(localStorage).filter(k => k.startsWith('gi_')).forEach(k => { localStorage.removeItem(k); });
+          location.reload();
+        },
+      );
+    }
+
+    const gridCog = getElementOrNull('grid-settings-btn', HTMLButtonElement);
+    const gridOverlayMount = document.getElementById('grid-overlay-mount');
+    if (gridCog && gridOverlayMount) {
+      mountGridOverlay(gridOverlayMount, gridCog);
+    }
+
+    const savedMax = this.loadSetting('maxKeys', '8');
+    this.maxSimultaneousKeys = parseInt(savedMax, 10);
+
+    const songbarMountEl = document.getElementById('songbar-mount');
+    if (songbarMountEl) {
+      mountSongBar(songbarMountEl, {
+        onSearch: () => { /* value read imperatively below via #midi-search-input */ },
+        onSearchFocus: () => {
+          const hint = document.querySelector<HTMLElement>('#song-bar-hint');
+          if (hint) hint.style.display = 'none';
+        },
+        onSearchBlur: () => {
+          const searchInput = document.querySelector<HTMLInputElement>('#midi-search-input');
+          const hint = document.querySelector<HTMLElement>('#song-bar-hint');
+          if (searchInput && hint && searchInput.value.trim() === '') {
+            const gameState = this.gameActor ? String(this.gameActor.getSnapshot().value) : undefined;
+            if (!gameState || gameState === 'idle' || gameState === 'error') {
+              hint.style.display = '';
+            }
+          }
+        },
+        onQuantizationCycle: () => { /* value read on-demand by loadMidiFromBuffer */ },
+        onGameReset: () => { this.gameActor?.send({ type: 'GAME_RESTART' }); },
+        onCalibrateStart: () => { this.enterCalibrationMode(); },
+        onCalibrateConfirm: () => { this.exitCalibrationMode(true); },
+        onCalibrateCancel: () => { this.exitCalibrationMode(false); },
+        onMaxKeysChange: (n: number) => {
+          this.maxSimultaneousKeys = n;
+          this.saveSetting('maxKeys', String(n));
+        },
+        initialMaxKeys: this.maxSimultaneousKeys,
+      });
+    }
+
+    createSelectAtSlot('wave-select-slot', 'wave-select', [
+      { value: 'sawtooth', text: 'SAW' },
+      { value: 'sine', text: 'SIN' },
+      { value: 'square', text: 'SQR' },
+      { value: 'triangle', text: 'TRI' },
+      { value: 'pluck', text: 'PLUCK' },
+      { value: 'organ', text: 'ORGAN' },
+      { value: 'brass', text: 'BRASS' },
+      { value: 'pad', text: 'PAD' },
+      { value: 'bell', text: 'BELL' },
+      { value: 'bass', text: 'BASS' },
+      { value: 'bright', text: 'BRIGHT' },
+      { value: 'warm', text: 'WARM' },
+    ], {});
+
+    createSelectAtSlot('layout-select-slot', 'layout-select', [], {
+      title: 'Select keyboard physical layout',
+    });
+
+    createSelectAtSlot('mpe-output-select-slot', 'mpe-output-select', [
+      { value: '', text: 'No MIDI outputs' },
+    ], { style: 'min-width:120px;', disabled: '' });
+
+    setupCyclingButton('quantization-level', [
+      { value: 'none', label: 'None' },
+      { value: '1/4', label: '1/4' },
+      { value: '1/8', label: '1/8' },
+      { value: '1/16', label: '1/16' },
+    ], 'none', () => { /* value read on-demand by loadMidiFromBuffer */ });
+
+    this.bindMountedControls();
+
+    const gridOverlay = getElementOrNull('grid-overlay', HTMLDivElement);
+    if (gridOverlay) {
+      gridOverlay.setAttribute('data-overlayscrollbars-initialize', '');
+      const overlayScrollbars = OverlayScrollbars(gridOverlay, {
+        scrollbars: {
+          theme: 'gi-scrollbar',
+          visibility: 'visible',
+          autoHide: 'never',
+        },
+      });
+      gridCog?.addEventListener('click', () => {
+        requestAnimationFrame(() => {
+          overlayScrollbars.update();
+        });
+      });
+    }
     const savedWaveform = this.loadSetting('waveform', 'sawtooth');
     const initialWaveform: WaveformType = isWaveformType(savedWaveform) ? savedWaveform : 'sawtooth';
     const waveformActor = createActor(waveformMachine, { input: { initial: initialWaveform } });
@@ -877,7 +1004,7 @@ MIDI expression settings let the user configure pitch bend range (2-48 semitones
       pbRangeInput.value = this.midiPitchBendRange.toString();
       pbRangeInput.addEventListener('change', () => {
         const val = parseInt(pbRangeInput.value, 10);
-        if (val >= 2 && val <= 48) {
+        if (val >= 2 && val <= 96) {
           this.midiPitchBendRange = val;
           this.saveSetting('midiPbRange', val.toString());
         } else {
@@ -900,7 +1027,7 @@ MIDI expression settings let the user configure pitch bend range (2-48 semitones
       pbRangeExprInput.value = this.midiPitchBendRange.toString();
       pbRangeExprInput.addEventListener('change', () => {
         const val = parseInt(pbRangeExprInput.value, 10);
-        if (val >= 2 && val <= 48) {
+        if (val >= 2 && val <= 96) {
           this.midiPitchBendRange = val;
           this.saveSetting('midiPbRange', val.toString());
         } else {
@@ -999,6 +1126,7 @@ MPE output sends per-note expression data to an external MIDI device. The state 
           },
         },
       });
+      hideNativeSelect(mpeSelect);
     }
 
     mpeActor.subscribe((snapshot) => {
@@ -1007,6 +1135,7 @@ MPE output sends per-note expression data to an external MIDI device. The state 
       if (mpeSS) {
         if (isEnabled) { mpeSS.enable(); } else { mpeSS.disable(); }
       }
+      if (mpeSelect) hideNativeSelect(mpeSelect);
     });
 
     mpeActor.start();
@@ -1017,12 +1146,14 @@ MPE output sends per-note expression data to an external MIDI device. The state 
       if (outputs.length === 0) {
         mpeSS.setData([{ text: 'No MIDI outputs', value: '', placeholder: true }]);
         mpeSS.disable();
+        if (mpeSelect) hideNativeSelect(mpeSelect);
         return;
       }
       mpeSS.setData(outputs.map(o => ({ text: o.name ?? o.id, value: o.id })));
       if (!mpeActor.getSnapshot().matches('enabled')) {
         mpeSS.disable();
       }
+      if (mpeSelect) hideNativeSelect(mpeSelect);
     };
 
     mpeCheckbox?.addEventListener('change', () => {
@@ -1208,24 +1339,6 @@ The QWERTY overlay toggle renders physical key labels (Q, W, E, R...) on the gri
       });
     }
 
-    const visSettingsBtn = document.getElementById('vis-settings-btn');
-    const visOverlayMount = document.getElementById('vis-overlay-mount');
-    if (visSettingsBtn && visOverlayMount && this.historyVisualizer) {
-      mountVisOverlay(visOverlayMount, visSettingsBtn, this.historyVisualizer);
-    }
-
-    const topbarMountEl = document.getElementById('topbar-mount');
-    if (topbarMountEl) {
-      mountTopBar(
-        topbarMountEl,
-        () => { /* about dialog wired in main.ts via #about-btn id */ },
-        () => {
-          Object.keys(localStorage).filter(k => k.startsWith('gi_')).forEach(k => { localStorage.removeItem(k); });
-          location.reload();
-        },
-      );
-    }
-
     window.addEventListener('blur', () => { this.stopAllNotes(); });
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'hidden') this.stopAllNotes();
@@ -1258,17 +1371,20 @@ as before, since all IDs are preserved.
 
 ``` {.typescript file=_generated/app-core.ts}
 
-    const gridCog = getElementOrNull('grid-settings-btn', HTMLButtonElement);
-    const gridOverlayMount = document.getElementById('grid-overlay-mount');
-    if (gridCog && gridOverlayMount) {
-      mountGridOverlay(gridOverlayMount, gridCog);
-    }
 ```
 
 Sustain and vibrato pedals are modeled as `pedalMachine` actors (activate/deactivate state). Keyboard modifiers (Space/Shift) drive the actors directly; the on-screen pedal buttons are handled by the `PedalsPanel` SolidJS component mounted into `#pedals-mount`. The actors' subscriptions toggle CSS classes and synth behavior in lockstep.
 
 ``` {.typescript file=_generated/app-core.ts}
     this.sustainActor = createActor(pedalMachine);
+    this.vibratoActor = createActor(pedalMachine);
+
+    const pedalsMountEl = document.getElementById('pedals-mount');
+    if (pedalsMountEl && this.sustainActor && this.vibratoActor) {
+      mountPedals(pedalsMountEl, this.sustainActor, this.vibratoActor);
+      this.bindMountedControls();
+    }
+
     this.sustainActor.subscribe((snapshot) => {
       const active = snapshot.matches('active');
       this.sustainIndicator?.classList.toggle('active', active);
@@ -1276,18 +1392,12 @@ Sustain and vibrato pedals are modeled as `pedalMachine` actors (activate/deacti
     });
     this.sustainActor.start();
 
-    this.vibratoActor = createActor(pedalMachine);
     this.vibratoActor.subscribe((snapshot) => {
       const active = snapshot.matches('active');
       this.vibratoIndicator?.classList.toggle('active', active);
       this.synth.setVibrato(active);
     });
     this.vibratoActor.start();
-
-    const pedalsMountEl = document.getElementById('pedals-mount');
-    if (pedalsMountEl && this.sustainActor && this.vibratoActor) {
-      mountPedals(pedalsMountEl, this.sustainActor, this.vibratoActor);
-    }
 ```
 
 The SolidJS SongBar component mounts into `#songbar-mount` and owns all song bar UI.
@@ -1297,40 +1407,6 @@ idle, loading, playing, complete, error. Its subscription drives all game UI upd
 target notes, progress bar, elapsed timer, and score overlay.
 
 ``` {.typescript file=_generated/app-core.ts}
-    const savedMax = this.loadSetting('maxKeys', '8');
-    this.maxSimultaneousKeys = parseInt(savedMax, 10);
-
-    const songbarMountEl = document.getElementById('songbar-mount');
-    if (songbarMountEl) {
-      mountSongBar(songbarMountEl, {
-        onSearch: () => { /* value read imperatively below via #midi-search-input */ },
-        onSearchFocus: () => {
-          const hint = document.querySelector<HTMLElement>('#song-bar-hint');
-          if (hint) hint.style.display = 'none';
-        },
-        onSearchBlur: () => {
-          const searchInput = document.querySelector<HTMLInputElement>('#midi-search-input');
-          const hint = document.querySelector<HTMLElement>('#song-bar-hint');
-          if (searchInput && hint && searchInput.value.trim() === '') {
-            const gameState = this.gameActor ? String(this.gameActor.getSnapshot().value) : undefined;
-            if (!gameState || gameState === 'idle' || gameState === 'error') {
-              hint.style.display = '';
-            }
-          }
-        },
-        onQuantizationCycle: () => { /* value read on-demand by loadMidiFromBuffer */ },
-        onGameReset: () => { this.gameActor?.send({ type: 'GAME_RESTART' }); },
-        onCalibrateStart: () => { this.enterCalibrationMode(); },
-        onCalibrateConfirm: () => { this.exitCalibrationMode(true); },
-        onCalibrateCancel: () => { this.exitCalibrationMode(false); },
-        onMaxKeysChange: (n: number) => {
-          this.maxSimultaneousKeys = n;
-          this.saveSetting('maxKeys', String(n));
-        },
-        initialMaxKeys: parseInt(savedMax, 10),
-      });
-    }
-
     this.gameActor = createActor(gameMachine);
     this.gameActor.start();
 

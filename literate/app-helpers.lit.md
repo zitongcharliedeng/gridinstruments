@@ -47,7 +47,7 @@ export function renderMarkdown(md: string): string {
 
 ``` {.typescript file=_generated/app-helpers.ts}
 export function isWaveformType(value: unknown): value is WaveformType {
-  return typeof value === 'string' && ['sine', 'square', 'sawtooth', 'triangle'].includes(value);
+  return typeof value === 'string' && ['sine', 'square', 'sawtooth', 'triangle', 'pluck', 'organ', 'brass', 'pad', 'bell', 'bass', 'bright', 'warm'].includes(value);
 }
 
 export function parseNum(s: string, fallback: number): number {
