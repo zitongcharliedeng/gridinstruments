@@ -318,6 +318,12 @@
       0% { background-position: 200% 0; }
       100% { background-position: -100% 0; }
     }
+    #vis-overlay {
+      padding: 8px 12px 8px 12px;
+      bottom: auto;
+      min-height: 100%;
+    }
+    #vis-overlay .overlay-section { margin-left: 0; }
     .hidden { display: none; }
 
     #mpe-output-select {
@@ -657,20 +663,27 @@
       font-size: 11px; flex-wrap: wrap;
     }
      .slider-info-btn {
-       position: absolute;
-       left: 0; top: 50%;
-       transform: translateY(-50%);
+       position: static;
+       transform: none;
        z-index: 3;
        color: var(--dim);
        width: 18px; height: 18px;
        padding: 0;
-       display: flex; align-items: center; justify-content: center;
+       display: inline-flex; align-items: center; justify-content: center;
        border: 1px solid var(--border);
        background: var(--bg);
        opacity: 0.7;
        cursor: pointer;
+       flex-shrink: 0;
+       vertical-align: middle;
      }
+    .slider-info-btn svg { width: var(--icon-lg); height: var(--icon-lg); display: block; flex-shrink: 0; }
     .slider-info-btn:hover { opacity: 1; color: var(--accent, #4af); border-color: var(--accent, #4af); }
+    .tuning-slider-area .slider-info-btn {
+      position: absolute;
+      left: 0; top: 50%;
+      transform: translateY(-50%);
+    }
     .slider-info-btn .info-preview {
       display: none;
       position: absolute;
@@ -865,7 +878,7 @@
       }
     }
   </style>
-  <script type="module" crossorigin src="/dev/assets/index-DCZVty4E.js"></script>
+  <script type="module" crossorigin src="/dev/assets/index-C04TdPBS.js"></script>
   <link rel="stylesheet" crossorigin href="/dev/assets/index-DElNnJOF.css">
 </head>
 <body>
