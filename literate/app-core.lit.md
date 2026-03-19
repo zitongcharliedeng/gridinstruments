@@ -306,23 +306,29 @@ MIDI listener setup wires incoming note-on, note-off, pitch bend, slide (CC74), 
       this.updateMidiDevicePanel(devices);
     });
 
+    const getVoicesForChannel = (deviceId: string, channel: number): string[] => {
+      const prefix = `${deviceId}_${channel}_`;
+      const ids: string[] = [];
+      for (const [key, noteId] of this.midiChannelVoice) {
+        if (key.startsWith(prefix)) ids.push(noteId);
+      }
+      return ids;
+    };
+
     this.midi.onPitchBend((channel, value, deviceId) => {
-      const audioNoteId = this.midiChannelVoice.get(`${deviceId}_${channel}`);
-      if (audioNoteId) {
+      for (const audioNoteId of getVoicesForChannel(deviceId, channel)) {
         if (this.expressionBend) this.synth.setPitchBend(audioNoteId, value * this.midiPitchBendRange);
         this.mpe.sendPitchBend(audioNoteId, value * this.midiPitchBendRange);
       }
     });
     this.midi.onSlide((channel, value, deviceId) => {
-      const audioNoteId = this.midiChannelVoice.get(`${deviceId}_${channel}`);
-      if (audioNoteId) {
+      for (const audioNoteId of getVoicesForChannel(deviceId, channel)) {
         if (this.expressionTimbre) this.synth.setTimbre(audioNoteId, value);
         this.mpe.sendSlide(audioNoteId, value);
       }
     });
     this.midi.onPressure((channel, value, deviceId) => {
-      const audioNoteId = this.midiChannelVoice.get(`${deviceId}_${channel}`);
-      if (audioNoteId) {
+      for (const audioNoteId of getVoicesForChannel(deviceId, channel)) {
         if (this.expressionPressure) this.synth.setPressure(audioNoteId, value);
         this.mpe.sendPressure(audioNoteId, value);
       }
@@ -342,7 +348,7 @@ MIDI note-on maps the incoming MIDI note number to grid coordinates using `midiT
       this.visualizer?.setCalibratedRange(new Set(this.calibratedCells));
     }
     this.activeNotes.set(noteKey, { coordX, coordY });
-    this.midiChannelVoice.set(`${deviceId}_${channel}`, audioNoteId);
+    this.midiChannelVoice.set(`${deviceId}_${channel}_${midiNote}`, audioNoteId);
     this.trackNoteOn(coordX, coordY, midiNote);
     if (this.gameActor?.getSnapshot().matches('playing')) {
       this.gameActor.send({ type: 'NOTE_PRESSED', cellId: `${coordX}_${coordY}`, midiNote });
@@ -364,7 +370,7 @@ MIDI note-on maps the incoming MIDI note number to grid coordinates using `midiT
     this.synth.stopNote(audioNoteId);
     this.mpe.noteOff(audioNoteId, midiNote);
     this.activeNotes.delete(noteKey);
-    this.midiChannelVoice.delete(`${deviceId}_${channel}`);
+    this.midiChannelVoice.delete(`${deviceId}_${channel}_${midiNote}`);
     this.trackNoteOff(coordX, coordY);
     this.render();
   }
