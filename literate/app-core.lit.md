@@ -1473,7 +1473,11 @@ the tuning slider and calibrate button to prevent mid-game tuning changes.
 
         const currentGroup = ctx.noteGroups[ctx.currentGroupIndex];
         if (currentGroup && this.visualizer) {
-          const allTargetCellIds = this.visualizer.getCellIdsForMidiNotes(new Set(currentGroup.midiNotes));
+          let allTargetCellIds = this.visualizer.getCellIdsForMidiNotes(new Set(currentGroup.midiNotes));
+          const calRange = this.calibratedRange;
+          if (calRange && calRange.size > 0) {
+            allTargetCellIds = allTargetCellIds.filter(id => calRange.has(id));
+          }
           this.visualizer.setTargetNotes(allTargetCellIds);
           const pressedMidis = new Set(ctx.pressedMidiNotes);
           if (pressedMidis.size > 0) {
