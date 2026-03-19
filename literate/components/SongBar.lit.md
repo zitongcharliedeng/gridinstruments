@@ -153,7 +153,7 @@ range. The banner with confirm/cancel actions appears when calibration is active
 
       <span id="song-bar-hint" style="display:none;" />
 
-      <div id="song-bar-calibrate" style="margin-left:auto;">
+      <div id="song-bar-calibrate" style="margin-left:auto;max-width:280px;">
         <button
           class="slider-info-btn icon-btn icon-lg"
           data-info="calibrate"
@@ -195,7 +195,7 @@ range. The banner with confirm/cancel actions appears when calibration is active
           </button>
           <button
             id="calibrate-cancel"
-            style="font-family:var(--font);font-size:9px;background:none;color:var(--dim);border:1px solid var(--border);padding:1px 4px;cursor:pointer;line-height:1;"
+            style="font-family:var(--font);font-size:9px;background:none;color:#f44;border:1px solid #f44;padding:1px 4px;cursor:pointer;line-height:1;"
             onClick={() => { props.onCalibrateCancel(); }}
           >
             &#x2717;
