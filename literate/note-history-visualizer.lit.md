@@ -368,7 +368,7 @@ C notes are labelled right-aligned using D-relative octave notation. A thin brig
     ctx.textBaseline = 'middle';
     for (let midi = this.midiMin; midi <= this.midiMax; midi++) {
       const pc = ((midi % 12) + 12) % 12;
-      if (pc !== 0) continue;
+      if (pc !== 2) continue;
       const ky = midiToY(midi) + noteH / 2;
       ctx.fillText(formatNoteWithOctavePrefix(midi), x + w - 2, ky);
     }
@@ -413,7 +413,7 @@ Background stripes alternate between a slightly darker shade for black-key rows.
     ctx.lineWidth = 1;
     for (let midi = this.midiMin; midi <= this.midiMax; midi++) {
       const pc = ((midi % 12) + 12) % 12;
-      if (pc !== 0) continue;
+      if (pc !== 2) continue;
       const ky = midiToY(midi) + noteH;
       ctx.beginPath();
       ctx.moveTo(x, ky);
