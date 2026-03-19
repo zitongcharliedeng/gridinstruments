@@ -335,7 +335,8 @@ ${srcLink('keyboard-layouts.lit.md', 'Source: keyboard-layouts.lit.md — layout
 <li><strong>Workaround</strong>: Use <strong>Calibrate Playable Area</strong> to restrict the active range, reducing ambiguity.</li>
 </ul>
 <h3>MPE Mode</h3>
-<p>In <a href="https://www.midi.org/midi-articles/midi-polyphonic-expression-mpe" target="_blank" rel="noopener">MPE mode</a>, each note gets a dedicated MIDI channel with independent pitch bend, pressure, and timbre. This enables per-note expression on supported controllers.</p>`,
+<p>In <a href="https://www.midi.org/midi-articles/midi-polyphonic-expression-mpe" target="_blank" rel="noopener">MPE mode</a>, each note gets a dedicated MIDI channel with independent pitch bend, pressure, and timbre. This enables per-note expression on supported controllers.</p>
+${srcLink('midi-input.lit.md', 'Source: midi-input.lit.md — MIDI device management')}`,
 
   calibrate: `
 <h2>Calibrate Playable Area</h2>
@@ -345,24 +346,28 @@ ${srcLink('keyboard-layouts.lit.md', 'Source: keyboard-layouts.lit.md — layout
 <li>Grey out unreachable cells so you can focus on what you can play</li>
 <li>Optimize game mode note placement</li>
 </ul>
-<p>The calibrated range is saved in localStorage and persists across sessions. Reset by clearing and re-calibrating.</p>`,
+<p>The calibrated range is saved in localStorage and persists across sessions. Reset by clearing and re-calibrating.</p>
+${srcLink('calibration.lit.md', 'Source: calibration.lit.md — range calibration and storage')}`,
 
   maxkeys: `
 <h2>Max Simultaneous Keys</h2>
 <p>The maximum number of keys your keyboard can register at once (keyboard rollover). Most laptop keyboards support 3-6 simultaneous keys. Gaming keyboards support 10+. MIDI controllers have no limit.</p>
 <p>The game engine uses this to validate chord difficulty — chords requiring more keys than your max will be flagged. Default is 8 (ten fingers minus thumbs).</p>
-<p>Changing this during a song will restart the beatmap to recalculate note groupings.</p>`,
+<p>Changing this during a song will restart the beatmap to recalculate note groupings.</p>
+${srcLink('game-engine.lit.md', 'Source: game-engine.lit.md — note grouping by max keys')}`,
 
   fullscreen: `
 <h2>Fullscreen</h2>
 <p>Expands the app to fill the entire screen, hiding the browser chrome. The keyboard grid scales to the full viewport for a more immersive playing experience.</p>
 <p>Press <strong>Esc</strong> or click the button again to exit fullscreen.</p>
-<p>On iOS Safari, true fullscreen is not available — the app fills the viewport but the browser bar remains.</p>`,
+<p>On iOS Safari, true fullscreen is not available — the app fills the viewport but the browser bar remains.</p>
+${srcLink('components/TopBar.lit.md', 'Source: TopBar.lit.md — fullscreen toggle')}`,
 
   'reset-layout': `
 <h2>Reset Page Layout</h2>
 <p>Restores the default panel sizes and positions — the visualiser panel height and pedals panel height return to their initial values.</p>
 <p>This does <strong>not</strong> reset any grid settings, tuning, waveform, or other instrument parameters. Only the visual panel layout is affected.</p>
-<p>Panel sizes are saved to <code>localStorage</code> and persist across sessions. Use this button if panels get into an unusable state.</p>`,
+<p>Panel sizes are saved to <code>localStorage</code> and persist across sessions. Use this button if panels get into an unusable state.</p>
+${srcLink('app-panels.lit.md', 'Source: app-panels.lit.md — panel resize and layout')}`,
 };
 ```
