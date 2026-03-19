@@ -1065,7 +1065,7 @@ font size with controlled Y positioning: raised for positive octaves, lowered
 for negative, and **vertically centered** for octave zero.
 
 ``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
-    const drawOctavePrefix = (): void => {
+    const drawOctavePrefix = (noteCenter: number): void => {
       const savedFont = this.ctx.font;
       this.ctx.font = `bold ${fontSize}px "JetBrains Mono", monospace`;
       const nameW = this.ctx.measureText(noteName).width;
@@ -1073,7 +1073,7 @@ for negative, and **vertically centered** for octave zero.
       this.ctx.font = `${octFont}px "JetBrains Mono", monospace`;
       this.ctx.textAlign = 'right';
       this.ctx.textBaseline = 'middle';
-      const octY = octave > 0 ? y - fontSize * 0.3 : octave < 0 ? y + fontSize * 0.3 : y;
+      const octY = octave > 0 ? noteCenter - fontSize * 0.3 : octave < 0 ? noteCenter + fontSize * 0.3 : noteCenter;
       this.ctx.fillText(octStr, x - nameW / 2 - 1, octY);
       this.ctx.font = savedFont;
       this.ctx.textAlign = 'center';
@@ -1082,7 +1082,7 @@ for negative, and **vertically centered** for octave zero.
     if (hasBracket && cellMin > 30) {
       this.ctx.textBaseline = 'bottom';
       this.ctx.textAlign = 'center';
-      drawOctavePrefix();
+      drawOctavePrefix(y - fontSize * 0.45);
       this.ctx.fillText(noteName, x, y);
       const subSize = Math.max(7, fontSize * 0.6);
       this.ctx.font = `${subSize}px "JetBrains Mono", monospace`;
@@ -1107,7 +1107,7 @@ octave prefix drawn at controlled position using the same modular functions.
 ``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
       this.ctx.textBaseline = 'middle';
       this.ctx.textAlign = 'center';
-      drawOctavePrefix();
+      drawOctavePrefix(y);
       this.ctx.fillText(noteName, x, y);
     }
     this.ctx.globalAlpha = 1;
