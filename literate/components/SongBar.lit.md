@@ -52,9 +52,8 @@ export function SongBar(props: SongBarProps): JSX.Element {
   const handleFileUpload = (e: Event): void => {
     const input = e.target as HTMLInputElement;
     const file = input.files?.[0];
-    if (file && file.name.endsWith('.mid')) {
-      const songBar = document.getElementById('song-bar');
-      if (songBar) songBar.dispatchEvent(new CustomEvent('midi-file-upload', { detail: file, bubbles: true }));
+    if (file?.name.endsWith('.mid') || file?.name.endsWith('.midi')) {
+      document.getElementById('song-bar')?.dispatchEvent(new CustomEvent('midi-file-upload', { detail: file, bubbles: true }));
     }
     input.value = '';
   };
