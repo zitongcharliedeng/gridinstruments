@@ -308,6 +308,7 @@ white on hover to signal draggability.
       height: 120px;
     }
     #visualiser-panel.collapsed { height: 0 !important; overflow: visible; border-bottom-width: 0; }
+    #visualiser-panel.collapsed #vis-settings-btn { display: none; }
     .panel-resize-handle-wrap {
       position: absolute;
       left: 50%;
