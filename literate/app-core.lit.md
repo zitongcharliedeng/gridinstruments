@@ -1249,7 +1249,8 @@ if matchMedia is unavailable (headless/CI), and clamp to a sane range.
      if (physicalDPI !== this.detectedDpi) {
        this.visualizer?.setCssPxPerInch(physicalDPI);
      }
-     const pianoKeyPx = PIANO_KEY_MM * physicalDPI / MM_PER_INCH;
+     const logicalDPI = physicalDPI / (window.devicePixelRatio || 1);
+     const pianoKeyPx = PIANO_KEY_MM * logicalDPI / MM_PER_INCH;
 ```
 
 The grid's cell width at zoom=1.0 comes from the lattice geometry — specifically the **half-vectors** `cellHv1` (wholetone direction) and `cellHv2` (octave direction). These change with the skew and shear sliders, so we measure them live:
