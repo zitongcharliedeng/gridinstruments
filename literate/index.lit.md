@@ -444,7 +444,7 @@ buttons that invert on hover.
       overflow-x: hidden;
       scrollbar-width: thin;
       scrollbar-color: var(--dim) transparent;
-      touch-action: pan-y;
+      touch-action: auto !important;
       -webkit-overflow-scrolling: touch;
     }
 
