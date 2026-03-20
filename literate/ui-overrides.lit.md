@@ -31,6 +31,8 @@ slim-select element overrides enforce JetBrains Mono, suppress the default focus
 .ss-main {
   font-family: 'JetBrains Mono', 'Courier New', monospace;
   font-size: 12px;
+  flex: 1;
+  min-width: 0;
 }
 
 .ss-main .ss-values .ss-single {
