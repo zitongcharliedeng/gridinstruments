@@ -59,7 +59,6 @@ slim-select element overrides enforce JetBrains Mono, suppress the default focus
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
   border-color: #888;
   z-index: 9999 !important;
-  position: fixed !important;
 }
 
 .ss-main {
