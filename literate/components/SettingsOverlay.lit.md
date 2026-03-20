@@ -16,6 +16,7 @@ containing sliders and other controls.
 
 ``` {.typescript file=_generated/components/SettingsOverlay.tsx}
 import { createSignal, For, Show, type JSX } from 'solid-js';
+import { applySliderFill } from '../app-slider';
 
 export interface SliderDef {
   id: string;
@@ -57,9 +58,11 @@ function SliderRow(props: { def: SliderDef }): JSX.Element {
   const fmt = props.def.formatBadge ?? ((v: number) => v.toFixed(1));
 
   const onInput = (e: Event): void => {
-    const v = parseFloat((e.target as HTMLInputElement).value);
+    const input = e.target as HTMLInputElement;
+    const v = parseFloat(input.value);
     setValue(v);
     props.def.onChange?.(v);
+    applySliderFill(input);
   };
 
   const onReset = (): void => {
