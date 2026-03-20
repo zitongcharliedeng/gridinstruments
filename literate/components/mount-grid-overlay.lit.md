@@ -64,7 +64,7 @@ export function mountGridOverlay(
             </div>
             <div class="tet-presets" id="tet-presets" data-alternate-ticks></div>
           </div>
-          <div class="overlay-section d-ref-group" style="margin-top: 18px">
+          <div class="tuning-slider-area" style="margin-top: 18px">
             <button class="slider-info-btn" data-info="dref"><i data-lucide="info"></i></button>
             <div class="slider-track">
               <span class="slider-label-overlay" id="d-ref-label">D REF (Hz)</span>
