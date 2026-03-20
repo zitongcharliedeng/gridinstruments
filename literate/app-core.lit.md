@@ -1261,8 +1261,9 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
        (Math.abs(geometry.cellHv1.x) + Math.abs(geometry.cellHv2.x)) * 2;
 
      const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-     const TARGET_KEYS_VISIBLE = isTouch ? 14 : 10;
-     const maxDefault = isTouch ? 0.75 : 1.0;
+     const isNarrow = window.innerWidth < 768;
+     const TARGET_KEYS_VISIBLE = isNarrow ? 18 : isTouch ? 14 : 10;
+     const maxDefault = isNarrow ? 0.5 : isTouch ? 0.68 : 1.0;
      const viewportBasedZoom = window.innerWidth / (gridCellWidthPx * TARGET_KEYS_VISIBLE);
      const dpiBasedZoom = pianoKeyPx / gridCellWidthPx;
      this.defaultZoom = Math.min(dpiBasedZoom, viewportBasedZoom, maxDefault);
