@@ -7,7 +7,6 @@ The module opens by importing all invariant check functions from `invariant-chec
 ``` {.typescript file=_generated/tests/machines/uiMachine.ts}
 import { setup } from 'xstate';
 import { type Page, expect } from '@playwright/test';
-import type { StateInvariant } from './types';
 ```
 
 Two shared Playwright helpers power all the panel drag and keyboard-focus tests. `tabUntil` cycles through focusable elements until the target selector is active; `dragHandle` simulates a pointer drag on a resize handle by the given pixel delta.
