@@ -107,15 +107,11 @@ OverlayScrollbars overrides apply the `gi-scrollbar` class. The 12 px track widt
 }
 
 #grid-overlay {
-  padding: 0;
+  padding: 48px 24px 24px 48px;
   position: absolute !important;
   top: 0 !important;
   left: 0 !important;
   right: 0 !important;
   bottom: 0 !important;
-}
-
-#grid-overlay [data-overlayscrollbars-viewport] {
-  padding: 48px 24px 24px 48px;
 }
 ```
