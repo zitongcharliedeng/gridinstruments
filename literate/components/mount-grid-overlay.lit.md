@@ -114,6 +114,7 @@ export function mountGridOverlay(
               <span class="gi-checkbox"><input type="checkbox" id="qwerty-overlay-toggle" checked /><span class="gi-check"></span></span>
               <span style="color:#fff">COMPUTER KEYBOARD LABELS</span>
             </label>
+            <button id="label-layout-mode" style="font-family:var(--font);font-size:10px;background:var(--bg);color:var(--fg);border:1px solid var(--border);padding:2px 6px;cursor:pointer;margin-left:8px;" value="qwerty">QWERTY</button>
           </div>
         </div>
       ),

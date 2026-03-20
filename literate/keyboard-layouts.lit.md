@@ -316,9 +316,22 @@ export function formatNoteWithOctavePrefix(midi: number): string {
 
 ## Key Mapping Queries and Display Labels
 
-`getAllMappedKeys` and `isKeyMapped` query the default (ANSI) layout. `codeToLabel` converts a W3C key code to a short display string for the QWERTY overlay — letter keys become single uppercase letters, digit keys become the digit character, and punctuation keys use their printed symbol.
+`getAllMappedKeys` and `isKeyMapped` query the default (ANSI) layout. `codeToLabel` converts a W3C key code to a short display string for the keyboard overlay. It accepts an optional `labelLayout` parameter: `'qwerty'` (default) uses standard US labels, `'dvorak'` remaps letter keys to Dvorak positions. Digit keys, numpad keys, and punctuation use their printed symbol.
 
 ``` {.typescript file=_generated/lib/keyboard-layouts.ts}
+export type LabelLayout = 'qwerty' | 'dvorak';
+
+const DVORAK_MAP: Record<string, string> = {
+  KeyQ: "'", KeyW: ',', KeyE: '.', KeyR: 'P', KeyT: 'Y',
+  KeyY: 'F', KeyU: 'G', KeyI: 'C', KeyO: 'R', KeyP: 'L',
+  KeyA: 'A', KeyS: 'O', KeyD: 'E', KeyF: 'U', KeyG: 'I',
+  KeyH: 'D', KeyJ: 'H', KeyK: 'T', KeyL: 'N',
+  KeyZ: ';', KeyX: 'Q', KeyC: 'J', KeyV: 'K',
+  KeyB: 'X', KeyN: 'B', KeyM: 'M',
+  Semicolon: 'S', Quote: '-', Comma: 'W', Period: 'V', Slash: 'Z',
+  Minus: '[', Equal: ']', BracketLeft: '/', BracketRight: '=',
+};
+
 export function getAllMappedKeys(): string[] {
   return Object.keys(KEYBOARD_VARIANTS[0].keyMap);
 }
@@ -327,7 +340,8 @@ export function isKeyMapped(code: string): boolean {
   return code in KEYBOARD_VARIANTS[0].keyMap;
 }
 
-export function codeToLabel(code: string): string {
+export function codeToLabel(code: string, labelLayout: LabelLayout = 'qwerty'): string {
+  if (labelLayout === 'dvorak' && code in DVORAK_MAP) return DVORAK_MAP[code];
   if (/^Key[A-Z]$/.test(code)) return code.slice(3);
   if (/^Digit[0-9]$/.test(code)) return code.slice(5);
   if (/^Numpad[0-9]$/.test(code)) return 'N' + code.slice(6);
