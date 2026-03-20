@@ -3,7 +3,7 @@
 DComposeApp — the main application class managing synth, visualizer, MIDI, keyboard/pointer input, and all UI wiring.
 
 ``` {.typescript file=_generated/app-core.ts}
-import { getLayout, KEYBOARD_VARIANTS, KeyboardLayout, codeToLabel, type LabelLayout } from './lib/keyboard-layouts';
+import { getLayout, KEYBOARD_VARIANTS, KeyboardLayout, codeToLabel, isDvorakLayout, type LabelLayout } from './lib/keyboard-layouts';
 import { Synth, WaveformType, FIFTH_MIN, FIFTH_MAX, FIFTH_DEFAULT, findNearestMarker, TUNING_MARKERS } from './lib/synth';
 import { KeyboardVisualizer } from './lib/keyboard-visualizer';
 import { NoteHistoryVisualizer } from './lib/note-history-visualizer';
@@ -115,7 +115,6 @@ The second group of private fields covers DOM references and UI state: canvas el
     pressureMode: 'gi_pressure_mode',
     timbreReverse: 'gi_timbre_reverse',
     dpi: 'gi_dpi',
-    labelLayout: 'gi_label_layout',
   } as const;
 
   private loadSetting(key: keyof typeof DComposeApp.STORAGE_KEYS, fallback: string): string {
@@ -602,6 +601,7 @@ The keyboard layout selector auto-detects ISO vs ANSI by probing the Keyboard AP
       if (savedLayout) {
         this.layoutSelect.value = savedLayout;
         this.currentLayout = getLayout(savedLayout);
+        this.labelLayout = isDvorakLayout(savedLayout) ? 'dvorak' : 'qwerty';
       } else {
         this.currentLayout = getLayout('ansi');
         this.layoutSelect.value = 'ansi';
@@ -627,10 +627,11 @@ The keyboard layout selector auto-detects ISO vs ANSI by probing the Keyboard AP
             const val = newVal[0]?.value;
             if (val) {
               this.currentLayout = getLayout(val);
+              this.labelLayout = isDvorakLayout(val) ? 'dvorak' : 'qwerty';
               this.saveSetting('layout', val);
               const qToggle = getElementOrNull('qwerty-overlay-toggle', HTMLInputElement);
               if (qToggle?.checked) {
-                this.visualizer?.setQwertyLabels(this.buildQwertyLabels());
+                this.visualizer?.setQwertyLabels(this.buildKeyboardLabels());
                 this.visualizer?.render();
               }
             }
@@ -1334,12 +1335,12 @@ The QWERTY overlay toggle renders physical key labels (Q, W, E, R...) on the gri
     const qwertyToggle = getElementOrNull('qwerty-overlay-toggle', HTMLInputElement);
     if (qwertyToggle) {
       if (qwertyToggle.checked) {
-        this.visualizer?.setQwertyLabels(this.buildQwertyLabels());
+        this.visualizer?.setQwertyLabels(this.buildKeyboardLabels());
         this.visualizer?.render();
       }
       qwertyToggle.addEventListener('change', () => {
         if (qwertyToggle.checked) {
-          this.visualizer?.setQwertyLabels(this.buildQwertyLabels());
+          this.visualizer?.setQwertyLabels(this.buildKeyboardLabels());
         } else {
           this.visualizer?.setQwertyLabels(new Map());
         }
@@ -1347,20 +1348,6 @@ The QWERTY overlay toggle renders physical key labels (Q, W, E, R...) on the gri
       });
     }
 
-    const LABEL_LAYOUTS: { value: string; label: string }[] = [
-      { value: 'qwerty', label: 'QWERTY' },
-      { value: 'dvorak', label: 'DVORAK' },
-    ];
-    const savedLabelLayout = this.loadSetting('labelLayout', 'qwerty');
-    this.labelLayout = (savedLabelLayout === 'dvorak') ? 'dvorak' : 'qwerty';
-    setupCyclingButton('label-layout-mode', LABEL_LAYOUTS, savedLabelLayout, (mode) => {
-      this.labelLayout = mode as LabelLayout;
-      this.saveSetting('labelLayout', mode);
-      if (qwertyToggle?.checked) {
-        this.visualizer?.setQwertyLabels(this.buildQwertyLabels());
-        this.visualizer?.render();
-      }
-    });
 
     window.addEventListener('blur', () => { this.stopAllNotes(); });
     document.addEventListener('visibilitychange', () => {
@@ -2399,12 +2386,12 @@ Calibration mode shows a banner instructing the user to play all reachable notes
   }
 ```
 
-`buildQwertyLabels` maps each physical key code in the current layout to its printable label (e.g. `KeyQ` becomes `Q`). The resulting map is keyed by grid cell ID (`coordX_coordY`) so the visualizer can render the label on the correct cell.
+`buildKeyboardLabels` maps each physical key code in the current layout to its printable label (e.g. `KeyQ` becomes `Q`). The resulting map is keyed by grid cell ID (`coordX_coordY`) so the visualizer can render the label on the correct cell.
 
 ``` {.typescript file=_generated/app-core.ts}
   private labelLayout: LabelLayout = 'qwerty';
 
-  private buildQwertyLabels(): Map<string, string> {
+  private buildKeyboardLabels(): Map<string, string> {
     const map = new Map<string, string>();
     for (const [code, coord] of Object.entries(this.currentLayout.keyMap)) {
       const label = codeToLabel(code, this.labelLayout);

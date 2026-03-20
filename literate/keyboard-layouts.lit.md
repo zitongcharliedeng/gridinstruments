@@ -171,6 +171,8 @@ const LAYOUTS_RAW: {
   { id: '65pct',      name: '65% (no F-row)',           hasIntlBackslash: false, hasBackslash: true,  hasNumpad: false, excludeKeys: SIXTY_FIVE_PCT_EXCLUDE },
   { id: '60pct',      name: '60% (compact)',            hasIntlBackslash: false, hasBackslash: true,  hasNumpad: false, excludeKeys: SIXTY_PCT_EXCLUDE },
   { id: '60pct-iso',  name: '60% ISO',                 hasIntlBackslash: true,  hasBackslash: true,  hasNumpad: false, excludeKeys: SIXTY_PCT_EXCLUDE },
+  { id: 'dvorak',     name: 'ANSI (Dvorak)',            hasIntlBackslash: false, hasBackslash: true,  hasNumpad: false },
+  { id: 'dvorak-iso', name: 'ISO (Dvorak)',             hasIntlBackslash: true,  hasBackslash: true,  hasNumpad: false },
 ];
 
 export const KEYBOARD_VARIANTS: KeyboardLayout[] = LAYOUTS_RAW.map(raw => ({
@@ -184,6 +186,10 @@ export const layouts: Record<string, KeyboardLayout> = Object.fromEntries(
 
 export function getLayout(id: string): KeyboardLayout {
   return layouts[id] ?? KEYBOARD_VARIANTS[0];
+}
+
+export function isDvorakLayout(id: string): boolean {
+  return id.startsWith('dvorak');
 }
 ```
 
