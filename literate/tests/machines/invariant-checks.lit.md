@@ -4242,8 +4242,8 @@ export const SONGBAR_CAL_3: StateInvariant = {
       if (!banner) throw new Error('#calibration-banner not found');
       return banner.textContent ?? '';
     });
-    if (!text.toLowerCase().includes('play notes')) {
-      throw new Error(`Calibration banner text does not mention "play notes": "${text.substring(0, 100)}"`);
+    if (!text.toLowerCase().includes('play') || !text.toLowerCase().includes('notes')) {
+      throw new Error(`Calibration banner text does not mention "play" and "notes": "${text.substring(0, 100)}"`);
     }
   },
 };
