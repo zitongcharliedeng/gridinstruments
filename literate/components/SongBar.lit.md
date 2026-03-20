@@ -49,6 +49,16 @@ export function SongBar(props: SongBarProps): JSX.Element {
     props.onMaxKeysChange(val);
   };
 
+  const handleFileUpload = (e: Event): void => {
+    const input = e.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (file && file.name.endsWith('.mid')) {
+      const songBar = document.getElementById('song-bar');
+      if (songBar) songBar.dispatchEvent(new CustomEvent('midi-file-upload', { detail: file, bubbles: true }));
+    }
+    input.value = '';
+  };
+
   return (
     <div id="song-bar">
 
@@ -71,6 +81,19 @@ export function SongBar(props: SongBarProps): JSX.Element {
             onBlur={() => { props.onSearchBlur(); }}
           />
         </div>
+        <input
+          type="file"
+          id="midi-file-input"
+          accept=".mid,.midi"
+          style="display:none;"
+          onChange={handleFileUpload}
+        />
+        <button
+          style="font-family:var(--font);font-size:9px;background:none;color:var(--dim);border:1px solid var(--border);padding:2px 4px;cursor:pointer;flex-shrink:0;"
+          onClick={() => { document.getElementById('midi-file-input')?.click(); }}
+        >
+          <i data-lucide="upload" style="width:10px;height:10px;" />
+        </button>
         <div
           id="midi-search-results"
           style="position:absolute;top:100%;left:0;min-width:280px;max-height:300px;overflow-y:auto;background:var(--bg);border:1px solid var(--border);z-index:25;display:none;"

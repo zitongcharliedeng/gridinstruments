@@ -1259,10 +1259,12 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
      const gridCellWidthPx =
        (Math.abs(geometry.cellHv1.x) + Math.abs(geometry.cellHv2.x)) * 2;
 
-     const TARGET_KEYS_VISIBLE = 10;
+     const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+     const TARGET_KEYS_VISIBLE = isTouch ? 14 : 10;
+     const maxDefault = isTouch ? 0.75 : 1.0;
      const viewportBasedZoom = window.innerWidth / (gridCellWidthPx * TARGET_KEYS_VISIBLE);
      const dpiBasedZoom = pianoKeyPx / gridCellWidthPx;
-     this.defaultZoom = Math.min(dpiBasedZoom, viewportBasedZoom, 1.0);
+     this.defaultZoom = Math.min(dpiBasedZoom, viewportBasedZoom, maxDefault);
      const savedZoom = this.loadSetting('zoom', this.defaultZoom.toString());
      if (this.zoomSlider) {
        this.zoomSlider.value = savedZoom;
@@ -1606,6 +1608,14 @@ Drag-and-drop MIDI file loading lets users drop a `.mid` file anywhere on the pa
         if (actor) actor.send({ type: 'LOAD_FAILED', error: msg });
       });
     });
+
+    document.body.addEventListener('midi-file-upload', ((e: CustomEvent<File>) => {
+      const file = e.detail;
+      const songTitle = file.name.replace(/\.(mid|midi)$/i, '');
+      file.arrayBuffer().then((buffer) => {
+        this.loadMidiFromBuffer(buffer, songTitle);
+      }).catch(() => { /* handled by game actor */ });
+    }) as EventListener);
 ```
 
 The MIDI search input queries multiple online MIDI repositories via `searchAllAdapters` with 300ms debounce. Results render as clickable rows that fetch and load the selected file directly into the game engine.
