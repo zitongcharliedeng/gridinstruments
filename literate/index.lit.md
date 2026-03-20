@@ -462,7 +462,7 @@ buttons that invert on hover.
       100% { background-position: -100% 0; }
     }
     #vis-overlay {
-      padding: 8px 12px 8px 48px;
+      padding: 8px 48px 8px 12px;
       bottom: auto;
       min-height: 100%;
     }

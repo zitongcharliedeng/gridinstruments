@@ -149,7 +149,7 @@ export class MidiInput {
 
 ## Channel Mode
 
-The channel mode controls how multi-channel MIDI data is routed. In `omni` and `chPerNote` modes all channels pass through; the distinction is semantic — callers use the channel field differently. In `chPerRow` mode only channels 1–4 are passed, mapping to the four physical keyboard rows.
+The channel mode controls how multi-channel MIDI data is routed. All three modes pass all 16 MIDI channels; the distinction is semantic — callers use the channel field differently. `omni` treats all input as one voice, `chPerNote` maps channel to per-note identity (MPE), and `chPerRow` maps channel to a physical row on the controller (e.g. LinnStrument uses channels 1–8 for 8 rows).
 
 ``` {.typescript file=_generated/lib/midi-input.ts}
   setChannelMode(mode: MidiChannelMode): void {
@@ -180,10 +180,6 @@ Polyphonic Aftertouch (0xA0) is the per-note pressure message used by MPE instru
     const channel = (statusByte & 0x0F) + 1; // 1-indexed
     const note = data[1];
     const velocity = data.length > 2 ? data[2] : 0;
-
-    if (this.channelMode !== 'omni' && this.channelMode !== 'chPerNote') {
-      if (channel < 1 || channel > 4) return;
-    }
 
     if (type === 0x90 && velocity > 0) {
       for (const cb of this.noteOnCallbacks) cb(note, velocity, channel, deviceId);
