@@ -134,7 +134,7 @@ function findCornerRoot(
     const cx = noteButtons.reduce((s, b) => s + b.x, 0) / noteButtons.length;
     const cy = noteButtons.reduce((s, b) => s + b.y, 0) / noteButtons.length;
 
-    const margin = 20;
+    const margin = 5;
     const allOnScreen = noteButtons.every(
       b => b.x >= margin && b.x <= width - margin && b.y >= margin && b.y <= height - margin,
     );
