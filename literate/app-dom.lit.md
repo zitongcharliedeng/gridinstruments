@@ -62,7 +62,6 @@ export function createSelectAtSlot(
       select.setAttribute(key, val);
     }
   }
-  hideNativeSelect(select);
   for (const opt of options) {
     const option = document.createElement('option');
     option.value = opt.value;

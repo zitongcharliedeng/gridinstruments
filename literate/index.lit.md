@@ -1021,8 +1021,6 @@ styling.
     }
 
 
-    .slider-track select { flex: 1; min-width: 0; }
-    #wave-select-slot, #layout-select-slot, #mpe-output-select-slot { flex: 1; min-width: 0; display: inline-flex; }
 
 
     #instructions {
