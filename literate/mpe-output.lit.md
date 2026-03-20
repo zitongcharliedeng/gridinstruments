@@ -15,7 +15,7 @@ export class MpeOutput {
   private freeChannels: number[];
   private channelByNoteId = new Map<string, number>();
   private _enabled = false;
-  private _bendRange = 48;
+  private _bendRange = 24;
 
   constructor() {
     this.freeChannels = [];

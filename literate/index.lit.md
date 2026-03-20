@@ -404,8 +404,6 @@ the overlay, and inverts to black-on-white while the overlay is open.
 
      .grid-cog {
        position: absolute;
-       top: 8px;
-       left: 8px;
        z-index: 15;
        width: 32px;
        height: 32px;
@@ -419,6 +417,8 @@ the overlay, and inverts to black-on-white while the overlay is open.
        justify-content: center;
        font-family: var(--font);
      }
+     #grid-settings-btn { top: 8px; left: 8px; }
+     #vis-settings-btn { top: 4px; right: 4px; }
      .grid-cog:hover { color: var(--fg); border-color: var(--accent); }
       .grid-cog.active { color: var(--bg); background: var(--fg); border-color: var(--fg); }
 ```
@@ -467,7 +467,7 @@ buttons that invert on hover.
       min-height: 100%;
     }
     #vis-overlay .overlay-section { margin-left: 0; }
-    .hidden { display: none; }
+    .hidden { display: none !important; pointer-events: none !important; }
 
     #mpe-output-select {
       position: absolute !important;
@@ -915,7 +915,7 @@ label+input pairs in the INPUT section.
        flex-shrink: 0;
        vertical-align: middle;
      }
-    .slider-info-btn svg { width: var(--icon-lg); height: var(--icon-lg); display: block; flex-shrink: 0; }
+    .slider-info-btn svg { width: var(--icon-sm); height: var(--icon-sm); display: block; flex-shrink: 0; }
     .slider-info-btn:hover { opacity: 1; color: var(--accent, #4af); border-color: var(--accent, #4af); }
     .tuning-slider-area .slider-info-btn {
       position: absolute;
@@ -1203,7 +1203,7 @@ bottom border; `data-*` attributes declare the min/max/default heights and the
     <!-- Visualiser panel -->
     <div id="visualiser-panel">
       <canvas id="history-canvas" height="120"></canvas>
-      <button id="vis-settings-btn" class="grid-cog icon-btn icon-md" style="position:absolute;top:4px;right:4px;z-index:15;"><i data-lucide="settings"></i></button>
+      <button id="vis-settings-btn" class="grid-cog icon-btn icon-md"><i data-lucide="settings"></i></button>
       <div id="vis-overlay-mount"></div>
       <div class="panel-resize-handle-wrap">
          <div class="panel-resize-handle" tabindex="0" role="separator" aria-orientation="horizontal" aria-label="Resize visualiser" data-target="visualiser-panel" data-min="60" data-max="400" data-default="120" data-key="gi_visualiser_h" data-hidden-key="gi_history_hidden"><span class="grip-lines"><span class="grip-line"></span><span class="grip-line"></span><span class="grip-line"></span></span><span class="handle-label">VISUALISER</span><span class="grip-lines"><span class="grip-line"></span><span class="grip-line"></span><span class="grip-line"></span></span></div>

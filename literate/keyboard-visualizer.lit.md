@@ -1067,6 +1067,8 @@ for negative, and **vertically centered** for octave zero.
 ``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
     const drawOctavePrefix = (noteCenter: number): void => {
       const savedFont = this.ctx.font;
+      const savedAlign = this.ctx.textAlign;
+      const savedBaseline = this.ctx.textBaseline;
       this.ctx.font = `bold ${fontSize}px "JetBrains Mono", monospace`;
       const nameW = this.ctx.measureText(noteName).width;
       const octFont = Math.max(6, fontSize * 0.45);
@@ -1076,7 +1078,8 @@ for negative, and **vertically centered** for octave zero.
       const octY = octave > 0 ? noteCenter - fontSize * 0.3 : octave < 0 ? noteCenter + fontSize * 0.3 : noteCenter;
       this.ctx.fillText(octStr, x - nameW / 2 - 1, octY);
       this.ctx.font = savedFont;
-      this.ctx.textAlign = 'center';
+      this.ctx.textAlign = savedAlign;
+      this.ctx.textBaseline = savedBaseline;
     };
 
     if (hasBracket && cellMin > 30) {
@@ -1116,23 +1119,35 @@ octave prefix drawn at controlled position using the same modular functions.
 ### QWERTY key overlay
 
 When QWERTY labels are enabled (for beginner key discovery), each mapped cell
-shows its keyboard shortcut as inline text to the right of the note name. The
-label uses a smaller font size and dimmer color to avoid competing with the
-note name while remaining readable at any skew angle.
+shows its keyboard shortcut as a keycap badge in the top-right quadrant of
+the cell. The badge is a sharp-cornered rectangle (matching the project's
+no-border-radius design language) with a single letter inside, styled to
+look like a physical keycap without competing with the centered note name.
 
 ``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
 
     const qLabel = this.qwertyLabels.get(noteId);
     if (qLabel) {
-      this.ctx.font = `bold ${fontSize}px "JetBrains Mono", monospace`;
-      const nameW = this.ctx.measureText(noteName).width;
-      const qSize = Math.max(8, fontSize * 0.4);
-      this.ctx.font = `${qSize}px "JetBrains Mono", monospace`;
-      this.ctx.fillStyle = '#ffff00';
-      this.ctx.globalAlpha = 0.6;
-      this.ctx.textAlign = 'left';
+      const qSize = Math.max(7, fontSize * 0.38);
+      this.ctx.font = `bold ${qSize}px "JetBrains Mono", monospace`;
+      const labelW = this.ctx.measureText(qLabel).width;
+      const padX = 2;
+      const padY = 1;
+      const boxW = labelW + padX * 2;
+      const boxH = qSize + padY * 2;
+      const boxX = x + cellMin * 0.15;
+      const boxY = y - cellMin * 0.3;
+      this.ctx.globalAlpha = 0.5;
+      this.ctx.fillStyle = '#333';
+      this.ctx.fillRect(boxX - boxW / 2, boxY - boxH / 2, boxW, boxH);
+      this.ctx.strokeStyle = '#888';
+      this.ctx.lineWidth = 0.5;
+      this.ctx.strokeRect(boxX - boxW / 2, boxY - boxH / 2, boxW, boxH);
+      this.ctx.fillStyle = '#fff';
+      this.ctx.globalAlpha = 0.8;
+      this.ctx.textAlign = 'center';
       this.ctx.textBaseline = 'middle';
-      this.ctx.fillText(qLabel, x + nameW / 2 + 2, y);
+      this.ctx.fillText(qLabel, boxX, boxY);
       this.ctx.globalAlpha = 1;
     }
   }

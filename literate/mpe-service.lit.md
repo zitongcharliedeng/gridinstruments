@@ -37,7 +37,7 @@ export type MPEListener = (voices: MPEVoice[]) => void;
 export const DEFAULT_MPE_SETTINGS: MPESettings = {
   masterChannel: 1,
   memberChannelCount: 15,
-  pitchBendRange: 48,
+  pitchBendRange: 24,
   pressureMode: 'channel-at',
   pressureCC: 11,
   timbreCC: 74,

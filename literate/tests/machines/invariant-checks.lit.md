@@ -1209,28 +1209,28 @@ export const iscMpe2Check: StateInvariant = {
       mpe.noteOn('n1', 60, 0.8);
       sent.length = 0;
 
-      mpe.sendPitchBend('n1', 24);
-      const bend24 = [...sent[0]];
+      mpe.sendPitchBend('n1', 12);
+      const bendHalf = [...sent[0]];
       sent.length = 0;
 
       mpe.sendPitchBend('n1', 0);
       const bendCenter = [...sent[0]];
       sent.length = 0;
 
-      mpe.sendPitchBend('n1', 48);
+      mpe.sendPitchBend('n1', 24);
       const bendMaxUp = [...sent[0]];
       sent.length = 0;
 
-      mpe.sendPitchBend('n1', -48);
+      mpe.sendPitchBend('n1', -24);
       const bendMaxDown = [...sent[0]];
 
-      return { bend24, bendCenter, bendMaxUp, bendMaxDown };
+      return { bendHalf, bendCenter, bendMaxUp, bendMaxDown };
     });
 
-    expect(result.bend24[0] & 0xF0).toBe(0xE0);
+    expect(result.bendHalf[0] & 0xF0).toBe(0xE0);
 
-    expect(result.bend24[1]).toBe(127);
-    expect(result.bend24[2]).toBe(95);
+    expect(result.bendHalf[1]).toBe(127);
+    expect(result.bendHalf[2]).toBe(95);
 
     expect(result.bendCenter[1]).toBe(0);
     expect(result.bendCenter[2]).toBe(64);
@@ -1389,7 +1389,7 @@ export const iscMpe5Check: StateInvariant = {
 
     expect(sent[10]).toEqual([0xB0, 101, 0]);   // RPN MSB = 0
     expect(sent[11]).toEqual([0xB0, 100, 0]);   // RPN LSB = 0 (PBS)
-    expect(sent[12]).toEqual([0xB0, 6, 48]);    // 48 semitones
+    expect(sent[12]).toEqual([0xB0, 6, 24]);    // 24 semitones
     expect(sent[13]).toEqual([0xB0, 38, 0]);    // 0 cents
   },
 };
@@ -1446,7 +1446,7 @@ export const iscSvc1Check: StateInvariant = {
     });
     expect(settings.masterChannel).toBe(1);
     expect(settings.memberChannelCount).toBe(15);
-    expect(settings.pitchBendRange).toBe(48);
+    expect(settings.pitchBendRange).toBe(24);
     expect(settings.pressureMode).toBe('channel-at');
     expect(settings.timbreCC).toBe(74);
     expect(settings.pressureCC).toBe(11);
@@ -1465,7 +1465,7 @@ export const iscSvc2Check: StateInvariant = {
     });
     expect(settings.timbreCC).toBe(1);
     expect(settings.masterChannel).toBe(1);
-    expect(settings.pitchBendRange).toBe(48);
+    expect(settings.pitchBendRange).toBe(24);
     expect(settings.pressureMode).toBe('channel-at');
   },
 };

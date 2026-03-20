@@ -1041,29 +1041,6 @@ MIDI expression settings let the user configure pitch bend range (2-48 semitones
       });
     }
 
-    const pbRangeExprInput = getElementOrNull('midi-pb-range-expr', HTMLInputElement);
-    if (pbRangeExprInput) {
-      pbRangeExprInput.value = this.midiPitchBendRange.toString();
-      pbRangeExprInput.addEventListener('change', () => {
-        const val = parseInt(pbRangeExprInput.value, 10);
-        if (val >= 2 && val <= 96) {
-          this.midiPitchBendRange = val;
-          this.saveSetting('midiPbRange', val.toString());
-        } else {
-          pbRangeExprInput.value = this.midiPitchBendRange.toString();
-        }
-      });
-      pbRangeExprInput.addEventListener('blur', () => {
-        const val = parseInt(pbRangeExprInput.value, 10);
-        const clamped = Math.max(0, Math.min(96, val));
-        pbRangeExprInput.value = clamped.toString();
-        if (clamped >= 2 && clamped <= 48) {
-          this.midiPitchBendRange = clamped;
-          this.saveSetting('midiPbRange', clamped.toString());
-        }
-      });
-    }
-
 ```
 
 Each expression dimension (bend, velocity, pressure, timbre) has a checkbox that
@@ -2020,7 +1997,7 @@ The idle timer controls the visibility of decorative elements (chord graffiti, s
       if (gs !== 'playing') {
         this.setIdleState(true);
       }
-    }, 3000);
+    }, 10000);
   }
 
   private setIdleState(idle: boolean): void {
