@@ -168,9 +168,6 @@ range. The banner with confirm/cancel actions appears when calibration is active
       <span id="song-bar-hint" style="display:none;" />
 
       <div id="song-bar-calibrate" style="margin-left:auto;max-width:320px;display:inline-flex;align-items:center;gap:4px;overflow:hidden;">
-        <button class="slider-info-btn" data-info="calibrate">
-          <i data-lucide="info" />
-        </button>
         <button class="slider-info-btn" data-info="maxkeys"><i data-lucide="info" /></button>
         <label style="display:inline-flex;align-items:center;gap:2px;font-family:var(--font);font-size:9px;color:var(--dim);">
           Max Keys
@@ -184,6 +181,7 @@ range. The banner with confirm/cancel actions appears when calibration is active
             onChange={handleMaxKeysChange}
           />
         </label>
+        <button class="slider-info-btn" data-info="calibrate"><i data-lucide="info" /></button>
         <button
           id="calibrate-btn"
           style="font-family:var(--font);font-size:9px;background:none;color:var(--dim);border:1px solid var(--border);padding:2px 8px;cursor:pointer;"
