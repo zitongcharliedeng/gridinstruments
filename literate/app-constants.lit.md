@@ -352,8 +352,8 @@ ${srcLink('calibration.lit.md', 'Source: calibration.lit.md — range calibratio
   maxkeys: `
 <h2>Max Simultaneous Keys</h2>
 <p>The maximum number of keys your keyboard can register at once (keyboard rollover). Most laptop keyboards support 3-6 simultaneous keys. Gaming keyboards support 10+. MIDI controllers have no limit.</p>
-<p>The game engine uses this to validate chord difficulty — chords requiring more keys than your max will be flagged. Default is 8 (ten fingers minus thumbs).</p>
-<p>Changing this during a song will restart the beatmap to recalculate note groupings.</p>
+<p>The game engine uses this to limit chord size — groups with more notes than your max will be trimmed. Default is 8 (ten fingers minus thumbs).</p>
+<p>Changes take effect on the next song load. Reload the current song to apply new settings.</p>
 ${srcLink('game-engine.lit.md', 'Source: game-engine.lit.md — note grouping by max keys')}`,
 
   fullscreen: `
