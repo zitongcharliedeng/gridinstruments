@@ -112,7 +112,7 @@ export function mountGridOverlay(
           <div class="slider-track" style="margin-top: 18px">
             <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;">
               <span class="gi-checkbox"><input type="checkbox" id="qwerty-overlay-toggle" checked /><span class="gi-check"></span></span>
-              <span style="color:#fff">KEY LABELS</span>
+              <span style="color:#fff">COMPUTER KEYBOARD LABELS</span>
             </label>
           </div>
         </div>

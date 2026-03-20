@@ -523,6 +523,7 @@ The MIDI device panel renders a list of connected controllers with enable/disabl
       { value: 'bass', text: 'BASS' },
       { value: 'bright', text: 'BRIGHT' },
       { value: 'warm', text: 'WARM' },
+      { value: 'guitar', text: 'GUITAR' },
     ], {});
 
     createSelectAtSlot('layout-select-slot', 'layout-select', [], {});

@@ -19,7 +19,7 @@ oscillator, timbre filter, gain envelope, grid coordinates (for live re-tuning),
 and a per-voice vibrato gain node.
 
 ``` {.typescript file=_generated/lib/synth.ts}
-export type WaveformType = 'sine' | 'square' | 'sawtooth' | 'triangle' | 'pluck' | 'organ' | 'brass' | 'pad' | 'bell' | 'bass' | 'bright' | 'warm';
+export type WaveformType = 'sine' | 'square' | 'sawtooth' | 'triangle' | 'pluck' | 'organ' | 'brass' | 'pad' | 'bell' | 'bass' | 'bright' | 'warm' | 'guitar';
 
 const CUSTOM_WAVES: Record<string, { real: number[]; imag: number[] }> = {
   pluck:  { real: [0,0,0,0,0,0,0,0], imag: [0,1,0.5,0.3,0.15,0.08,0.04,0.02] },
@@ -30,6 +30,7 @@ const CUSTOM_WAVES: Record<string, { real: number[]; imag: number[] }> = {
   bass:   { real: [0,0,0,0,0], imag: [0,1,0.8,0.4,0.1] },
   bright: { real: [0,0,0,0,0,0,0,0,0,0,0,0,0], imag: [0,1,0.9,0.8,0.7,0.6,0.5,0.4,0.3,0.2,0.15,0.1,0.05] },
   warm:   { real: [0,0,0,0,0,0], imag: [0,1,0.5,0.15,0.04,0.01] },
+  guitar: { real: [0,0,0,0,0,0,0,0,0,0,0,0,0], imag: [0,1,0.7,0.45,0.35,0.2,0.15,0.1,0.08,0.05,0.03,0.02,0.01] },
 };
 
 function isNativeWaveform(w: string): w is OscillatorType {
