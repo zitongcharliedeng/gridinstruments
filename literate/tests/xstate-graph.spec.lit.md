@@ -1085,6 +1085,14 @@ The golden screenshot tests compare rendered pixels against stored reference ima
     await page.locator('#calibrate-cancel').click();
   });
 
+  test('SMOKE-6: Vis overlay opens with TIME and RANGE sliders', async ({ page }) => {
+    await page.locator('#vis-settings-btn').click();
+    await page.waitForTimeout(200);
+    await expect(page.locator('#vis-time-slider')).toBeAttached();
+    await expect(page.locator('#vis-range-slider')).toBeAttached();
+    await page.keyboard.press('Escape');
+  });
+
   test('SMOKE-5: Wave dropdown opens and shows options', async ({ page }) => {
     await page.locator('#grid-settings-btn').click();
     await page.waitForTimeout(200);
