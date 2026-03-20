@@ -356,8 +356,8 @@ thicken and fully brighten so they remain visible without a hover state.
     .panel-resize-handle:hover .handle-label { color: var(--fg); }
     @media (hover: none) and (pointer: coarse) {
       .panel-resize-handle { min-height: 36px; touch-action: none; border-color: #444; }
-      .grip-line { height: 2px; background: var(--fg); }
-      .handle-label { color: var(--fg); opacity: 1; font-size: 10px; }
+      .panel-resize-handle .grip-line { height: 2px; background: var(--fg); }
+      .panel-resize-handle .handle-label { color: var(--fg); opacity: 1; font-size: 10px; }
     }
     #history-canvas {
       display: block;
