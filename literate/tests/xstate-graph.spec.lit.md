@@ -1085,6 +1085,17 @@ The golden screenshot tests compare rendered pixels against stored reference ima
     await page.locator('#calibrate-cancel').click();
   });
 
+  test('SMOKE-5: Wave dropdown opens and shows options', async ({ page }) => {
+    await page.locator('#grid-settings-btn').click();
+    await page.waitForTimeout(200);
+    const ssMain = page.locator('.ss-main').first();
+    await ssMain.click();
+    await page.waitForTimeout(300);
+    const optCount = await page.locator('.ss-content .ss-option').first().count();
+    expect(optCount).toBeGreaterThan(0);
+    await page.keyboard.press('Escape');
+  });
+
   test('SMOKE-4: Info buttons are 18x18 squares', async ({ page }) => {
     await page.locator('#grid-settings-btn').click();
     await page.waitForTimeout(200);
