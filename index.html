@@ -161,6 +161,7 @@
       font-size: 11px;
       flex-wrap: wrap;
       margin-left: auto;
+      max-width: 700px;
     }
     #song-bar-calibrate,
     #song-bar-search,
@@ -195,6 +196,7 @@
       height: 120px;
     }
     #visualiser-panel.collapsed { height: 0 !important; overflow: visible; border-bottom-width: 0; }
+    #visualiser-panel.collapsed #vis-settings-btn { display: none; }
     .panel-resize-handle-wrap {
       position: absolute;
       left: 50%;
@@ -236,8 +238,8 @@
     .panel-resize-handle:hover .handle-label { color: var(--fg); }
     @media (hover: none) and (pointer: coarse) {
       .panel-resize-handle { min-height: 36px; touch-action: none; border-color: #444; }
-      .grip-line { height: 2px; background: var(--fg); }
-      .handle-label { color: var(--fg); opacity: 1; font-size: 10px; }
+      .panel-resize-handle .grip-line { height: 2px; background: var(--fg); }
+      .panel-resize-handle .handle-label { color: var(--fg); opacity: 1; font-size: 10px; }
     }
     #history-canvas {
       display: block;
@@ -273,8 +275,6 @@
 
      .grid-cog {
        position: absolute;
-       top: 8px;
-       left: 8px;
        z-index: 15;
        width: 32px;
        height: 32px;
@@ -288,6 +288,8 @@
        justify-content: center;
        font-family: var(--font);
      }
+     #grid-settings-btn { top: 8px; left: 8px; }
+     #vis-settings-btn { top: 4px; right: 4px; }
      .grid-cog:hover { color: var(--fg); border-color: var(--accent); }
       .grid-cog.active { color: var(--bg); background: var(--fg); border-color: var(--fg); }
 
@@ -301,6 +303,8 @@
       overflow-x: hidden;
       scrollbar-width: thin;
       scrollbar-color: var(--dim) transparent;
+      touch-action: pan-y;
+      -webkit-overflow-scrolling: touch;
     }
 
     .settings-overlay::before {
@@ -318,7 +322,13 @@
       0% { background-position: 200% 0; }
       100% { background-position: -100% 0; }
     }
-    .hidden { display: none; }
+    #vis-overlay {
+      padding: 8px 48px 8px 12px;
+      bottom: auto;
+      min-height: 100%;
+    }
+    #vis-overlay .overlay-section { margin-left: 0; }
+    .hidden { display: none !important; pointer-events: none !important; }
 
     #mpe-output-select {
       position: absolute !important;
@@ -657,20 +667,27 @@
       font-size: 11px; flex-wrap: wrap;
     }
      .slider-info-btn {
-       position: absolute;
-       left: 0; top: 50%;
-       transform: translateY(-50%);
+       position: static;
+       transform: none;
        z-index: 3;
        color: var(--dim);
        width: 18px; height: 18px;
        padding: 0;
-       display: flex; align-items: center; justify-content: center;
+       display: inline-flex; align-items: center; justify-content: center;
        border: 1px solid var(--border);
        background: var(--bg);
        opacity: 0.7;
        cursor: pointer;
+       flex-shrink: 0;
+       vertical-align: middle;
      }
+    .slider-info-btn svg { width: var(--icon-sm); height: var(--icon-sm); display: block; flex-shrink: 0; }
     .slider-info-btn:hover { opacity: 1; color: var(--accent, #4af); border-color: var(--accent, #4af); }
+    .tuning-slider-area .slider-info-btn {
+      position: absolute;
+      left: 0; top: 50%;
+      transform: translateY(-50%);
+    }
     .slider-info-btn .info-preview {
       display: none;
       position: absolute;
@@ -748,7 +765,6 @@
     }
 
 
-    .slider-track select { flex: 1; min-width: 0; }
 
 
     #instructions {
@@ -804,6 +820,8 @@
         gap: 4px;
         min-width: 0;
       }
+      .top-bar-left .slider-info-btn { display: none; }
+      #song-bar .slider-info-btn { display: none; }
       .site-title {
         font-size: 10px;
       }
@@ -865,8 +883,8 @@
       }
     }
   </style>
-  <script type="module" crossorigin src="./assets/index-U1k_koaX.js"></script>
-  <link rel="stylesheet" crossorigin href="./assets/index-DElNnJOF.css">
+  <script type="module" crossorigin src="./assets/index-BM-eJpUg.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-BiXRBHva.css">
 </head>
 <body>
   <div id="app">
@@ -881,7 +899,7 @@
     <!-- Visualiser panel -->
     <div id="visualiser-panel">
       <canvas id="history-canvas" height="120"></canvas>
-      <button id="vis-settings-btn" class="grid-cog icon-btn icon-md" style="position:absolute;top:4px;left:4px;z-index:15;"><i data-lucide="settings"></i></button>
+      <button id="vis-settings-btn" class="grid-cog icon-btn icon-md"><i data-lucide="settings"></i></button>
       <div id="vis-overlay-mount"></div>
       <div class="panel-resize-handle-wrap">
          <div class="panel-resize-handle" tabindex="0" role="separator" aria-orientation="horizontal" aria-label="Resize visualiser" data-target="visualiser-panel" data-min="60" data-max="400" data-default="120" data-key="gi_visualiser_h" data-hidden-key="gi_history_hidden"><span class="grip-lines"><span class="grip-line"></span><span class="grip-line"></span><span class="grip-line"></span></span><span class="handle-label">VISUALISER</span><span class="grip-lines"><span class="grip-line"></span><span class="grip-line"></span><span class="grip-line"></span></span></div>
