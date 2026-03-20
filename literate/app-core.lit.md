@@ -1726,7 +1726,6 @@ Keyboard input handling maps physical key codes to grid coordinates through the 
       this.visualizer?.setCalibratedRange(new Set(this.calibratedCells));
     }
     this.activeNotes.set(code, { coordX, coordY });
-    this.maxSimultaneousKeys = Math.max(this.maxSimultaneousKeys, this.activeNotes.size);
     this.trackNoteOn(effectiveCoordX, effectiveCoordY, midiNote);
     if (this.gameActor?.getSnapshot().matches('playing')) {
       this.gameActor.send({ type: 'NOTE_PRESSED', cellId: `${effectiveCoordX}_${effectiveCoordY}`, midiNote });
@@ -2064,7 +2063,7 @@ MIDI buffer loading is the shared entry point for both drag-and-drop files and s
 
       const medianMidi = computeMedianMidiNote(quantizedEvents);
 
-      let groups = buildNoteGroups(quantizedEvents);
+      let groups = buildNoteGroups(quantizedEvents, this.maxSimultaneousKeys);
 
       const range = this.calibratedRange;
       let semitones = 0;

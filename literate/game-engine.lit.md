@@ -41,7 +41,7 @@ A new group opens whenever the current event starts more than `CHORD_THRESHOLD_M
 Channel 9 (General MIDI drums) is filtered defensively; `parseMidi` already excludes drums but this guard prevents malformed inputs from breaking the grouper.
 
 ``` {.typescript file=_generated/lib/game-engine.ts}
-export function buildNoteGroups(events: NoteEvent[]): GameNoteGroup[] {
+export function buildNoteGroups(events: NoteEvent[], maxKeys = 8): GameNoteGroup[] {
   const sorted = [...events]
     .filter(e => e.channel !== 9)
     .sort((a, b) => a.startMs - b.startMs);
@@ -52,7 +52,7 @@ export function buildNoteGroups(events: NoteEvent[]): GameNoteGroup[] {
     const last = groups[groups.length - 1];
     if (last && event.startMs - last.startMs <= CHORD_THRESHOLD_MS) {
       const cellId = midiToCellId(event.midiNote);
-      if (!last.cellIds.includes(cellId)) {
+      if (!last.cellIds.includes(cellId) && last.cellIds.length < maxKeys) {
         last.cellIds.push(cellId);
         last.midiNotes.push(event.midiNote);
       }
