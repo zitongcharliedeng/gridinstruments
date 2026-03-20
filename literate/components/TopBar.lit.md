@@ -16,6 +16,7 @@ needed for it.
 
 ``` {.typescript file=_generated/components/TopBar.tsx}
 import { type JSX } from 'solid-js';
+import { InfoButton } from './InfoButton';
 
 export interface TopBarProps {
   onAbout: () => void;
@@ -70,15 +71,11 @@ export function TopBar(props: TopBarProps): JSX.Element {
           Suggest
         </a>
       </div>
-      <button class="slider-info-btn" data-info="fullscreen">
-        <i data-lucide="info" />
-      </button>
+      <InfoButton infoKey="fullscreen" />
       <button id="fullscreen-btn" class="icon-btn icon-md" onClick={onFullscreen}>
         <i data-lucide="maximize" />
       </button>
-      <button class="slider-info-btn" data-info="reset-layout">
-        <i data-lucide="info" />
-      </button>
+      <InfoButton infoKey="reset-layout" />
       <button id="reset-layout" onClick={onResetClick}>
         <span class="icon"><i data-lucide="rotate-ccw" /></span> Reset Page
       </button>

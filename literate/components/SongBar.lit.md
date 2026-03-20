@@ -12,6 +12,7 @@ manipulation inside.
 
 ``` {.typescript file=_generated/components/SongBar.tsx}
 import { createSignal, type JSX } from 'solid-js';
+import { InfoButton } from './InfoButton';
 
 export interface SongBarProps {
   onSearch: (query: string) => void;
@@ -62,9 +63,7 @@ export function SongBar(props: SongBarProps): JSX.Element {
     <div id="song-bar">
 
       <div id="song-bar-search" style="position:relative;display:inline-flex;align-items:center;gap:4px;">
-        <button class="slider-info-btn" data-info="search">
-          <i data-lucide="info" />
-        </button>
+        <InfoButton infoKey="search" />
         <div style="position:relative;display:inline-flex;align-items:center;">
           <i
             data-lucide="search"
@@ -108,9 +107,7 @@ active — the song title, progress bar, elapsed timer, and restart button.
 ``` {.typescript file=_generated/components/SongBar.tsx}
 
       <div id="song-bar-status" style="display:inline-flex;align-items:center;gap:8px;">
-        <button class="slider-info-btn" data-info="quantization">
-          <i data-lucide="info" />
-        </button>
+        <InfoButton infoKey="quantization" />
         <label style="display:inline-flex;align-items:center;gap:4px;font-size:10px;color:var(--dim);">
           Quant
           <button
@@ -168,7 +165,7 @@ range. The banner with confirm/cancel actions appears when calibration is active
       <span id="song-bar-hint" style="display:none;" />
 
       <div id="song-bar-calibrate" style="margin-left:auto;max-width:320px;display:inline-flex;align-items:center;gap:4px;overflow:hidden;">
-        <button class="slider-info-btn" data-info="maxkeys"><i data-lucide="info" /></button>
+        <InfoButton infoKey="maxkeys" />
         <label style="display:inline-flex;align-items:center;gap:2px;font-family:var(--font);font-size:9px;color:var(--dim);">
           Max Keys
           <input
@@ -181,7 +178,7 @@ range. The banner with confirm/cancel actions appears when calibration is active
             onChange={handleMaxKeysChange}
           />
         </label>
-        <button class="slider-info-btn" data-info="calibrate"><i data-lucide="info" /></button>
+        <InfoButton infoKey="calibrate" />
         <button
           id="calibrate-btn"
           style="font-family:var(--font);font-size:9px;background:none;color:var(--dim);border:1px solid var(--border);padding:2px 8px;cursor:pointer;"
