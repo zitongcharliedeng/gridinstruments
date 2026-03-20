@@ -145,7 +145,7 @@ range. The banner with confirm/cancel actions appears when calibration is active
 
       <span id="song-bar-hint" style="display:none;" />
 
-      <div id="song-bar-calibrate" style="margin-left:auto;max-width:320px;display:inline-flex;align-items:center;gap:4px;">
+      <div id="song-bar-calibrate" style="margin-left:auto;max-width:320px;display:inline-flex;align-items:center;gap:4px;overflow:hidden;">
         <button class="slider-info-btn" data-info="calibrate">
           <i data-lucide="info" />
         </button>
