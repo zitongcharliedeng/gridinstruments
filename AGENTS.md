@@ -246,6 +246,32 @@ A build break blocks everything. A structural problem blocks feature work. A bug
 
 ---
 
+## Agent Behavioral Rules (ENFORCED — read before every task)
+
+These rules exist because the agent repeatedly made the same mistakes across multiple sessions. They are not suggestions — they are hard constraints.
+
+1. **NEVER label an issue "ready for review" without browsing the DEPLOYED site** (`gridinstruments.xyz/dev`) with Playwright, taking a screenshot, and viewing it with Read tool. localhost tests are insufficient — they miss OverlayScrollbars positioning, SolidJS reactivity, and mobile rendering issues.
+
+2. **NEVER claim a fix works without checking `getBoundingClientRect()` on the DEPLOYED site.** Elements with `isVisible()=true` can still be at `top: 676px` (off-screen). Always check position, not just visibility.
+
+3. **Fix the testing harness BEFORE fixing individual bugs.** The user has said this 20+ times. Framework fixes come first because they change how everything else gets verified.
+
+4. **The agent IS the test harness.** The agent takes screenshots, views them with Read tool, and judges "does this look correct?" Coded Playwright assertions that check CSS classes are NOT real tests.
+
+5. **NEVER output empty heartbeat messages.** Every response must contain actual code changes, verified screenshots, or concrete progress. Echoing "Active" or "Working" is not work.
+
+6. **NEVER rename a function more than once.** Pick a descriptive name and commit to it immediately.
+
+7. **Read the FULL issue thread** (`gh issue view NUMBER --comments`) before ANY coding. The issue thread IS the spec.
+
+8. **Use the PAI Algorithm** (`~/.claude/PAI/Algorithm/v3.7.0.md`) for every complex task. It's installed and working — just never invoked.
+
+9. **OverlayScrollbars overrides position:absolute.** Always add `position: absolute !important` in `ui-overrides.css` for overlay elements wrapped by OverlayScrollbars.
+
+10. **SolidJS template literal class is NOT reactive.** Use `classList={{ hidden: !props.visible() }}`, never `class={\`...\${expr}\`}`.
+
+---
+
 ## Anti-patterns (Banned Behaviors)
 
 These are not structurally enforced but are project policy. Violating them creates technical debt.
