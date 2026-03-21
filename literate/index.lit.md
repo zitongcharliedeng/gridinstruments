@@ -923,6 +923,15 @@ label+input pairs in the INPUT section.
     #game-song-title { font-family: var(--font); font-size: 10px; color: var(--fg); text-transform: uppercase; letter-spacing: 0.06em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 160px; }
     #game-progress { width: 80px; height: 2px; background: var(--border); position: relative; display: inline-block; vertical-align: middle; }
     #game-quantization-badge { font-family: var(--font); font-size: 9px; color: var(--dim); text-transform: uppercase; letter-spacing: 0.06em; }
+    #song-bar-status { display: inline-flex; align-items: center; gap: 8px; }
+    #song-bar-calibrate { margin-left: auto; max-width: 320px; display: inline-flex; align-items: center; gap: 4px; overflow: hidden; }
+    #song-bar-hint { display: none; }
+    #calibrate-btn { font-family: var(--font); font-size: 9px; background: none; color: var(--dim); border: 1px solid var(--border); padding: 2px 8px; cursor: pointer; white-space: nowrap; }
+    #calibration-banner { display: none; font-family: var(--font); font-size: 9px; gap: 2px; align-items: center; white-space: nowrap; }
+    #calibration-warning { display: none; }
+    #calibration-msg { color: var(--fg); }
+    #calibrate-confirm { font-family: var(--font); font-size: 9px; background: none; color: #4f4; border: 1px solid #4f4; padding: 1px 4px; cursor: pointer; line-height: 1; }
+    #calibrate-cancel { font-family: var(--font); font-size: 9px; background: none; color: #f44; border: 1px solid #f44; padding: 1px 4px; cursor: pointer; line-height: 1; }
     #game-progress-fill { height: 100%; background: #fff; width: 0%; transition: width 0.1s linear; }
     #game-elapsed-timer { font-size: 10px; color: var(--dim); font-family: var(--font); min-width: 3ch; text-align: right; }
      .slider-info-btn {

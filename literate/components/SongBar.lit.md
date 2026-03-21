@@ -109,7 +109,7 @@ active — the song title, progress bar, elapsed timer, and restart button.
 
 ``` {.typescript file=_generated/components/SongBar.tsx}
 
-      <div id="song-bar-status" style="display:inline-flex;align-items:center;gap:8px;">
+      <div id="song-bar-status">
         <InfoButton infoKey="quantization" />
         <span style="color:var(--dim);font-size:10px;">Quant</span>
         <span id="quantization-select-slot"></span>
@@ -142,9 +142,9 @@ range. The banner with confirm/cancel actions appears when calibration is active
 
 ``` {.typescript file=_generated/components/SongBar.tsx}
 
-      <span id="song-bar-hint" style="display:none;" />
+      <span id="song-bar-hint" />
 
-      <div id="song-bar-calibrate" style="margin-left:auto;max-width:320px;display:inline-flex;align-items:center;gap:4px;overflow:hidden;">
+      <div id="song-bar-calibrate">
         <InfoButton infoKey="maxkeys" />
         <label style="display:inline-flex;align-items:center;gap:2px;font-family:var(--font);font-size:9px;color:var(--dim);">
           Max Keys
@@ -170,18 +170,16 @@ range. The banner with confirm/cancel actions appears when calibration is active
             id="calibration-banner"
             style="display:none;font-family:var(--font);font-size:9px;gap:2px;align-items:center;white-space:nowrap;"
           >
-            <span id="calibration-warning" style="display:none;" />
-            <span id="calibration-msg" style="color:var(--fg);">Confirm?</span>
+            <span id="calibration-warning" />
+            <span id="calibration-msg">Confirm?</span>
           <button
             id="calibrate-confirm"
-            style="font-family:var(--font);font-size:9px;background:none;color:#4f4;border:1px solid #4f4;padding:1px 4px;cursor:pointer;line-height:1;"
             onClick={() => { props.onCalibrateConfirm(); }}
           >
             &#x2713;
           </button>
           <button
             id="calibrate-cancel"
-            style="font-family:var(--font);font-size:9px;background:none;color:#f44;border:1px solid #f44;padding:1px 4px;cursor:pointer;line-height:1;"
             onClick={() => { props.onCalibrateCancel(); }}
           >
             &#x2717;
