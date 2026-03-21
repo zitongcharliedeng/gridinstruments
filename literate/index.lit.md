@@ -749,6 +749,11 @@ label+input pairs in the INPUT section.
     #song-bar-status { gap: 8px; }
     #song-bar-calibrate { margin-left: auto; max-width: 320px; gap: 4px; overflow: hidden; }
     #song-bar-hint { display: none; margin-left: auto; transition: opacity 2s ease-in; }
+    #ghosting-toast { display: none; position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 30; background: rgba(0,0,0,0.85); border: 1px solid var(--dim); padding: 12px 16px; font-family: var(--font); font-size: 11px; color: var(--fg); flex-direction: row; align-items: flex-start; gap: 12px; max-width: 400px; }
+    #ghosting-toast span { flex: 1; line-height: 1.5; }
+    #ghosting-toast-dismiss { background: none; border: none; color: var(--dim); font-family: var(--font); font-size: 14px; cursor: pointer; padding: 0; line-height: 1; flex-shrink: 0; }
+    #pedals-panel { height: 44px; }
+    #pedals-mount { display: contents; }
     #calibrate-btn { font-family: var(--font); font-size: 9px; background: none; color: var(--dim); border: 1px solid var(--border); padding: 2px 8px; cursor: pointer; white-space: nowrap; }
     #calibration-banner { display: none; font-family: var(--font); font-size: 9px; gap: 2px; align-items: center; white-space: nowrap; position: absolute; left: 0; top: 0; right: 0; bottom: 0; background: var(--bg); justify-content: center; }
     #calibration-warning { display: none; }
@@ -1063,11 +1068,11 @@ toggled active/inactive by the state machine on hold/release events.
 ``` {.html file=index.html}
 
     <!-- Pedals -->
-    <div id="pedals-panel" style="height:44px">
+    <div id="pedals-panel">
       <div class="panel-resize-handle-wrap pedals-handle-wrap">
          <div class="panel-resize-handle" tabindex="0" role="separator" aria-orientation="horizontal" aria-label="Resize pedals" data-target="pedals-panel" data-min="30" data-max="120" data-default="44" data-key="gi_pedals_h" data-direction="up" data-hidden-key="gi_pedals_hidden"><span class="grip-lines"><span class="grip-line"></span><span class="grip-line"></span><span class="grip-line"></span></span><span class="handle-label">PEDALS</span><span class="grip-lines"><span class="grip-line"></span><span class="grip-line"></span><span class="grip-line"></span></span></div>
       </div>
-      <div id="pedals-mount" style="display:contents"></div>
+      <div id="pedals-mount"></div>
     </div>
 
    </div>
@@ -1087,9 +1092,9 @@ strokes a hand-drawn texture.
 ``` {.html file=index.html}
 
    <!-- Keyboard rollover warning toast -->
-   <div id="ghosting-toast" style="display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:30;background:rgba(0,0,0,0.85);border:1px solid var(--dim);padding:12px 16px;font-family:var(--font);font-size:11px;color:var(--fg);flex-direction:row;align-items:flex-start;gap:12px;max-width:400px;">
-     <span style="flex:1;line-height:1.5;">Your keyboard may limit simultaneous notes. For full chords, connect a MIDI controller or use touchscreen.</span>
-     <button id="ghosting-toast-dismiss" style="background:none;border:none;color:var(--dim);font-family:var(--font);font-size:14px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;">✕</button>
+   <div id="ghosting-toast">
+     <span>Your keyboard may limit simultaneous notes. For full chords, connect a MIDI controller or use touchscreen.</span>
+     <button id="ghosting-toast-dismiss">✕</button>
    </div>
 
    <dialog id="about-dialog">
