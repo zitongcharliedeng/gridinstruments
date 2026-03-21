@@ -1919,7 +1919,7 @@ Pointer input (touch and mouse) uses the Pointer Events API for unified handling
           const rawSemitones = pitchOffset / cellWidth * 2;
           const wg = this.pointerWiggle.get(event.pointerId);
           const isActivelySliding = wg ? wg.changes >= 1 : false;
-          const semitones = isActivelySliding ? rawSemitones : 0;
+          const semitones = isActivelySliding ? rawSemitones : Math.round(rawSemitones);
 
           const timbreDirLen = Math.sqrt(cellHv2.x * cellHv2.x + cellHv2.y * cellHv2.y);
           const timbreOffset = (dx * cellHv2.x + dy * cellHv2.y) / timbreDirLen;
