@@ -475,6 +475,7 @@ buttons that invert on hover.
     }
     #vis-overlay .overlay-section { margin-left: 0; }
     .hidden { display: none !important; pointer-events: none !important; }
+    .dimmed { opacity: 0.3; pointer-events: none; transition: opacity 0.3s ease; }
 
     #mpe-output-select {
       position: absolute !important;
