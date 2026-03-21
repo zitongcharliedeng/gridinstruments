@@ -1065,6 +1065,17 @@ The golden screenshot tests compare rendered pixels against stored reference ima
     await page.keyboard.press('Escape');
   });
 
+  test('SMOKE-9: Global cog opens with volume, tuning, MIDI controls', async ({ page }) => {
+    await page.locator('#global-settings-btn').click();
+    await page.waitForTimeout(200);
+    const overlay = page.locator('#global-overlay');
+    await expect(overlay).toBeVisible();
+    await expect(page.locator('#volume-slider')).toBeAttached();
+    await expect(page.locator('#tuning-slider')).toBeAttached();
+    await expect(page.locator('#d-ref-slider')).toBeAttached();
+    await page.keyboard.press('Escape');
+  });
+
   test('SMOKE-2: Key press plays note — visualizer responds', async ({ page }) => {
     const canvas = page.locator('#keyboard-canvas');
     await expect(canvas).toBeVisible();
