@@ -65,6 +65,8 @@ export class DComposeApp {
   private pointerWiggle = new Map<number, { xs: number[]; times: number[]; lastDir: number; changes: number }>();
 
   private maxSimultaneousKeys = 8;
+  private peakKeysThisSession = 0;
+  private ghostingWarningShown = false;
 
   private vibratoRAF: number | null = null;
   private vibratoPhase = 0;
@@ -1459,6 +1461,18 @@ the tuning slider and calibrate button to prevent mid-game tuning changes.
             allTargetCellIds = allTargetCellIds.filter(id => calRange.has(id));
           }
           this.visualizer.setTargetNotes(allTargetCellIds);
+
+          if (!this.ghostingWarningShown && allTargetCellIds.length > 3 && this.peakKeysThisSession > 0 && allTargetCellIds.length > this.peakKeysThisSession) {
+            this.ghostingWarningShown = true;
+            const hint = document.getElementById('song-bar-hint');
+            if (hint) {
+              hint.style.display = '';
+              hint.style.opacity = '1';
+              hint.textContent = `This chord needs ${allTargetCellIds.length} keys — your keyboard may limit to ${this.peakKeysThisSession}. Try a MIDI controller.`;
+              setTimeout(() => { hint.style.opacity = '0'; }, 5000);
+            }
+          }
+
           const pressedMidis = new Set(ctx.pressedMidiNotes);
           if (pressedMidis.size > 0) {
             const pressedCellIds = this.visualizer.getCellIdsForMidiNotes(pressedMidis);
@@ -1736,6 +1750,7 @@ Keyboard input handling maps physical key codes to grid coordinates through the 
       this.visualizer?.setCalibratedRange(new Set(this.calibratedCells));
     }
     this.activeNotes.set(code, { coordX, coordY });
+    this.peakKeysThisSession = Math.max(this.peakKeysThisSession, this.activeNotes.size);
     this.trackNoteOn(effectiveCoordX, effectiveCoordY, midiNote);
     if (this.gameActor?.getSnapshot().matches('playing')) {
       this.gameActor.send({ type: 'NOTE_PRESSED', cellId: `${effectiveCoordX}_${effectiveCoordY}`, midiNote });
