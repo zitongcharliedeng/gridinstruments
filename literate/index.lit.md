@@ -224,12 +224,6 @@ star count, and suggest link as adjacent inline-flex children separated by
      .gh-btn .star-icon { color: #FFD700; }
     .gh-suggest { color: #4caf50; }
 
-    #global-settings-bar {
-      position: relative;
-      flex-shrink: 0;
-      border-bottom: 1px solid var(--border);
-      min-height: 32px;
-    }
     .gh-suggest svg { fill: #4caf50; }
     .gh-suggest:hover { color: #66bb6a; background: var(--subtle); }
 ```
@@ -1219,15 +1213,6 @@ song bar wraps below the title on narrow viewports.
 ## Global settings bar DOM
 
 The global settings bar sits between the top bar and the visualiser panel. It
-holds SOUND and INPUT controls that apply to all grids — volume, waveform,
-tuning, MIDI, and keyboard layout. Per-grid controls (skew, shear, zoom) stay
-in the grid cog overlay. The cog button toggles the overlay; the mount div
-receives the SolidJS component from `mountGlobalSettings`.
-
-``` {.html file=index.html}
-
-```
-
 ## Visualiser panel DOM
 
 The visualiser panel holds the `#history-canvas` that the note-history

@@ -5,8 +5,7 @@ This is the bridge between the vanilla TS app and the Solid component system
 for the per-grid settings panel. The `mountGridOverlay` function is called from
 app-core during initialization.
 
-Only per-grid settings (VISUAL) live here. Global settings (SOUND, INPUT)
-are in the separate global settings panel mounted by `mountGlobalSettings`.
+All settings (SOUND, VISUAL, INPUT) live in this single overlay panel.
 
 The overlay preserves every existing DOM ID so that the app-core event
 listeners continue to work without modification. Solid renders the structure;
