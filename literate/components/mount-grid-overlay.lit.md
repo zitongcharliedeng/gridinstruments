@@ -15,6 +15,7 @@ import { createSignal } from 'solid-js';
 import { SettingsOverlay } from './SettingsOverlay';
 import type { SectionDef } from './SettingsOverlay';
 import { InfoButton } from './InfoButton';
+import { refreshAllSliderUI } from '../app-slider';
 ```
 
 The mount function accepts the container element and the cog button. It owns
@@ -29,7 +30,10 @@ export function mountGridOverlay(
 ): { toggle: () => void; setVisible: (v: boolean) => void } {
   const [visible, setVisible] = createSignal(false);
 
-  const toggle = (): void => { setVisible(v => !v); };
+  const toggle = (): void => {
+    setVisible(v => !v);
+    if (visible()) setTimeout(refreshAllSliderUI, 50);
+  };
   const onEscape = (e: KeyboardEvent): void => {
     if (e.key === 'Escape' && visible()) setVisible(false);
   };
