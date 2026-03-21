@@ -28,24 +28,6 @@ export function getElementOrNull<T extends HTMLElement>(id: string, type: new() 
 `createSelectAtSlot` creates a `<select>` element and replaces a placeholder `<div>` slot in the DOM. SlimSelect-wrapped selects are created in JavaScript rather than in HTML source so that a lint rule can enforce the absence of native `<select>` tags in the HTML file.
 
 ``` {.typescript file=_generated/app-dom.ts}
-export function hideNativeSelect(select: HTMLSelectElement): void {
-  if (select.id === 'mpe-output-select') {
-    select.style.display = 'none';
-    select.setAttribute('aria-hidden', 'true');
-    return;
-  }
-  select.tabIndex = -1;
-  select.style.position = 'absolute';
-  select.style.width = '1px';
-  select.style.height = '1px';
-  select.style.opacity = '0';
-  select.style.overflow = 'hidden';
-  select.style.pointerEvents = 'none';
-  select.style.margin = '0';
-  select.style.padding = '0';
-  select.style.borderWidth = '0';
-  select.setAttribute('aria-hidden', 'true');
-}
 
 export function createSelectAtSlot(
   slotId: string,
