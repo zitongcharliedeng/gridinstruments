@@ -888,7 +888,7 @@ entirely below 375 px to recover horizontal space for the essential controls.
         gap: 6px;
         font-size: 10px;
       }
-      #song-bar #midi-search-input {
+      #midi-search-input {
         width: 150px;
       }
     }
@@ -959,7 +959,7 @@ gap and font size.
         font-size: 10px;
         flex-wrap: wrap;
       }
-      #song-bar #midi-search-input {
+      #midi-search-input {
         width: 120px;
       }
     }
@@ -983,7 +983,7 @@ hidden entirely, and the song bar compresses to its minimum height and search wi
         font-size: 9px;
         min-height: 24px;
       }
-      #song-bar #midi-search-input {
+      #midi-search-input {
         width: 100px;
       }
     }
