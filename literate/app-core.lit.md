@@ -2359,7 +2359,8 @@ Calibration mode shows a banner instructing the user to play all reachable notes
     }
     if (warning && (gameState === 'playing' || gameState === 'loading' || gameState === 'complete')) {
       warning.style.display = '';
-      warning.textContent = 'Song stopped — calibration changes the playable range';
+      warning.textContent = 'Song stopped';
+      setTimeout(() => { warning.style.display = 'none'; }, 2000);
     } else if (warning) {
       warning.style.display = 'none';
     }
