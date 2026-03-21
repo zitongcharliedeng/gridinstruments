@@ -43,7 +43,16 @@ const OVERLAY_CSS = `.settings-overlay {
   font-size:11px; color:var(--dim); text-transform:uppercase; letter-spacing:0.08em;
   font-family:var(--font); font-weight:700; display:flex; align-items:center; gap:6px;
 }
-.overlay-section-title:hover { color:var(--fg); }`;
+.overlay-section-title:hover { color:var(--fg); }
+.overlay-btn {
+  font-family:var(--font); font-size:11px; font-weight:700;
+  text-transform:uppercase; letter-spacing:0.08em; background:#000;
+  color:#fff; border:1px solid var(--dim); padding:6px 12px;
+  cursor:pointer; user-select:none;
+}
+.overlay-btn:hover { border-color:var(--fg); }
+.overlay-btn:active { background:var(--subtle); }
+.dimmed { opacity:0.3; pointer-events:none; transition:opacity 0.3s ease; }`;
 
 let overlayCssInjected = false;
 function injectOverlayCSS(): void {

@@ -440,7 +440,6 @@ buttons that invert on hover.
       padding: 8px 12px 8px 40px;
     }
     .hidden { display: none !important; pointer-events: none !important; }
-    .dimmed { opacity: 0.3; pointer-events: none; transition: opacity 0.3s ease; }
 
     #mpe-output-select {
       position: absolute !important;
@@ -460,21 +459,6 @@ groups, and `.overlay-btn` as the standard action button style — uppercase, hi
 inverting on hover.
 
 ``` {.html file=index.html}
-    .overlay-btn {
-      font-family: var(--font);
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      background: #000;
-      color: #fff;
-      border: 1px solid var(--dim);
-      padding: 6px 12px;
-      cursor: pointer;
-      user-select: none;
-    }
-    .overlay-btn:hover { border-color: var(--fg); }
-    .overlay-btn:active { background: var(--subtle); }
 ```
 
 ## Search results and pedals panel
