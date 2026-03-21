@@ -53,7 +53,7 @@ export function mountGridOverlay(
       children: () => (
         <div>
           <div class="slider-track">
-            <span class="ctrl-label" class="ctrl-label">WAVE</span>
+            <span class="ctrl-label">WAVE</span>
             <span id="wave-select-slot"></span>
             <button class="slider-reset icon-btn icon-md" id="wave-reset"><i data-lucide="rotate-cw"></i></button>
           </div>
@@ -135,7 +135,7 @@ export function mountGridOverlay(
       children: () => (
         <div>
           <div class="slider-track">
-            <span class="ctrl-label" class="ctrl-label">KEYBOARD LAYOUT</span>
+            <span class="ctrl-label">KEYBOARD LAYOUT</span>
             <span id="layout-select-slot"></span>
             <button class="slider-reset icon-btn icon-md" id="layout-reset"><i data-lucide="rotate-cw"></i></button>
           </div>
