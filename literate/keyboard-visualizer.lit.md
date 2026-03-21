@@ -1076,7 +1076,8 @@ for negative, and **vertically centered** for octave zero.
       this.ctx.font = `${octFont}px "JetBrains Mono", monospace`;
       this.ctx.textAlign = 'right';
       this.ctx.textBaseline = 'middle';
-      const octY = octave > 0 ? noteCenter - fontSize * 0.3 : octave < 0 ? noteCenter + fontSize * 0.3 : noteCenter;
+      const isDRef = coordX === 0 && coordY === 0;
+      const octY = octave > 0 ? noteCenter - fontSize * 0.3 : octave < 0 ? noteCenter + fontSize * 0.3 : isDRef ? noteCenter : noteCenter - fontSize * 0.3;
       this.ctx.fillText(octStr, x - nameW / 2 - 1, octY);
       this.ctx.font = savedFont;
       this.ctx.textAlign = savedAlign;

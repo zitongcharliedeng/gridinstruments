@@ -32,10 +32,14 @@ export function mountGridOverlay(
 
   const toggle = (): void => {
     setVisible(v => !v);
+    cogBtn.classList.toggle('active', visible());
     if (visible()) setTimeout(refreshAllSliderUI, 50);
   };
   const onEscape = (e: KeyboardEvent): void => {
-    if (e.key === 'Escape' && visible()) setVisible(false);
+    if (e.key === 'Escape' && visible()) {
+      setVisible(false);
+      cogBtn.classList.remove('active');
+    }
   };
   document.addEventListener('keydown', onEscape);
   cogBtn.addEventListener('click', toggle);
