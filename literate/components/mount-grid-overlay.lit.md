@@ -123,7 +123,7 @@ export function mountGridOverlay(
           <div class="slider-track mt-18">
             <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;">
               <span class="gi-checkbox"><input type="checkbox" id="qwerty-overlay-toggle" checked /><span class="gi-check"></span></span>
-              <span style="color:#fff">COMPUTER KEYBOARD LABELS</span>
+              <span class="text-white">COMPUTER KEYBOARD LABELS</span>
             </label>
           </div>
         </div>
@@ -147,31 +147,31 @@ export function mountGridOverlay(
                 <InfoButton infoKey="bend" />
                 <label class="expr-label">
                   <span class="gi-checkbox"><input type="checkbox" id="expr-bend" checked /><span class="gi-check"></span></span>
-                  <span style="color:#fff">Pitch Bend</span>
+                  <span class="text-white">Pitch Bend</span>
                   <input type="text" inputmode="numeric" pattern="[0-9]*" id="midi-pb-range-expr" value="24" style="width:3ch;text-align:center;font-family:var(--font);font-size:10px;background:var(--bg);color:var(--fg);border:1px solid var(--border);padding:2px 3px;" />
-                  <span style="color:var(--dim);font-size:10px;">semitones</span>
+                  <span class="text-dim-sm">semitones</span>
                 </label>
               </div>
               <div class="midi-panel-row" id="expr-velocity-row" style="gap:2px">
                 <InfoButton infoKey="velocity" />
                 <label class="expr-label">
                   <span class="gi-checkbox"><input type="checkbox" id="expr-velocity" checked /><span class="gi-check"></span></span>
-                  <span style="color:#fff">Note Velocity</span>
+                  <span class="text-white">Note Velocity</span>
                 </label>
               </div>
               <div class="midi-panel-row" id="expr-pressure-row" style="gap:2px">
                 <InfoButton infoKey="pressure" />
                 <span style="color:#fff;font-size:12px;">Pressure</span>
-                <span style="color:var(--dim);font-size:9px;">mode</span>
+                <span class="text-dim">mode</span>
                 <span id="pressure-mode-slot"></span>
-                <span style="color:var(--dim);font-size:9px;">source</span>
+                <span class="text-dim">source</span>
                 <span id="pressure-cc-source-slot"></span>
               </div>
               <div class="midi-panel-row" id="expr-timbre-row" style="gap:2px">
                 <InfoButton infoKey="timbre" />
                 <label class="expr-label">
                   <span class="gi-checkbox"><input type="checkbox" id="expr-timbre" checked /><span class="gi-check"></span></span>
-                  <span style="color:#fff">Timbre Slide</span>
+                  <span class="text-white">Timbre Slide</span>
                 </label>
                 <span id="timbre-cc-mode-slot"></span>
                 <label style="display:inline-flex;align-items:center;gap:3px;cursor:pointer;font-size:10px;">
@@ -180,7 +180,7 @@ export function mountGridOverlay(
                 </label>
               </div>
               <div class="midi-panel-row" id="mpe-output-row">
-                <span class="ctrl-label" style="color:#fff">MPE Out:</span>
+                <span class="ctrl-label" class="text-white">MPE Out:</span>
                 <label class="expr-label">
                   <span class="gi-checkbox"><input type="checkbox" id="mpe-enabled" /><span class="gi-check"></span></span>
                   Enable
