@@ -279,10 +279,6 @@ calibrate — each use `inline-flex` to keep their controls tight. The
       outline: 2px solid rgba(255, 255, 255, 0.7);
       outline-offset: -2px;
     }
-    #song-bar-hint {
-      margin-left: auto;
-      transition: opacity 2s ease-in;
-    }
 
 
 ```
@@ -790,7 +786,7 @@ label+input pairs in the INPUT section.
     #game-quantization-badge { font-family: var(--font); font-size: 9px; color: var(--dim); text-transform: uppercase; letter-spacing: 0.06em; }
     #song-bar-status { display: inline-flex; align-items: center; gap: 8px; }
     #song-bar-calibrate { margin-left: auto; max-width: 320px; display: inline-flex; align-items: center; gap: 4px; overflow: hidden; }
-    #song-bar-hint { display: none; }
+    #song-bar-hint { display: none; margin-left: auto; transition: opacity 2s ease-in; }
     #calibrate-btn { font-family: var(--font); font-size: 9px; background: none; color: var(--dim); border: 1px solid var(--border); padding: 2px 8px; cursor: pointer; white-space: nowrap; }
     #calibration-banner { display: none; font-family: var(--font); font-size: 9px; gap: 2px; align-items: center; white-space: nowrap; }
     #calibration-warning { display: none; }
