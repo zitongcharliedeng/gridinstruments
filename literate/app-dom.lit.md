@@ -57,27 +57,5 @@ export function createSelectAtSlot(
 
 ## Cycling Button
 
-`setupCyclingButton` turns a button into a value cycler — each click advances to the next option and calls `onChange`. The current value is stored as `btn.value` so external code can read it without maintaining separate state.
-
 ``` {.typescript file=_generated/app-dom.ts}
-export function setupCyclingButton(
-  btnId: string,
-  options: { value: string; label: string }[],
-  initialValue: string,
-  onChange: (value: string) => void,
-): HTMLButtonElement | null {
-  const btn = getElementOrNull(btnId, HTMLButtonElement);
-  if (!btn) return null;
-  let currentIndex = options.findIndex(o => o.value === initialValue);
-  if (currentIndex < 0) currentIndex = 0;
-  btn.value = options[currentIndex].value;
-  btn.textContent = options[currentIndex].label;
-  btn.addEventListener('click', () => {
-    currentIndex = (currentIndex + 1) % options.length;
-    btn.value = options[currentIndex].value;
-    btn.textContent = options[currentIndex].label;
-    onChange(options[currentIndex].value);
-  });
-  return btn;
-}
 ```
