@@ -25,6 +25,12 @@ export function mountVisOverlay(
     cogBtn.classList.toggle('active', visible());
     if (visible()) setTimeout(refreshAllSliderUI, 50);
   });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && visible()) {
+      setVisible(false);
+      cogBtn.classList.remove('active');
+    }
+  });
 
   const sections: SectionDef[] = [
     {
