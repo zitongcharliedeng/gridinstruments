@@ -1910,22 +1910,22 @@ Pointer input (touch and mouse) uses the Pointer Events API for unified handling
           const dx = (event.clientX - rect.left) - btn.x;
           const dy = (event.clientY - rect.top) - btn.y;
 
-          const pitchDirLen = Math.sqrt(cellHv2.x * cellHv2.x + cellHv2.y * cellHv2.y);
-          const pitchOffset = (dx * cellHv2.x + dy * cellHv2.y) / pitchDirLen;
-          const cellHeight = pitchDirLen * 2;
-          const rawSemitones = pitchOffset / cellHeight * 2;
+          const pitchDirLen = Math.sqrt(cellHv1.x * cellHv1.x + cellHv1.y * cellHv1.y);
+          const pitchOffset = (dx * cellHv1.x + dy * cellHv1.y) / pitchDirLen;
+          const cellWidth = pitchDirLen * 2;
+          const rawSemitones = pitchOffset / cellWidth * 2;
           const DEAD_ZONE = 0.15;
           const semitones = Math.abs(rawSemitones) < DEAD_ZONE ? 0 : rawSemitones;
 
-          const timbreDirLen = Math.sqrt(cellHv1.x * cellHv1.x + cellHv1.y * cellHv1.y);
-          const timbreOffset = (dx * cellHv1.x + dy * cellHv1.y) / timbreDirLen;
-          const normalizedX = Math.max(0, Math.min(1, (timbreOffset / timbreDirLen + 1) / 2));
+          const timbreDirLen = Math.sqrt(cellHv2.x * cellHv2.x + cellHv2.y * cellHv2.y);
+          const timbreOffset = (dx * cellHv2.x + dy * cellHv2.y) / timbreDirLen;
+          const normalizedY = Math.max(0, Math.min(1, (timbreOffset / timbreDirLen + 1) / 2));
 
           if (this.expressionBend) this.synth.setPitchBend(noteId, semitones);
-          if (this.expressionTimbre) this.synth.setTimbre(noteId, this.timbreReverse ? 1 - normalizedX : normalizedX);
+          if (this.expressionTimbre) this.synth.setTimbre(noteId, this.timbreReverse ? 1 - normalizedY : normalizedY);
           if (this.expressionPressure && event.pressure > 0) this.synth.setPressure(noteId, event.pressure);
           this.mpe.sendPitchBend(noteId, semitones);
-          this.mpe.sendSlide(noteId, normalizedX);
+          this.mpe.sendSlide(noteId, normalizedY);
           this.mpe.sendPressure(noteId, event.pressure);
         }
       }
