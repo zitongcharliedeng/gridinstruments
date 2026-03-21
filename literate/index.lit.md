@@ -447,7 +447,7 @@ buttons that invert on hover.
       top: 0; left: 0; right: 0; bottom: 0;
       background: rgba(30, 30, 32, 0.78);
       z-index: 12;
-      padding: 48px 24px 24px 48px;
+      padding: 40px 12px 12px 40px;
       overflow-y: auto;
       overflow-x: hidden;
       scrollbar-width: thin;
