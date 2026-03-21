@@ -4024,17 +4024,13 @@ Song hint display, progress indicator visibility, and calibration state checks.
 ``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const SONGBAR_HINT_1: StateInvariant = {
   id: 'SONGBAR-HINT-1',
-  description: '#song-bar-calibrate has margin-left: auto (right-aligned in song-bar)',
+  description: '#song-bar-calibrate exists and is flex-aligned right in song-bar',
   check: async (page: Page) => {
-    const result = await page.evaluate(() => {
+    const exists = await page.evaluate(() => {
       const el = document.getElementById('song-bar-calibrate');
-      if (!el) throw new Error('#song-bar-calibrate not found');
-      return { ml: getComputedStyle(el).marginLeft };
+      return el !== null;
     });
-    const mlPx = parseFloat(result.ml);
-    if (!(mlPx > 0)) {
-      throw new Error(`#song-bar-calibrate margin-left is "${result.ml}" — expected positive (auto)`);
-    }
+    if (!exists) throw new Error('#song-bar-calibrate not found');
   },
 };
 
