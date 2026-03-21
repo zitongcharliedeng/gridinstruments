@@ -1106,17 +1106,20 @@ button component.
       });
     }
 
-    const TIMBRE_CC_OPTIONS = [
-      { value: '74', label: 'CC74' },
-      { value: '1', label: 'CC1' },
-      { value: '11', label: 'CC11' },
-    ];
     const savedTimbreMode = this.loadSetting('timbreCcMode', '74');
     this.applyTimbreCcMode(savedTimbreMode);
-    setupCyclingButton('timbre-cc-mode', TIMBRE_CC_OPTIONS, savedTimbreMode, (cc) => {
-      this.applyTimbreCcMode(cc);
-      this.saveSetting('timbreCcMode', cc);
-    });
+    const timbreCcSelect = createSelectAtSlot('timbre-cc-mode-slot', 'timbre-cc-mode', [
+      { value: '74', text: 'CC74' },
+      { value: '1', text: 'CC1' },
+      { value: '11', text: 'CC11' },
+    ], {});
+    if (timbreCcSelect) {
+      timbreCcSelect.value = savedTimbreMode;
+      const tcSS = new SlimSelect({ select: timbreCcSelect, settings: { showSearch: false }, events: {
+        afterChange: (newVal) => { const cc = newVal[0]?.value ?? '74'; this.applyTimbreCcMode(cc); this.saveSetting('timbreCcMode', cc); },
+      }});
+      void tcSS;
+    }
 
     const savedPressureCc = this.loadSetting('pressureCcSource', 'aftertouch');
     this.midi.setPressureCC(savedPressureCc === 'aftertouch' ? null : parseInt(savedPressureCc, 10));
