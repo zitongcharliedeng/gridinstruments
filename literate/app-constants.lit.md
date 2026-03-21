@@ -294,7 +294,9 @@ ${srcLink('synth.lit.md', 'Source: synth.lit.md — reference pitch handling')}`
 ``` {.typescript file=_generated/app-constants.ts}
   zoom: `
 <h2>Zoom</h2>
-<p>Scales grid cell size. The default is DPI-calibrated to approximate standard keyboard key width (~15mm). Reset returns to this default.</p>
+<p>Scales grid cell size. The default uses your screen's detected DPI (divided by devicePixelRatio) to approximate standard keyboard key width (~15mm).</p>
+<p>If keys are too large or small on your device, use the <strong>DPI Override</strong> field below the zoom slider to manually set your screen's DPI. Leave empty for auto-detection.</p>
+<p>Reset returns to the DPI-calibrated default.</p>
 ${srcLink('keyboard-visualizer.lit.md', 'Source: keyboard-visualizer.lit.md — grid rendering')}`,
 ```
 
