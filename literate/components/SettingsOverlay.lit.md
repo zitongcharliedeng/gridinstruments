@@ -121,8 +121,10 @@ slider moves, not the entire overlay.
 ``` {.typescript file=_generated/components/SettingsOverlay.tsx}
 
 function SliderRow(props: { def: SliderDef }): JSX.Element {
-  const [value, setValue] = createSignal(props.def.defaultValue);
-  const fmt = props.def.formatBadge ?? ((v: number) => v.toFixed(1));
+  const defVal = props.def.defaultValue;
+  const fmtFn = props.def.formatBadge;
+  const [value, setValue] = createSignal(defVal);
+  const fmt = fmtFn ?? ((v: number) => v.toFixed(1));
 
   const onInput = (e: Event): void => {
     const input = e.target as HTMLInputElement;
@@ -178,7 +180,8 @@ before the user opens the panel.
 
 export function SettingsOverlay(props: SettingsOverlayProps): JSX.Element {
   injectOverlayCSS();
-  const sectionClass = props.sectionClass ?? 'overlay-section';
+  const sc = props.sectionClass;
+  const sectionClass = sc ?? 'overlay-section';
   return (
     <div id={props.overlayId} class="settings-overlay" classList={{ hidden: !props.visible() }}>
       <For each={props.sections}>
