@@ -64,7 +64,13 @@ const OVERLAY_CSS = `.settings-overlay {
 #grid-settings-btn { top:8px; left:8px; }
 #vis-settings-btn { top:4px; left:8px; }
 .grid-cog:hover { color:var(--fg); border-color:var(--accent); }
-.grid-cog.active { color:var(--bg); background:var(--fg); border-color:var(--fg); }`;
+.grid-cog.active { color:var(--bg); background:var(--fg); border-color:var(--fg); }
+.gi-checkbox { position:relative; display:inline-block; width:14px; height:14px; cursor:pointer; vertical-align:middle; }
+.gi-checkbox input { position:absolute; inset:0; margin:0; cursor:pointer; appearance:none; -webkit-appearance:none; background:transparent; border:none; z-index:1; }
+.gi-checkbox .gi-check { display:block; width:14px; height:14px; border:1px solid var(--border); background:var(--bg); pointer-events:none; }
+.gi-checkbox input:checked + .gi-check { background:var(--fg); border-color:var(--fg); }
+.gi-checkbox input:checked + .gi-check::after { content:''; position:absolute; left:4px; top:1px; width:4px; height:8px; border:solid var(--bg); border-width:0 2px 2px 0; transform:rotate(45deg); }
+.gi-checkbox input:focus-visible + .gi-check { border-color:var(--accent); }`;
 
 let overlayCssInjected = false;
 function injectOverlayCSS(): void {
