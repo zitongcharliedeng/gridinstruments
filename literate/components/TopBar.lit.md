@@ -18,6 +18,21 @@ needed for it.
 import { type JSX } from 'solid-js';
 import { InfoButton } from './InfoButton';
 
+const TOPBAR_CSS = `.top-bar-left { display:flex; align-items:center; gap:8px; min-width:0; }
+.site-title { font-weight:700; font-size:11px; color:#fff; letter-spacing:0.04em; }
+.gh-actions { display:inline-flex; align-items:center; border:1px solid var(--border); font-size:10px; }
+.gh-mark { padding:2px 6px; border-right:1px solid var(--border); background:var(--subtle); }
+.gh-mark svg { flex:0 0 auto; width:1em; height:1em; fill:#fff; }
+.gh-btn { display:inline-flex; align-items:center; gap:4px; padding:2px 8px; font-family:var(--font); font-size:10px; color:#fff; text-decoration:none; }
+.gh-btn + .gh-btn { border-left:1px solid var(--border); }
+.gh-btn:hover { color:var(--fg); background:var(--subtle); }
+.gh-btn svg { fill:currentColor; }
+.gh-btn .star-icon { color:#FFD700; }
+.gh-suggest { color:#4caf50; }
+.gh-suggest svg { fill:#4caf50; }
+.gh-suggest:hover { color:#66bb6a; background:var(--subtle); }`;
+let topbarCssInjected = false;
+
 export interface TopBarProps {
   onAbout: () => void;
   onReset: () => void;
@@ -33,6 +48,7 @@ call in app-core after mount.
 ``` {.typescript file=_generated/components/TopBar.tsx}
 
 export function TopBar(props: TopBarProps): JSX.Element {
+  if (!topbarCssInjected) { const s = document.createElement('style'); s.textContent = TOPBAR_CSS; document.head.appendChild(s); topbarCssInjected = true; }
   const onAboutClick = (): void => {
     props.onAbout();
   };
