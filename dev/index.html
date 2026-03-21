@@ -171,6 +171,7 @@
       gap: 6px;
     }
     #song-bar #calibrate-btn { font-size: 10px; padding: 2px 8px; }
+    #calibrate-btn.active { color: var(--bg); background: var(--fg); border-color: var(--fg); cursor: default; }
     #song-bar #calibration-banner { gap: 2px; }
     #song-bar.dropping {
       outline: 2px solid rgba(255, 255, 255, 0.7);
@@ -333,6 +334,7 @@
     }
     #vis-overlay .overlay-section { margin-left: 0; }
     .hidden { display: none !important; pointer-events: none !important; }
+    .dimmed { opacity: 0.3; pointer-events: none; transition: opacity 0.3s ease; }
 
     #mpe-output-select {
       position: absolute !important;
@@ -893,7 +895,7 @@
       }
     }
   </style>
-  <script type="module" crossorigin src="/dev/assets/index-D90ByNHs.js"></script>
+  <script type="module" crossorigin src="/dev/assets/index-BE9HhgXv.js"></script>
   <link rel="stylesheet" crossorigin href="/dev/assets/index-BiXRBHva.css">
 </head>
 <body>
