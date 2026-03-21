@@ -352,10 +352,14 @@ MIDI note-on maps the incoming MIDI note number to grid coordinates using `midiT
     const noteKey = `midi_${deviceId}_${channel}_${midiNote}`;
     const audioNoteId = `midi_${deviceId}_${channel}_${midiNote}_${coordX}_${coordY}`;
     const channelVoiceKey = `${deviceId}_${channel}_${midiNote}`;
-    const oldAudioId = this.midiChannelVoice.get(channelVoiceKey);
-    if (oldAudioId) {
-      this.synth.stopNote(oldAudioId);
-      this.mpe.noteOff(oldAudioId, midiNote);
+    const existing = this.activeNotes.get(noteKey);
+    if (existing) {
+      const oldAudioId = this.midiChannelVoice.get(channelVoiceKey);
+      if (oldAudioId) {
+        this.synth.stopNote(oldAudioId);
+        this.mpe.noteOff(oldAudioId, midiNote);
+      }
+      this.trackNoteOff(existing.coordX, existing.coordY);
     }
     if (this.calibrating) {
       this.calibratedCells.add(`${coordX}_${coordY}`);
@@ -2399,7 +2403,7 @@ Calibration mode shows a banner instructing the user to play all reachable notes
       const msg = document.getElementById('calibration-msg');
       if (msg) {
         msg.textContent = count > 0 ? `Range saved (${count} keys)` : 'Range cleared — all keys playable';
-        setTimeout(() => { msg.textContent = 'Play reachable notes'; }, 2000);
+        setTimeout(() => { msg.textContent = 'Play all reachable notes, then tap \u2713'; }, 2000);
       }
     }
     this.visualizer?.setCalibratedRange(this.calibratedRange);
