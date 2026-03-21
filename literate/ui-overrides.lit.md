@@ -118,5 +118,6 @@ OverlayScrollbars overrides apply the `gi-scrollbar` class. The 12 px track widt
   padding: 40px 12px 12px 40px !important;
   overflow-y: auto !important;
   overflow-x: hidden !important;
+  touch-action: auto !important;
 }
 ```
