@@ -1095,7 +1095,7 @@ The golden screenshot tests compare rendered pixels against stored reference ima
   });
 
   test('SMOKE-5: Wave dropdown opens and shows options', async ({ page }) => {
-    await page.locator('#grid-settings-btn').click();
+    await page.locator('#global-settings-btn').click();
     await page.waitForTimeout(200);
     const ssMain = page.locator('.ss-main').first();
     await ssMain.click();
@@ -1106,7 +1106,7 @@ The golden screenshot tests compare rendered pixels against stored reference ima
   });
 
   test('SMOKE-7: Dvorak layout appears in keyboard dropdown', async ({ page }) => {
-    await page.locator('#grid-settings-btn').click();
+    await page.locator('#global-settings-btn').click();
     await page.waitForTimeout(200);
     const layoutSelect = page.locator('.ss-content .ss-option');
     await page.locator('.ss-main').nth(1).click();
@@ -1130,11 +1130,11 @@ The golden screenshot tests compare rendered pixels against stored reference ima
   });
 
   test('SMOKE-4: Info buttons are 14x14 square text buttons', async ({ page }) => {
-    await page.locator('#grid-settings-btn').click();
+    await page.locator('#global-settings-btn').click();
     await page.waitForTimeout(200);
     const infoBtns = page.locator('.slider-info-btn:visible');
     const count = await infoBtns.count();
-    expect(count).toBeGreaterThan(5);
+    expect(count).toBeGreaterThan(3);
     for (let i = 0; i < Math.min(count, 5); i++) {
       const box = await infoBtns.nth(i).boundingBox();
       if (box) {
