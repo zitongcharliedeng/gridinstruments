@@ -53,7 +53,7 @@ export function mountGridOverlay(
         <div>
           <div class="slider-track">
             <span class="ctrl-label">WAVE</span>
-            <span id="wave-select-slot"></span>
+            <span id="wave-select-slot" />
             <button class="slider-reset icon-btn icon-md" id="wave-reset"><i data-lucide="rotate-cw"></i></button>
           </div>
           <div class="ctrl-group mt-18">
@@ -80,7 +80,7 @@ export function mountGridOverlay(
             <div class="slider-track">
               <span class="slider-label-overlay" id="d-ref-label">D REF (Hz)</span>
               <input type="range" id="d-ref-slider" min="73.42" max="1174.66" step="0.01" value="293.66" />
-              <input type="text" class="badge-input" id="d-ref-input" value="293.66" style="width:80px; text-transform:none;" />
+              <input type="text" class="badge-input" id="d-ref-input" value="293.66" />
               <button id="d-ref-reset" class="slider-reset icon-btn icon-md"><i data-lucide="rotate-cw"></i></button>
             </div>
           </div>
@@ -122,7 +122,7 @@ export function mountGridOverlay(
           </div>
           <div class="slider-track mt-18">
             <label class="expr-label-lg">
-              <span class="gi-checkbox"><input type="checkbox" id="qwerty-overlay-toggle" checked /><span class="gi-check"></span></span>
+              <span class="gi-checkbox"><input type="checkbox" id="qwerty-overlay-toggle" checked /><span class="gi-check" /></span>
               <span class="text-white">COMPUTER KEYBOARD LABELS</span>
             </label>
           </div>
@@ -135,7 +135,7 @@ export function mountGridOverlay(
         <div>
           <div class="slider-track">
             <span class="ctrl-label">KEYBOARD LAYOUT</span>
-            <span id="layout-select-slot"></span>
+            <span id="layout-select-slot" />
             <button class="slider-reset icon-btn icon-md" id="layout-reset"><i data-lucide="rotate-cw"></i></button>
           </div>
           <div class="mt-18">
@@ -146,7 +146,7 @@ export function mountGridOverlay(
               <div class="midi-panel-row" id="expr-bend-row">
                 <InfoButton infoKey="bend" />
                 <label class="expr-label">
-                  <span class="gi-checkbox"><input type="checkbox" id="expr-bend" checked /><span class="gi-check"></span></span>
+                  <span class="gi-checkbox"><input type="checkbox" id="expr-bend" checked /><span class="gi-check" /></span>
                   <span class="text-white">Pitch Bend</span>
                   <input type="text" inputmode="numeric" pattern="[0-9]*" id="midi-pb-range-expr" value="24" class="numeric-input" />
                   <span class="text-dim-sm">semitones</span>
@@ -155,7 +155,7 @@ export function mountGridOverlay(
               <div class="midi-panel-row" id="expr-velocity-row">
                 <InfoButton infoKey="velocity" />
                 <label class="expr-label">
-                  <span class="gi-checkbox"><input type="checkbox" id="expr-velocity" checked /><span class="gi-check"></span></span>
+                  <span class="gi-checkbox"><input type="checkbox" id="expr-velocity" checked /><span class="gi-check" /></span>
                   <span class="text-white">Note Velocity</span>
                 </label>
               </div>
@@ -163,29 +163,29 @@ export function mountGridOverlay(
                 <InfoButton infoKey="pressure" />
                 <span class="text-white-12">Pressure</span>
                 <span class="text-dim">mode</span>
-                <span id="pressure-mode-slot"></span>
+                <span id="pressure-mode-slot" />
                 <span class="text-dim">source</span>
-                <span id="pressure-cc-source-slot"></span>
+                <span id="pressure-cc-source-slot" />
               </div>
               <div class="midi-panel-row" id="expr-timbre-row">
                 <InfoButton infoKey="timbre" />
                 <label class="expr-label">
-                  <span class="gi-checkbox"><input type="checkbox" id="expr-timbre" checked /><span class="gi-check"></span></span>
+                  <span class="gi-checkbox"><input type="checkbox" id="expr-timbre" checked /><span class="gi-check" /></span>
                   <span class="text-white">Timbre Slide</span>
                 </label>
-                <span id="timbre-cc-mode-slot"></span>
+                <span id="timbre-cc-mode-slot" />
                 <label class="expr-label-sm">
-                  <span class="gi-checkbox"><input type="checkbox" id="timbre-reverse" /><span class="gi-check"></span></span>
+                  <span class="gi-checkbox"><input type="checkbox" id="timbre-reverse" /><span class="gi-check" /></span>
                   <span class="text-dim-plain">Rev</span>
                 </label>
               </div>
               <div class="midi-panel-row" id="mpe-output-row">
                 <span class="ctrl-label">MPE Out:</span>
                 <label class="expr-label">
-                  <span class="gi-checkbox"><input type="checkbox" id="mpe-enabled" /><span class="gi-check"></span></span>
+                  <span class="gi-checkbox"><input type="checkbox" id="mpe-enabled" /><span class="gi-check" /></span>
                   Enable
                 </label>
-                <span id="mpe-output-select-slot" class="select-slot"></span>
+                <span id="mpe-output-select-slot" class="select-slot" />
               </div>
             </div>
           </div>
