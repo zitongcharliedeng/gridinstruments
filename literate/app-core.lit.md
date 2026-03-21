@@ -496,7 +496,7 @@ The MIDI device panel renders a list of connected controllers with enable/disabl
         onSearch: () => { /* value read imperatively below via #midi-search-input */ },
         onSearchFocus: () => {
           const hint = document.querySelector<HTMLElement>('#song-bar-hint');
-          if (hint) hint.style.display = 'none';
+          if (hint) hint.classList.remove('show-inline');
         },
         onSearchBlur: () => {
           const searchInput = document.querySelector<HTMLInputElement>('#midi-search-input');
@@ -504,7 +504,7 @@ The MIDI device panel renders a list of connected controllers with enable/disabl
           if (searchInput && hint && searchInput.value.trim() === '') {
             const gameState = this.gameActor ? String(this.gameActor.getSnapshot().value) : undefined;
             if (!gameState || gameState === 'idle' || gameState === 'error') {
-              hint.style.display = '';
+              hint.classList.add('show-inline');
             }
           }
         },
@@ -1500,7 +1500,7 @@ the tuning slider and calibrate button to prevent mid-game tuning changes.
             this.ghostingWarningShown = true;
             const hint = document.getElementById('song-bar-hint');
             if (hint) {
-              hint.style.display = '';
+              hint.classList.add('show-inline');
               hint.style.opacity = '1';
               hint.textContent = `This chord needs ${allTargetCellIds.length} keys — your keyboard may limit to ${this.peakKeysThisSession}. Try a MIDI controller.`;
               setTimeout(() => { hint.style.opacity = '0'; }, 5000);
@@ -1529,8 +1529,8 @@ the tuning slider and calibrate button to prevent mid-game tuning changes.
           this.historyVisualizer?.setGhostNote(null);
         }
         this.render();
-        if (statusEl) statusEl.style.display = 'flex';
-        if (songBarHint) songBarHint.style.display = 'none';
+        if (statusEl) statusEl.classList.add('show-flex');
+        if (songBarHint) songBarHint.classList.remove('show-inline');
 
         if (progressFill && ctx.noteGroups.length > 0) {
           const pct = (ctx.currentGroupIndex / ctx.noteGroups.length) * 100;
@@ -1557,8 +1557,8 @@ The remaining game states handle loading (show progress bar, hide hint), complet
 
 ``` {.typescript file=_generated/app-core.ts}
       } else if (state === 'loading') {
-        if (statusEl) statusEl.style.display = 'flex';
-        if (songBarHint) songBarHint.style.display = 'none';
+        if (statusEl) statusEl.classList.add('show-flex');
+        if (songBarHint) songBarHint.classList.remove('show-inline');
         if (progressFill) progressFill.style.width = '0%';
         if (elapsedTimer) elapsedTimer.textContent = '';
       } else if (state === 'complete') {
@@ -1573,8 +1573,8 @@ The remaining game states handle loading (show progress bar, hide hint), complet
         const elapsedMs = ctx.finishTimeMs - ctx.startTimeMs;
         const elapsedSec = (elapsedMs / 1000).toFixed(1);
         this.showGameScore(elapsedSec);
-        if (statusEl) statusEl.style.display = 'flex';
-        if (songBarHint) songBarHint.style.display = 'none';
+        if (statusEl) statusEl.classList.add('show-flex');
+        if (songBarHint) songBarHint.classList.remove('show-inline');
         if (progressFill) progressFill.style.width = '100%';
         if (elapsedTimer) {
           const totalSec = Math.floor(parseFloat(elapsedSec));
@@ -1591,7 +1591,7 @@ The remaining game states handle loading (show progress bar, hide hint), complet
         this.visualizer?.setPressedTargetNotes([]);
         this.historyVisualizer?.setGhostNote(null);
         this.render();
-        if (statusEl) statusEl.style.display = 'none';
+        if (statusEl) statusEl.classList.remove('show-flex');
         if (songBarHint) songBarHint.style.display = '';
         if (progressFill) progressFill.style.width = '0%';
         if (elapsedTimer) elapsedTimer.textContent = '';
@@ -1661,7 +1661,7 @@ The MIDI search input queries multiple online MIDI repositories via `searchAllAd
         if (searchDebounce !== null) clearTimeout(searchDebounce);
         searchDebounce = setTimeout(() => void (async () => {
           const query = searchInput.value.trim();
-          if (query.length < 2) { resultsDiv.innerHTML = ''; resultsDiv.style.display = 'none'; return; }
+          if (query.length < 2) { resultsDiv.innerHTML = ''; resultsDiv.classList.remove('show-flex'); return; }
           resultsDiv.style.display = 'block';
           resultsDiv.innerHTML = '<div class="search-status">Searching\u2026</div>';
           try {
@@ -1690,7 +1690,7 @@ The MIDI search input queries multiple online MIDI repositories via `searchAllAd
 
               row.addEventListener('click', () => {
                 void this.handleSearchResultClick(r);
-                resultsDiv.style.display = 'none';
+                resultsDiv.classList.remove('show-flex');
                 searchInput.value = '';
               });
 
@@ -2390,7 +2390,7 @@ Calibration mode shows a banner instructing the user to play all reachable notes
     const banner = document.getElementById('calibration-banner');
     const msg = document.getElementById('calibration-msg');
     const warning = document.getElementById('calibration-warning');
-    if (banner) banner.style.display = 'flex';
+    if (banner) banner.classList.add('show-flex');
     if (msg) msg.textContent = 'Play notes';
     const gameState = this.gameActor ? String(this.gameActor.getSnapshot().value) : undefined;
     if (gameState === 'playing' || gameState === 'loading') {
@@ -2399,9 +2399,9 @@ Calibration mode shows a banner instructing the user to play all reachable notes
     if (warning && (gameState === 'playing' || gameState === 'loading' || gameState === 'complete')) {
       warning.style.display = '';
       warning.textContent = 'Song stopped';
-      setTimeout(() => { warning.style.display = 'none'; }, 2000);
+      setTimeout(() => { warning.classList.remove('show-flex'); }, 2000);
     } else if (warning) {
-      warning.style.display = 'none';
+      warning.classList.remove('show-flex');
     }
     const btn = document.getElementById('calibrate-btn') as HTMLButtonElement | null;
     if (btn) {
@@ -2435,7 +2435,7 @@ Calibration mode shows a banner instructing the user to play all reachable notes
     this.visualizer?.setCalibratedRange(this.calibratedRange);
     this.calibratedCells = new Set();
     const banner = document.getElementById('calibration-banner');
-    if (banner) banner.style.display = 'none';
+    if (banner) banner.classList.remove('show-flex');
     const btn = document.getElementById('calibrate-btn') as HTMLButtonElement | null;
     if (btn) {
       btn.textContent = 'Calibrate Playable Area';
