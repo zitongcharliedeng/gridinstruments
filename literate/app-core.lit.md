@@ -31,7 +31,7 @@ import SlimSelect from 'slim-select';
 import { OverlayScrollbars } from 'overlayscrollbars';
 
 import { isWaveformType, parseNum, formatSliderAnnotation, noteNameToHz } from './app-helpers';
-import { createSelectAtSlot, getElement, getElementOrNull, hideNativeSelect, setupCyclingButton } from './app-dom';
+import { createSelectAtSlot, getElement, getElementOrNull, setupCyclingButton } from './app-dom';
 import { thumbCenterPx, clampBadgePosition, applySliderFill } from './app-slider';
 import { SHEAR_PRESETS, TUNING_LABEL_PRESETS } from './app-constants';
 ```
@@ -1159,7 +1159,6 @@ MPE output sends per-note expression data to an external MIDI device. The state 
           },
         },
       });
-      hideNativeSelect(mpeSelect);
     }
 
     mpeActor.subscribe((snapshot) => {
@@ -1168,7 +1167,6 @@ MPE output sends per-note expression data to an external MIDI device. The state 
       if (mpeSS) {
         if (isEnabled) { mpeSS.enable(); } else { mpeSS.disable(); }
       }
-      if (mpeSelect) hideNativeSelect(mpeSelect);
     });
 
     mpeActor.start();
@@ -1179,14 +1177,12 @@ MPE output sends per-note expression data to an external MIDI device. The state 
       if (outputs.length === 0) {
         mpeSS.setData([{ text: 'No MIDI outputs', value: '', placeholder: true }]);
         mpeSS.disable();
-        if (mpeSelect) hideNativeSelect(mpeSelect);
-        return;
+          return;
       }
       mpeSS.setData(outputs.map(o => ({ text: o.name ?? o.id, value: o.id })));
       if (!mpeActor.getSnapshot().matches('enabled')) {
         mpeSS.disable();
       }
-      if (mpeSelect) hideNativeSelect(mpeSelect);
     };
 
     mpeCheckbox?.addEventListener('change', () => {
