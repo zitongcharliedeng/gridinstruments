@@ -439,12 +439,6 @@ machine.
       margin-left: 8px;
       flex-shrink: 0;
     }
-    #midi-search-results .search-status {
-      font-family: var(--font);
-      font-size: 11px;
-      color: var(--dim);
-      padding: 4px 0;
-    }
 ```
 
 The pedals panel stacks two full-width `.pedal-btn` elements separated by a 1px gap.
