@@ -420,7 +420,7 @@ the overlay, and inverts to black-on-white while the overlay is open.
        font-family: var(--font);
      }
      #grid-settings-btn { top: 8px; left: 8px; }
-     #vis-settings-btn { top: 4px; right: 4px; }
+     #vis-settings-btn { top: 4px; left: 8px; }
      .grid-cog:hover { color: var(--fg); border-color: var(--accent); }
       .grid-cog.active { color: var(--bg); background: var(--fg); border-color: var(--fg); }
 ```
