@@ -180,7 +180,7 @@ export function mountGridOverlay(
                 </label>
               </div>
               <div class="midi-panel-row" id="mpe-output-row">
-                <span class="ctrl-label" class="text-white">MPE Out:</span>
+                <span class="ctrl-label">MPE Out:</span>
                 <label class="expr-label">
                   <span class="gi-checkbox"><input type="checkbox" id="mpe-enabled" /><span class="gi-check"></span></span>
                   Enable
