@@ -223,6 +223,22 @@ star count, and suggest link as adjacent inline-flex children separated by
     .gh-btn svg { fill: currentColor; }
      .gh-btn .star-icon { color: #FFD700; }
     .gh-suggest { color: #4caf50; }
+
+    #global-settings-bar {
+      position: relative;
+      flex-shrink: 0;
+      border-bottom: 1px solid var(--border);
+      min-height: 32px;
+    }
+    #global-settings-btn {
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 15;
+    }
+    #global-settings-mount {
+      position: relative;
+    }
     .gh-suggest svg { fill: #4caf50; }
     .gh-suggest:hover { color: #66bb6a; background: var(--subtle); }
 ```
@@ -1203,6 +1219,23 @@ song bar wraps below the title on narrow viewports.
       <!-- Song/game controls — right side of header, wraps on narrow — mounted by SolidJS SongBar component -->
       <div id="songbar-mount"></div>
     </header>
+```
+
+## Global settings bar DOM
+
+The global settings bar sits between the top bar and the visualiser panel. It
+holds SOUND and INPUT controls that apply to all grids — volume, waveform,
+tuning, MIDI, and keyboard layout. Per-grid controls (skew, shear, zoom) stay
+in the grid cog overlay. The cog button toggles the overlay; the mount div
+receives the SolidJS component from `mountGlobalSettings`.
+
+``` {.html file=index.html}
+
+    <!-- Global settings panel (SOUND + INPUT — applies to all grids) -->
+    <div id="global-settings-bar">
+      <button id="global-settings-btn" class="grid-cog icon-btn icon-md"><i data-lucide="settings-2"></i></button>
+      <div id="global-settings-mount"></div>
+    </div>
 ```
 
 ## Visualiser panel DOM

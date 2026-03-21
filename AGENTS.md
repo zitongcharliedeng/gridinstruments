@@ -218,15 +218,27 @@ These rules are structurally enforced -- by the build, by ast-grep rules, by the
 
 | Restriction | Enforcement |
 |-------------|-------------|
-| Never edit `_generated/*.ts` directly | chmod 444 + gitignored; `Edit`/`Write` will EACCES |
-| No `as any`, `@ts-ignore`, `@ts-expect-error` | `tsc --strict`; ast-grep rule |
-| No `!` non-null assertions | ast-grep rule; use `if (!x) throw new Error(msg)` or optional chaining |
-| No standalone `test()` calls outside the spec file | ast-grep rule `no-imperative-test-files` |
-| No `Effect` imports outside `_generated/services/` | ast-grep rule `no-effect-outside-services` |
-| No native `<select>` elements in HTML | ast-grep rule `no-native-select-in-html` (use slim-select) |
-| No raw DOM mutations (setAttribute, textContent, innerHTML, style.*, classList.*) | ast-grep rules enforce going through machine actions |
-| No imperative `page.goto()` in tests | ast-grep rule `no-raw-goto-in-specs` |
-| No raw `dispatchEvent` in tests | ast-grep rule `no-raw-dispatchevent-in-specs` |
+| Never edit `_generated/*.ts` directly | chmod 444 + gitignored; `Edit`/`Write` will EACCES; ast-grep `no-direct-generated-edit` |
+| No `as any`, `@ts-ignore`, `@ts-expect-error` | `tsc --strict`; ast-grep `no-ts-comments` |
+| No `!` non-null assertions | ast-grep `no-type-assertion`; use `if (!x) throw new Error(msg)` or optional chaining |
+| No standalone `test()` calls outside the spec file | ast-grep `no-imperative-test-files` |
+| No `Effect` imports outside `_generated/services/` | ast-grep `no-effect-outside-services` |
+| No native `<select>` elements in HTML | ast-grep `no-native-select-in-html` (use slim-select) |
+| No raw `title=` tooltip attributes in HTML | ast-grep `no-raw-tooltips` (use InfoButton component) |
+| No raw `setAttribute` calls | ast-grep `no-raw-setattribute` (go through machine actions) |
+| No raw `textContent` mutations | ast-grep `no-raw-textcontent` (go through machine actions) |
+| No raw `innerHTML` mutations | ast-grep `no-raw-innerhtml` (go through machine actions) |
+| No raw `style.*` mutations | ast-grep `no-raw-style-mutation` (go through machine actions) |
+| No raw `classList.add` | ast-grep `no-raw-classlist-add` (go through machine actions) |
+| No raw `classList.remove` | ast-grep `no-raw-classlist-remove` (go through machine actions) |
+| No raw `classList.toggle` | ast-grep `no-raw-classlist-toggle` (go through machine actions) |
+| No raw `.hidden =` mutations | ast-grep `no-raw-hidden` (go through machine actions) |
+| No raw `.disabled =` mutations | ast-grep `no-raw-disabled` (go through machine actions) |
+| No raw slider value/step manipulation | ast-grep `no-raw-slider-manipulation` (use app-slider helpers) |
+| No ad-hoc icon styling | ast-grep `no-adhoc-icon-styling` (use icon-btn/icon-md classes) |
+| No naked browser API calls | ast-grep `no-naked-browser-api` (inject via Effect services) |
+| No imperative `page.goto()` in tests | ast-grep `no-raw-goto-in-specs` |
+| No raw `dispatchEvent` in tests | ast-grep `no-raw-dispatchevent-in-specs` |
 | Tests only in `tests/xstate-graph.spec.ts` | `testMatch` in playwright config |
 | New tests must be `StateInvariant` objects | Wired into `[Structural]` block in spec file |
 

@@ -62,7 +62,9 @@ export function SongBar(props: SongBarProps): JSX.Element {
   return (
     <div id="song-bar">
 
-      <div id="song-bar-search" style="position:relative;display:inline-flex;align-items:center;gap:4px;">
+      <div id="song-bar-search" style="position:relative;display:inline-flex;flex-direction:column;gap:2px;">
+        <span class="overlay-section-title">SONG</span>
+        <div style="display:inline-flex;align-items:center;gap:4px;">
         <InfoButton infoKey="search" />
         <div style="position:relative;display:inline-flex;align-items:center;">
           <i
@@ -96,6 +98,7 @@ export function SongBar(props: SongBarProps): JSX.Element {
           id="midi-search-results"
           style="position:absolute;top:100%;left:0;min-width:280px;max-height:300px;overflow-y:auto;background:var(--bg);border:1px solid var(--border);z-index:25;display:none;"
         />
+        </div>
       </div>
 ```
 

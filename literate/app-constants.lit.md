@@ -328,6 +328,8 @@ ${srcLink('keyboard-layouts.lit.md', 'Source: keyboard-layouts.lit.md — layout
   midi: `
 <h2>MIDI Input</h2>
 <p>External MIDI controllers send <strong>note numbers</strong> (0–127), not grid coordinates. The app maps each MIDI note to the closest grid cell, but enharmonic equivalents (e.g., C♭♭ vs B♭) share the same MIDI note number and cannot be distinguished.</p>
+<h3>Browser Support</h3>
+<p><strong>WebMIDI is not available on iOS or Safari.</strong> Use <strong>Chrome</strong>, <strong>Edge</strong>, or <strong>Opera</strong> for MIDI controller input. Firefox does not support WebMIDI either. On iOS devices, MIDI input is not possible in any browser — use touch or computer keyboard input instead.</p>
 <h3>Limitations</h3>
 <ul>
 <li><strong>12-note constraint</strong>: MIDI encodes pitch as integers mod 12. Microtonal tunings wider than 12-TET produce duplicate mappings — two grid cells with different fifths-positions but the same MIDI note.</li>
@@ -346,7 +348,8 @@ ${srcLink('midi-input.lit.md', 'Source: midi-input.lit.md — MIDI device manage
 <li>Grey out unreachable cells so you can focus on what you can play</li>
 <li>Optimize game mode note placement</li>
 </ul>
-<p>The calibrated range is saved in localStorage and persists across sessions. Reset by clearing and re-calibrating.</p>
+<p><strong>Confirming with 0 notes played clears the calibrated range</strong> — all cells become active again and auto-transposition is disabled.</p>
+<p>The calibrated range is saved in localStorage and persists across sessions. Reset by confirming with no notes played, or by re-calibrating with a new range.</p>
 ${srcLink('calibration.lit.md', 'Source: calibration.lit.md — range calibration and storage')}`,
 
   maxkeys: `
