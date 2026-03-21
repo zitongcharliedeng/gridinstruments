@@ -903,7 +903,7 @@ label+input pairs in the INPUT section.
 
 ``` {.html file=index.html}
      .midi-panel-row {
-      display: flex; align-items: center; gap: 4px;
+      display: flex; align-items: center; gap: 2px;
       font-size: 11px; flex-wrap: wrap;
     }
      .slider-info-btn {

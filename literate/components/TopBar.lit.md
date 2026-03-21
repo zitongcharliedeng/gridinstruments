@@ -51,8 +51,8 @@ export function TopBar(props: TopBarProps): JSX.Element {
 
   return (
     <>
-      <button id="about-btn" class="icon-btn" onClick={onAboutClick}>
-        <i data-lucide="info" />
+      <button id="about-btn" class="slider-info-btn" data-info="about" onClick={onAboutClick}>
+        i
       </button>
       <span class="site-title">GridInstruments</span>
       <div class="gh-actions">

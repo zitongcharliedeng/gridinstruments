@@ -133,7 +133,7 @@ export function mountGridOverlay(
               <span class="overlay-section-title">MIDI</span> <InfoButton infoKey="midi" />
               <div id="midi-device-list"></div>
               <span class="overlay-section-title">EXPRESSION</span>
-              <div class="midi-panel-row" id="expr-bend-row" style="gap:6px">
+              <div class="midi-panel-row" id="expr-bend-row" style="gap:2px">
                 <InfoButton infoKey="bend" />
                 <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;">
                   <span class="gi-checkbox"><input type="checkbox" id="expr-bend" checked /><span class="gi-check"></span></span>
@@ -142,20 +142,20 @@ export function mountGridOverlay(
                   <span style="color:var(--dim);font-size:10px;">semitones</span>
                 </label>
               </div>
-              <div class="midi-panel-row" id="expr-velocity-row" style="gap:6px">
+              <div class="midi-panel-row" id="expr-velocity-row" style="gap:2px">
                 <InfoButton infoKey="velocity" />
                 <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;">
                   <span class="gi-checkbox"><input type="checkbox" id="expr-velocity" checked /><span class="gi-check"></span></span>
                   <span style="color:#fff">Note Velocity</span>
                 </label>
               </div>
-              <div class="midi-panel-row" id="expr-pressure-row" style="gap:6px">
+              <div class="midi-panel-row" id="expr-pressure-row" style="gap:2px">
                 <InfoButton infoKey="pressure" />
                 <span style="color:#fff;font-size:12px;">Pressure Mode</span>
                 <button id="pressure-mode" style="font-family:var(--font);font-size:10px;background:var(--bg);color:var(--fg);border:1px solid var(--border);padding:2px 6px;cursor:pointer;" value="channel">Channel</button>
                 <span style="color:var(--dim);font-size:9px;">(click to cycle)</span>
               </div>
-              <div class="midi-panel-row" id="expr-timbre-row" style="gap:6px">
+              <div class="midi-panel-row" id="expr-timbre-row" style="gap:2px">
                 <InfoButton infoKey="timbre" />
                 <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;">
                   <span class="gi-checkbox"><input type="checkbox" id="expr-timbre" checked /><span class="gi-check"></span></span>
