@@ -52,7 +52,9 @@ const OVERLAY_CSS = `.settings-overlay {
 }
 .overlay-btn:hover { border-color:var(--fg); }
 .overlay-btn:active { background:var(--subtle); }
-.dimmed { opacity:0.3; pointer-events:none; transition:opacity 0.3s ease; }`;
+.dimmed { opacity:0.3; pointer-events:none; transition:opacity 0.3s ease; }
+.slider-row-track { margin-top: 8px; }
+.slider-badge-edit { width:50px; text-align:center; font-family:var(--font); font-size:10px; background:var(--bg); color:var(--fg); border:1px solid var(--border); padding:1px 3px; }`;
 
 let overlayCssInjected = false;
 function injectOverlayCSS(): void {
@@ -116,7 +118,7 @@ function SliderRow(props: { def: SliderDef }): JSX.Element {
   };
 
   return (
-    <div class="slider-track" style="margin-top: 8px">
+    <div class="slider-track slider-row-track">
       <span class="slider-label-overlay">{props.def.label}</span>
       <input
         type="range"
@@ -129,9 +131,8 @@ function SliderRow(props: { def: SliderDef }): JSX.Element {
       />
       <input
         type="text"
-        class="badge-input"
+        class="badge-input slider-badge-edit"
         value={fmt(value())}
-        style="width:50px;text-align:center;font-family:var(--font);font-size:10px;background:var(--bg);color:var(--fg);border:1px solid var(--border);padding:1px 3px;"
         onChange={(e) => {
           const v = parseFloat((e.target as HTMLInputElement).value);
           if (Number.isFinite(v)) { setValue(Math.max(props.def.min, Math.min(props.def.max, v))); props.def.onChange?.(value()); }

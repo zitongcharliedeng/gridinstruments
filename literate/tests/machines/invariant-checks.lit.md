@@ -4029,10 +4029,11 @@ export const SONGBAR_HINT_1: StateInvariant = {
     const result = await page.evaluate(() => {
       const el = document.getElementById('song-bar-calibrate');
       if (!el) throw new Error('#song-bar-calibrate not found');
-      return { inlineML: el.style.marginLeft };
+      return { ml: getComputedStyle(el).marginLeft };
     });
-    if (result.inlineML !== 'auto') {
-      throw new Error(`#song-bar-calibrate margin-left is "${result.inlineML}" — expected "auto"`);
+    const mlPx = parseFloat(result.ml);
+    if (!(mlPx > 0)) {
+      throw new Error(`#song-bar-calibrate margin-left is "${result.ml}" — expected positive (auto)`);
     }
   },
 };
