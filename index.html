@@ -138,6 +138,22 @@
     .gh-btn svg { fill: currentColor; }
      .gh-btn .star-icon { color: #FFD700; }
     .gh-suggest { color: #4caf50; }
+
+    #global-settings-bar {
+      position: relative;
+      flex-shrink: 0;
+      border-bottom: 1px solid var(--border);
+      min-height: 32px;
+    }
+    #global-settings-btn {
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 15;
+    }
+    #global-settings-mount {
+      position: relative;
+    }
     .gh-suggest svg { fill: #4caf50; }
     .gh-suggest:hover { color: #66bb6a; background: var(--subtle); }
      #about-btn {
@@ -895,7 +911,7 @@
       }
     }
   </style>
-  <script type="module" crossorigin src="./assets/index-EOEGXgR6.js"></script>
+  <script type="module" crossorigin src="./assets/index-DU2k3VHC.js"></script>
   <link rel="stylesheet" crossorigin href="./assets/index-BrmHDgVP.css">
 </head>
 <body>
@@ -907,6 +923,12 @@
       <!-- Song/game controls — right side of header, wraps on narrow — mounted by SolidJS SongBar component -->
       <div id="songbar-mount"></div>
     </header>
+
+    <!-- Global settings panel (SOUND + INPUT — applies to all grids) -->
+    <div id="global-settings-bar">
+      <button id="global-settings-btn" class="grid-cog icon-btn icon-md"><i data-lucide="settings-2"></i></button>
+      <div id="global-settings-mount"></div>
+    </div>
 
     <!-- Visualiser panel -->
     <div id="visualiser-panel">
