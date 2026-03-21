@@ -45,6 +45,7 @@ export class MidiInput {
   private pressureCallbacks: MidiExpressionCallback[] = [];
 
   private channelMode: MidiChannelMode = 'omni';
+  private pressureCC: number | null = null;
 
   private _available = false;
 
@@ -159,6 +160,10 @@ The channel mode controls how multi-channel MIDI data is routed. All three modes
   getChannelMode(): MidiChannelMode {
     return this.channelMode;
   }
+
+  setPressureCC(cc: number | null): void {
+    this.pressureCC = cc;
+  }
 ```
 
 ## Message Handling
@@ -191,7 +196,11 @@ Polyphonic Aftertouch (0xA0) is the per-note pressure message used by MPE instru
       for (const cb of this.pitchBendCallbacks) cb(channel, normalized, deviceId);
     } else if (type === 0xB0 && (note === 74 || note === 1 || note === 11)) {
       const normalized = velocity / 127;
-      for (const cb of this.slideCallbacks) cb(channel, normalized, deviceId);
+      if (this.pressureCC !== null && note === this.pressureCC) {
+        for (const cb of this.pressureCallbacks) cb(channel, normalized, deviceId);
+      } else {
+        for (const cb of this.slideCallbacks) cb(channel, normalized, deviceId);
+      }
     } else if (type === 0xA0) {
       if (data.length < 3) return;
       const normalized = data[2] / 127;

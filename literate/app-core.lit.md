@@ -117,6 +117,7 @@ The second group of private fields covers DOM references and UI state: canvas el
     pressureMode: 'gi_pressure_mode',
     timbreReverse: 'gi_timbre_reverse',
     dpi: 'gi_dpi',
+    pressureCcSource: 'gi_pressure_cc_source',
   } as const;
 
   private loadSetting(key: keyof typeof DComposeApp.STORAGE_KEYS, fallback: string): string {
@@ -1110,6 +1111,18 @@ button component.
     setupCyclingButton('timbre-cc-mode', TIMBRE_CC_OPTIONS, savedTimbreMode, (cc) => {
       this.applyTimbreCcMode(cc);
       this.saveSetting('timbreCcMode', cc);
+    });
+
+    const PRESSURE_CC_OPTIONS = [
+      { value: 'aftertouch', label: 'Aftertouch' },
+      { value: '11', label: 'CC11' },
+      { value: '1', label: 'CC1' },
+    ];
+    const savedPressureCc = this.loadSetting('pressureCcSource', 'aftertouch');
+    this.midi.setPressureCC(savedPressureCc === 'aftertouch' ? null : parseInt(savedPressureCc, 10));
+    setupCyclingButton('pressure-cc-source', PRESSURE_CC_OPTIONS, savedPressureCc, (mode) => {
+      this.midi.setPressureCC(mode === 'aftertouch' ? null : parseInt(mode, 10));
+      this.saveSetting('pressureCcSource', mode);
     });
 ```
 

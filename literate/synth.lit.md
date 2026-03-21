@@ -627,12 +627,12 @@ range from 500 Hz to 18 000 Hz.
 
 Pressure controls per-voice gain with a square-root curve (`value^0.5`),
 Velocity sets the ceiling (initial attack brightness), while pressure
-controls the ongoing sustained volume across the full 0–1 range, independent
-of the initial strike velocity. Velocity only affects the attack transient
-(timbre filter cutoff and initial gain ramp). Once the player applies
-pressure, it takes over gain completely — a soft strike followed by hard
-pressure reaches full volume. A small floor (0.01) prevents total silence
-so release transients remain audible.
+scales the ongoing sustained volume by combining velocity and pressure.
+The gain is `velocityGain * pressure` — a soft strike (low velocity) with
+full pressure reaches `velocityGain` (not full volume), preserving the
+dynamic range that the initial strike established. This matches the MPE
+standard where aftertouch modulates within the velocity-set envelope.
+A small floor (0.01) prevents total silence.
 
 ``` {.typescript file=_generated/lib/synth.ts}
   setPressure(noteId: string, value: number): void {
@@ -640,7 +640,7 @@ so release transients remain audible.
     const voice = this.voices.get(noteId);
     if (!voice) return;
     const clamped = Math.max(0, Math.min(1, value));
-    const gain = Math.max(0.01, clamped);
+    const gain = Math.max(0.01, voice.velocityGain * clamped);
     voice.gainNode.gain.setTargetAtTime(gain, this.context.currentTime, 0.01);
   }
 

@@ -159,9 +159,9 @@ export function mountGridOverlay(
               </div>
               <div class="midi-panel-row" id="expr-pressure-row" style="gap:2px">
                 <InfoButton infoKey="pressure" />
-                <span style="color:#fff;font-size:12px;">Pressure Mode</span>
+                <span style="color:#fff;font-size:12px;">Pressure</span>
                 <button id="pressure-mode" style="font-family:var(--font);font-size:10px;background:var(--bg);color:var(--fg);border:1px solid var(--border);padding:2px 6px;cursor:pointer;" value="channel">Channel</button>
-                <span style="color:var(--dim);font-size:9px;">(click to cycle)</span>
+                <button id="pressure-cc-source" style="font-family:var(--font);font-size:10px;background:var(--bg);color:var(--fg);border:1px solid var(--border);padding:2px 6px;cursor:pointer;" value="aftertouch">Aftertouch</button>
               </div>
               <div class="midi-panel-row" id="expr-timbre-row" style="gap:2px">
                 <InfoButton infoKey="timbre" />
