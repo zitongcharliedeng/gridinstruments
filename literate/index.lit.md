@@ -657,8 +657,8 @@ using absolute positioning relative to `.tuning-slider-area`. Each mark
 consists of a vertical tick (short or staggered-tall to avoid label collisions)
 and a small clickable `.slider-preset-btn` that snaps the slider to the named
 EDO. Active marks turn green (`#4f4`) to indicate the current temperament. The
-`.slider-info-btn` is an inline info-circle icon that opens the contextual help
-dialog for that parameter.
+`.slider-info-btn` is a 14x14 square text "i" button that opens the contextual
+help dialog for that parameter. CSS is co-located in `InfoButton.lit.md`.
 
 ``` {.html file=index.html}
 
@@ -711,11 +711,9 @@ dialog for that parameter.
      .slider-preset-mark.active .slider-preset-btn { color: #4f4; }
 ```
 
-`.slider-info-btn` is an inline square icon that opens contextual help for its
-adjacent control. By default it flows inline (static position) so it sits
-naturally to the left of whatever component it accompanies. Inside
-`.tuning-slider-area`, it switches to absolute positioning at the left edge
-of the slider track. `.midi-panel-row` provides a flex row for MIDI control
+The `.tuning-slider-area` override positions the info button absolutely at the
+left edge of the slider track (base styles in `InfoButton.lit.md`).
+`.midi-panel-row` provides a flex row for MIDI control
 label+input pairs in the INPUT section.
 
 ``` {.html file=index.html}
