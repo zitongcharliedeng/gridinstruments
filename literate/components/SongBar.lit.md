@@ -111,7 +111,7 @@ active — the song title, progress bar, elapsed timer, and restart button.
 
       <div id="song-bar-status">
         <InfoButton infoKey="quantization" />
-        <span style="color:var(--dim);font-size:10px;">Quant</span>
+        <span class="text-dim-sm">Quant</span>
         <span id="quantization-select-slot"></span>
         <div id="game-status">
           <div id="game-song-title" />
@@ -146,7 +146,7 @@ range. The banner with confirm/cancel actions appears when calibration is active
 
       <div id="song-bar-calibrate">
         <InfoButton infoKey="maxkeys" />
-        <label style="display:inline-flex;align-items:center;gap:2px;font-family:var(--font);font-size:9px;color:var(--dim);">
+        <label class="maxkeys-label">
           Max Keys
           <input
             type="text"
@@ -158,18 +158,14 @@ range. The banner with confirm/cancel actions appears when calibration is active
           />
         </label>
         <InfoButton infoKey="calibrate" />
-        <div style="display:inline-flex;align-items:center;min-width:160px;max-width:220px;overflow:hidden;">
+        <div class="calibrate-wrap">
           <button
             id="calibrate-btn"
-            style="font-family:var(--font);font-size:9px;background:none;color:var(--dim);border:1px solid var(--border);padding:2px 8px;cursor:pointer;white-space:nowrap;"
             onClick={() => { props.onCalibrateStart(); }}
           >
             Calibrate Playable Area
           </button>
-          <span
-            id="calibration-banner"
-            style="display:none;font-family:var(--font);font-size:9px;gap:2px;align-items:center;white-space:nowrap;"
-          >
+          <span id="calibration-banner">
             <span id="calibration-warning" />
             <span id="calibration-msg">Confirm?</span>
           <button
