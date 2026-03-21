@@ -285,9 +285,6 @@ calibrate — each use `inline-flex` to keep their controls tight. The
     }
 
 
-    .graffiti-overlay {
-      transition: opacity 1.5s ease;
-    }
 ```
 
 ## Visualiser panel and resize handle
@@ -886,20 +883,6 @@ styling.
 
 ``` {.html file=index.html}
 
-    .graffiti-overlay {
-      position: absolute;
-      pointer-events: none;
-      mix-blend-mode: screen;
-      z-index: 5;
-      transition: opacity 1.5s ease;
-    }
-    .graffiti-label {
-      font-family: var(--font);
-      font-size: 14px;
-      font-style: italic;
-      fill: #FFD700;
-      opacity: 0.9;
-    }
 
 
 

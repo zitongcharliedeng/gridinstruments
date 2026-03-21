@@ -13,6 +13,21 @@ Chord shapes are expressed in fifth/octave grid coordinates `(fifth steps, octav
 ``` {.typescript file=_generated/lib/chord-graffiti.ts}
 import rough from 'roughjs';
 import type { KeyboardVisualizer } from './keyboard-visualizer';
+
+const GRAFFITI_CSS = `.graffiti-overlay {
+  position:absolute; pointer-events:none; mix-blend-mode:screen;
+  z-index:5; transition:opacity 1.5s ease;
+}
+.graffiti-label {
+  font-family:var(--font); font-size:14px; font-style:italic;
+  fill:#FFD700; opacity:0.9;
+}`;
+if (!document.querySelector('style[data-graffiti]')) {
+  const s = document.createElement('style');
+  s.setAttribute('data-graffiti', '');
+  s.textContent = GRAFFITI_CSS;
+  document.head.appendChild(s);
+}
 ```
 
 ``` {.typescript file=_generated/lib/chord-graffiti.ts}
