@@ -436,35 +436,6 @@ buttons that invert on hover.
 
 ``` {.html file=index.html}
 
-    .settings-overlay {
-      position: absolute;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(30, 30, 32, 0.78);
-      z-index: 12;
-      padding: 40px 12px 12px 40px;
-      overflow-y: auto;
-      overflow-x: hidden;
-      scrollbar-width: thin;
-      scrollbar-color: var(--dim) transparent;
-      touch-action: auto !important;
-      -webkit-overflow-scrolling: touch;
-    }
-
-    .settings-overlay::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(110deg, rgba(255,255,255,0.04) 20%, rgba(255,255,255,0.10) 40%, rgba(255,255,255,0.14) 50%, rgba(255,255,255,0.10) 60%, rgba(255,255,255,0.04) 80%);
-      box-shadow: inset 0 0 40px rgba(255,255,255,0.04);
-      background-size: 300% 100%;
-      animation: shimmer 60s linear infinite;
-      pointer-events: none;
-      z-index: 0;
-    }
-    @keyframes shimmer {
-      0% { background-position: 200% 0; }
-      100% { background-position: -100% 0; }
-    }
     #vis-overlay {
       padding: 8px 12px 8px 40px;
     }

@@ -18,6 +18,32 @@ containing sliders and other controls.
 import { createSignal, For, Show, type JSX } from 'solid-js';
 import { applySliderFill } from '../app-slider';
 
+const OVERLAY_CSS = `.settings-overlay {
+  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(30, 30, 32, 0.78); z-index: 12;
+  padding: 40px 12px 12px 40px; overflow-y: auto; overflow-x: hidden;
+  scrollbar-width: thin; scrollbar-color: var(--dim) transparent;
+  touch-action: auto !important; -webkit-overflow-scrolling: touch;
+}
+.settings-overlay::before {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(110deg, rgba(255,255,255,0.04) 20%, rgba(255,255,255,0.10) 40%, rgba(255,255,255,0.14) 50%, rgba(255,255,255,0.10) 60%, rgba(255,255,255,0.04) 80%);
+  box-shadow: inset 0 0 40px rgba(255,255,255,0.04);
+  background-size: 300% 100%; animation: shimmer 60s linear infinite;
+  pointer-events: none; z-index: 0;
+}
+@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -100% 0; } }
+.hidden { display: none !important; pointer-events: none !important; }`;
+
+let overlayCssInjected = false;
+function injectOverlayCSS(): void {
+  if (overlayCssInjected) return;
+  const s = document.createElement('style');
+  s.textContent = OVERLAY_CSS;
+  document.head.appendChild(s);
+  overlayCssInjected = true;
+}
+
 export interface SliderDef {
   id: string;
   label: string;
@@ -111,6 +137,7 @@ before the user opens the panel.
 ``` {.typescript file=_generated/components/SettingsOverlay.tsx}
 
 export function SettingsOverlay(props: SettingsOverlayProps): JSX.Element {
+  injectOverlayCSS();
   const sectionClass = props.sectionClass ?? 'overlay-section';
   return (
     <div id={props.overlayId} class="settings-overlay" classList={{ hidden: !props.visible() }}>
