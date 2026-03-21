@@ -92,7 +92,7 @@ export function SongBar(props: SongBarProps): JSX.Element {
           style="font-family:var(--font);font-size:9px;background:none;color:var(--dim);border:1px solid var(--border);padding:2px 4px;cursor:pointer;flex-shrink:0;"
           onClick={() => { document.getElementById('midi-file-input')?.click(); }}
         >
-          <i data-lucide="upload" style="width:10px;height:10px;" />
+          <i data-lucide="upload" class="icon" />
         </button>
         <div
           id="midi-search-results"
