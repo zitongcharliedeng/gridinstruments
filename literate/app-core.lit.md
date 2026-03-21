@@ -556,6 +556,7 @@ The MIDI device panel renders a list of connected controllers with enable/disabl
     if (gridOverlay) {
       gridOverlay.setAttribute('data-overlayscrollbars-initialize', '');
       const overlayScrollbars = OverlayScrollbars(gridOverlay, {
+        overflow: { x: 'hidden', y: 'scroll' },
         scrollbars: {
           theme: 'gi-scrollbar',
           visibility: 'visible',
