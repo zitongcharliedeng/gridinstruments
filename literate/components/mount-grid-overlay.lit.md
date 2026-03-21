@@ -54,7 +54,7 @@ export function mountGridOverlay(
           <div class="slider-track">
             <span class="ctrl-label">WAVE</span>
             <span id="wave-select-slot" />
-            <button class="slider-reset icon-btn icon-md" id="wave-reset"><i data-lucide="rotate-cw"></i></button>
+            <button class="slider-reset icon-btn icon-md" id="wave-reset"><i data-lucide="rotate-cw" /></button>
           </div>
           <div class="ctrl-group mt-18">
             <InfoButton infoKey="volume" />
@@ -62,7 +62,7 @@ export function mountGridOverlay(
               <span class="slider-label-overlay">VOL (dB)</span>
               <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.5" />
               <span class="slider-value-badge" id="volume-thumb-badge">-10.5</span>
-              <button class="slider-reset icon-btn icon-md" id="volume-reset"><i data-lucide="rotate-cw"></i></button>
+              <button class="slider-reset icon-btn icon-md" id="volume-reset"><i data-lucide="rotate-cw" /></button>
             </div>
           </div>
           <div class="tuning-slider-area mt-18">
@@ -71,9 +71,9 @@ export function mountGridOverlay(
               <span class="slider-label-overlay" id="tuning-label">FIFTHS TUNING (cents)</span>
               <input type="range" id="tuning-slider" min="683" max="722" step="0.01" value="700" />
               <input type="text" class="badge-input" id="tuning-thumb-badge" value="700" />
-              <button class="slider-reset icon-btn icon-md" id="tuning-reset"><i data-lucide="rotate-cw"></i></button>
+              <button class="slider-reset icon-btn icon-md" id="tuning-reset"><i data-lucide="rotate-cw" /></button>
             </div>
-            <div class="tet-presets" id="tet-presets" data-alternate-ticks></div>
+            <div class="tet-presets" id="tet-presets" data-alternate-ticks />
           </div>
           <div class="tuning-slider-area mt-18">
             <InfoButton infoKey="dref" />
@@ -81,7 +81,7 @@ export function mountGridOverlay(
               <span class="slider-label-overlay" id="d-ref-label">D REF (Hz)</span>
               <input type="range" id="d-ref-slider" min="73.42" max="1174.66" step="0.01" value="293.66" />
               <input type="text" class="badge-input" id="d-ref-input" value="293.66" />
-              <button id="d-ref-reset" class="slider-reset icon-btn icon-md"><i data-lucide="rotate-cw"></i></button>
+              <button id="d-ref-reset" class="slider-reset icon-btn icon-md"><i data-lucide="rotate-cw" /></button>
             </div>
           </div>
         </div>
@@ -97,9 +97,9 @@ export function mountGridOverlay(
               <span class="slider-label-overlay" id="skew-label">MECH SKEW</span>
               <input type="range" id="skew-slider" min="-0.5" max="1.5" step="0.01" value="0" />
               <input type="text" class="badge-input" id="skew-thumb-badge" value="0.00" />
-              <button class="slider-reset icon-btn icon-md" id="skew-reset"><i data-lucide="rotate-cw"></i></button>
+              <button class="slider-reset icon-btn icon-md" id="skew-reset"><i data-lucide="rotate-cw" /></button>
             </div>
-            <div class="slider-presets" id="skew-presets"></div>
+            <div class="slider-presets" id="skew-presets" />
           </div>
           <div class="tuning-slider-area mt-18">
             <InfoButton infoKey="shear" />
@@ -107,9 +107,9 @@ export function mountGridOverlay(
               <span class="slider-label-overlay" id="bfact-label">WICKED SHEAR</span>
               <input type="range" id="bfact-slider" min="-0.5" max="1.5" step="0.01" value="0" />
               <input type="text" class="badge-input" id="bfact-thumb-badge" value="0.00" />
-              <button class="slider-reset icon-btn icon-md" id="bfact-reset"><i data-lucide="rotate-cw"></i></button>
+              <button class="slider-reset icon-btn icon-md" id="bfact-reset"><i data-lucide="rotate-cw" /></button>
             </div>
-            <div class="slider-presets" id="bfact-presets"></div>
+            <div class="slider-presets" id="bfact-presets" />
           </div>
           <div class="tuning-slider-area mt-18">
             <InfoButton infoKey="zoom" />
@@ -117,7 +117,7 @@ export function mountGridOverlay(
               <span class="slider-label-overlay">ZOOM (x)</span>
               <input type="range" id="zoom-slider" min="0.2" max="3" step="0.01" value="1" />
               <span class="slider-value-badge" id="zoom-thumb-badge">1.00</span>
-              <button class="slider-reset icon-btn icon-md" id="zoom-reset"><i data-lucide="rotate-cw"></i></button>
+              <button class="slider-reset icon-btn icon-md" id="zoom-reset"><i data-lucide="rotate-cw" /></button>
             </div>
           </div>
           <div class="slider-track mt-18">
@@ -136,12 +136,12 @@ export function mountGridOverlay(
           <div class="slider-track">
             <span class="ctrl-label">KEYBOARD LAYOUT</span>
             <span id="layout-select-slot" />
-            <button class="slider-reset icon-btn icon-md" id="layout-reset"><i data-lucide="rotate-cw"></i></button>
+            <button class="slider-reset icon-btn icon-md" id="layout-reset"><i data-lucide="rotate-cw" /></button>
           </div>
           <div class="mt-18">
             <div id="midi-settings-panel">
               <span class="overlay-section-title">MIDI</span> <InfoButton infoKey="midi" />
-              <div id="midi-device-list"></div>
+              <div id="midi-device-list" />
               <span class="overlay-section-title">EXPRESSION</span>
               <div class="midi-panel-row" id="expr-bend-row">
                 <InfoButton infoKey="bend" />
