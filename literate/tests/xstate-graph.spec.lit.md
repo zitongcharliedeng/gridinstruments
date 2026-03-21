@@ -1104,6 +1104,30 @@ The golden screenshot tests compare rendered pixels against stored reference ima
     await page.keyboard.press('Escape');
   });
 
+  test('SMOKE-7: Dvorak layout appears in keyboard dropdown', async ({ page }) => {
+    await page.locator('#grid-settings-btn').click();
+    await page.waitForTimeout(200);
+    const layoutSelect = page.locator('.ss-content .ss-option');
+    await page.locator('.ss-main').nth(1).click();
+    await page.waitForTimeout(200);
+    const texts = await layoutSelect.allTextContents();
+    const hasDvorak = texts.some(t => t.includes('Dvorak'));
+    expect(hasDvorak).toBe(true);
+    await page.keyboard.press('Escape');
+  });
+
+  test('SMOKE-8: Mobile viewport — grid visible and playable at 375px', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 812 });
+    await page.waitForTimeout(500);
+    const canvas = page.locator('#keyboard-canvas');
+    const box = await canvas.boundingBox();
+    expect(box).not.toBeNull();
+    if (box) {
+      expect(box.width).toBeCloseTo(375, -1);
+      expect(box.height).toBeGreaterThan(200);
+    }
+  });
+
   test('SMOKE-4: Info buttons are 14x14 square text buttons', async ({ page }) => {
     await page.locator('#grid-settings-btn').click();
     await page.waitForTimeout(200);
