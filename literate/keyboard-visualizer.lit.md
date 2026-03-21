@@ -926,13 +926,14 @@ colors for the resolved state.
     const isActive = this.activeNotes.has(noteId);
     const isSourceActive = isActive && this.sourceActiveNotes.has(noteId);
     const isMirrorActive = isActive && !isSourceActive;
-    const isTarget = this.targetNotes.has(noteId) && !isActive;
+    const isUncalibrated = this.calibratedRange !== null && !this.calibratedRange.has(noteId);
+    const effectiveActive = isSourceActive || (isMirrorActive && !isUncalibrated);
+    const isTarget = this.targetNotes.has(noteId) && !effectiveActive;
     const isTargetPressed = isTarget && this.pressedTargetNotes.has(noteId);
     const isTargetUnpressed = isTarget && !this.pressedTargetNotes.has(noteId);
-    const isSustained = this.sustainedNotes.has(noteId) && !isActive;
-    const isUncalibrated = this.calibratedRange !== null && !this.calibratedRange.has(noteId);
+    const isSustained = this.sustainedNotes.has(noteId) && !effectiveActive;
 
-    const state: 'active' | 'target' | 'target-pressed' | 'sustained' | 'uncalibrated-white' | 'uncalibrated-black' | 'white' | 'black' = isActive ? 'active'
+    const state: 'active' | 'target' | 'target-pressed' | 'sustained' | 'uncalibrated-white' | 'uncalibrated-black' | 'white' | 'black' = effectiveActive ? 'active'
       : isTargetPressed ? 'target-pressed'
       : isTargetUnpressed ? 'target'
       : isSustained ? 'sustained'
