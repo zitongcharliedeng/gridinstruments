@@ -1059,9 +1059,9 @@ The golden screenshot tests compare rendered pixels against stored reference ima
     await page.waitForTimeout(200);
     const overlay = page.locator('#grid-overlay');
     await expect(overlay).toBeVisible();
-    await expect(page.locator('#volume-slider')).toBeAttached();
-    await expect(page.locator('#tuning-slider')).toBeAttached();
     await expect(page.locator('#zoom-slider')).toBeAttached();
+    await expect(page.locator('#skew-slider')).toBeAttached();
+    await expect(page.locator('#bfact-slider')).toBeAttached();
     await page.keyboard.press('Escape');
   });
 
