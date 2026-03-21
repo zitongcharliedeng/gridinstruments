@@ -345,35 +345,12 @@ export function quantizeNotes(
   const result: NoteEvent[] = [];
 ```
 
-For each event, snapping finds the start grid point. Long notes spanning multiple grid points are split into one event per grid point, each with an equal share of the original duration.
+For each event, snapping finds the nearest grid point. The note keeps its original duration — sustained notes are NOT split into repeated taps. This gives a natural "hold the note" feel instead of button-mashing spam.
 
 ``` {.typescript file=_generated/lib/game-engine.ts}
   for (const event of events) {
     const snappedStart = snapToGrid(event.startMs);
-    const noteEndMs = event.startMs + event.durationMs;
-
-    const gridPointsInNote: number[] = [];
-    for (const gp of grid) {
-      if (gp >= snappedStart && gp < noteEndMs) {
-        gridPointsInNote.push(gp);
-      }
-      if (gp >= noteEndMs) break;
-    }
-
-    if (gridPointsInNote.length <= 1) {
-      result.push({ ...event, startMs: snappedStart });
-    } else {
-      for (const gp of gridPointsInNote) {
-        result.push({
-          midiNote: event.midiNote,
-          startMs: gp,
-          durationMs: event.durationMs / gridPointsInNote.length,
-          velocity: event.velocity,
-          channel: event.channel,
-          track: event.track,
-        });
-      }
-    }
+    result.push({ ...event, startMs: snappedStart });
   }
 ```
 
