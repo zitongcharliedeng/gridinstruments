@@ -1501,9 +1501,10 @@ the tuning slider and calibrate button to prevent mid-game tuning changes.
             const hint = document.getElementById('song-bar-hint');
             if (hint) {
               hint.classList.add('show-inline');
-              hint.style.opacity = '1';
+              hint.classList.add('visible-full');
+              hint.classList.remove('faded');
               hint.textContent = `This chord needs ${allTargetCellIds.length} keys — your keyboard may limit to ${this.peakKeysThisSession}. Try a MIDI controller.`;
-              setTimeout(() => { hint.style.opacity = '0'; }, 5000);
+              setTimeout(() => { hint.classList.remove('visible-full'); hint.classList.add('faded'); }, 5000);
             }
           }
 
@@ -2067,10 +2068,10 @@ The idle timer controls the visibility of decorative elements (chord graffiti, s
     this.isIdle = idle;
 
     const graffitiEl = document.querySelector<SVGElement>('.graffiti-overlay');
-    if (graffitiEl) graffitiEl.style.opacity = idle ? '1' : '0';
+    if (graffitiEl) { graffitiEl.classList.toggle('visible-full', idle); graffitiEl.classList.toggle('faded', !idle); }
 
     const songBarHint = document.getElementById('song-bar-hint');
-    if (songBarHint) songBarHint.style.opacity = idle ? '1' : '0';
+    if (songBarHint) { songBarHint.classList.toggle('visible-full', idle); songBarHint.classList.toggle('faded', !idle); }
 
     this.historyVisualizer?.setIdleState(idle);
   }

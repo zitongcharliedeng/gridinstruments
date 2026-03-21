@@ -72,7 +72,9 @@ const OVERLAY_CSS = `.settings-overlay {
 .gi-checkbox input:checked + .gi-check::after { content:''; position:absolute; left:4px; top:1px; width:4px; height:8px; border:solid var(--bg); border-width:0 2px 2px 0; transform:rotate(45deg); }
 .gi-checkbox input:focus-visible + .gi-check { border-color:var(--accent); }
 .show-flex { display: flex !important; }
-.show-inline { display: inline-flex !important; }`;
+.show-inline { display: inline-flex !important; }
+.faded { opacity: 0; }
+.visible-full { opacity: 1; }`;
 
 let overlayCssInjected = false;
 function injectOverlayCSS(): void {
