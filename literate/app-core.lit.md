@@ -2369,7 +2369,6 @@ Calibration mode shows a banner instructing the user to play all reachable notes
       btn.classList.add('active');
       btn.disabled = true;
     }
-    document.getElementById('top-bar')?.classList.add('dimmed');
     document.getElementById('visualiser-panel')?.classList.add('dimmed');
     document.getElementById('pedals-panel')?.classList.add('dimmed');
     this.render();
@@ -2402,7 +2401,6 @@ Calibration mode shows a banner instructing the user to play all reachable notes
       btn.classList.remove('active');
       btn.disabled = false;
     }
-    document.getElementById('top-bar')?.classList.remove('dimmed');
     document.getElementById('visualiser-panel')?.classList.remove('dimmed');
     document.getElementById('pedals-panel')?.classList.remove('dimmed');
     this.render();

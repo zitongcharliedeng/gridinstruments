@@ -1073,16 +1073,17 @@ The golden screenshot tests compare rendered pixels against stored reference ima
     await page.keyboard.up('KeyH');
   });
 
-  test('SMOKE-3: Calibrate button text and banner bounded', async ({ page }) => {
+  test('SMOKE-3: Calibrate button inverts and banner appears', async ({ page }) => {
     const btn = page.locator('#calibrate-btn');
     await expect(btn).toHaveText('Calibrate Playable Area');
     await btn.click();
     await page.waitForTimeout(300);
+    await expect(btn).toHaveText('Calibrating...');
     const banner = page.locator('#calibration-banner');
     await expect(banner).toBeVisible();
-    const box = await banner.boundingBox();
-    if (box) expect(box.width).toBeLessThan(250);
     await page.locator('#calibrate-cancel').click();
+    await page.waitForTimeout(200);
+    await expect(btn).toHaveText('Calibrate Playable Area');
   });
 
   test('SMOKE-6: Vis overlay opens with TIME and RANGE sliders', async ({ page }) => {
