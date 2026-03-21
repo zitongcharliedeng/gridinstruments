@@ -1106,6 +1106,7 @@ save horizontal space, and the song bar reduces its gap and font size for phone 
 ``` {.html file=index.html}
 
     @media (max-width: 480px) {
+      .settings-overlay { padding: 36px 8px 8px 36px; }
       #top-bar {
         padding: 2px 4px;
         flex-wrap: wrap;
