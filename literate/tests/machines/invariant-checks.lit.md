@@ -4731,7 +4731,7 @@ export const MIDI_SETTINGS_GROUPED: StateInvariant = {
     await page.locator('#grid-settings-btn').click();
     await page.waitForTimeout(300);
     const result = await page.evaluate(() => {
-      const overlay = document.getElementById('global-overlay');
+      const overlay = document.getElementById('grid-overlay');
       if (!overlay) return { hasExpression: false, sectionTitles: [] };
       const titles = [...overlay.querySelectorAll('.overlay-section-title')].map(el => el.textContent?.trim());
       return {
