@@ -1249,9 +1249,6 @@ We binary-search the DPI from 40 to 600, fall back to `96 * devicePixelRatio`
 if matchMedia is unavailable (headless/CI), and clamp to a sane range.
 
 ``` {.typescript file=_generated/app-core.ts}
-     const PIANO_KEY_MM = 23;
-     const MM_PER_INCH = 25.4;
-
      const detectPhysicalDPI = (): number => {
        if (typeof window.matchMedia !== 'function') {
          return Math.max(72, Math.min(300, 96 * window.devicePixelRatio));
