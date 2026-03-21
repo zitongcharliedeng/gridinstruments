@@ -33,7 +33,17 @@ const OVERLAY_CSS = `.settings-overlay {
   pointer-events: none; z-index: 0;
 }
 @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -100% 0; } }
-.hidden { display: none !important; pointer-events: none !important; }`;
+.hidden { display: none !important; pointer-events: none !important; }
+.overlay-section { display:flex; flex-direction:column; gap:5px; margin-left:40px; margin-bottom:8px; }
+.overlay-section .ctrl-label { color:#fff; }
+.overlay-section .slider-track { width:100%; }
+.overlay-section .tuning-slider-area { position:relative; width:100%; margin-bottom:40px; }
+.overlay-section .tuning-slider-area .slider-track { width:calc(100% - 18px); }
+.overlay-section-title {
+  font-size:11px; color:var(--dim); text-transform:uppercase; letter-spacing:0.08em;
+  font-family:var(--font); font-weight:700; display:flex; align-items:center; gap:6px;
+}
+.overlay-section-title:hover { color:var(--fg); }`;
 
 let overlayCssInjected = false;
 function injectOverlayCSS(): void {
