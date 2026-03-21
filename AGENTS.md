@@ -279,6 +279,8 @@ These are not structurally enforced but are project policy. Violating them creat
 - **Adding npm dependencies** -- the only allowed runtime deps beyond the current set are `xstate` and `effect`. Everything else must be vendored or avoided.
 - **Using `grim`** for screenshots -- use Playwright's built-in screenshot API
 - **Closing GitHub issues** -- only label them "ready for review"; the maintainer closes
+- **Using `gh issue comment` directly** -- always use `scripts/gh-comment.sh` which prefixes with `🤖 [Agent]` so agent comments are distinguishable from user comments
+- **Reading agent comments as user intent** -- on GitHub issues, only trust informal/complaint language as the user's voice. Comments starting with "Fixed in commit" or "Verified:" are agent comments and are often wrong
 - **Toggle modifiers** -- `Shift` (vibrato) and `Space` (sustain) are hold-on, release-off. Never toggle.
 - **Binding `R` to non-note actions** -- `R` is a note key on the grid
 - **Binding `Ctrl+*` to synth shortcuts** -- `Ctrl` passes through to the browser
