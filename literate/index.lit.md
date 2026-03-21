@@ -934,6 +934,11 @@ label+input pairs in the INPUT section.
     #calibrate-cancel { font-family: var(--font); font-size: 9px; background: none; color: #f44; border: 1px solid #f44; padding: 1px 4px; cursor: pointer; line-height: 1; }
     .calibrate-wrap { display: inline-flex; align-items: center; min-width: 160px; max-width: 220px; overflow: hidden; }
     .maxkeys-label { display: inline-flex; align-items: center; gap: 2px; font-family: var(--font); font-size: 9px; color: var(--dim); }
+    .search-row { display: inline-flex; align-items: center; gap: 4px; }
+    .search-input-wrap { position: relative; display: inline-flex; align-items: center; }
+    .search-icon { position: absolute; left: 6px; width: 12px; height: 12px; color: var(--dim); pointer-events: none; }
+    #midi-file-input { display: none; }
+    .game-controls { display: flex; gap: 6px; align-items: center; }
     #game-progress-fill { height: 100%; background: #fff; width: 0%; transition: width 0.1s linear; }
     #game-elapsed-timer { font-size: 10px; color: var(--dim); font-family: var(--font); min-width: 3ch; text-align: right; }
      .slider-info-btn {

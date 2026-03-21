@@ -64,12 +64,12 @@ export function SongBar(props: SongBarProps): JSX.Element {
 
       <div id="song-bar-search">
         <span class="overlay-section-title">SONG</span>
-        <div style="display:inline-flex;align-items:center;gap:4px;">
+        <div class="search-row">
         <InfoButton infoKey="search" />
-        <div style="position:relative;display:inline-flex;align-items:center;">
+        <div class="search-input-wrap">
           <i
             data-lucide="search"
-            style="position:absolute;left:6px;width:12px;height:12px;color:var(--dim);pointer-events:none;"
+            class="search-icon"
           />
           <input
             id="midi-search-input"
@@ -84,7 +84,6 @@ export function SongBar(props: SongBarProps): JSX.Element {
           type="file"
           id="midi-file-input"
           accept=".mid,.midi"
-          style="display:none;"
           onChange={handleFileUpload}
         />
         <button
@@ -115,7 +114,7 @@ active — the song title, progress bar, elapsed timer, and restart button.
         <span id="quantization-select-slot"></span>
         <div id="game-status">
           <div id="game-song-title" />
-          <div style="display:flex;gap:6px;align-items:center;">
+          <div class="game-controls">
             <div id="game-progress">
               <div id="game-progress-fill" />
             </div>
