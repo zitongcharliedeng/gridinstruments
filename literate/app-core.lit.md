@@ -2352,7 +2352,7 @@ Calibration mode shows a banner instructing the user to play all reachable notes
     const msg = document.getElementById('calibration-msg');
     const warning = document.getElementById('calibration-warning');
     if (banner) banner.style.display = 'flex';
-    if (msg) msg.textContent = 'Play reachable notes';
+    if (msg) msg.textContent = 'Play all reachable notes, then tap \u2713';
     const gameState = this.gameActor ? String(this.gameActor.getSnapshot().value) : undefined;
     if (gameState === 'playing' || gameState === 'loading') {
       this.gameActor?.send({ type: 'GAME_RESET' });
@@ -2381,7 +2381,7 @@ Calibration mode shows a banner instructing the user to play all reachable notes
       const count = this.calibratedCells.size;
       const msg = document.getElementById('calibration-msg');
       if (msg) {
-        msg.textContent = count > 0 ? `Range saved (${count} keys)` : 'Range cleared';
+        msg.textContent = count > 0 ? `Range saved (${count} keys)` : 'Range cleared — all keys playable';
         setTimeout(() => { msg.textContent = 'Play reachable notes'; }, 2000);
       }
     }
