@@ -1104,7 +1104,7 @@ The golden screenshot tests compare rendered pixels against stored reference ima
     await page.keyboard.press('Escape');
   });
 
-  test('SMOKE-4: Info buttons are 16x16 squares', async ({ page }) => {
+  test('SMOKE-4: Info buttons are 14x14 square text buttons', async ({ page }) => {
     await page.locator('#grid-settings-btn').click();
     await page.waitForTimeout(200);
     const infoBtns = page.locator('.slider-info-btn:visible');
@@ -1113,8 +1113,8 @@ The golden screenshot tests compare rendered pixels against stored reference ima
     for (let i = 0; i < Math.min(count, 5); i++) {
       const box = await infoBtns.nth(i).boundingBox();
       if (box) {
-        expect(Math.round(box.width)).toBeCloseTo(16, -1);
-        expect(Math.round(box.height)).toBeCloseTo(16, -1);
+        expect(Math.round(box.width)).toBeCloseTo(14, -1);
+        expect(Math.round(box.height)).toBeCloseTo(14, -1);
       }
     }
     await page.keyboard.press('Escape');

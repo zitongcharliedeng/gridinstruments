@@ -17,7 +17,7 @@ export interface InfoButtonProps {
 export function InfoButton(props: InfoButtonProps): JSX.Element {
   return (
     <button class="slider-info-btn" data-info={props.infoKey}>
-      <i data-lucide="info" />
+      i
     </button>
   );
 }

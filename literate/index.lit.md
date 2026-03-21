@@ -911,7 +911,7 @@ label+input pairs in the INPUT section.
        transform: none;
        z-index: 3;
        color: var(--dim);
-       width: 16px; height: 16px;
+       width: 14px; height: 14px;
        padding: 0;
        display: inline-flex; align-items: center; justify-content: center;
        border: 1px solid #555;
@@ -920,9 +920,13 @@ label+input pairs in the INPUT section.
        cursor: pointer;
        flex-shrink: 0;
        vertical-align: middle;
-       margin-right: 0;
+       margin-right: 2px;
+       font-family: var(--font);
+       font-size: 9px;
+       font-style: italic;
+       line-height: 1;
      }
-    .slider-info-btn svg { width: 10px; height: 10px; display: block; flex-shrink: 0; }
+    .slider-info-btn svg { display: none; }
     .slider-info-btn:hover { opacity: 1; color: var(--accent, #4af); border-color: var(--accent, #4af); }
     .tuning-slider-area .slider-info-btn {
       position: absolute;
