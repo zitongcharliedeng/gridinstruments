@@ -240,7 +240,6 @@ calibrate — each use `inline-flex` to keep their controls tight. The
       align-items: center;
       gap: 6px;
     }
-    #song-bar #calibrate-btn { font-size: 10px; padding: 2px 8px; }
     #calibrate-btn.active { color: var(--bg); background: var(--fg); border-color: var(--bg); cursor: default; }
     #song-bar #calibration-banner { gap: 2px; }
     #song-bar.dropping {
