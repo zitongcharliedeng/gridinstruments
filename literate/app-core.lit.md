@@ -2364,7 +2364,11 @@ Calibration mode shows a banner instructing the user to play all reachable notes
       warning.style.display = 'none';
     }
     const btn = document.getElementById('calibrate-btn');
-    if (btn) btn.style.display = 'none';
+    if (btn) {
+      btn.textContent = 'Calibrating...';
+      btn.classList.add('active');
+      btn.disabled = true;
+    }
     this.render();
   }
 
@@ -2392,7 +2396,8 @@ Calibration mode shows a banner instructing the user to play all reachable notes
     const btn = document.getElementById('calibrate-btn');
     if (btn) {
       btn.textContent = 'Calibrate Playable Area';
-      btn.style.display = '';
+      btn.classList.remove('active');
+      (btn as HTMLButtonElement).disabled = false;
     }
     this.render();
   }
