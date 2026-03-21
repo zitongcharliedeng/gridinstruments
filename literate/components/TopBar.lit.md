@@ -51,7 +51,7 @@ export function TopBar(props: TopBarProps): JSX.Element {
 
   return (
     <>
-      <button id="about-btn" class="slider-info-btn" data-info="about" onClick={onAboutClick}>
+      <button id="about-btn" class="slider-info-btn" onClick={onAboutClick}>
         i
       </button>
       <span class="site-title">GridInstruments</span>
