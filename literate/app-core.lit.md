@@ -1904,7 +1904,9 @@ Pointer input (touch and mouse) uses the Pointer Events API for unified handling
           const pitchDirLen = Math.sqrt(cellHv2.x * cellHv2.x + cellHv2.y * cellHv2.y);
           const pitchOffset = (dx * cellHv2.x + dy * cellHv2.y) / pitchDirLen;
           const cellHeight = pitchDirLen * 2;
-          const semitones = -pitchOffset / cellHeight * 2;
+          const rawSemitones = pitchOffset / cellHeight * 2;
+          const DEAD_ZONE = 0.15;
+          const semitones = Math.abs(rawSemitones) < DEAD_ZONE ? 0 : rawSemitones;
 
           const timbreDirLen = Math.sqrt(cellHv1.x * cellHv1.x + cellHv1.y * cellHv1.y);
           const timbreOffset = (dx * cellHv1.x + dy * cellHv1.y) / timbreDirLen;
