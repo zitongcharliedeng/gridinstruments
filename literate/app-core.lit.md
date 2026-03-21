@@ -406,14 +406,20 @@ The MIDI device panel renders a list of connected controllers with enable/disabl
 ``` {.typescript file=_generated/app-core.ts}
   private updateMidiDevicePanel(devices: MidiDeviceInfo[]): void {
     if (!this.midiDeviceList) return;
-    this.midiDeviceList.innerHTML = '';
+    this.midiDeviceList.textContent = '';
 
     if (!this.midi.isAvailable) {
-      this.midiDeviceList.innerHTML = '<span class="midi-no-devices" style="line-height:1.5;">WebMIDI is not available in this browser.<br>Use <strong>Chrome</strong>, <strong>Edge</strong>, or <strong>Opera</strong> for MIDI input.<br><span style="color:var(--dim);font-size:9px;">Safari, iOS, and Firefox do not support WebMIDI.</span></span>';
+      const msg = document.createElement('span');
+      msg.className = 'midi-no-devices';
+      msg.textContent = 'WebMIDI is not available in this browser. Use Chrome, Edge, or Opera for MIDI input. Safari, iOS, and Firefox do not support WebMIDI.';
+      this.midiDeviceList.appendChild(msg);
       return;
     }
     if (devices.length === 0) {
-      this.midiDeviceList.innerHTML = '<span class="midi-no-devices">No MIDI devices detected — plug in a controller</span>';
+      const msg = document.createElement('span');
+      msg.className = 'midi-no-devices';
+      msg.textContent = 'No MIDI devices detected — plug in a controller';
+      this.midiDeviceList.appendChild(msg);
       return;
     }
 
