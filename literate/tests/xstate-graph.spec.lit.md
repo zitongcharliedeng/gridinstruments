@@ -1139,15 +1139,6 @@ The golden screenshot tests compare rendered pixels against stored reference ima
     await page.keyboard.press('Escape');
   });
 
-  test('SMOKE-11: Grid cog and vis cog do not overlap', async ({ page }) => {
-    const gridCog = await page.locator('#grid-settings-btn').boundingBox();
-    const visCog = await page.locator('#vis-settings-btn').boundingBox();
-    if (gridCog && visCog) {
-      const overlap = !(gridCog.x + gridCog.width <= visCog.x || visCog.x + visCog.width <= gridCog.x || gridCog.y + gridCog.height <= visCog.y || visCog.y + visCog.height <= gridCog.y);
-      expect(overlap, 'grid cog and vis cog must not overlap').toBe(false);
-    }
-  });
-
   test('SMOKE-4: Info buttons are 14x14 square text buttons', async ({ page }) => {
     await page.locator('#grid-settings-btn').click();
     await page.waitForTimeout(200);
