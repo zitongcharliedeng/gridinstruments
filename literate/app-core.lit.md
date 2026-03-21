@@ -726,7 +726,7 @@ Wicked Shear (bfact) controls the row-offset angle of the lattice. At bfact=0 (D
       const updateBfactLabel = (value: number): void => {
         if (!bfactLabel) return;
         const ann = formatSliderAnnotation(value, SHEAR_PRESETS, 2);
-        bfactLabel.innerHTML = `WICKED SHEAR <span style='color:#88ff88'>${ann}</span>`;
+        bfactLabel.textContent = `WICKED SHEAR ${ann}`;
       };
 
       const updateBfactBadge = (value: number): void => {
@@ -818,7 +818,7 @@ The fifths tuning slider sets the generator interval in cents. This is the core 
       const updateTuningLabel = (value: number): void => {
         if (!tuningLabel) return;
         const ann = formatSliderAnnotation(value, TUNING_LABEL_PRESETS, 1, '\u00a2');
-        tuningLabel.innerHTML = `FIFTHS TUNING (cents) <span style='color:#88ff88'>${ann}</span>`;
+        tuningLabel.textContent = `FIFTHS TUNING (cents) ${ann}`;
       };
       updateTuningLabel(FIFTH_DEFAULT);
       updateThumbBadge(FIFTH_DEFAULT);
@@ -1662,17 +1662,17 @@ The MIDI search input queries multiple online MIDI repositories via `searchAllAd
         if (searchDebounce !== null) clearTimeout(searchDebounce);
         searchDebounce = setTimeout(() => void (async () => {
           const query = searchInput.value.trim();
-          if (query.length < 2) { resultsDiv.innerHTML = ''; resultsDiv.classList.remove('show-flex'); return; }
+          if (query.length < 2) { resultsDiv.textContent = ''; resultsDiv.classList.remove('show-flex'); return; }
           resultsDiv.classList.add('show-flex');
-          resultsDiv.innerHTML = '<div class="search-status">Searching\u2026</div>';
+          resultsDiv.textContent = 'Searching\u2026';
           try {
             const { results, errors } = await searchAllAdapters(query);
             if (results.length === 0) {
               const errMsg = errors.length > 0 ? errors.join('; ') : 'no matches';
-              resultsDiv.innerHTML = `<div class="search-status">No results — ${errMsg}</div>`;
+              resultsDiv.textContent = `No results — ${errMsg}`;
               return;
             }
-            resultsDiv.innerHTML = '';
+            resultsDiv.textContent = '';
             for (const r of results) {
               const row = document.createElement('div');
               row.className = 'search-result';
@@ -1698,7 +1698,7 @@ The MIDI search input queries multiple online MIDI repositories via `searchAllAd
               resultsDiv.appendChild(row);
             }
           } catch {
-            resultsDiv.innerHTML = '<div class="search-status">Search failed</div>';
+            resultsDiv.textContent = 'Search failed';
           }
         })(), 300);
       });
@@ -2082,15 +2082,15 @@ Search result click handling fetches the MIDI file from the remote URL and pipes
 ``` {.typescript file=_generated/app-core.ts}
   private async handleSearchResultClick(result: MidiSearchResult): Promise<void> {
     const resultsDiv = document.getElementById('midi-search-results');
-    if (resultsDiv) resultsDiv.innerHTML = '<div class="search-status">Loading\u2026</div>';
+    if (resultsDiv) resultsDiv.textContent = 'Loading\u2026';
     try {
       const response = await fetch(result.fetchUrl);
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const buffer = await response.arrayBuffer();
       this.loadMidiFromBuffer(buffer, result.title);
-      if (resultsDiv) resultsDiv.innerHTML = '';
+      if (resultsDiv) resultsDiv.textContent = '';
     } catch (err) {
-      if (resultsDiv) resultsDiv.innerHTML = '<div class="search-status">Load failed</div>';
+      if (resultsDiv) resultsDiv.textContent = 'Load failed';
       const actor = this.gameActor;
       if (actor) {
         const msg = err instanceof Error ? err.message : 'Failed to fetch MIDI';
