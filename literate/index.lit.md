@@ -511,39 +511,6 @@ by the state machine.
 
 ``` {.html file=index.html}
 
-    #pedals-panel {
-      flex-shrink: 0;
-      display: flex;
-      gap: 1px;
-      background: var(--border);
-      overflow: visible;
-      position: relative;
-      z-index: 1;
-      border-top: 1px solid var(--border);
-    }
-    #pedals-panel.collapsed { height: 0 !important; overflow: visible; }
-    .pedal-btn {
-      flex: 1;
-      padding: 12px 0;
-      font-family: var(--font);
-      font-size: 12px;
-      font-weight: 500;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: var(--dim);
-      background: var(--bg);
-      border: none;
-      cursor: pointer;
-      user-select: none;
-      -webkit-user-select: none;
-      touch-action: manipulation;
-      -webkit-touch-callout: none;
-      -webkit-tap-highlight-color: transparent;
-    }
-    @media (hover: hover) {
-      .pedal-btn:hover { color: var(--fg); background: var(--subtle); }
-    }
-    .pedal-btn.active { color: var(--bg); background: var(--fg); }
 ```
 
 ## Control group and form input styles
