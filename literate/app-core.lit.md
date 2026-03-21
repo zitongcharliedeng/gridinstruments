@@ -54,6 +54,7 @@ export class DComposeApp {
   private noteHoldCounts = new Map<string, number>();
   private keyRepeat = new Set<string>();
   private midiChannelVoice = new Map<string, string>();
+  private lastNotePerChannel = new Map<string, string>();
   private midiPitchBendRange = 24;
   private expressionBend = true;
   private expressionVelocity = true;
@@ -314,6 +315,9 @@ MIDI listener setup wires incoming note-on, note-off, pitch bend, slide (CC74), 
     });
 
     const getVoicesForChannel = (deviceId: string, channel: number): string[] => {
+      const channelKey = `${deviceId}_${channel}`;
+      const lastNote = this.lastNotePerChannel.get(channelKey);
+      if (lastNote) return [lastNote];
       const prefix = `${deviceId}_${channel}_`;
       const ids: string[] = [];
       for (const [key, noteId] of this.midiChannelVoice) {
@@ -367,6 +371,7 @@ MIDI note-on maps the incoming MIDI note number to grid coordinates using `midiT
     }
     this.activeNotes.set(noteKey, { coordX, coordY });
     this.midiChannelVoice.set(`${deviceId}_${channel}_${midiNote}`, audioNoteId);
+    this.lastNotePerChannel.set(`${deviceId}_${channel}`, audioNoteId);
     this.trackNoteOn(coordX, coordY, midiNote);
     if (this.gameActor?.getSnapshot().matches('playing')) {
       this.gameActor.send({ type: 'NOTE_PRESSED', cellId: `${coordX}_${coordY}`, midiNote });
@@ -389,6 +394,8 @@ MIDI note-on maps the incoming MIDI note number to grid coordinates using `midiT
     this.mpe.noteOff(audioNoteId, midiNote);
     this.activeNotes.delete(noteKey);
     this.midiChannelVoice.delete(`${deviceId}_${channel}_${midiNote}`);
+    const chKey = `${deviceId}_${channel}`;
+    if (this.lastNotePerChannel.get(chKey) === audioNoteId) this.lastNotePerChannel.delete(chKey);
     this.trackNoteOff(coordX, coordY);
     this.render();
   }
