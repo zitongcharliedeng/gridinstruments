@@ -1593,7 +1593,7 @@ The remaining game states handle loading (show progress bar, hide hint), complet
         this.historyVisualizer?.setGhostNote(null);
         this.render();
         if (statusEl) statusEl.classList.remove('show-flex');
-        if (songBarHint) songBarHint.style.display = '';
+        if (songBarHint) songBarHint.classList.add('show-inline');
         if (progressFill) progressFill.style.width = '0%';
         if (elapsedTimer) elapsedTimer.textContent = '';
       }
@@ -1663,7 +1663,7 @@ The MIDI search input queries multiple online MIDI repositories via `searchAllAd
         searchDebounce = setTimeout(() => void (async () => {
           const query = searchInput.value.trim();
           if (query.length < 2) { resultsDiv.innerHTML = ''; resultsDiv.classList.remove('show-flex'); return; }
-          resultsDiv.style.display = 'block';
+          resultsDiv.classList.add('show-flex');
           resultsDiv.innerHTML = '<div class="search-status">Searching\u2026</div>';
           try {
             const { results, errors } = await searchAllAdapters(query);
@@ -2398,7 +2398,7 @@ Calibration mode shows a banner instructing the user to play all reachable notes
       this.gameActor?.send({ type: 'GAME_RESET' });
     }
     if (warning && (gameState === 'playing' || gameState === 'loading' || gameState === 'complete')) {
-      warning.style.display = '';
+      warning.classList.add('show-flex');
       warning.textContent = 'Song stopped';
       setTimeout(() => { warning.classList.remove('show-flex'); }, 2000);
     } else if (warning) {
