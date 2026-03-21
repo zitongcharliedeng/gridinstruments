@@ -31,7 +31,7 @@ import SlimSelect from 'slim-select';
 import { OverlayScrollbars } from 'overlayscrollbars';
 
 import { isWaveformType, parseNum, formatSliderAnnotation, noteNameToHz } from './app-helpers';
-import { createSelectAtSlot, getElement, getElementOrNull, setupCyclingButton } from './app-dom';
+import { createSelectAtSlot, getElement, getElementOrNull } from './app-dom';
 import { thumbCenterPx, clampBadgePosition, applySliderFill } from './app-slider';
 import { SHEAR_PRESETS, TUNING_LABEL_PRESETS } from './app-constants';
 ```
@@ -536,12 +536,17 @@ The MIDI device panel renders a list of connected controllers with enable/disabl
       { value: '', text: 'No MIDI outputs' },
     ], { style: 'min-width:120px;', disabled: '' });
 
-    setupCyclingButton('quantization-level', [
-      { value: 'none', label: 'None' },
-      { value: '1/4', label: '1/4' },
-      { value: '1/8', label: '1/8' },
-      { value: '1/16', label: '1/16' },
-    ], 'none', () => { /* value read on-demand by loadMidiFromBuffer */ });
+    createSelectAtSlot('quantization-select-slot', 'quantization-level', [
+      { value: 'none', text: 'None' },
+      { value: '1/4', text: '1/4' },
+      { value: '1/8', text: '1/8' },
+      { value: '1/16', text: '1/16' },
+    ], {});
+    const quantSelect = getElementOrNull('quantization-level', HTMLSelectElement);
+    if (quantSelect) {
+      const qSS = new SlimSelect({ select: quantSelect, settings: { showSearch: false } });
+      void qSS;
+    }
 
     this.bindMountedControls();
 

@@ -111,16 +111,8 @@ active — the song title, progress bar, elapsed timer, and restart button.
 
       <div id="song-bar-status" style="display:inline-flex;align-items:center;gap:8px;">
         <InfoButton infoKey="quantization" />
-        <label style="display:inline-flex;align-items:center;gap:4px;font-size:10px;color:var(--dim);">
-          Quant
-          <button
-            id="quantization-level"
-            style="font-family:var(--font);font-size:10px;background:var(--bg);color:var(--fg);border:1px solid var(--border);padding:2px 6px;cursor:pointer;"
-            value="none"
-          >
-            None
-          </button>
-        </label>
+        <span style="color:var(--dim);font-size:10px;">Quant</span>
+        <span id="quantization-select-slot"></span>
         <div id="game-status" style="display:none;align-items:center;gap:8px;">
           <div
             id="game-song-title"
