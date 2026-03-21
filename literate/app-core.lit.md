@@ -11,7 +11,7 @@ import { MidiInput, MidiDeviceInfo } from './lib/midi-input';
 import { MPEService } from './lib/mpe-service';
 import { midiToCoord, coordToMidiNote } from './lib/note-colors';
 import { createChordGraffiti } from './lib/chord-graffiti';
-import { createIcons, Info, Search, Star, Maximize, RotateCcw, RotateCw, Settings, Settings2, X } from 'lucide';
+import { createIcons, Info, Search, Star, Maximize, RotateCcw, RotateCw, Settings, Settings2, Upload, X } from 'lucide';
 import { mountVisOverlay } from './components/mount-vis-overlay';
 import { mountGridOverlay } from './components/mount-grid-overlay';
 import { mountPedals } from './components/mount-pedals';
@@ -194,7 +194,7 @@ Initialization is async because MIDI and MPE both require browser permission gra
 
 ``` {.typescript file=_generated/app-core.ts}
   private async init(): Promise<void> {
-    createIcons({ icons: { Info, Search, Star, Maximize, RotateCcw, RotateCw, Settings, Settings2, X } });
+    createIcons({ icons: { Info, Search, Star, Maximize, RotateCcw, RotateCw, Settings, Settings2, Upload, X } });
     this.calibratedRange = loadCalibratedRange();
     this.setupVisualizer();
     if (this.calibratedRange) {
@@ -202,7 +202,7 @@ Initialization is async because MIDI and MPE both require browser permission gra
     }
     this.setupHistoryVisualizer();
     this.setupEventListeners();
-    createIcons({ icons: { Info, Search, Star, Maximize, RotateCcw, RotateCw, Settings, Settings2, X } });
+    createIcons({ icons: { Info, Search, Star, Maximize, RotateCcw, RotateCw, Settings, Settings2, Upload, X } });
     await this.midi.init();
     await this.mpe.init();
     this.mpe.subscribe((voices) => {
@@ -2051,7 +2051,7 @@ The idle timer controls the visibility of decorative elements (chord graffiti, s
       if (gs !== 'playing') {
         this.setIdleState(true);
       }
-    }, 10000);
+    }, 5000);
   }
 
   private setIdleState(idle: boolean): void {

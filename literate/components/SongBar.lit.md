@@ -89,10 +89,12 @@ export function SongBar(props: SongBarProps): JSX.Element {
           onChange={handleFileUpload}
         />
         <button
-          style="font-family:var(--font);font-size:9px;background:none;color:var(--dim);border:1px solid var(--border);padding:2px 4px;cursor:pointer;flex-shrink:0;"
+          class="icon-btn icon-md"
+          style="flex-shrink:0;"
           onClick={() => { document.getElementById('midi-file-input')?.click(); }}
+          aria-label="Upload MIDI file"
         >
-          <i data-lucide="upload" class="icon" />
+          <i data-lucide="upload" />
         </button>
         <div
           id="midi-search-results"
