@@ -1072,18 +1072,21 @@ button component.
         this.saveSetting('exprVelocity', exprVelCb.checked.toString());
       });
     }
-    const PRESSURE_MODES = [
-      { value: 'channel', label: 'Channel' },
-      { value: 'poly', label: 'Poly AT' },
-      { value: 'mpe', label: 'MPE' },
-      { value: 'off', label: 'Off' },
-    ];
     const savedPressureMode = this.loadSetting('pressureMode', 'channel');
     this.expressionPressure = savedPressureMode !== 'off';
-    setupCyclingButton('pressure-mode', PRESSURE_MODES, savedPressureMode, (mode) => {
-      this.expressionPressure = mode !== 'off';
-      this.saveSetting('pressureMode', mode);
-    });
+    const pressureModeSelect = createSelectAtSlot('pressure-mode-slot', 'pressure-mode', [
+      { value: 'channel', text: 'Channel' },
+      { value: 'poly', text: 'Poly AT' },
+      { value: 'mpe', text: 'MPE' },
+      { value: 'off', text: 'Off' },
+    ], {});
+    if (pressureModeSelect) {
+      pressureModeSelect.value = savedPressureMode;
+      const pmSS = new SlimSelect({ select: pressureModeSelect, settings: { showSearch: false }, events: {
+        afterChange: (newVal) => { const mode = newVal[0]?.value ?? 'channel'; this.expressionPressure = mode !== 'off'; this.saveSetting('pressureMode', mode); },
+      }});
+      void pmSS;
+    }
 
     const exprTimbreCb = getElementOrNull('expr-timbre', HTMLInputElement);
     if (exprTimbreCb) {
@@ -1115,17 +1118,20 @@ button component.
       this.saveSetting('timbreCcMode', cc);
     });
 
-    const PRESSURE_CC_OPTIONS = [
-      { value: 'aftertouch', label: 'Aftertouch' },
-      { value: '11', label: 'CC11' },
-      { value: '1', label: 'CC1' },
-    ];
     const savedPressureCc = this.loadSetting('pressureCcSource', 'aftertouch');
     this.midi.setPressureCC(savedPressureCc === 'aftertouch' ? null : parseInt(savedPressureCc, 10));
-    setupCyclingButton('pressure-cc-source', PRESSURE_CC_OPTIONS, savedPressureCc, (mode) => {
-      this.midi.setPressureCC(mode === 'aftertouch' ? null : parseInt(mode, 10));
-      this.saveSetting('pressureCcSource', mode);
-    });
+    const pressureCcSelect = createSelectAtSlot('pressure-cc-source-slot', 'pressure-cc-source', [
+      { value: 'aftertouch', text: 'Aftertouch' },
+      { value: '11', text: 'CC11' },
+      { value: '1', text: 'CC1' },
+    ], {});
+    if (pressureCcSelect) {
+      pressureCcSelect.value = savedPressureCc;
+      const pcSS = new SlimSelect({ select: pressureCcSelect, settings: { showSearch: false }, events: {
+        afterChange: (newVal) => { const mode = newVal[0]?.value ?? 'aftertouch'; this.midi.setPressureCC(mode === 'aftertouch' ? null : parseInt(mode, 10)); this.saveSetting('pressureCcSource', mode); },
+      }});
+      void pcSS;
+    }
 ```
 
 MPE output sends per-note expression data to an external MIDI device. The state machine (`mpeMachine`) gates the enable/disable toggle, while the SlimSelect dropdown lists available MIDI outputs. The output list refreshes automatically when devices are connected or disconnected.
