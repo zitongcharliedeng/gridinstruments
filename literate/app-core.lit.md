@@ -1867,7 +1867,7 @@ Pointer input (touch and mouse) uses the Pointer Events API for unified handling
       this.stopPointerNote(event.pointerId, currentButton.coordX, currentButton.coordY);
       if (newButton) this.playPointerNote(event.pointerId, newButton.coordX, newButton.coordY, event.pressure);
       this.pointerDown.set(event.pointerId, newButton);
-    } else if (!this.mpe.isEnabled()) {
+    } else {
       const now = performance.now();
       let wg = this.pointerWiggle.get(event.pointerId);
       if (!wg) {
@@ -1895,11 +1895,9 @@ Pointer input (touch and mouse) uses the Pointer Events API for unified handling
       } else if (!wiggling && this.synth.getVibrato() && !this.arrowLeftHeld && !this.arrowRightHeld) {
         this.synth.setVibrato(false);
       }
-    } else if (this.mpe.isEnabled()) {
       const effectiveCoordX = currentButton.coordX + this.transposeOffset;
       const effectiveCoordY = currentButton.coordY + this.octaveOffset;
       const noteId = `ptr_${event.pointerId}_${effectiveCoordX}_${effectiveCoordY}`;
-      this.mpe.sendPressure(noteId, event.pressure);
       if (this.visualizer) {
         const { cellHv1, cellHv2 } = this.visualizer.getGridGeometry();
         const buttons = this.visualizer.getButtons();
@@ -1911,15 +1909,19 @@ Pointer input (touch and mouse) uses the Pointer Events API for unified handling
 
           const pitchDirLen = Math.sqrt(cellHv2.x * cellHv2.x + cellHv2.y * cellHv2.y);
           const pitchOffset = (dx * cellHv2.x + dy * cellHv2.y) / pitchDirLen;
-          const cellHeight = pitchDirLen * 2; // cellHv2 is a half-vector
+          const cellHeight = pitchDirLen * 2;
           const semitones = -pitchOffset / cellHeight * 2;
 
           const timbreDirLen = Math.sqrt(cellHv1.x * cellHv1.x + cellHv1.y * cellHv1.y);
           const timbreOffset = (dx * cellHv1.x + dy * cellHv1.y) / timbreDirLen;
           const normalizedX = Math.max(0, Math.min(1, (timbreOffset / timbreDirLen + 1) / 2));
 
+          if (this.expressionBend) this.synth.setPitchBend(noteId, semitones);
+          if (this.expressionTimbre) this.synth.setTimbre(noteId, this.timbreReverse ? 1 - normalizedX : normalizedX);
+          if (this.expressionPressure && event.pressure > 0) this.synth.setPressure(noteId, event.pressure);
           this.mpe.sendPitchBend(noteId, semitones);
           this.mpe.sendSlide(noteId, normalizedX);
+          this.mpe.sendPressure(noteId, event.pressure);
         }
       }
     }
