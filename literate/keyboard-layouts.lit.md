@@ -63,7 +63,8 @@ for (const [code, [iqX, iqY, iqZ]] of COORDS_BY_CODE) {
   if (iqZ === 1) {
     LAYER1_KEY_MAP[code] = iqToDCompose(iqX, iqY);
   } else if (iqZ === 3) {
-    NUMPAD_KEY_MAP[code] = iqToDCompose(iqX, iqY);
+    const [cx, cy] = iqToDCompose(iqX, iqY);
+    NUMPAD_KEY_MAP[code] = [cx + 14, cy];
   }
 }
 ```
