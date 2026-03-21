@@ -797,10 +797,10 @@ export const noWhiteBackgroundCheck: StateInvariant = {
 export const drefDriftCheck: StateInvariant = {
   id: 'ISS-84-1',
   check: async (page: Page) => {
-    await page.click('#grid-settings-btn');
+    await page.click('#global-settings-btn');
     await page.waitForTimeout(500);
     const drefBefore = await page.locator('#d-ref-input').inputValue();
-    await page.click('#grid-settings-btn');
+    await page.click('#global-settings-btn');
     await page.waitForTimeout(300);
     const canvas = page.locator('#keyboard-canvas');
     const box = await canvas.boundingBox();
@@ -814,7 +814,7 @@ export const drefDriftCheck: StateInvariant = {
       await page.mouse.up();
     }
     await page.waitForTimeout(500);
-    await page.click('#grid-settings-btn');
+    await page.click('#global-settings-btn');
     await page.waitForTimeout(500);
     const drefAfter = await page.locator('#d-ref-input').inputValue();
     expect(drefAfter, 'D-ref must not drift from keyboard interaction').toBe(drefBefore);
