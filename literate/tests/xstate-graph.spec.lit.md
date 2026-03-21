@@ -269,7 +269,7 @@ Golden screenshot tests compare rendered pixels against stored reference images.
   });
 
   test('GOLDEN-8: TET notch labels snapshot', async ({ page }) => {
-    await page.locator('#grid-settings-btn').click();
+    await page.locator('#global-settings-btn').click();
     await page.waitForTimeout(300);
     await tetNotchGoldenCheck.check(page);
   });

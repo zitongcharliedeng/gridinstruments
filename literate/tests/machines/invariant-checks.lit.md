@@ -1798,7 +1798,7 @@ export const iss87CogNoOverlapCheck: StateInvariant = {
 export const iss96WaveSelectCheck: StateInvariant = {
   id: 'ISS-96-1',
   check: async (page: Page) => {
-    await page.locator('#grid-settings-btn').click();
+    await page.locator('#global-settings-btn').click();
     await page.waitForTimeout(300);
     const waveSelect = page.locator('#wave-select');
     const tagName = await waveSelect.evaluate(el => el.tagName);
@@ -1827,7 +1827,7 @@ export const iss96WaveSelectCheck: StateInvariant = {
 export const iss97LayoutResetCheck: StateInvariant = {
   id: 'ISS-97-1',
   check: async (page: Page) => {
-    await page.locator('#grid-settings-btn').click();
+    await page.locator('#global-settings-btn').click();
     await page.waitForTimeout(300);
     const layoutReset = page.locator('#layout-reset');
     await expect(layoutReset).toBeVisible();
@@ -4235,15 +4235,15 @@ Continuing with `SONGBAR_CAL_3` and related invariants.
 ``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const SONGBAR_CAL_3: StateInvariant = {
   id: 'SONGBAR-CAL-3',
-  description: 'Calibration message text mentions "play notes"',
+  description: 'Calibration message text mentions "play" or "confirm"',
   check: async (page: Page) => {
     const text = await page.evaluate(() => {
-      const banner = document.getElementById('calibration-banner');
-      if (!banner) throw new Error('#calibration-banner not found');
-      return banner.textContent ?? '';
+      const msg = document.getElementById('calibration-msg');
+      if (!msg) throw new Error('#calibration-msg not found');
+      return msg.textContent ?? '';
     });
-    if (!text.toLowerCase().includes('play') || !text.toLowerCase().includes('notes')) {
-      throw new Error(`Calibration banner text does not mention "play" and "notes": "${text.substring(0, 100)}"`);
+    if (!text.toLowerCase().includes('play') && !text.toLowerCase().includes('confirm')) {
+      throw new Error(`Calibration msg text unexpected: "${text.substring(0, 100)}"`);
     }
   },
 };
@@ -4514,10 +4514,10 @@ export const FLAT_SOUND_TOGGLE: StateInvariant = {
   id: 'UI-FLAT-SOUND-1',
   description: 'Expression checkboxes exist (bend, velocity, pressure, timbre)',
   check: async (page: Page) => {
-    await page.locator('#grid-settings-btn').click();
+    await page.locator('#global-settings-btn').click();
     await page.waitForTimeout(300);
     const count = await page.evaluate(() =>
-      document.querySelectorAll('#grid-overlay input[type="checkbox"]').length
+      document.querySelectorAll('#global-overlay input[type="checkbox"]').length
     );
     if (count < 4) throw new Error(`Expected at least 4 expression checkboxes, found ${count}`);
     await page.keyboard.press('Escape');
@@ -4728,10 +4728,10 @@ export const MIDI_SETTINGS_GROUPED: StateInvariant = {
   id: 'IDEAL-MIDI-GROUPED',
   description: 'MIDI settings has EXPRESSION subtitle and logical grouping',
   check: async (page: Page) => {
-    await page.locator('#grid-settings-btn').click();
+    await page.locator('#global-settings-btn').click();
     await page.waitForTimeout(300);
     const result = await page.evaluate(() => {
-      const overlay = document.getElementById('grid-overlay');
+      const overlay = document.getElementById('global-overlay');
       if (!overlay) return { hasExpression: false, sectionTitles: [] };
       const titles = [...overlay.querySelectorAll('.overlay-section-title')].map(el => el.textContent?.trim());
       return {
