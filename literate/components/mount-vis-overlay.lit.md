@@ -11,6 +11,7 @@ import { SettingsOverlay } from './SettingsOverlay';
 import type { SectionDef } from './SettingsOverlay';
 import type { NoteHistoryVisualizer } from '../lib/note-history-visualizer';
 import { D_REF_MIDI } from '../lib/keyboard-layouts';
+import { refreshAllSliderUI } from '../app-slider';
 
 export function mountVisOverlay(
   mountEl: HTMLElement,
@@ -19,7 +20,11 @@ export function mountVisOverlay(
 ): void {
   const [visible, setVisible] = createSignal(false);
 
-  cogBtn.addEventListener('click', () => setVisible(v => !v));
+  cogBtn.addEventListener('click', () => {
+    setVisible(v => !v);
+    cogBtn.classList.toggle('active', visible());
+    if (visible()) setTimeout(refreshAllSliderUI, 50);
+  });
 
   const sections: SectionDef[] = [
     {
