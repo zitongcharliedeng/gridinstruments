@@ -22,7 +22,7 @@ import { pedalMachine } from './machines/pedalMachines';
 import { mpeMachine } from './machines/mpeMachine';
 import { gameMachine } from './machines/gameMachine';
 import { parseMidi } from './lib/midi-parser';
-import { buildNoteGroups, computeMedianMidiNote, findOptimalTransposition, transposeSong, cropToRange, quantizeNotes } from './lib/game-engine';
+import { buildNoteGroups, computeMedianMidiNote, findOptimalTransposition, transposeSong, foldOctaves, quantizeNotes } from './lib/game-engine';
 import type { QuantizationLevel } from './lib/game-engine';
 import { loadCalibratedRange, saveCalibratedRange, clearCalibratedRange } from './lib/calibration';
 import { searchAllAdapters, type MidiSearchResult } from './lib/midi-search';
@@ -2095,7 +2095,7 @@ MIDI buffer loading is the shared entry point for both drag-and-drop files and s
       if (range && range.size > 0) {
         semitones = findOptimalTransposition(groups, range);
         groups = transposeSong(groups, semitones);
-        groups = cropToRange(groups, range);
+        groups = foldOctaves(groups, range);
       }
 
       const adjustedMedianMidi = medianMidi + semitones;
