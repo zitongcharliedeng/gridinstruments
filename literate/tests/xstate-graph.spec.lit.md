@@ -1140,6 +1140,16 @@ The golden screenshot tests compare rendered pixels against stored reference ima
     }
   });
 
+  test('SMOKE-10: Upload button and pressure CC source exist', async ({ page }) => {
+    const uploadBtn = page.locator('#midi-file-input');
+    await expect(uploadBtn).toBeAttached();
+    await page.locator('#global-settings-btn').click();
+    await page.waitForTimeout(200);
+    const pressureCcBtn = page.locator('#pressure-cc-source');
+    await expect(pressureCcBtn).toBeAttached();
+    await page.keyboard.press('Escape');
+  });
+
   test('SMOKE-4: Info buttons are 14x14 square text buttons', async ({ page }) => {
     await page.locator('#global-settings-btn').click();
     await page.waitForTimeout(200);
