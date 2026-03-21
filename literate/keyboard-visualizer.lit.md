@@ -984,15 +984,16 @@ computed as center +/- (hv1 * s) +/- (hv2 * s).
     this.ctx.lineTo(px(-1,  1), py(-1,  1));
     this.ctx.closePath();
     this.ctx.fillStyle = fillColor;
-    this.ctx.globalAlpha = isMirrorActive ? cellAlpha * 0.4 : cellAlpha;
-    this.ctx.fill();
     if (isMirrorActive) {
-      this.ctx.globalAlpha = 0.9;
+      this.ctx.globalAlpha = 0.8;
       this.ctx.strokeStyle = fillColor;
       this.ctx.lineWidth = 2;
       this.ctx.setLineDash([4, 3]);
       this.ctx.stroke();
       this.ctx.setLineDash([]);
+    } else {
+      this.ctx.globalAlpha = cellAlpha;
+      this.ctx.fill();
     }
     this.ctx.globalAlpha = 1;
 ```
