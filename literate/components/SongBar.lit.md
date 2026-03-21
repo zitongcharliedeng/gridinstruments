@@ -182,7 +182,7 @@ range. The banner with confirm/cancel actions appears when calibration is active
           />
         </label>
         <InfoButton infoKey="calibrate" />
-        <div style="display:inline-flex;align-items:center;width:160px;overflow:hidden;">
+        <div style="display:inline-flex;align-items:center;min-width:160px;max-width:220px;overflow:hidden;">
           <button
             id="calibrate-btn"
             style="font-family:var(--font);font-size:9px;background:none;color:var(--dim);border:1px solid var(--border);padding:2px 8px;cursor:pointer;white-space:nowrap;"
