@@ -46,7 +46,6 @@ export function PedalsPanel(props: PedalsPanelProps): JSX.Element {
       <button
         class="pedal-btn"
         id="sustain-indicator"
-        style="padding-top: 4px;"
         onPointerDown={onSustainDown}
         onPointerUp={props.onSustainUp}
         onPointerLeave={props.onSustainUp}
@@ -56,7 +55,6 @@ export function PedalsPanel(props: PedalsPanelProps): JSX.Element {
       <button
         class="pedal-btn"
         id="vibrato-indicator"
-        style="padding-top: 4px;"
         onPointerDown={onVibratoDown}
         onPointerUp={props.onVibratoUp}
         onPointerLeave={props.onVibratoUp}

@@ -87,8 +87,7 @@ export function SongBar(props: SongBarProps): JSX.Element {
           onChange={handleFileUpload}
         />
         <button
-          class="icon-btn icon-md"
-          style="flex-shrink:0;"
+          class="icon-btn icon-md upload-btn"
           onClick={() => { document.getElementById('midi-file-input')?.click(); }}
           aria-label="Upload MIDI file"
         >
@@ -124,7 +123,6 @@ active — the song title, progress bar, elapsed timer, and restart button.
           <button
             id="game-reset-btn"
             class="overlay-btn"
-            style="font-size:10px;padding:2px 6px;"
             onClick={() => { props.onGameReset(); }}
           >
             &#x27F2; Restart
