@@ -202,7 +202,7 @@ export function mountGridOverlay(
   mountEl.addEventListener('click', (e) => {
     const target = e.target;
     if (!(target instanceof HTMLElement)) return;
-    if (target.id === 'grid-overlay') setVisible(false);
+    if (target.id === 'grid-overlay') { setVisible(false); cogBtn.classList.remove('active'); }
   });
 
   return { toggle, setVisible };
