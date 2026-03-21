@@ -57,6 +57,6 @@ export function mountVisOverlay(
     },
   ];
 
-  render(() => <SettingsOverlay overlayId="vis-overlay" sections={sections} visible={visible} onToggle={() => setVisible(v => !v)} />, mountEl);
+  render(() => <SettingsOverlay overlayId="vis-overlay" sections={sections} visible={visible} onToggle={() => { setVisible(v => !v); cogBtn.classList.toggle('active', visible()); }} />, mountEl);
 }
 ```
