@@ -241,7 +241,6 @@ calibrate — each use `inline-flex` to keep their controls tight. The
       gap: 6px;
     }
     #calibrate-btn.active { color: var(--bg); background: var(--fg); border-color: var(--bg); cursor: default; }
-    #song-bar #calibration-banner { gap: 2px; }
     #song-bar.dropping {
       outline: 2px solid rgba(255, 255, 255, 0.7);
       outline-offset: -2px;
