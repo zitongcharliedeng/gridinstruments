@@ -53,11 +53,11 @@ export function mountGridOverlay(
       children: () => (
         <div>
           <div class="slider-track">
-            <span class="ctrl-label" style="font-size:9px;text-transform:uppercase;white-space:nowrap;color:#fff;flex-shrink:0">WAVE</span>
+            <span class="ctrl-label" class="ctrl-label">WAVE</span>
             <span id="wave-select-slot"></span>
             <button class="slider-reset icon-btn icon-md" id="wave-reset"><i data-lucide="rotate-cw"></i></button>
           </div>
-          <div class="ctrl-group" style="margin-top: 18px">
+          <div class="ctrl-group mt-18">
             <InfoButton infoKey="volume" />
             <div class="slider-track">
               <span class="slider-label-overlay">VOL (dB)</span>
@@ -66,7 +66,7 @@ export function mountGridOverlay(
               <button class="slider-reset icon-btn icon-md" id="volume-reset"><i data-lucide="rotate-cw"></i></button>
             </div>
           </div>
-          <div class="tuning-slider-area" style="margin-top: 18px">
+          <div class="tuning-slider-area mt-18">
             <InfoButton infoKey="tuning" />
             <div class="slider-track">
               <span class="slider-label-overlay" id="tuning-label">FIFTHS TUNING (cents)</span>
@@ -76,7 +76,7 @@ export function mountGridOverlay(
             </div>
             <div class="tet-presets" id="tet-presets" data-alternate-ticks></div>
           </div>
-          <div class="tuning-slider-area" style="margin-top: 18px">
+          <div class="tuning-slider-area mt-18">
             <InfoButton infoKey="dref" />
             <div class="slider-track">
               <span class="slider-label-overlay" id="d-ref-label">D REF (Hz)</span>
@@ -102,7 +102,7 @@ export function mountGridOverlay(
             </div>
             <div class="slider-presets" id="skew-presets"></div>
           </div>
-          <div class="tuning-slider-area" style="margin-top: 18px">
+          <div class="tuning-slider-area mt-18">
             <InfoButton infoKey="shear" />
             <div class="slider-track">
               <span class="slider-label-overlay" id="bfact-label">WICKED SHEAR</span>
@@ -112,7 +112,7 @@ export function mountGridOverlay(
             </div>
             <div class="slider-presets" id="bfact-presets"></div>
           </div>
-          <div class="tuning-slider-area" style="margin-top: 18px">
+          <div class="tuning-slider-area mt-18">
             <InfoButton infoKey="zoom" />
             <div class="slider-track">
               <span class="slider-label-overlay">ZOOM (x)</span>
@@ -121,7 +121,7 @@ export function mountGridOverlay(
               <button class="slider-reset icon-btn icon-md" id="zoom-reset"><i data-lucide="rotate-cw"></i></button>
             </div>
           </div>
-          <div class="slider-track" style="margin-top: 18px">
+          <div class="slider-track mt-18">
             <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;">
               <span class="gi-checkbox"><input type="checkbox" id="qwerty-overlay-toggle" checked /><span class="gi-check"></span></span>
               <span style="color:#fff">COMPUTER KEYBOARD LABELS</span>
@@ -135,18 +135,18 @@ export function mountGridOverlay(
       children: () => (
         <div>
           <div class="slider-track">
-            <span class="ctrl-label" style="font-size:9px;text-transform:uppercase;white-space:nowrap;color:#fff;flex-shrink:0">KEYBOARD LAYOUT</span>
+            <span class="ctrl-label" class="ctrl-label">KEYBOARD LAYOUT</span>
             <span id="layout-select-slot"></span>
             <button class="slider-reset icon-btn icon-md" id="layout-reset"><i data-lucide="rotate-cw"></i></button>
           </div>
-          <div style="margin-top: 18px">
+          <div class="mt-18">
             <div id="midi-settings-panel">
               <span class="overlay-section-title">MIDI</span> <InfoButton infoKey="midi" />
               <div id="midi-device-list"></div>
               <span class="overlay-section-title">EXPRESSION</span>
               <div class="midi-panel-row" id="expr-bend-row" style="gap:2px">
                 <InfoButton infoKey="bend" />
-                <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;">
+                <label class="expr-label">
                   <span class="gi-checkbox"><input type="checkbox" id="expr-bend" checked /><span class="gi-check"></span></span>
                   <span style="color:#fff">Pitch Bend</span>
                   <input type="text" inputmode="numeric" pattern="[0-9]*" id="midi-pb-range-expr" value="24" style="width:3ch;text-align:center;font-family:var(--font);font-size:10px;background:var(--bg);color:var(--fg);border:1px solid var(--border);padding:2px 3px;" />
@@ -155,7 +155,7 @@ export function mountGridOverlay(
               </div>
               <div class="midi-panel-row" id="expr-velocity-row" style="gap:2px">
                 <InfoButton infoKey="velocity" />
-                <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;">
+                <label class="expr-label">
                   <span class="gi-checkbox"><input type="checkbox" id="expr-velocity" checked /><span class="gi-check"></span></span>
                   <span style="color:#fff">Note Velocity</span>
                 </label>
@@ -168,7 +168,7 @@ export function mountGridOverlay(
               </div>
               <div class="midi-panel-row" id="expr-timbre-row" style="gap:2px">
                 <InfoButton infoKey="timbre" />
-                <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;">
+                <label class="expr-label">
                   <span class="gi-checkbox"><input type="checkbox" id="expr-timbre" checked /><span class="gi-check"></span></span>
                   <span style="color:#fff">Timbre Slide</span>
                 </label>
@@ -180,7 +180,7 @@ export function mountGridOverlay(
               </div>
               <div class="midi-panel-row" id="mpe-output-row">
                 <span class="ctrl-label" style="color:#fff">MPE Out:</span>
-                <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;">
+                <label class="expr-label">
                   <span class="gi-checkbox"><input type="checkbox" id="mpe-enabled" /><span class="gi-check"></span></span>
                   Enable
                 </label>

@@ -915,6 +915,9 @@ label+input pairs in the INPUT section.
       display: flex; align-items: center; gap: 2px;
       font-size: 11px; flex-wrap: wrap;
     }
+    .mt-18 { margin-top: 18px; }
+    .expr-label { display: inline-flex; align-items: center; gap: 4px; cursor: pointer; font-size: 12px; }
+    .ctrl-label { font-size: 9px; text-transform: uppercase; white-space: nowrap; color: #fff; flex-shrink: 0; }
      .slider-info-btn {
        position: relative;
        transform: none;
