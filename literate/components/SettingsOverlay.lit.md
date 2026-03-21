@@ -82,7 +82,16 @@ function SliderRow(props: { def: SliderDef }): JSX.Element {
         value={value()}
         onInput={onInput}
       />
-      <span class="slider-value-badge">{fmt(value())}</span>
+      <input
+        type="text"
+        class="badge-input"
+        value={fmt(value())}
+        style="width:50px;text-align:center;font-family:var(--font);font-size:10px;background:var(--bg);color:var(--fg);border:1px solid var(--border);padding:1px 3px;"
+        onChange={(e) => {
+          const v = parseFloat((e.target as HTMLInputElement).value);
+          if (Number.isFinite(v)) { setValue(Math.max(props.def.min, Math.min(props.def.max, v))); props.def.onChange?.(value()); }
+        }}
+      />
       <button class="slider-reset icon-btn icon-md" onClick={onReset}>
         <i data-lucide="rotate-cw" />
       </button>
