@@ -61,7 +61,7 @@ and the label includes an annotated preset name when near a named landmark.
 
      if (_skewLabel) {
       const ann = formatSliderAnnotation(skew.value, SKEW_PRESETS, 2);
-      _skewLabel.innerHTML = `MECH SKEW <span style='color:#88ff88'>${ann}</span>`;
+      _skewLabel.textContent = `MECH SKEW ${ann}`;
     }
 
     if (_skewSlider) {
