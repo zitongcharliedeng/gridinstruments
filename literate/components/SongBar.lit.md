@@ -62,7 +62,7 @@ export function SongBar(props: SongBarProps): JSX.Element {
   return (
     <div id="song-bar">
 
-      <div id="song-bar-search" style="position:relative;display:inline-flex;flex-direction:column;gap:2px;">
+      <div id="song-bar-search">
         <span class="overlay-section-title">SONG</span>
         <div style="display:inline-flex;align-items:center;gap:4px;">
         <InfoButton infoKey="search" />
@@ -113,30 +113,15 @@ active — the song title, progress bar, elapsed timer, and restart button.
         <InfoButton infoKey="quantization" />
         <span style="color:var(--dim);font-size:10px;">Quant</span>
         <span id="quantization-select-slot"></span>
-        <div id="game-status" style="display:none;align-items:center;gap:8px;">
-          <div
-            id="game-song-title"
-            style="font-family:var(--font);font-size:10px;color:var(--fg);text-transform:uppercase;letter-spacing:0.06em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:160px;"
-          />
+        <div id="game-status">
+          <div id="game-song-title" />
           <div style="display:flex;gap:6px;align-items:center;">
-            <div
-              id="game-progress"
-              style="width:80px;height:2px;background:var(--border);position:relative;display:inline-block;vertical-align:middle;"
-            >
-              <div
-                id="game-progress-fill"
-                style="height:100%;background:#fff;width:0%;transition:width 0.1s linear;"
-              />
+            <div id="game-progress">
+              <div id="game-progress-fill" />
             </div>
-            <div
-              id="game-quantization-badge"
-              style="font-family:var(--font);font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:0.06em;"
-            />
+            <div id="game-quantization-badge" />
           </div>
-          <span
-            id="game-elapsed-timer"
-            style="font-size:10px;color:var(--dim);font-family:var(--font);min-width:3ch;text-align:right;"
-          />
+          <span id="game-elapsed-timer" />
           <button
             id="game-reset-btn"
             class="overlay-btn"
