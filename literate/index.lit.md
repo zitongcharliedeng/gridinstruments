@@ -914,6 +914,10 @@ label+input pairs in the INPUT section.
     .expr-label-lg { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; font-size: 12px; }
     .numeric-input { width: 3ch; text-align: center; font-family: var(--font); font-size: 10px; background: var(--bg); color: var(--fg); border: 1px solid var(--border); padding: 2px 3px; }
     .select-slot { min-width: 120px; display: inline-block; }
+    #d-ref-input { width: 80px; text-transform: none; }
+    #midi-search-input { width: 200px; box-sizing: border-box; font-family: var(--font); font-size: 10px; background: var(--bg); color: var(--fg); border: 1px solid var(--border); padding: 2px 6px 2px 22px; }
+    #midi-search-results { position: absolute; top: 100%; left: 0; min-width: 280px; max-height: 300px; overflow-y: auto; background: var(--bg); border: 1px solid var(--border); z-index: 25; display: none; }
+    #max-keys-input { width: 3ch; font-family: var(--font); font-size: 9px; background: var(--bg); color: var(--fg); border: 1px solid var(--border); padding: 1px 2px; text-align: center; }
      .slider-info-btn {
        position: relative;
        transform: none;

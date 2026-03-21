@@ -75,7 +75,6 @@ export function SongBar(props: SongBarProps): JSX.Element {
             id="midi-search-input"
             type="text"
             placeholder="Search or drop .mid file..."
-            style="width:200px;box-sizing:border-box;font-family:var(--font);font-size:10px;background:var(--bg);color:var(--fg);border:1px solid var(--border);padding:2px 6px 2px 22px;"
             onInput={handleSearchInput}
             onFocus={() => { props.onSearchFocus(); }}
             onBlur={() => { props.onSearchBlur(); }}
@@ -98,7 +97,6 @@ export function SongBar(props: SongBarProps): JSX.Element {
         </button>
         <div
           id="midi-search-results"
-          style="position:absolute;top:100%;left:0;min-width:280px;max-height:300px;overflow-y:auto;background:var(--bg);border:1px solid var(--border);z-index:25;display:none;"
         />
         </div>
       </div>
@@ -171,7 +169,6 @@ range. The banner with confirm/cancel actions appears when calibration is active
             pattern="[0-9]*"
             id="max-keys-input"
             value={maxKeys()}
-            style="width:3ch;font-family:var(--font);font-size:9px;background:var(--bg);color:var(--fg);border:1px solid var(--border);padding:1px 2px;text-align:center;"
             onChange={handleMaxKeysChange}
           />
         </label>
