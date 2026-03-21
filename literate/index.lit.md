@@ -925,7 +925,7 @@ label+input pairs in the INPUT section.
       font-size: 11px; flex-wrap: wrap;
     }
      .slider-info-btn {
-       position: static;
+       position: relative;
        transform: none;
        z-index: 3;
        color: var(--dim);
