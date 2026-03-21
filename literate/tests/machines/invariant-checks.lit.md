@@ -797,10 +797,10 @@ export const noWhiteBackgroundCheck: StateInvariant = {
 export const drefDriftCheck: StateInvariant = {
   id: 'ISS-84-1',
   check: async (page: Page) => {
-    await page.click('#global-settings-btn');
+    await page.click('#grid-settings-btn');
     await page.waitForTimeout(500);
     const drefBefore = await page.locator('#d-ref-input').inputValue();
-    await page.click('#global-settings-btn');
+    await page.click('#grid-settings-btn');
     await page.waitForTimeout(300);
     const canvas = page.locator('#keyboard-canvas');
     const box = await canvas.boundingBox();
@@ -814,7 +814,7 @@ export const drefDriftCheck: StateInvariant = {
       await page.mouse.up();
     }
     await page.waitForTimeout(500);
-    await page.click('#global-settings-btn');
+    await page.click('#grid-settings-btn');
     await page.waitForTimeout(500);
     const drefAfter = await page.locator('#d-ref-input').inputValue();
     expect(drefAfter, 'D-ref must not drift from keyboard interaction').toBe(drefBefore);
@@ -1798,7 +1798,7 @@ export const iss87CogNoOverlapCheck: StateInvariant = {
 export const iss96WaveSelectCheck: StateInvariant = {
   id: 'ISS-96-1',
   check: async (page: Page) => {
-    await page.locator('#global-settings-btn').click();
+    await page.locator('#grid-settings-btn').click();
     await page.waitForTimeout(300);
     const waveSelect = page.locator('#wave-select');
     const tagName = await waveSelect.evaluate(el => el.tagName);
@@ -1827,7 +1827,7 @@ export const iss96WaveSelectCheck: StateInvariant = {
 export const iss97LayoutResetCheck: StateInvariant = {
   id: 'ISS-97-1',
   check: async (page: Page) => {
-    await page.locator('#global-settings-btn').click();
+    await page.locator('#grid-settings-btn').click();
     await page.waitForTimeout(300);
     const layoutReset = page.locator('#layout-reset');
     await expect(layoutReset).toBeVisible();
@@ -4514,10 +4514,10 @@ export const FLAT_SOUND_TOGGLE: StateInvariant = {
   id: 'UI-FLAT-SOUND-1',
   description: 'Expression checkboxes exist (bend, velocity, pressure, timbre)',
   check: async (page: Page) => {
-    await page.locator('#global-settings-btn').click();
+    await page.locator('#grid-settings-btn').click();
     await page.waitForTimeout(300);
     const count = await page.evaluate(() =>
-      document.querySelectorAll('#global-overlay input[type="checkbox"]').length
+      document.querySelectorAll('#grid-overlay input[type="checkbox"]').length
     );
     if (count < 4) throw new Error(`Expected at least 4 expression checkboxes, found ${count}`);
     await page.keyboard.press('Escape');
@@ -4728,7 +4728,7 @@ export const MIDI_SETTINGS_GROUPED: StateInvariant = {
   id: 'IDEAL-MIDI-GROUPED',
   description: 'MIDI settings has EXPRESSION subtitle and logical grouping',
   check: async (page: Page) => {
-    await page.locator('#global-settings-btn').click();
+    await page.locator('#grid-settings-btn').click();
     await page.waitForTimeout(300);
     const result = await page.evaluate(() => {
       const overlay = document.getElementById('global-overlay');

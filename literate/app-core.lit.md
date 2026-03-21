@@ -14,7 +14,6 @@ import { createChordGraffiti } from './lib/chord-graffiti';
 import { createIcons, Info, Search, Star, Maximize, RotateCcw, RotateCw, Settings, Settings2, X } from 'lucide';
 import { mountVisOverlay } from './components/mount-vis-overlay';
 import { mountGridOverlay } from './components/mount-grid-overlay';
-import { mountGlobalSettings } from './components/mount-global-settings';
 import { mountPedals } from './components/mount-pedals';
 import { mountTopBar } from './components/mount-topbar';
 import { mountSongBar } from './components/mount-songbar';
@@ -479,12 +478,6 @@ The MIDI device panel renders a list of connected controllers with enable/disabl
     const gridOverlayMount = document.getElementById('grid-overlay-mount');
     if (gridCog && gridOverlayMount) {
       mountGridOverlay(gridOverlayMount, gridCog);
-    }
-
-    const globalCog = getElementOrNull('global-settings-btn', HTMLButtonElement);
-    const globalSettingsMount = document.getElementById('global-settings-mount');
-    if (globalCog && globalSettingsMount) {
-      mountGlobalSettings(globalSettingsMount, globalCog);
     }
 
     const savedMax = this.loadSetting('maxKeys', '8');

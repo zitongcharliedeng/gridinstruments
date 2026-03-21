@@ -230,15 +230,6 @@ star count, and suggest link as adjacent inline-flex children separated by
       border-bottom: 1px solid var(--border);
       min-height: 32px;
     }
-    #global-settings-btn {
-      position: absolute;
-      top: 0;
-      left: 0;
-      z-index: 15;
-    }
-    #global-settings-mount {
-      position: relative;
-    }
     .gh-suggest svg { fill: #4caf50; }
     .gh-suggest:hover { color: #66bb6a; background: var(--subtle); }
 ```
@@ -1231,11 +1222,6 @@ receives the SolidJS component from `mountGlobalSettings`.
 
 ``` {.html file=index.html}
 
-    <!-- Global settings panel (SOUND + INPUT — applies to all grids) -->
-    <div id="global-settings-bar">
-      <button id="global-settings-btn" class="grid-cog icon-btn icon-md"><i data-lucide="settings-2"></i></button>
-      <div id="global-settings-mount"></div>
-    </div>
 ```
 
 ## Visualiser panel DOM

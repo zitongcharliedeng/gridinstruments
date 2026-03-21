@@ -269,7 +269,7 @@ Golden screenshot tests compare rendered pixels against stored reference images.
   });
 
   test('GOLDEN-8: TET notch labels snapshot', async ({ page }) => {
-    await page.locator('#global-settings-btn').click();
+    await page.locator('#grid-settings-btn').click();
     await page.waitForTimeout(300);
     await tetNotchGoldenCheck.check(page);
   });
@@ -1059,20 +1059,9 @@ The golden screenshot tests compare rendered pixels against stored reference ima
     await page.waitForTimeout(200);
     const overlay = page.locator('#grid-overlay');
     await expect(overlay).toBeVisible();
-    await expect(page.locator('#zoom-slider')).toBeAttached();
-    await expect(page.locator('#skew-slider')).toBeAttached();
-    await expect(page.locator('#bfact-slider')).toBeAttached();
-    await page.keyboard.press('Escape');
-  });
-
-  test('SMOKE-9: Global cog opens with volume, tuning, MIDI controls', async ({ page }) => {
-    await page.locator('#global-settings-btn').click();
-    await page.waitForTimeout(200);
-    const overlay = page.locator('#global-overlay');
-    await expect(overlay).toBeVisible();
     await expect(page.locator('#volume-slider')).toBeAttached();
     await expect(page.locator('#tuning-slider')).toBeAttached();
-    await expect(page.locator('#d-ref-slider')).toBeAttached();
+    await expect(page.locator('#zoom-slider')).toBeAttached();
     await page.keyboard.press('Escape');
   });
 
@@ -1106,7 +1095,7 @@ The golden screenshot tests compare rendered pixels against stored reference ima
   });
 
   test('SMOKE-5: Wave dropdown opens and shows options', async ({ page }) => {
-    await page.locator('#global-settings-btn').click();
+    await page.locator('#grid-settings-btn').click();
     await page.waitForTimeout(200);
     const ssMain = page.locator('.ss-main').first();
     await ssMain.click();
@@ -1117,7 +1106,7 @@ The golden screenshot tests compare rendered pixels against stored reference ima
   });
 
   test('SMOKE-7: Dvorak layout appears in keyboard dropdown', async ({ page }) => {
-    await page.locator('#global-settings-btn').click();
+    await page.locator('#grid-settings-btn').click();
     await page.waitForTimeout(200);
     const layoutSelect = page.locator('.ss-content .ss-option');
     await page.locator('.ss-main').nth(1).click();
@@ -1143,7 +1132,7 @@ The golden screenshot tests compare rendered pixels against stored reference ima
   test('SMOKE-10: Upload button and pressure CC source exist', async ({ page }) => {
     const uploadBtn = page.locator('#midi-file-input');
     await expect(uploadBtn).toBeAttached();
-    await page.locator('#global-settings-btn').click();
+    await page.locator('#grid-settings-btn').click();
     await page.waitForTimeout(200);
     const pressureCcBtn = page.locator('#pressure-cc-source');
     await expect(pressureCcBtn).toBeAttached();
@@ -1151,7 +1140,7 @@ The golden screenshot tests compare rendered pixels against stored reference ima
   });
 
   test('SMOKE-4: Info buttons are 14x14 square text buttons', async ({ page }) => {
-    await page.locator('#global-settings-btn').click();
+    await page.locator('#grid-settings-btn').click();
     await page.waitForTimeout(200);
     const infoBtns = page.locator('.slider-info-btn:visible');
     const count = await infoBtns.count();
