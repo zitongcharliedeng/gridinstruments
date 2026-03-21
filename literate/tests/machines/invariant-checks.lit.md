@@ -3547,7 +3547,7 @@ Continuing with `gameQuant3` and related invariants.
 ``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const gameQuant3: StateInvariant = {
   id: 'GAME-QUANT-3',
-  description: 'long note spanning multiple grid points splits into repeated events',
+  description: 'long note snaps to grid and keeps original duration (no splitting)',
   check: async (page: Page) => {
     const result = await page.evaluate(async () => {
       const { quantizeNotes } = await import('/_generated/lib/game-engine.ts');
@@ -3559,15 +3559,13 @@ export const gameQuant3: StateInvariant = {
       const quantized = quantizeNotes(events, tempoMap, timeSigMap, '1/8');
       return {
         count: quantized.length,
-        allSameMidi: quantized.every(e => e.midiNote === 60),
-        starts: quantized.map(e => e.startMs),
+        midiNote: quantized[0]?.midiNote,
+        duration: quantized[0]?.durationMs,
       };
     });
-    expect(result.count, 'long note should split into multiple events').toBeGreaterThan(1);
-    expect(result.allSameMidi, 'all split events should have same midiNote').toBe(true);
-    for (const ms of result.starts) {
-      expect(ms % 250, `split event at ${ms} should be on 1/8 grid`).toBe(0);
-    }
+    expect(result.count, 'long note should remain a single event').toBe(1);
+    expect(result.midiNote).toBe(60);
+    expect(result.duration).toBe(2000);
   },
 };
 
@@ -4412,18 +4410,18 @@ export const EXPR_JOINT_3: StateInvariant = {
 
 export const EXPR_JOINT_4: StateInvariant = {
   id: 'EXPR-JOINT-4',
-  description: '.slider-info-btn[data-info="timbre"] exists and timbre has CC mode cycling button',
+  description: '.slider-info-btn[data-info="timbre"] exists and timbre has CC mode dropdown',
   check: async (page: Page) => {
     const exists = await page.evaluate(() =>
       document.querySelector('.slider-info-btn[data-info="timbre"]') !== null
     );
     if (!exists) throw new Error('.slider-info-btn[data-info="timbre"] not found');
-    const hasCycleBtn = await page.evaluate(() => {
-      const btn = document.getElementById('timbre-cc-mode');
-      if (!btn) return false;
-      return btn.tagName === 'BUTTON' && (btn.value === '74' || btn.value === '1');
+    const hasSelect = await page.evaluate(() => {
+      const el = document.getElementById('timbre-cc-mode');
+      if (!el) return false;
+      return el.tagName === 'SELECT';
     });
-    if (!hasCycleBtn) throw new Error('No cycling <button id="timbre-cc-mode"> found');
+    if (!hasSelect) throw new Error('No <select id="timbre-cc-mode"> found');
   },
 };
 
