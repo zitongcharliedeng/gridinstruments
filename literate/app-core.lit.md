@@ -1915,8 +1915,9 @@ Pointer input (touch and mouse) uses the Pointer Events API for unified handling
           const pitchOffset = (dx * cellHv1.x + dy * cellHv1.y) / pitchDirLen;
           const cellWidth = pitchDirLen * 2;
           const rawSemitones = pitchOffset / cellWidth * 2;
-          const DEAD_ZONE = 0.15;
-          const semitones = Math.abs(rawSemitones) < DEAD_ZONE ? 0 : rawSemitones;
+          const wg = this.pointerWiggle.get(event.pointerId);
+          const isActivelySliding = wg ? wg.changes >= 1 : false;
+          const semitones = isActivelySliding ? rawSemitones : 0;
 
           const timbreDirLen = Math.sqrt(cellHv2.x * cellHv2.x + cellHv2.y * cellHv2.y);
           const timbreOffset = (dx * cellHv2.x + dy * cellHv2.y) / timbreDirLen;
