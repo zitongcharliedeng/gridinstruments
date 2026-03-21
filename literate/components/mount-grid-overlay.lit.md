@@ -143,7 +143,7 @@ export function mountGridOverlay(
               <span class="overlay-section-title">MIDI</span> <InfoButton infoKey="midi" />
               <div id="midi-device-list"></div>
               <span class="overlay-section-title">EXPRESSION</span>
-              <div class="midi-panel-row" id="expr-bend-row" style="gap:2px">
+              <div class="midi-panel-row" id="expr-bend-row">
                 <InfoButton infoKey="bend" />
                 <label class="expr-label">
                   <span class="gi-checkbox"><input type="checkbox" id="expr-bend" checked /><span class="gi-check"></span></span>
@@ -152,14 +152,14 @@ export function mountGridOverlay(
                   <span class="text-dim-sm">semitones</span>
                 </label>
               </div>
-              <div class="midi-panel-row" id="expr-velocity-row" style="gap:2px">
+              <div class="midi-panel-row" id="expr-velocity-row">
                 <InfoButton infoKey="velocity" />
                 <label class="expr-label">
                   <span class="gi-checkbox"><input type="checkbox" id="expr-velocity" checked /><span class="gi-check"></span></span>
                   <span class="text-white">Note Velocity</span>
                 </label>
               </div>
-              <div class="midi-panel-row" id="expr-pressure-row" style="gap:2px">
+              <div class="midi-panel-row" id="expr-pressure-row">
                 <InfoButton infoKey="pressure" />
                 <span style="color:#fff;font-size:12px;">Pressure</span>
                 <span class="text-dim">mode</span>
@@ -167,7 +167,7 @@ export function mountGridOverlay(
                 <span class="text-dim">source</span>
                 <span id="pressure-cc-source-slot"></span>
               </div>
-              <div class="midi-panel-row" id="expr-timbre-row" style="gap:2px">
+              <div class="midi-panel-row" id="expr-timbre-row">
                 <InfoButton infoKey="timbre" />
                 <label class="expr-label">
                   <span class="gi-checkbox"><input type="checkbox" id="expr-timbre" checked /><span class="gi-check"></span></span>
