@@ -104,6 +104,8 @@ export function setupInfoDialogs(): void {
   const contentEl = document.getElementById('info-content');
   if (!(dialog instanceof HTMLDialogElement)) return;
 
+  let activeInfoBtn: HTMLButtonElement | null = null;
+
   const infoDialogActor = createActor(dialogMachine);
   infoDialogActor.subscribe((snapshot) => {
     if (snapshot.matches('open')) {
@@ -111,6 +113,10 @@ export function setupInfoDialogs(): void {
       dialog.showModal();
     } else {
       dialog.close();
+      if (activeInfoBtn) {
+        activeInfoBtn.classList.remove('active');
+        activeInfoBtn = null;
+      }
     }
   });
   infoDialogActor.start();
@@ -118,6 +124,9 @@ export function setupInfoDialogs(): void {
   document.querySelectorAll<HTMLButtonElement>('.slider-info-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
+      if (activeInfoBtn) activeInfoBtn.classList.remove('active');
+      activeInfoBtn = btn;
+      btn.classList.add('active');
       const key = btn.dataset.info;
       const content = (key && SLIDER_INFO[key]) ?? '';
       infoDialogActor.send({ type: 'OPEN', content });

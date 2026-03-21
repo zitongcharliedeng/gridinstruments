@@ -928,6 +928,7 @@ label+input pairs in the INPUT section.
      }
     .slider-info-btn svg { display: none; }
     .slider-info-btn:hover { opacity: 1; color: var(--accent, #4af); border-color: var(--accent, #4af); }
+    .slider-info-btn.active { color: var(--bg); background: var(--fg); border-color: var(--fg); }
     .tuning-slider-area .slider-info-btn {
       position: absolute;
       left: 0; top: 50%;
