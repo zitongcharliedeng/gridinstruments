@@ -54,7 +54,17 @@ const OVERLAY_CSS = `.settings-overlay {
 .overlay-btn:active { background:var(--subtle); }
 .dimmed { opacity:0.3; pointer-events:none; transition:opacity 0.3s ease; }
 .slider-row-track { margin-top: 8px; }
-.slider-badge-edit { width:50px; text-align:center; font-family:var(--font); font-size:10px; background:var(--bg); color:var(--fg); border:1px solid var(--border); padding:1px 3px; }`;
+.slider-badge-edit { width:50px; text-align:center; font-family:var(--font); font-size:10px; background:var(--bg); color:var(--fg); border:1px solid var(--border); padding:1px 3px; }
+.grid-cog {
+  position:absolute; z-index:15; width:32px; height:32px; font-size:16px;
+  background:var(--bg); color:var(--dim); border:1px solid var(--border);
+  cursor:pointer; display:flex; align-items:center; justify-content:center;
+  font-family:var(--font);
+}
+#grid-settings-btn { top:8px; left:8px; }
+#vis-settings-btn { top:4px; left:8px; }
+.grid-cog:hover { color:var(--fg); border-color:var(--accent); }
+.grid-cog.active { color:var(--bg); background:var(--fg); border-color:var(--fg); }`;
 
 let overlayCssInjected = false;
 function injectOverlayCSS(): void {
