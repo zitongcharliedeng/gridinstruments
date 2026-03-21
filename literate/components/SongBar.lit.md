@@ -102,7 +102,7 @@ export function SongBar(props: SongBarProps): JSX.Element {
 
 ## Status Section
 
-The status section shows the quantization cycling button and — when a game is
+The status section shows the quantization dropdown and — when a game is
 active — the song title, progress bar, elapsed timer, and restart button.
 
 ``` {.typescript file=_generated/components/SongBar.tsx}

@@ -1,6 +1,6 @@
 # App DOM
 
-DOM query helpers and element factory functions — safe element lookup with type narrowing, select-at-slot creation, and cycling button setup.
+DOM query helpers and element factory functions — safe element lookup with type narrowing and select-at-slot creation.
 
 ## Typed Element Getters
 

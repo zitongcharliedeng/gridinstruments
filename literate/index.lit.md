@@ -17,7 +17,7 @@ The page is a vertical flex layout (`#app`) with these major sections:
   fullscreen toggle, and a layout-reset button.
 
 - **Song bar** (`#song-bar`, line 861) — calibration controls, MIDI song search
-  input with dropdown results, quantization cycling button, game-mode progress
+  input with dropdown results, quantization dropdown, game-mode progress
   display with elapsed timer and restart.
 
 - **Visualiser panel** (`#visualiser-panel`, line 902) — canvas for the note
