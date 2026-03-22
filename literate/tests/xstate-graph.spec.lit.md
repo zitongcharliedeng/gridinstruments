@@ -171,6 +171,7 @@ import {
        FULLSCREEN_BTN,
        FLAT_SOUND_TOGGLE,
        ALL_INFO_BTNS,
+       INFO_HOVER_PREVIEW,
        VOW_NO_NATIVE_SELECT,
        VOW_NO_SCROLL,
        VOW_SINGLE_FONT,
@@ -1032,6 +1033,10 @@ The golden screenshot tests compare rendered pixels against stored reference ima
 
   test('UI-INFO-COMPLETE-1: All 9 info buttons exist', async ({ page }) => {
     await ALL_INFO_BTNS.check(page);
+  });
+
+  test('UI-INFO-HOVER-1: Every info button has hover preview with content', async ({ page }) => {
+    await INFO_HOVER_PREVIEW.check(page);
   });
 
   test('VOW-NO-NATIVE-SELECT: No native select elements', async ({ page }) => {
