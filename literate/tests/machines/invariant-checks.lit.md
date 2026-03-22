@@ -4564,6 +4564,26 @@ export const INFO_HOVER_PREVIEW: StateInvariant = {
   },
 };
 
+export const COG_ACTIVE_INVERSION: StateInvariant = {
+  id: 'UI-COG-INVERT-1',
+  description: 'Grid cog inverts to white-on-black when overlay is open',
+  check: async (page: Page) => {
+    const cog = page.locator('#grid-settings-btn');
+    await cog.click();
+    await page.waitForTimeout(100);
+    const hasActive = await cog.evaluate(el => el.classList.contains('active'));
+    if (!hasActive) throw new Error('Grid cog missing .active class after click');
+    const bg = await cog.evaluate(el => getComputedStyle(el).backgroundColor);
+    await cog.click();
+    await page.waitForTimeout(100);
+    const stillActive = await cog.evaluate(el => el.classList.contains('active'));
+    if (stillActive) throw new Error('Grid cog still .active after second click (close)');
+    if (!bg.includes('255') && !bg.includes('fff')) {
+      throw new Error(`Cog active background not white: ${bg}`);
+    }
+  },
+};
+
 ```
 
 ## Binding Vow Invariants

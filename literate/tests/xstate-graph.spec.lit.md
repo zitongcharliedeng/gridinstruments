@@ -172,6 +172,7 @@ import {
        FLAT_SOUND_TOGGLE,
        ALL_INFO_BTNS,
        INFO_HOVER_PREVIEW,
+       COG_ACTIVE_INVERSION,
        VOW_NO_NATIVE_SELECT,
        VOW_NO_SCROLL,
        VOW_SINGLE_FONT,
@@ -1037,6 +1038,10 @@ The golden screenshot tests compare rendered pixels against stored reference ima
 
   test('UI-INFO-HOVER-1: Every info button has hover preview with content', async ({ page }) => {
     await INFO_HOVER_PREVIEW.check(page);
+  });
+
+  test('UI-COG-INVERT-1: Grid cog inverts when overlay opens, reverts on close', async ({ page }) => {
+    await COG_ACTIVE_INVERSION.check(page);
   });
 
   test('VOW-NO-NATIVE-SELECT: No native select elements', async ({ page }) => {
