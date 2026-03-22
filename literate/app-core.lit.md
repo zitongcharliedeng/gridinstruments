@@ -979,18 +979,19 @@ The D-ref input field handles both numeric Hz values and note name strings (e.g.
 resets to the default 293.66 Hz if invalid.
 
 ``` {.typescript file=_generated/app-core.ts}
+    const parseDRefValue = (raw: string): number | null => {
+      const fromNote = noteNameToHz(raw);
+      if (fromNote !== null) return fromNote;
+      const hz = parseFloat(raw);
+      return (isFinite(hz) && hz >= 20 && hz <= 20000) ? hz : null;
+    };
+
     dRefInput?.addEventListener('input', () => {
       const raw = dRefInput.value.trim();
       if (raw === '') return;
-      const fromNote = noteNameToHz(raw);
-      if (fromNote !== null) {
-        dRefInput.value = fromNote.toFixed(2);
-        dRefInput.setCustomValidity('');
-        applyDRefHz(fromNote);
-        return;
-      }
-      const hz = parseFloat(raw);
-      if (isFinite(hz) && hz >= 20 && hz <= 20000) {
+      const hz = parseDRefValue(raw);
+      if (hz !== null) {
+        if (noteNameToHz(raw) !== null) dRefInput.value = hz.toFixed(2);
         dRefInput.setCustomValidity('');
         applyDRefHz(hz);
       } else {
@@ -1001,17 +1002,11 @@ resets to the default 293.66 Hz if invalid.
     dRefInput?.addEventListener('blur', () => {
       const raw = dRefInput.value.trim();
       if (raw === '') { applyDRefHz(293.66); return; }
-      const fromNote = noteNameToHz(raw);
-      if (fromNote !== null) {
-        dRefInput.value = fromNote.toFixed(2);
-        dRefInput.setCustomValidity('');
-        applyDRefHz(fromNote);
-        return;
-      }
-      const hz = parseFloat(raw);
-      if (isFinite(hz) && hz >= 20 && hz <= 20000) {
+      const hz = parseDRefValue(raw);
+      if (hz !== null) {
         dRefInput.value = hz.toFixed(2);
         dRefInput.setCustomValidity('');
+        applyDRefHz(hz);
       } else {
         applyDRefHz(293.66);
       }
