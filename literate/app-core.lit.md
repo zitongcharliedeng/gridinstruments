@@ -63,7 +63,7 @@ export class DComposeApp {
   private timbreReverse = false;
 
   private pointerDown = new Map<number, { coordX: number; coordY: number } | null>();
-  private pointerWiggle = new Map<number, { xs: number[]; times: number[]; lastDir: number; changes: number }>();
+  private pointerWiggle = new Map<number, { xs: number[]; ys: number[]; times: number[]; lastDir: number; changes: number }>();
 
   private maxSimultaneousKeys = 8;
   private peakKeysThisSession = 0;
@@ -1891,16 +1891,18 @@ Pointer input (touch and mouse) uses the Pointer Events API for unified handling
       const now = performance.now();
       let wg = this.pointerWiggle.get(event.pointerId);
       if (!wg) {
-        wg = { xs: [event.clientX], times: [now], lastDir: 0, changes: 0 };
+        wg = { xs: [event.clientX], ys: [event.clientY], times: [now], lastDir: 0, changes: 0 };
         this.pointerWiggle.set(event.pointerId, wg);
       } else {
         const prevX = wg.xs[wg.xs.length - 1];
         const dx = event.clientX - prevX;
         wg.xs.push(event.clientX);
+        wg.ys.push(event.clientY);
         wg.times.push(now);
         while (wg.times.length > 1 && now - wg.times[0] > 500) {
           wg.times.shift();
           wg.xs.shift();
+          wg.ys.shift();
           wg.changes = Math.max(0, wg.changes - 1);
         }
         if (Math.abs(dx) > 3) {
@@ -1931,8 +1933,18 @@ Pointer input (touch and mouse) uses the Pointer Events API for unified handling
           const pitchOffset = (dx * cellHv1.x + dy * cellHv1.y) / pitchDirLen;
           const cellWidth = pitchDirLen * 2;
           const rawSemitones = pitchOffset / cellWidth * 2;
-          const wg = this.pointerWiggle.get(event.pointerId);
-          const isActivelySliding = wg ? wg.changes >= 1 : false;
+          const pw = this.pointerWiggle.get(event.pointerId);
+          const velocityPxPerMs = (() => {
+            if (!pw || pw.xs.length < 2) return 0;
+            const n = pw.xs.length;
+            const lookback = Math.max(0, n - 4);
+            const dt = pw.times[n - 1] - pw.times[lookback];
+            if (dt < 1) return 0;
+            const tdx = pw.xs[n - 1] - pw.xs[lookback];
+            const tdy = pw.ys[n - 1] - pw.ys[lookback];
+            return Math.sqrt(tdx * tdx + tdy * tdy) / dt;
+          })();
+          const isActivelySliding = velocityPxPerMs > 0.15;
           const semitones = isActivelySliding ? rawSemitones : Math.round(rawSemitones);
 
           const timbreDirLen = Math.sqrt(cellHv2.x * cellHv2.x + cellHv2.y * cellHv2.y);
