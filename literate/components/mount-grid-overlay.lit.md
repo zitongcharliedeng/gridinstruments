@@ -93,22 +93,26 @@ export function mountGridOverlay(
             </div>
           </div>
           <div class="tuning-slider-area mt-18">
-            <InfoButton infoKey="tuning" />
-            <div class="slider-track">
-              <span class="slider-label-overlay" id="tuning-label">FIFTHS TUNING (cents)</span>
-              <input type="range" id="tuning-slider" min="683" max="722" step="0.01" value="700" />
-              <input type="text" class="badge-input" id="tuning-thumb-badge" value="700" />
-              <button class="slider-reset icon-btn icon-md" id="tuning-reset"><i data-lucide="rotate-cw" /></button>
+            <div class="ctrl-group">
+              <InfoButton infoKey="tuning" />
+              <div class="slider-track">
+                <span class="slider-label-overlay" id="tuning-label">FIFTHS TUNING (cents)</span>
+                <input type="range" id="tuning-slider" min="683" max="722" step="0.01" value="700" />
+                <input type="text" class="badge-input" id="tuning-thumb-badge" value="700" />
+                <button class="slider-reset icon-btn icon-md" id="tuning-reset"><i data-lucide="rotate-cw" /></button>
+              </div>
             </div>
             <div class="tet-presets" id="tet-presets" data-alternate-ticks />
           </div>
           <div class="tuning-slider-area mt-18">
-            <InfoButton infoKey="dref" />
-            <div class="slider-track">
-              <span class="slider-label-overlay" id="d-ref-label">D REF (Hz)</span>
-              <input type="range" id="d-ref-slider" min="73.42" max="1174.66" step="0.01" value="293.66" />
-              <input type="text" class="badge-input" id="d-ref-input" value="293.66" />
-              <button id="d-ref-reset" class="slider-reset icon-btn icon-md"><i data-lucide="rotate-cw" /></button>
+            <div class="ctrl-group">
+              <InfoButton infoKey="dref" />
+              <div class="slider-track">
+                <span class="slider-label-overlay" id="d-ref-label">D REF (Hz)</span>
+                <input type="range" id="d-ref-slider" min="73.42" max="1174.66" step="0.01" value="293.66" />
+                <input type="text" class="badge-input" id="d-ref-input" value="293.66" />
+                <button id="d-ref-reset" class="slider-reset icon-btn icon-md"><i data-lucide="rotate-cw" /></button>
+              </div>
             </div>
           </div>
         </div>
@@ -119,32 +123,38 @@ export function mountGridOverlay(
       children: () => (
         <div>
           <div class="tuning-slider-area">
-            <InfoButton infoKey="skew" />
-            <div class="slider-track">
-              <span class="slider-label-overlay" id="skew-label">MECH SKEW</span>
-              <input type="range" id="skew-slider" min="-0.5" max="1.5" step="0.01" value="0" />
-              <input type="text" class="badge-input" id="skew-thumb-badge" value="0.00" />
-              <button class="slider-reset icon-btn icon-md" id="skew-reset"><i data-lucide="rotate-cw" /></button>
+            <div class="ctrl-group">
+              <InfoButton infoKey="skew" />
+              <div class="slider-track">
+                <span class="slider-label-overlay" id="skew-label">MECH SKEW</span>
+                <input type="range" id="skew-slider" min="-0.5" max="1.5" step="0.01" value="0" />
+                <input type="text" class="badge-input" id="skew-thumb-badge" value="0.00" />
+                <button class="slider-reset icon-btn icon-md" id="skew-reset"><i data-lucide="rotate-cw" /></button>
+              </div>
             </div>
             <div class="slider-presets" id="skew-presets" />
           </div>
           <div class="tuning-slider-area mt-18">
-            <InfoButton infoKey="shear" />
-            <div class="slider-track">
-              <span class="slider-label-overlay" id="bfact-label">WICKED SHEAR</span>
-              <input type="range" id="bfact-slider" min="-0.5" max="1.5" step="0.01" value="0" />
-              <input type="text" class="badge-input" id="bfact-thumb-badge" value="0.00" />
-              <button class="slider-reset icon-btn icon-md" id="bfact-reset"><i data-lucide="rotate-cw" /></button>
+            <div class="ctrl-group">
+              <InfoButton infoKey="shear" />
+              <div class="slider-track">
+                <span class="slider-label-overlay" id="bfact-label">WICKED SHEAR</span>
+                <input type="range" id="bfact-slider" min="-0.5" max="1.5" step="0.01" value="0" />
+                <input type="text" class="badge-input" id="bfact-thumb-badge" value="0.00" />
+                <button class="slider-reset icon-btn icon-md" id="bfact-reset"><i data-lucide="rotate-cw" /></button>
+              </div>
             </div>
             <div class="slider-presets" id="bfact-presets" />
           </div>
           <div class="tuning-slider-area mt-18">
-            <InfoButton infoKey="zoom" />
-            <div class="slider-track">
-              <span class="slider-label-overlay">ZOOM (x)</span>
-              <input type="range" id="zoom-slider" min="0.2" max="3" step="0.01" value="1" />
-              <span class="slider-value-badge" id="zoom-thumb-badge">1.00</span>
-              <button class="slider-reset icon-btn icon-md" id="zoom-reset"><i data-lucide="rotate-cw" /></button>
+            <div class="ctrl-group">
+              <InfoButton infoKey="zoom" />
+              <div class="slider-track">
+                <span class="slider-label-overlay">ZOOM (x)</span>
+                <input type="range" id="zoom-slider" min="0.2" max="3" step="0.01" value="1" />
+                <span class="slider-value-badge" id="zoom-thumb-badge">1.00</span>
+                <button class="slider-reset icon-btn icon-md" id="zoom-reset"><i data-lucide="rotate-cw" /></button>
+              </div>
             </div>
           </div>
           <div class="slider-track mt-18">

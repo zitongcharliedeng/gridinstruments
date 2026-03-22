@@ -87,8 +87,8 @@ input.badge-input:invalid { border-color: #cc3333; }
 .slider-preset-mark.active .slider-tick { background: #4f4; }
 .slider-preset-mark.active .slider-preset-btn { color: #4f4; }
 .tuning-slider-area { position: relative; }
-.tuning-slider-area .slider-info-btn { position: absolute; left: 0; top: 50%; transform: translateY(-50%); }
-.tuning-slider-area .slider-track { margin-left: 18px; width: calc(100% - 18px); }
+.tuning-slider-area .ctrl-group { display: flex; align-items: center; gap: 5px; }
+.tuning-slider-area .ctrl-group .slider-track { flex: 1; min-width: 0; }
 .about-content h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent, #4af); margin: 24px 0 8px; border-bottom: 1px solid #222; padding-bottom: 4px; }
 .about-content h3 { font-size: 12px; color: #aaa; margin: 16px 0 4px; }
 .about-content p { font-size: 12px; line-height: 1.6; color: #ccc; margin: 8px 0; }
