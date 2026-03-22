@@ -69,7 +69,7 @@ const SONGBAR_CSS = `#song-bar {
 #song-bar-hint { display:none; margin-left:auto; transition:opacity 2s ease-in; }
 #calibrate-btn { font-family:var(--font); font-size:9px; background:none; color:var(--dim); border:1px solid var(--border); padding:2px 8px; cursor:pointer; white-space:nowrap; }
 #calibration-banner { display:none; font-family:var(--font); font-size:9px; gap:2px; align-items:center; white-space:nowrap; position:absolute; left:0; top:0; right:0; bottom:0; background:var(--bg); justify-content:center; }
-#calibration-warning { display:none; }
+#calibration-warning { display:none; position:absolute; left:50%; top:-14px; transform:translateX(-50%); font-size:8px; color:var(--dim); white-space:nowrap; pointer-events:none; }
 #calibration-msg { color:var(--fg); }
 #calibrate-confirm { font-family:var(--font); font-size:9px; background:none; color:#4f4; border:1px solid #4f4; padding:1px 4px; cursor:pointer; line-height:1; }
 #calibrate-cancel { font-family:var(--font); font-size:9px; background:none; color:#f44; border:1px solid #f44; padding:1px 4px; cursor:pointer; line-height:1; }
