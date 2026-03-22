@@ -397,39 +397,11 @@ label+input pairs in the INPUT section.
     .numeric-input { width: 3ch; text-align: center; font-family: var(--font); font-size: 10px; background: var(--bg); color: var(--fg); border: 1px solid var(--border); padding: 2px 3px; }
     .select-slot { min-width: 120px; display: inline-block; }
     #d-ref-input { width: 80px; text-transform: none; }
-    #midi-search-input { width: 200px; box-sizing: border-box; font-family: var(--font); font-size: 10px; background: var(--bg); color: var(--fg); border: 1px solid var(--border); padding: 2px 6px 2px 22px; }
-    #midi-search-results { position: absolute; top: 100%; left: 0; min-width: 280px; max-height: 300px; overflow-y: auto; background: var(--bg); border: 1px solid var(--border); z-index: 25; display: none; }
-    #max-keys-input { width: 3ch; font-family: var(--font); font-size: 9px; background: var(--bg); color: var(--fg); border: 1px solid var(--border); padding: 1px 2px; text-align: center; }
-    #song-bar-search { position: relative; flex-direction: column; gap: 2px; }
-    #game-status { display: none; align-items: center; gap: 8px; }
-    #game-song-title { font-family: var(--font); font-size: 10px; color: var(--fg); text-transform: uppercase; letter-spacing: 0.06em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 160px; }
-    #game-progress { width: 80px; height: 2px; background: var(--border); position: relative; display: inline-block; vertical-align: middle; }
-    #game-quantization-badge { font-family: var(--font); font-size: 9px; color: var(--dim); text-transform: uppercase; letter-spacing: 0.06em; }
-    #song-bar-status { gap: 8px; }
-    #song-bar-calibrate { margin-left: auto; max-width: 320px; gap: 4px; overflow: hidden; }
-    #song-bar-hint { display: none; margin-left: auto; transition: opacity 2s ease-in; }
     #ghosting-toast { display: none; position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 30; background: rgba(0,0,0,0.85); border: 1px solid var(--dim); padding: 12px 16px; font-family: var(--font); font-size: 11px; color: var(--fg); flex-direction: row; align-items: flex-start; gap: 12px; max-width: 400px; }
     #ghosting-toast span { flex: 1; line-height: 1.5; }
     #ghosting-toast-dismiss { background: none; border: none; color: var(--dim); font-family: var(--font); font-size: 14px; cursor: pointer; padding: 0; line-height: 1; flex-shrink: 0; }
     #pedals-panel { height: 44px; }
     #pedals-mount { display: contents; }
-    #calibrate-btn { font-family: var(--font); font-size: 9px; background: none; color: var(--dim); border: 1px solid var(--border); padding: 2px 8px; cursor: pointer; white-space: nowrap; }
-    #calibration-banner { display: none; font-family: var(--font); font-size: 9px; gap: 2px; align-items: center; white-space: nowrap; position: absolute; left: 0; top: 0; right: 0; bottom: 0; background: var(--bg); justify-content: center; }
-    #calibration-warning { display: none; }
-    #calibration-msg { color: var(--fg); }
-    #calibrate-confirm { font-family: var(--font); font-size: 9px; background: none; color: #4f4; border: 1px solid #4f4; padding: 1px 4px; cursor: pointer; line-height: 1; }
-    #calibrate-cancel { font-family: var(--font); font-size: 9px; background: none; color: #f44; border: 1px solid #f44; padding: 1px 4px; cursor: pointer; line-height: 1; }
-    .calibrate-wrap { position: relative; display: inline-flex; align-items: center; min-width: 160px; max-width: 220px; overflow: hidden; }
-    .maxkeys-label { display: inline-flex; align-items: center; gap: 2px; font-family: var(--font); font-size: 9px; color: var(--dim); }
-    .search-row { display: inline-flex; align-items: center; gap: 4px; }
-    .search-input-wrap { position: relative; display: inline-flex; align-items: center; }
-    .search-icon { position: absolute; left: 6px; width: 12px; height: 12px; color: var(--dim); pointer-events: none; }
-    #midi-file-input { display: none; }
-    .game-controls { display: flex; gap: 6px; align-items: center; }
-    #game-reset-btn { font-size: 10px; padding: 2px 6px; }
-    .upload-btn { flex-shrink: 0; }
-    #game-progress-fill { height: 100%; background: #fff; width: 0%; transition: width 0.1s linear; }
-    #game-elapsed-timer { font-size: 10px; color: var(--dim); font-family: var(--font); min-width: 3ch; text-align: right; }
 ```
 
 ## Dialog and about content styles
