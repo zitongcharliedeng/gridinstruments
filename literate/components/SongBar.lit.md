@@ -45,7 +45,17 @@ const SONGBAR_CSS = `#song-bar {
   display:inline-flex; align-items:center; gap:6px;
 }
 #calibrate-btn.active { color:var(--bg); background:var(--fg); border-color:var(--bg); cursor:default; }
-#song-bar.dropping { outline:2px solid rgba(255,255,255,0.7); outline-offset:-2px; }`;
+#song-bar.dropping { outline:2px solid rgba(255,255,255,0.7); outline-offset:-2px; }
+.search-result {
+  display:flex; justify-content:space-between; align-items:center;
+  padding:4px 6px; cursor:pointer; font-family:var(--font);
+  font-size:11px; color:var(--fg); border-bottom:1px solid var(--border);
+}
+.search-result:hover { background:var(--subtle); }
+.search-result .result-title {
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1; min-width:0;
+}
+.search-result .result-source { color:var(--dim); font-size:10px; margin-left:8px; flex-shrink:0; }`;
 
 let songbarCssInjected = false;
 function injectSongBarCSS(): void {

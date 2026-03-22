@@ -329,49 +329,8 @@ buttons that invert on hover.
 
 ## Search results and pedals panel
 
-`.search-result` rows are used inside the MIDI song search dropdown: each row
-shows a truncated title on the left and a dimmed source label on the right. The
-`#pedals-panel` is a fixed-height flex row that collapses to zero height when
-hidden. Each `.pedal-btn` occupies half the row and inverts to white-on-black
-while held, matching the sustain and vibrato active states managed by the state
-machine.
-
-``` {.html file=index.html}
-
-    .search-result {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 4px 6px;
-      cursor: pointer;
-      font-family: var(--font);
-      font-size: 11px;
-      color: var(--fg);
-      border-bottom: 1px solid var(--border);
-    }
-    .search-result:hover { background: var(--subtle); }
-    .search-result .result-title {
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      flex: 1;
-      min-width: 0;
-    }
-    .search-result .result-source {
-      color: var(--dim);
-      font-size: 10px;
-      margin-left: 8px;
-      flex-shrink: 0;
-    }
-```
-
-The pedals panel stacks two full-width `.pedal-btn` elements separated by a 1px gap.
-Each button inverts to white-on-black when held, driven by the `.active` class toggled
-by the state machine.
-
-``` {.html file=index.html}
-
-```
+Search result CSS (`.search-result`) is co-located in `components/SongBar.lit.md`.
+Pedals CSS (`.pedal-btn`) is co-located in `components/PedalsPanel.lit.md`.
 
 ## Control group and form input styles
 
