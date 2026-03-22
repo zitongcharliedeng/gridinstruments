@@ -1966,7 +1966,7 @@ Pointer input (touch and mouse) uses the Pointer Events API for unified handling
             return Math.sqrt(tdx * tdx + tdy * tdy) / dt;
           })();
           const isActivelySliding = velocityPxPerMs > 0.15;
-          const semitones = isActivelySliding ? rawSemitones : Math.round(rawSemitones);
+          const semitones = isActivelySliding ? rawSemitones : 0;
 
           const timbreDirLen = Math.sqrt(cellHv2.x * cellHv2.x + cellHv2.y * cellHv2.y);
           const timbreOffset = (dx * cellHv2.x + dy * cellHv2.y) / timbreDirLen;
