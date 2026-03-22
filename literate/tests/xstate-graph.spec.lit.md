@@ -908,7 +908,7 @@ The SongBar progress and calibration tests verify that the in-game status elemen
     await SONGBAR_PROGRESS_4.check(page);
   });
 
-  test('SONGBAR-CAL-1: #calibrate-btn text is "Calibrate playable area"', async ({ page }) => {
+  test('SONGBAR-CAL-1: #calibrate-btn text is "Calibrate Playable Area"', async ({ page }) => {
     await SONGBAR_CAL_1.check(page);
   });
 
