@@ -1315,34 +1315,29 @@ The DPI override input lets users correct auto-detection on non-standard display
      if (dpiOverride && savedDpiStr !== '') {
        dpiOverride.value = savedDpiStr;
      }
+     const applyDpi = (dpi: number): void => {
+       this.visualizer?.setCssPxPerInch(dpi);
+       if (this.zoomSlider) {
+         this.zoomSlider.value = this.defaultZoom.toString();
+         this.zoomSlider.dispatchEvent(new Event('input'));
+       }
+     };
      dpiOverride?.addEventListener('change', () => {
        if (!dpiOverride.value.trim()) {
          this.saveSetting('dpi', '');
-         this.visualizer?.setCssPxPerInch(this.detectedDpi);
-         if (this.zoomSlider) {
-           this.zoomSlider.value = this.defaultZoom.toString();
-           this.zoomSlider.dispatchEvent(new Event('input'));
-         }
+         applyDpi(this.detectedDpi);
          return;
        }
        const dpiVal = parseFloat(dpiOverride.value);
        if (dpiVal >= 40 && dpiVal <= 600) {
          this.saveSetting('dpi', dpiOverride.value);
-         this.visualizer?.setCssPxPerInch(dpiVal);
-         if (this.zoomSlider) {
-           this.zoomSlider.value = this.defaultZoom.toString();
-           this.zoomSlider.dispatchEvent(new Event('input'));
-         }
+         applyDpi(dpiVal);
        }
      });
      dpiOverrideReset?.addEventListener('click', () => {
        if (dpiOverride) dpiOverride.value = '';
        this.saveSetting('dpi', '');
-       this.visualizer?.setCssPxPerInch(this.detectedDpi);
-       if (this.zoomSlider) {
-         this.zoomSlider.value = this.defaultZoom.toString();
-         this.zoomSlider.dispatchEvent(new Event('input'));
-       }
+       applyDpi(this.detectedDpi);
      });
 ```
 
