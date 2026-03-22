@@ -43,7 +43,7 @@ export interface GameContext {
   noteGroups: NoteGroup[];
   currentGroupIndex: number;
   targetCellIds: string[];
-  pressedMidiNotes: number[];
+  pressedCellIds: string[];
   startTimeMs: number;
   finishTimeMs: number;
   error: string | null;
@@ -80,12 +80,12 @@ export const gameMachine = setup({
   actions: {
     assignSongLoaded: assign(({ event }) => {
       assertEvent(event, 'SONG_LOADED');
-      const pressedMidiNotes: number[] = [];
+      const pressedCellIds: string[] = [];
       return {
         noteGroups: event.noteGroups,
         currentGroupIndex: 0,
         targetCellIds: event.noteGroups[0]?.cellIds ?? [],
-        pressedMidiNotes,
+        pressedCellIds,
         startTimeMs: Date.now(),
         finishTimeMs: 0,
         error: null,
@@ -97,10 +97,10 @@ export const gameMachine = setup({
     }),
     accumulateNote: assign(({ context, event }) => {
       assertEvent(event, 'NOTE_PRESSED');
-      if (context.pressedMidiNotes.includes(event.midiNote)) {
-        return { pressedMidiNotes: context.pressedMidiNotes };
+      if (context.pressedCellIds.includes(event.cellId)) {
+        return { pressedCellIds: context.pressedCellIds };
       }
-      return { pressedMidiNotes: [...context.pressedMidiNotes, event.midiNote] };
+      return { pressedCellIds: [...context.pressedCellIds, event.cellId] };
     }),
 ```
 
@@ -109,11 +109,11 @@ The remaining actions advance to the next chord group, record the finish timesta
 ``` {.typescript file=_generated/machines/gameMachine.ts}
     advanceGroup: assign(({ context }) => {
       const nextIndex = context.currentGroupIndex + 1;
-      const pressedMidiNotes: number[] = [];
+      const pressedCellIds: string[] = [];
       return {
         currentGroupIndex: nextIndex,
         targetCellIds: context.noteGroups[nextIndex]?.cellIds ?? [],
-        pressedMidiNotes,
+        pressedCellIds,
       };
     }),
     setFinishTime: assign(() => ({ finishTimeMs: Date.now() })),
@@ -121,18 +121,18 @@ The remaining actions advance to the next chord group, record the finish timesta
       noteGroups: [],
       currentGroupIndex: 0,
       targetCellIds: [],
-      pressedMidiNotes: [],
+      pressedCellIds: [],
       startTimeMs: 0,
       finishTimeMs: 0,
       error: null,
       tuningWarnAcknowledged: false,
     })),
     restartGame: assign(({ context }) => {
-      const pressedMidiNotes: number[] = [];
+      const pressedCellIds: string[] = [];
       return {
         currentGroupIndex: 0,
         targetCellIds: context.noteGroups[0]?.cellIds ?? [],
-        pressedMidiNotes,
+        pressedCellIds,
         startTimeMs: Date.now(),
         finishTimeMs: 0,
       };
@@ -151,14 +151,14 @@ would exhaust the groups array.
   guards: {
     isCorrectNote: ({ context, event }) => {
       assertEvent(event, 'NOTE_PRESSED');
-      return context.noteGroups[context.currentGroupIndex]?.midiNotes.includes(event.midiNote) ?? false;
+      return context.noteGroups[context.currentGroupIndex]?.cellIds.includes(event.cellId) ?? false;
     },
     isChordComplete: ({ context, event }) => {
       assertEvent(event, 'NOTE_PRESSED');
       const group = context.noteGroups[context.currentGroupIndex];
       if (!group) return false;
-      const withNew = new Set([...context.pressedMidiNotes, event.midiNote]);
-      return group.midiNotes.every(n => withNew.has(n));
+      const withNew = new Set([...context.pressedCellIds, event.cellId]);
+      return group.cellIds.every(id => withNew.has(id));
     },
     isLastGroup: ({ context }) =>
       context.currentGroupIndex + 1 >= context.noteGroups.length,
@@ -176,7 +176,7 @@ The initial context zeroes all runtime fields. `idle` and `loading` are waiting 
     noteGroups: [],
     currentGroupIndex: 0,
     targetCellIds: [],
-    pressedMidiNotes: [],
+    pressedCellIds: [],
     startTimeMs: 0,
     finishTimeMs: 0,
     error: null,

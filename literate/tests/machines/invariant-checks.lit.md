@@ -2101,7 +2101,7 @@ export const gameMachineReset: StateInvariant = {
     expect(afterReset.context.noteGroups.length).toBe(0);
     expect(afterReset.context.targetCellIds.length).toBe(0);
     expect(afterReset.context.currentGroupIndex).toBe(0);
-    expect(afterReset.context.pressedMidiNotes.length).toBe(0);
+    expect(afterReset.context.pressedCellIds.length).toBe(0);
   },
 };
 
@@ -2341,7 +2341,7 @@ export const gameSm8PlayingNewSong: StateInvariant = {
 
 export const gameSm9PlayingReset: StateInvariant = {
   id: 'GAME-SM-9',
-  description: 'playing → GAME_RESET → idle (pressedMidiNotes cleared)',
+  description: 'playing → GAME_RESET → idle (pressedCellIds cleared)',
   check: async (_page: Page) => {
     const actor = createActor(gameMachine);
     actor.start();
@@ -2353,7 +2353,7 @@ export const gameSm9PlayingReset: StateInvariant = {
     });
 
     actor.send({ type: 'NOTE_PRESSED', cellId: '0_0', midiNote: 60 });
-    const pressedBefore = actor.getSnapshot().context.pressedMidiNotes;
+    const pressedBefore = actor.getSnapshot().context.pressedCellIds;
 
     actor.send({ type: 'GAME_RESET' });
     const snap = actor.getSnapshot();
@@ -2362,7 +2362,7 @@ export const gameSm9PlayingReset: StateInvariant = {
 
     expect(pressedBefore.length, 'one note must be accumulated before reset').toBe(1);
     expect(snap.value, 'GAME_RESET from playing must return to idle').toBe('idle');
-    expect(snap.context.pressedMidiNotes.length, 'pressedMidiNotes must be empty after reset').toBe(0);
+    expect(snap.context.pressedCellIds.length, 'pressedCellIds must be empty after reset').toBe(0);
     expect(snap.context.noteGroups.length, 'noteGroups must be empty after reset').toBe(0);
   },
 };
@@ -2396,7 +2396,7 @@ export const gameSm10WrongNoteNoop: StateInvariant = {
 
     expect(snap.value, 'wrong note must not change state').toBe('playing');
     expect(snap.context.currentGroupIndex, 'wrong note must not advance the group index').toBe(0);
-    expect(snap.context.pressedMidiNotes.length, 'wrong note must not be accumulated').toBe(0);
+    expect(snap.context.pressedCellIds.length, 'wrong note must not be accumulated').toBe(0);
   },
 };
 
@@ -2446,7 +2446,7 @@ export const gameFreqReject: StateInvariant = {
 
     actor.send({ type: 'NOTE_PRESSED', cellId: '0_0', midiNote: 61 });
     const state = actor.getSnapshot().value as string;
-    const pressed = actor.getSnapshot().context.pressedMidiNotes;
+    const pressed = actor.getSnapshot().context.pressedCellIds;
 
     actor.stop();
 
@@ -2566,12 +2566,12 @@ export const gameChordClear: StateInvariant = {
     });
 
     actor.send({ type: 'NOTE_PRESSED', cellId: '0_0', midiNote: 60 });
-    const afterAccumulate = actor.getSnapshot().context.pressedMidiNotes;
-    expect(afterAccumulate, 'should contain accumulated note').toContain(60);
+    const afterAccumulate = actor.getSnapshot().context.pressedCellIds;
+    expect(afterAccumulate, 'should contain accumulated cellId').toContain('0_0');
 
     actor.send({ type: 'NOTE_PRESSED', cellId: '1_0', midiNote: 64 });
-    const afterAdvance = actor.getSnapshot().context.pressedMidiNotes;
-    expect(afterAdvance.length, 'pressedMidiNotes should be empty after advance').toBe(0);
+    const afterAdvance = actor.getSnapshot().context.pressedCellIds;
+    expect(afterAdvance.length, 'pressedCellIds should be empty after advance').toBe(0);
     expect(actor.getSnapshot().context.currentGroupIndex, 'should be on group 1').toBe(1);
 
     actor.stop();
@@ -3125,7 +3125,7 @@ Continuing with `gameInput1` and related invariants.
 ``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const gameInput1: StateInvariant = {
   id: 'GAME-INPUT-1',
-  description: 'NOTE_PRESSED with correct midiNote field advances currentGroupIndex',
+  description: 'NOTE_PRESSED with correct cellId advances currentGroupIndex',
   check: async (_page: Page) => {
     const actor = createActor(gameMachine);
     actor.start();
@@ -3154,7 +3154,7 @@ export const gameInput1: StateInvariant = {
 
 export const gameInput2: StateInvariant = {
   id: 'GAME-INPUT-2',
-  description: 'NOTE_PRESSED with wrong midiNote is rejected: state, index, and accumulator unchanged',
+  description: 'NOTE_PRESSED with wrong cellId is rejected: state, index, and accumulator unchanged',
   check: async (_page: Page) => {
     const actor = createActor(gameMachine);
     actor.start();
@@ -3165,14 +3165,14 @@ export const gameInput2: StateInvariant = {
       noteGroups: [{ cellIds: ['0_0'], midiNotes: [60], startMs: 0 }],
     });
 
-    actor.send({ type: 'NOTE_PRESSED', cellId: '0_0', midiNote: 99 });
+    actor.send({ type: 'NOTE_PRESSED', cellId: '5_5', midiNote: 99 });
     const snap = actor.getSnapshot();
 
     actor.stop();
 
-    expect(snap.value, 'wrong midiNote must not change state').toBe('playing');
-    expect(snap.context.currentGroupIndex, 'wrong midiNote must not advance group index').toBe(0);
-    expect(snap.context.pressedMidiNotes.length, 'wrong midiNote must not be accumulated').toBe(0);
+    expect(snap.value, 'wrong cellId must not change state').toBe('playing');
+    expect(snap.context.currentGroupIndex, 'wrong cellId must not advance group index').toBe(0);
+    expect(snap.context.pressedCellIds.length, 'wrong cellId must not be accumulated').toBe(0);
   },
 };
 
@@ -3184,7 +3184,7 @@ Continuing with `gameInput3` and related invariants.
 ``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const gameInput3: StateInvariant = {
   id: 'GAME-INPUT-3',
-  description: 'NOTE_PRESSED matches by midiNote only — arbitrary cellId with correct midiNote advances group',
+  description: 'NOTE_PRESSED with wrong cellId but correct midiNote is rejected — cellId-based matching',
   check: async (_page: Page) => {
     const actor = createActor(gameMachine);
     actor.start();
@@ -3203,8 +3203,8 @@ export const gameInput3: StateInvariant = {
 
     actor.stop();
 
-    expect(snap.value, 'machine stays in playing (second group remaining)').toBe('playing');
-    expect(snap.context.currentGroupIndex, 'group advances despite non-matching cellId — midiNote-based matching').toBe(1);
+    expect(snap.value, 'machine stays in playing').toBe('playing');
+    expect(snap.context.currentGroupIndex, 'wrong cellId must not advance group even with correct midiNote').toBe(0);
   },
 };
 
@@ -3284,7 +3284,7 @@ export const gameEdge3: StateInvariant = {
     actor.stop();
 
     expect(snap.value, 'chord incomplete (64 not pressed) — machine must remain in playing').toBe('playing');
-    expect(snap.context.pressedMidiNotes.length, 'duplicate note 60 deduped — exactly 1 entry in pressedMidiNotes').toBe(1);
+    expect(snap.context.pressedCellIds.length, 'duplicate note 60 deduped — exactly 1 entry in pressedCellIds').toBe(1);
     expect(snap.context.currentGroupIndex, 'chord not complete — group index unchanged at 0').toBe(0);
   },
 };
@@ -3368,7 +3368,7 @@ export const gameEdge5: StateInvariant = {
     expect(beforeIndex, 'group index starts at 0').toBe(0);
     expect(snap.value, 'machine remains in playing (second group still pending)').toBe('playing');
     expect(snap.context.currentGroupIndex, 'single-note group advances to index 1 immediately on correct press').toBe(1);
-    expect(snap.context.pressedMidiNotes.length, 'pressedMidiNotes cleared after group advance').toBe(0);
+    expect(snap.context.pressedCellIds.length, 'pressedCellIds cleared after group advance').toBe(0);
   },
 };
 

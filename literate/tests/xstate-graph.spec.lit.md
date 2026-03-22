@@ -533,7 +533,7 @@ The game integration tests exercise the full pipeline from MIDI parsing through 
   });
 ```
 
-These tests cover the game's note-matching logic: frequency-based acceptance ignores `cellId` mismatch, `cellId`-only matches are rejected when `midiNote` is wrong, chord groups require all constituent notes, single-note groups advance immediately, and the `pressedMidiNotes` accumulator clears on group advance.
+These tests cover the game's note-matching logic: frequency-based acceptance ignores `cellId` mismatch, `cellId`-only matches are rejected when `midiNote` is wrong, chord groups require all constituent notes, single-note groups advance immediately, and the `pressedCellIds` accumulator clears on group advance.
 
 ``` {.typescript file=_generated/tests/xstate-graph.spec.ts}
   test('GAME-FREQ-1: correct midiNote with wrong cellId is accepted', async ({ page }) => {
@@ -552,7 +552,7 @@ These tests cover the game's note-matching logic: frequency-based acceptance ign
     await gameChordSingle.check(page);
   });
 
-  test('GAME-CHORD-3: pressedMidiNotes clears on group advance', async ({ page }) => {
+  test('GAME-CHORD-3: pressedCellIds clears on group advance', async ({ page }) => {
     await gameChordClear.check(page);
   });
 ```
@@ -692,7 +692,7 @@ The game state machine (GAME-SM-*) tests exercise every major transition in `gam
     await gameSm8PlayingNewSong.check(page);
   });
 
-  test('GAME-SM-9: playing → GAME_RESET → idle (pressedMidiNotes cleared)', async ({ page }) => {
+  test('GAME-SM-9: playing → GAME_RESET → idle (pressedCellIds cleared)', async ({ page }) => {
     await gameSm9PlayingReset.check(page);
   });
 
@@ -712,11 +712,11 @@ The game input tests verify the `NOTE_PRESSED` event handler: a correct `midiNot
     await gameInput1.check(page);
   });
 
-  test('GAME-INPUT-2: NOTE_PRESSED with wrong midiNote is rejected: state, index, and accumulator unchanged', async ({ page }) => {
+  test('GAME-INPUT-2: NOTE_PRESSED with wrong cellId is rejected: state, index, and accumulator unchanged', async ({ page }) => {
     await gameInput2.check(page);
   });
 
-  test('GAME-INPUT-3: NOTE_PRESSED matches by midiNote only — arbitrary cellId with correct midiNote advances group', async ({ page }) => {
+  test('GAME-INPUT-3: NOTE_PRESSED with wrong cellId but correct midiNote is rejected — cellId-based matching', async ({ page }) => {
     await gameInput3.check(page);
   });
 ```

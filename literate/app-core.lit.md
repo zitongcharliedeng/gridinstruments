@@ -1525,10 +1525,8 @@ the tuning slider and calibrate button to prevent mid-game tuning changes.
             }
           }
 
-          const pressedMidis = new Set(ctx.pressedMidiNotes);
-          if (pressedMidis.size > 0) {
-            const pressedCellIds = this.visualizer.getCellIdsForMidiNotes(pressedMidis);
-            this.visualizer.setPressedTargetNotes(pressedCellIds);
+          if (ctx.pressedCellIds.length > 0) {
+            this.visualizer.setPressedTargetNotes(ctx.pressedCellIds);
           } else {
             this.visualizer.setPressedTargetNotes([]);
           }
