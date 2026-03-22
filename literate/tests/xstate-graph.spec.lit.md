@@ -533,14 +533,14 @@ The game integration tests exercise the full pipeline from MIDI parsing through 
   });
 ```
 
-These tests cover the game's note-matching logic: frequency-based acceptance ignores `cellId` mismatch, `cellId`-only matches are rejected when `midiNote` is wrong, chord groups require all constituent notes, single-note groups advance immediately, and the `pressedCellIds` accumulator clears on group advance.
+These tests cover the game's note-matching logic: cellId-based matching rejects wrong grid positions even with correct midiNote, chord groups require all constituent cellIds, single-note groups advance immediately, and the `pressedCellIds` accumulator clears on group advance.
 
 ``` {.typescript file=_generated/tests/xstate-graph.spec.ts}
-  test('GAME-FREQ-1: correct midiNote with wrong cellId is accepted', async ({ page }) => {
+  test('GAME-FREQ-1: correct midiNote with wrong cellId is rejected (cellId-based matching)', async ({ page }) => {
     await gameFreqMatch.check(page);
   });
 
-  test('GAME-FREQ-2: wrong midiNote with matching cellId is rejected', async ({ page }) => {
+  test('GAME-FREQ-2: correct cellId with wrong midiNote still advances (cellId-based matching)', async ({ page }) => {
     await gameFreqReject.check(page);
   });
 
@@ -705,7 +705,7 @@ The game state machine (GAME-SM-*) tests exercise every major transition in `gam
   });
 ```
 
-The game input tests verify the `NOTE_PRESSED` event handler: a correct `midiNote` advances `currentGroupIndex` regardless of `cellId`, a wrong `midiNote` is silently rejected, and the frequency-only matching rule applies even with an arbitrary `cellId`.
+The game input tests verify the `NOTE_PRESSED` event handler: a correct `cellId` advances `currentGroupIndex`, a wrong `cellId` is silently rejected even if the `midiNote` matches, preventing mirror-note false positives in non-12-TET tunings.
 
 ``` {.typescript file=_generated/tests/xstate-graph.spec.ts}
   test('GAME-INPUT-1: NOTE_PRESSED with correct midiNote field advances currentGroupIndex', async ({ page }) => {

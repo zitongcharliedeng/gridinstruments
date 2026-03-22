@@ -3,7 +3,7 @@
 Game/tutorial state machine for GridInstruments. Manages the MIDI play-along game lifecycle:
 `idle → loading → playing → complete`, with an `error` branch on load failure.
 
-`NOTE_PRESSED` in `playing` uses frequency-based (`midiNote`) matching: a correct note that
+`NOTE_PRESSED` in `playing` uses cellId-based matching: a correct note that
 completes the current chord group advances to the next group, or transitions to `complete` if
 it was the last group. Wrong notes are silently ignored.
 

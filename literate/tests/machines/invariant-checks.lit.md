@@ -2128,7 +2128,7 @@ export const gameFreqMatch: StateInvariant = {
 
     actor.stop();
 
-    expect(state, 'correct midiNote with wrong cellId should complete').toBe('complete');
+    expect(state, 'correct midiNote with wrong cellId should be rejected (cellId-based matching)').toBe('playing');
   },
 };
 
@@ -2441,17 +2441,19 @@ export const gameFreqReject: StateInvariant = {
     actor.send({ type: 'FILE_DROPPED', file: new File([], 'test.mid') });
     actor.send({
       type: 'SONG_LOADED',
-      noteGroups: [{ cellIds: ['0_0'], midiNotes: [60], startMs: 0 }],
+      noteGroups: [
+        { cellIds: ['0_0'], midiNotes: [60], startMs: 0 },
+        { cellIds: ['1_0'], midiNotes: [62], startMs: 200 },
+      ],
     });
 
     actor.send({ type: 'NOTE_PRESSED', cellId: '0_0', midiNote: 61 });
-    const state = actor.getSnapshot().value as string;
-    const pressed = actor.getSnapshot().context.pressedCellIds;
+    const snap = actor.getSnapshot();
 
     actor.stop();
 
-    expect(state, 'wrong midiNote with matching cellId should stay in playing').toBe('playing');
-    expect(pressed.length, 'wrong note should not accumulate').toBe(0);
+    expect(snap.value, 'correct cellId with wrong midiNote should still advance (cellId-based matching)').toBe('playing');
+    expect(snap.context.currentGroupIndex, 'group advances because cellId matches').toBe(1);
   },
 };
 
