@@ -4607,6 +4607,40 @@ export const COG_ACTIVE_INVERSION: StateInvariant = {
   },
 };
 
+export const SITE_TITLE_CHECK: StateInvariant = {
+  id: 'UI-TITLE-1',
+  description: 'Site title is gridinstruments.xyz',
+  check: async (page: Page) => {
+    const title = await page.locator('.site-title').textContent();
+    if (!title?.includes('gridinstruments.xyz')) {
+      throw new Error(`Site title is "${title}", expected "gridinstruments.xyz"`);
+    }
+  },
+};
+
+export const SLIDER_FILL_CHECK: StateInvariant = {
+  id: 'UI-SLIDER-FILL-1',
+  description: 'All visible sliders have gradient fill applied',
+  check: async (page: Page) => {
+    await page.locator('#grid-settings-btn').click();
+    await page.waitForTimeout(200);
+    const unfilled = await page.evaluate(() => {
+      const sliders = document.querySelectorAll<HTMLInputElement>('.slider-track input[type="range"]');
+      const missing: string[] = [];
+      sliders.forEach(s => {
+        if (s.offsetWidth > 0 && !s.style.background.includes('gradient')) {
+          missing.push(s.id || 'unknown');
+        }
+      });
+      return missing;
+    });
+    await page.locator('#grid-settings-btn').click();
+    if (unfilled.length > 0) {
+      throw new Error(`Sliders without fill gradient: ${unfilled.join(', ')}`);
+    }
+  },
+};
+
 ```
 
 ## Binding Vow Invariants

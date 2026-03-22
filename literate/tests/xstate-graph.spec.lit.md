@@ -174,6 +174,8 @@ import {
        INFO_HOVER_PREVIEW,
        PEDAL_HOLD_RELEASE,
        COG_ACTIVE_INVERSION,
+       SITE_TITLE_CHECK,
+       SLIDER_FILL_CHECK,
        VOW_NO_NATIVE_SELECT,
        VOW_NO_SCROLL,
        VOW_SINGLE_FONT,
@@ -1043,6 +1045,14 @@ The golden screenshot tests compare rendered pixels against stored reference ima
 
   test('UI-PEDAL-1: Sustain pedal activates on hold and deactivates on release', async ({ page }) => {
     await PEDAL_HOLD_RELEASE.check(page);
+  });
+
+  test('UI-TITLE-1: Site title is gridinstruments.xyz', async ({ page }) => {
+    await SITE_TITLE_CHECK.check(page);
+  });
+
+  test('UI-SLIDER-FILL-1: All visible sliders have gradient fill', async ({ page }) => {
+    await SLIDER_FILL_CHECK.check(page);
   });
 
   test('UI-COG-INVERT-1: Grid cog inverts when overlay opens, reverts on close', async ({ page }) => {
