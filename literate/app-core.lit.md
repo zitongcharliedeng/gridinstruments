@@ -2454,6 +2454,8 @@ Calibration mode shows a banner instructing the user to play all reachable notes
     document.getElementById('visualiser-panel')?.classList.add('dimmed');
     document.getElementById('pedals-panel')?.classList.add('dimmed');
     document.querySelector('.top-bar-left')?.classList.add('dimmed');
+    document.getElementById('song-bar-search')?.classList.add('dimmed');
+    document.getElementById('song-bar-status')?.classList.add('dimmed');
     this.render();
   }
 
@@ -2487,6 +2489,8 @@ Calibration mode shows a banner instructing the user to play all reachable notes
     document.getElementById('visualiser-panel')?.classList.remove('dimmed');
     document.getElementById('pedals-panel')?.classList.remove('dimmed');
     document.querySelector('.top-bar-left')?.classList.remove('dimmed');
+    document.getElementById('song-bar-search')?.classList.remove('dimmed');
+    document.getElementById('song-bar-status')?.classList.remove('dimmed');
     this.render();
   }
 ```

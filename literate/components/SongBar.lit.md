@@ -44,7 +44,7 @@ const SONGBAR_CSS = `#song-bar {
 #song-bar-calibrate, #song-bar-search, #song-bar-status {
   display:inline-flex; align-items:center; gap:6px;
 }
-#calibrate-btn.active { color:var(--bg); background:var(--fg); border-color:var(--bg); cursor:default; }
+#calibrate-btn.active { color:var(--bg); background:var(--fg); border-color:var(--fg); cursor:default; }
 #song-bar.dropping { outline:2px solid rgba(255,255,255,0.7); outline-offset:-2px; }
 .search-result {
   display:flex; justify-content:space-between; align-items:center;
