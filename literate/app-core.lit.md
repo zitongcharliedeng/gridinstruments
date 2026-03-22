@@ -1066,12 +1066,10 @@ MIDI expression settings let the user configure pitch bend range (2-48 semitones
       });
       pbRangeInput.addEventListener('blur', () => {
         const val = parseInt(pbRangeInput.value, 10);
-        const clamped = Math.max(0, Math.min(96, val));
+        const clamped = Math.max(2, Math.min(96, Number.isFinite(val) ? val : 24));
         pbRangeInput.value = clamped.toString();
-        if (clamped >= 2 && clamped <= 48) {
-          this.midiPitchBendRange = clamped;
-          this.saveSetting('midiPbRange', clamped.toString());
-        }
+        this.midiPitchBendRange = clamped;
+        this.saveSetting('midiPbRange', clamped.toString());
       });
     }
 
