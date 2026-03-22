@@ -586,9 +586,7 @@ The MIDI device panel renders a list of connected controllers with enable/disabl
         },
       });
       gridCog?.addEventListener('click', () => {
-        setTimeout(() => {
-          overlayScrollbars.update();
-        }, 50);
+        requestAnimationFrame(() => { requestAnimationFrame(() => { overlayScrollbars.update(); }); });
       });
     }
     const savedWaveform = this.loadSetting('waveform', 'sawtooth');
@@ -1409,8 +1407,8 @@ Focus management prevents UI controls from capturing keyboard input after intera
 
 ``` {.typescript file=_generated/app-core.ts}
     document.querySelectorAll<HTMLElement>('select, input[type="range"], input[type="checkbox"]').forEach(el => {
-      el.addEventListener('pointerup', () => setTimeout(() => { el.blur(); }, 0));
-      el.addEventListener('change', () => setTimeout(() => { el.blur(); }, 0));
+      el.addEventListener('pointerup', () => requestAnimationFrame(() => { el.blur(); }));
+      el.addEventListener('change', () => requestAnimationFrame(() => { el.blur(); }));
     });
 
     document.querySelectorAll<HTMLInputElement>('input[type="text"]').forEach(el => {
