@@ -179,29 +179,22 @@ export function applySliderFill(slider: HTMLInputElement): void {
 
 ``` {.typescript file=_generated/app-slider.ts}
 export function refreshAllSliderUI(): void {
-  const sliderBadgePairs: [string, string | null, number][] = [
-    ['skew-slider', 'skew-thumb-badge', 50],
-    ['bfact-slider', 'bfact-thumb-badge', 50],
-    ['tuning-slider', 'tuning-thumb-badge', 50],
-    ['volume-slider', 'volume-thumb-badge', 50],
-    ['zoom-slider', 'zoom-thumb-badge', 50],
-    ['d-ref-slider', 'd-ref-input', 80],
-  ];
-  for (const [sliderId, badgeId, badgeWidth] of sliderBadgePairs) {
-    const slider = document.querySelector<HTMLInputElement>(`#${sliderId}`);
-    if (!slider) continue;
+  const allSliders = document.querySelectorAll<HTMLInputElement>('.slider-track input[type="range"]');
+  for (const slider of allSliders) {
+    if (slider.offsetWidth <= 0) continue;
     applySliderFill(slider);
-    if (badgeId) {
-      const badge = document.getElementById(badgeId);
-      if (badge) {
-        const min = parseNum(slider.min, 0);
-        const max = parseNum(slider.max, 100);
-        const val = parseNum(slider.value, 0);
-        const ratio = (Math.max(min, Math.min(max, val)) - min) / (max - min);
-        const centerPx = thumbCenterPx(ratio, slider);
-        const clampedPx = clampBadgePosition(centerPx, slider, badgeWidth);
-        badge.style.left = `${clampedPx}px`;
-      }
+    const track = slider.closest('.slider-track');
+    if (!track) continue;
+    const badge = track.querySelector<HTMLElement>('.slider-value-badge, .badge-input');
+    if (badge) {
+      const badgeWidth = badge.classList.contains('badge-input') ? 50 : 50;
+      const min = parseNum(slider.min, 0);
+      const max = parseNum(slider.max, 100);
+      const val = parseNum(slider.value, 0);
+      const ratio = (Math.max(min, Math.min(max, val)) - min) / (max - min);
+      const centerPx = thumbCenterPx(ratio, slider);
+      const clampedPx = clampBadgePosition(centerPx, slider, badgeWidth);
+      badge.style.left = `${clampedPx}px`;
     }
   }
 }
