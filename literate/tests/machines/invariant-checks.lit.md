@@ -4566,6 +4566,27 @@ export const INFO_HOVER_PREVIEW: StateInvariant = {
   },
 };
 
+export const PEDAL_HOLD_RELEASE: StateInvariant = {
+  id: 'UI-PEDAL-1',
+  description: 'Sustain pedal gets .active on mouse down and loses it on mouse up',
+  check: async (page: Page) => {
+    const pedal = page.locator('#sustain-indicator');
+    const box = await pedal.boundingBox();
+    if (!box) throw new Error('#sustain-indicator not visible');
+    const cx = box.x + box.width / 2;
+    const cy = box.y + box.height / 2;
+    await page.mouse.move(cx, cy);
+    await page.mouse.down();
+    await page.waitForTimeout(150);
+    const hasActive = await pedal.evaluate(el => el.classList.contains('active'));
+    if (!hasActive) throw new Error('Sustain pedal missing .active after mouse down');
+    await page.mouse.up();
+    await page.waitForTimeout(150);
+    const stillActive = await pedal.evaluate(el => el.classList.contains('active'));
+    if (stillActive) throw new Error('Sustain pedal still .active after mouse up — stuck');
+  },
+};
+
 export const COG_ACTIVE_INVERSION: StateInvariant = {
   id: 'UI-COG-INVERT-1',
   description: 'Grid cog inverts to white-on-black when overlay is open',
