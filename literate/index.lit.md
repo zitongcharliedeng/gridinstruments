@@ -326,22 +326,6 @@ white when checked and draws a CSS-only checkmark via a pseudo-element.
 
 ``` {.html file=index.html}
 
-    .ctrl-group {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      flex-shrink: 0;
-    }
-    .ctrl-label {
-      font-size: 11px;
-      color: var(--dim);
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      white-space: nowrap;
-      pointer-events: none;
-    }
-
     select, input[type="range"], input[type="number"], input[type="text"] {
       font-family: var(--font);
       font-size: 12px;

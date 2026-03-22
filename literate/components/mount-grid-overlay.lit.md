@@ -34,7 +34,8 @@ const GRID_OVERLAY_CSS = `#mpe-output-select {
 .midi-panel-row { display:flex; align-items:center; gap:2px; font-size:11px; flex-wrap:wrap; }
 .mt-18 { margin-top:18px; }
 .expr-label { display:inline-flex; align-items:center; gap:4px; cursor:pointer; font-size:12px; }
-.ctrl-label { font-size:9px; text-transform:uppercase; white-space:nowrap; color:#fff; flex-shrink:0; }
+.ctrl-group { display:flex; align-items:center; gap:5px; flex-shrink:0; }
+.ctrl-label { font-size:9px; text-transform:uppercase; white-space:nowrap; color:#fff; flex-shrink:0; font-weight:700; letter-spacing:0.06em; }
 .text-white { color:#fff; }
 .text-white-12 { color:#fff; font-size:12px; }
 .text-dim { color:var(--dim); font-size:9px; }
