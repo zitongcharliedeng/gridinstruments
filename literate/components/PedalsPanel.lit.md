@@ -13,18 +13,19 @@ parent can wire the `pedalMachine` actors without any direct DOM access.
 import { type JSX } from 'solid-js';
 
 const PEDALS_CSS = `#pedals-panel {
-  flex-shrink:0; display:flex; gap:1px; background:var(--border);
+  flex-shrink:0; display:flex; gap:0; background:var(--bg);
   overflow:visible; position:relative; z-index:1; border-top:1px solid var(--border);
 }
 #pedals-panel.collapsed { height:0 !important; overflow:visible; }
 .pedal-btn {
-  flex:1; padding:4px 0 12px 0; font-family:var(--font); font-size:12px;
-  font-weight:500; text-transform:uppercase; letter-spacing:0.1em;
-  color:var(--dim); background:var(--bg); border:none; cursor:pointer;
+  flex:1; padding:8px 0; font-family:var(--font); font-size:11px;
+  font-weight:700; text-transform:uppercase; letter-spacing:0.12em;
+  color:var(--dim); background:var(--bg); border:none; border-right:1px solid var(--border); cursor:pointer;
   user-select:none; -webkit-user-select:none; touch-action:manipulation;
   -webkit-touch-callout:none; -webkit-tap-highlight-color:transparent;
 }
 @media (hover:hover) { .pedal-btn:hover { color:var(--fg); background:var(--subtle); } }
+.pedal-btn:last-child { border-right:none; }
 .pedal-btn.active { color:var(--bg); background:var(--fg); }`;
 
 let pedalsCssInjected = false;

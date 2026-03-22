@@ -132,7 +132,6 @@ wraps on narrow screens.
     <div id="song-bar">
 
       <div id="song-bar-search">
-        <span class="overlay-section-title">SONG</span>
         <div class="search-row">
         <InfoButton infoKey="search" />
         <div class="search-input-wrap">
