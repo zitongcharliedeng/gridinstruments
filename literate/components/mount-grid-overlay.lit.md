@@ -119,6 +119,15 @@ export function mountGridOverlay(
         </div>
       ),
     },
+```
+
+### VISUAL section
+
+Per-grid visual settings: skew (DCompose ↔ MidiMech morph), wicked shear
+(row-offset angle), zoom (cell size), QWERTY overlay toggle, and keyboard
+layout selector. Each slider wraps its info button in a `ctrl-group` flex row.
+
+``` {.typescript file=_generated/components/mount-grid-overlay.tsx}
     {
       title: 'VISUAL (per grid)',
       children: () => (
@@ -167,6 +176,15 @@ export function mountGridOverlay(
         </div>
       ),
     },
+```
+
+### INPUT section
+
+Global input settings: MIDI device management, pitch bend range, and expression
+controls (bend, velocity, pressure, timbre). Expression checkboxes toggle which
+MPE dimensions are active. Pressure mode and CC source use slim-select dropdowns.
+
+``` {.typescript file=_generated/components/mount-grid-overlay.tsx}
     {
       title: 'INPUT (global)',
       children: () => (
