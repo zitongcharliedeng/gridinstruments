@@ -64,6 +64,7 @@ export class DComposeApp {
 
   private pointerDown = new Map<number, { coordX: number; coordY: number } | null>();
   private pointerWiggle = new Map<number, { xs: number[]; ys: number[]; times: number[]; lastDir: number; changes: number }>();
+  private localExpression = new Map<string, { pressure: number; pitchBend: number }>();
 
   private maxSimultaneousKeys = 8;
   private peakKeysThisSession = 0;
@@ -330,7 +331,10 @@ MIDI listener setup wires incoming note-on, note-off, pitch bend, slide (CC74), 
       for (const audioNoteId of getVoicesForChannel(deviceId, channel)) {
         if (this.expressionBend) this.synth.setPitchBend(audioNoteId, value * this.midiPitchBendRange);
         this.mpe.sendPitchBend(audioNoteId, value * this.midiPitchBendRange);
+        const prev = this.localExpression.get(audioNoteId);
+        this.localExpression.set(audioNoteId, { pressure: prev?.pressure ?? 0, pitchBend: value * this.midiPitchBendRange });
       }
+      this.visualizer?.setMPEExpression(this.localExpression);
     });
     this.midi.onSlide((channel, value, deviceId) => {
       const v = this.timbreReverse ? 1 - value : value;
@@ -343,7 +347,10 @@ MIDI listener setup wires incoming note-on, note-off, pitch bend, slide (CC74), 
       for (const audioNoteId of getVoicesForChannel(deviceId, channel)) {
         if (this.expressionPressure) this.synth.setPressure(audioNoteId, value);
         this.mpe.sendPressure(audioNoteId, value);
+        const prev = this.localExpression.get(audioNoteId);
+        this.localExpression.set(audioNoteId, { pressure: value, pitchBend: prev?.pitchBend ?? 0 });
       }
+      this.visualizer?.setMPEExpression(this.localExpression);
     });
   }
 ```
@@ -392,6 +399,8 @@ MIDI note-on maps the incoming MIDI note number to grid coordinates using `midiT
     const audioNoteId = `midi_${deviceId}_${channel}_${midiNote}_${coordX}_${coordY}`;
     this.synth.stopNote(audioNoteId);
     this.mpe.noteOff(audioNoteId, midiNote);
+    this.localExpression.delete(audioNoteId);
+    this.visualizer?.setMPEExpression(this.localExpression);
     this.activeNotes.delete(noteKey);
     this.midiChannelVoice.delete(`${deviceId}_${channel}_${midiNote}`);
     const chKey = `${deviceId}_${channel}`;
@@ -1955,6 +1964,10 @@ Pointer input (touch and mouse) uses the Pointer Events API for unified handling
           if (this.expressionBend) this.synth.setPitchBend(noteId, semitones);
           if (this.expressionTimbre) this.synth.setTimbre(noteId, this.timbreReverse ? 1 - normalizedY : normalizedY);
           if (this.expressionPressure && event.pressure > 0) this.synth.setPressure(noteId, event.pressure);
+          const prevExpr = this.localExpression.get(noteId);
+          const newPressure = (this.expressionPressure && event.pressure > 0) ? event.pressure : (prevExpr?.pressure ?? 0);
+          this.localExpression.set(noteId, { pressure: newPressure, pitchBend: semitones });
+          this.visualizer?.setMPEExpression(this.localExpression);
           this.mpe.sendPitchBend(noteId, semitones);
           this.mpe.sendSlide(noteId, normalizedY);
           this.mpe.sendPressure(noteId, event.pressure);
@@ -2012,6 +2025,8 @@ Pointer input (touch and mouse) uses the Pointer Events API for unified handling
     const midiNote = coordToMidiNote(effectiveCoordX, effectiveCoordY);
     this.synth.stopNote(audioNoteId);
     this.mpe.noteOff(audioNoteId, midiNote);
+    this.localExpression.delete(audioNoteId);
+    this.visualizer?.setMPEExpression(this.localExpression);
     this.activeNotes.delete(`ptr_${pointerId}`);
     this.trackNoteOff(effectiveCoordX, effectiveCoordY);
     this.render();
