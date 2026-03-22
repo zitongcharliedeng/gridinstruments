@@ -369,6 +369,7 @@ MIDI note-on maps the incoming MIDI note number to grid coordinates using `midiT
       if (oldAudioId) {
         this.synth.stopNote(oldAudioId);
         this.mpe.noteOff(oldAudioId, midiNote);
+        this.localExpression.delete(oldAudioId);
       }
       this.trackNoteOff(existing.coordX, existing.coordY);
     }
@@ -1871,6 +1872,8 @@ Key-up mirrors key-down: arrow releases clear pitch bend (or switch from vibrato
     const midiNote = coordToMidiNote(effectiveCoordX, effectiveCoordY);
     this.synth.stopNote(audioNoteId);
     this.mpe.noteOff(audioNoteId, midiNote);
+    this.localExpression.delete(audioNoteId);
+    this.visualizer?.setMPEExpression(this.localExpression);
     this.activeNotes.delete(code);
     this.trackNoteOff(effectiveCoordX, effectiveCoordY);
     this.render();
