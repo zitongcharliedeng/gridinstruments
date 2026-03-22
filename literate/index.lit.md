@@ -175,44 +175,8 @@ layout of top bar → song bar → visualiser → grid → pedals.
 
 ## Top bar styles
 
-`#top-bar` is a flex row that wraps on narrow screens. The left side groups the
-site title, GitHub badge (star + suggest), fullscreen, and reset-layout
-buttons. The `.gh-actions` badge mimics a GitHub badge widget with a mark,
-star count, and suggest link as adjacent inline-flex children separated by
-`var(--border)` lines.
-
-``` {.html file=index.html}
-
-    #top-bar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 2px 6px;
-      border-bottom: 1px solid var(--border);
-      flex-shrink: 0;
-      position: relative;
-      z-index: 30;
-      flex-wrap: wrap;
-    }
-```
-
-The about button and reset-layout button sit at the far right of `.top-bar-left`; both
-use dim text at rest and brighten on hover.
-
-``` {.html file=index.html}
-     #about-btn {
-       font-size: 11px;
-       color: var(--dim);
-       padding: 0 2px;
-     }
-    #about-btn:hover { color: var(--fg); }
-    #reset-layout {
-      font-family: var(--font); font-size: 9px; color: var(--dim);
-      background: none; border: 1px solid var(--border);
-      padding: 2px 6px; cursor: pointer; margin-left: 4px;
-    }
-    #reset-layout:hover { color: var(--fg); border-color: var(--accent); }
-```
+Top bar CSS (`#top-bar`, `#about-btn`, `#reset-layout`) is co-located in
+`components/TopBar.lit.md` alongside the component that renders them.
 
 ## Song bar styles
 

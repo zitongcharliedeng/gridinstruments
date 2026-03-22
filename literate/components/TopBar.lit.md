@@ -30,7 +30,20 @@ const TOPBAR_CSS = `.top-bar-left { display:flex; align-items:center; gap:8px; m
 .gh-btn .star-icon { color:#FFD700; }
 .gh-suggest { color:#4caf50; }
 .gh-suggest svg { fill:#4caf50; }
-.gh-suggest:hover { color:#66bb6a; background:var(--subtle); }`;
+.gh-suggest:hover { color:#66bb6a; background:var(--subtle); }
+#top-bar {
+  display:flex; justify-content:space-between; align-items:center;
+  padding:2px 6px; border-bottom:1px solid var(--border); flex-shrink:0;
+  position:relative; z-index:30; flex-wrap:wrap;
+}
+#about-btn { font-size:11px; color:var(--dim); padding:0 2px; }
+#about-btn:hover { color:var(--fg); }
+#reset-layout {
+  font-family:var(--font); font-size:9px; color:var(--dim);
+  background:none; border:1px solid var(--border); padding:2px 6px;
+  cursor:pointer; margin-left:4px;
+}
+#reset-layout:hover { color:var(--fg); border-color:var(--accent); }`;
 let topbarCssInjected = false;
 
 export interface TopBarProps {
