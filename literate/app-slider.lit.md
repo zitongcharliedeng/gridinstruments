@@ -187,7 +187,7 @@ export function refreshAllSliderUI(): void {
     if (!track) continue;
     const badge = track.querySelector<HTMLElement>('.slider-value-badge, .badge-input');
     if (badge) {
-      const badgeWidth = badge.classList.contains('badge-input') ? 50 : 50;
+      const badgeWidth = 50;
       const min = parseNum(slider.min, 0);
       const max = parseNum(slider.max, 100);
       const val = parseNum(slider.value, 0);
