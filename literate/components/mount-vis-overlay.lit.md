@@ -13,11 +13,20 @@ import type { NoteHistoryVisualizer } from '../lib/note-history-visualizer';
 import { D_REF_MIDI } from '../lib/keyboard-layouts';
 import { refreshAllSliderUI } from '../app-slider';
 
+const VIS_OVERLAY_CSS = `#vis-overlay { padding: 8px 12px 8px 40px; }`;
+let visOverlayCssInjected = false;
+
 export function mountVisOverlay(
   mountEl: HTMLElement,
   cogBtn: HTMLElement,
   historyVis: NoteHistoryVisualizer,
 ): void {
+  if (!visOverlayCssInjected) {
+    const s = document.createElement('style');
+    s.textContent = VIS_OVERLAY_CSS;
+    document.head.appendChild(s);
+    visOverlayCssInjected = true;
+  }
   const [visible, setVisible] = createSignal(false);
 
   cogBtn.addEventListener('click', () => {

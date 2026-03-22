@@ -301,30 +301,13 @@ the overlay, and inverts to black-on-white while the overlay is open.
 
 ## Grid settings overlay
 
-`#grid-overlay` covers the entire keyboard area with a semi-transparent
-frosted background. A slow CSS `shimmer` animation sweeps a subtle highlight
-across it to make the overlay feel alive. The `hidden` class toggles visibility
-via `display: none`. Overlay sections use `.overlay-section-title` for
-uppercase, letter-spaced category headings and `.overlay-btn` for action
-buttons that invert on hover.
+Overlay CSS (`.settings-overlay`, `.overlay-section`, `.grid-cog`) is co-located in
+`components/SettingsOverlay.lit.md`. `#vis-overlay` padding is in
+`components/mount-vis-overlay.lit.md`. `#mpe-output-select` hidden hack is in
+`components/mount-grid-overlay.lit.md`.
 
 ``` {.html file=index.html}
-
-    #vis-overlay {
-      padding: 8px 12px 8px 40px;
-    }
     .hidden { display: none !important; pointer-events: none !important; }
-    #mpe-output-select {
-      position: absolute !important;
-      width: 1px !important;
-      height: 1px !important;
-      opacity: 0 !important;
-      overflow: hidden !important;
-      pointer-events: none !important;
-      margin: 0 !important;
-      padding: 0 !important;
-      border-width: 0 !important;
-    }
 ```
 
 ## Search results and pedals panel
