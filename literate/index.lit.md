@@ -349,14 +349,16 @@ are co-located in `mount-grid-overlay.lit.md`. `.gi-checkbox` is co-located in
 
 ```
 
-## Ghosting toast, pedals height, and instructions
+## Ghosting toast
 
-Remaining cross-component styles: the ghosting toast notification, pedals panel
-height, and keyboard instructions block. All other component CSS is co-located
-in its respective `.lit.md` file (slider → `app-slider`, dialog → `app-slider`,
-top bar → `TopBar`, song bar → `SongBar`, overlay → `SettingsOverlay`,
-graffiti → `chord-graffiti`, grid overlay → `mount-grid-overlay`,
-vis overlay → `mount-vis-overlay`).
+The ghosting toast appears when a game chord requires more simultaneous keys
+than the user's keyboard can register. Pedals CSS is in `PedalsPanel.lit.md`.
+
+``` {.html file=index.html}
+    #ghosting-toast { display: none; position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 30; background: rgba(0,0,0,0.85); border: 1px solid var(--dim); padding: 12px 16px; font-family: var(--font); font-size: 11px; color: var(--fg); flex-direction: row; align-items: flex-start; gap: 12px; max-width: 400px; }
+    #ghosting-toast span { flex: 1; line-height: 1.5; }
+    #ghosting-toast-dismiss { background: none; border: none; color: var(--dim); font-family: var(--font); font-size: 14px; cursor: pointer; padding: 0; line-height: 1; flex-shrink: 0; }
+```
 
 ## Responsive breakpoints
 
