@@ -910,8 +910,6 @@ TET preset tick marks are generated from the `TUNING_MARKERS` array (5-TET throu
      if (this.volumeSlider) {
        this.volumeSlider.value = savedVolume;
        this.synth.setMasterVolume(parseFloat(savedVolume));
-     }
-     if (this.volumeSlider) {
        const volRef = this.volumeSlider;
        volRef.addEventListener('input', () => {
          const val = parseFloat(volRef.value);
@@ -1313,8 +1311,6 @@ The grid's cell width at zoom=1.0 comes from the lattice geometry — specifical
      if (this.zoomSlider) {
        this.zoomSlider.value = savedZoom;
        this.visualizer?.setZoom(parseFloat(savedZoom));
-     }
-     if (this.zoomSlider) {
        const zoomRef = this.zoomSlider;
        zoomRef.addEventListener('input', () => {
          const zoom = parseFloat(zoomRef.value);
