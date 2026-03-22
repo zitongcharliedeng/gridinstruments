@@ -1756,7 +1756,10 @@ Keyboard input handling maps physical key codes to grid coordinates through the 
           const cy = noteData.coordY + this.octaveOffset;
           const noteId = `key_${noteCode}_${cx}_${cy}`;
           this.synth.setPitchBend(noteId, bendSemitones);
+          const prev = this.localExpression.get(noteId);
+          this.localExpression.set(noteId, { pressure: prev?.pressure ?? 0, pitchBend: bendSemitones });
         }
+        this.visualizer?.setMPEExpression(this.localExpression);
       }
       return;
     }
@@ -1832,6 +1835,8 @@ Key-up mirrors key-down: arrow releases clear pitch bend (or switch from vibrato
           const cy = noteData.coordY + this.octaveOffset;
           const noteId = `key_${noteCode}_${cx}_${cy}`;
           this.synth.setPitchBend(noteId, bendSemitones);
+          const prev = this.localExpression.get(noteId);
+          this.localExpression.set(noteId, { pressure: prev?.pressure ?? 0, pitchBend: bendSemitones });
         }
       } else {
         for (const [noteCode, noteData] of this.activeNotes) {
@@ -1839,8 +1844,11 @@ Key-up mirrors key-down: arrow releases clear pitch bend (or switch from vibrato
           const cy = noteData.coordY + this.octaveOffset;
           const noteId = `key_${noteCode}_${cx}_${cy}`;
           this.synth.setPitchBend(noteId, 0);
+          const prev = this.localExpression.get(noteId);
+          if (prev) this.localExpression.set(noteId, { pressure: prev.pressure, pitchBend: 0 });
         }
       }
+      this.visualizer?.setMPEExpression(this.localExpression);
       return;
     }
 
