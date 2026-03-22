@@ -1858,6 +1858,15 @@ Pointer input (touch and mouse) uses the Pointer Events API for unified handling
     this.pointerDown.set(event.pointerId, button);
   }
 
+```
+
+Pointer-move handles two cases: (1) the finger crossed a cell boundary → stop
+the old note and start a new one, or (2) the finger is within the same cell →
+compute velocity-based pitch quantization and expression (bend, timbre, pressure).
+Instantaneous velocity from the last 4 pointer samples determines whether the
+touch is stationary (snap to cell center) or sliding (continuous microtonal bend).
+
+``` {.typescript file=_generated/app-core.ts}
   private handlePointerMove(event: PointerEvent): void {
     if (!this.pointerDown.has(event.pointerId)) return;
     const currentButton = this.pointerDown.get(event.pointerId);
