@@ -1,0 +1,14 @@
+id: no-settimeout-in-components
+language: typescript
+rule:
+  pattern: setTimeout($$$)
+  inside:
+    kind: call_expression
+    stopBy: end
+message: |
+  BANNED: setTimeout in components. Use SolidJS createEffect, queueMicrotask,
+  or requestAnimationFrame instead. setTimeout is unreliable for DOM timing
+  and creates race conditions with framework reactivity.
+severity: error
+files:
+  - "_generated/components/**"

@@ -48,37 +48,40 @@ deactivates the pedal, matching the existing imperative behaviour.
 
 ``` {.typescript file=_generated/components/PedalsPanel.tsx}
 
+function HoldButton(props: {
+  id: string;
+  label: string;
+  onDown: () => void;
+  onUp: () => void;
+}): JSX.Element {
+  const down = (e: PointerEvent): void => {
+    e.preventDefault();
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    props.onDown();
+  };
+  const up = (e: PointerEvent): void => {
+    (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
+    props.onUp();
+  };
+  return (
+    <button
+      class="pedal-btn"
+      id={props.id}
+      on:pointerdown={down}
+      on:pointerup={up}
+      on:pointercancel={() => { props.onUp(); }}
+    >
+      {props.label}
+    </button>
+  );
+}
+
 export function PedalsPanel(props: PedalsPanelProps): JSX.Element {
   if (!pedalsCssInjected) { const s = document.createElement('style'); s.textContent = PEDALS_CSS; document.head.appendChild(s); pedalsCssInjected = true; }
-  const onSustainDown = (e: PointerEvent): void => {
-    e.preventDefault();
-    props.onSustainDown();
-  };
-  const onVibratoDown = (e: PointerEvent): void => {
-    e.preventDefault();
-    props.onVibratoDown();
-  };
-
   return (
     <>
-      <button
-        class="pedal-btn"
-        id="sustain-indicator"
-        onPointerDown={onSustainDown}
-        onPointerUp={() => { props.onSustainUp(); }}
-        onPointerLeave={() => { props.onSustainUp(); }}
-      >
-        SUSTAIN
-      </button>
-      <button
-        class="pedal-btn"
-        id="vibrato-indicator"
-        onPointerDown={onVibratoDown}
-        onPointerUp={() => { props.onVibratoUp(); }}
-        onPointerLeave={() => { props.onVibratoUp(); }}
-      >
-        VIBRATO
-      </button>
+      <HoldButton id="sustain-indicator" label="SUSTAIN" onDown={() => { props.onSustainDown(); }} onUp={() => { props.onSustainUp(); }} />
+      <HoldButton id="vibrato-indicator" label="VIBRATO" onDown={() => { props.onVibratoDown(); }} onUp={() => { props.onVibratoUp(); }} />
     </>
   );
 }

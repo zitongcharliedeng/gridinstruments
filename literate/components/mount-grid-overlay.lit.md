@@ -62,7 +62,7 @@ export function mountGridOverlay(
   const toggle = (): void => {
     setVisible(v => !v);
     cogBtn.classList.toggle('active', visible());
-    if (visible()) setTimeout(refreshAllSliderUI, 50);
+    if (visible()) requestAnimationFrame(() => { requestAnimationFrame(refreshAllSliderUI); });
   };
   const onEscape = (e: KeyboardEvent): void => {
     if (e.key === 'Escape' && visible()) {

@@ -32,7 +32,7 @@ export function mountVisOverlay(
   cogBtn.addEventListener('click', () => {
     setVisible(v => !v);
     cogBtn.classList.toggle('active', visible());
-    if (visible()) setTimeout(refreshAllSliderUI, 50);
+    if (visible()) requestAnimationFrame(() => { requestAnimationFrame(refreshAllSliderUI); });
   });
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && visible()) {

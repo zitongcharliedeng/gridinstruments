@@ -83,7 +83,7 @@ export function TopBar(props: TopBarProps): JSX.Element {
       <button id="about-btn" class="slider-info-btn" onClick={onAboutClick}>
         i
       </button>
-      <span class="site-title">GridInstruments</span>
+      <span class="site-title">gridinstruments.xyz</span>
       <div class="gh-actions">
         <span class="gh-mark icon">
           <svg viewBox="0 0 16 16">
