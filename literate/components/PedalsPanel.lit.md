@@ -13,9 +13,10 @@ parent can wire the `pedalMachine` actors without any direct DOM access.
 import { type JSX } from 'solid-js';
 
 const PEDALS_CSS = `#pedals-panel {
-  flex-shrink:0; display:flex; gap:0; background:var(--bg);
+  flex-shrink:0; display:flex; gap:0; background:var(--bg); height:44px;
   overflow:visible; position:relative; z-index:1; border-top:1px solid var(--border);
 }
+#pedals-mount { display:contents; }
 #pedals-panel.collapsed { height:0 !important; overflow:visible; }
 .pedal-btn {
   flex:1; padding:8px 0; font-family:var(--font); font-size:11px;
