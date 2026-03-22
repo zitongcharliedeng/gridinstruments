@@ -55,7 +55,5 @@ export function createSelectAtSlot(
 }
 ```
 
-## Cycling Button
-
 ``` {.typescript file=_generated/app-dom.ts}
 ```
