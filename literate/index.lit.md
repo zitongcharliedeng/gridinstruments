@@ -376,24 +376,6 @@ top bar → `TopBar`, song bar → `SongBar`, overlay → `SettingsOverlay`,
 graffiti → `chord-graffiti`, grid overlay → `mount-grid-overlay`,
 vis overlay → `mount-vis-overlay`).
 
-``` {.html file=index.html}
-
-    #instructions {
-      font-size: 11px;
-      color: var(--dim);
-      border: 1px solid var(--border);
-      padding: 8px 12px;
-      line-height: 1.7;
-    }
-    #instructions kbd {
-      background: var(--subtle);
-      border: 1px solid var(--border);
-      padding: 1px 4px;
-      font-family: var(--font);
-      font-size: 10px;
-    }
-```
-
 ## Responsive breakpoints
 
 Three `@media` breakpoints progressively compact the top bar and song bar for
