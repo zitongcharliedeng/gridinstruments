@@ -538,6 +538,13 @@ The MIDI device panel renders a list of connected controllers with enable/disabl
       });
     }
 
+```
+
+The remaining setup creates slim-select dropdowns for waveform, layout, MIDI
+output, and quantization. Each dropdown is created via `createSelectAtSlot`,
+then wired to its backing state with a change listener and localStorage persistence.
+
+``` {.typescript file=_generated/app-core.ts}
     createSelectAtSlot('wave-select-slot', 'wave-select', [
       { value: 'sawtooth', text: 'SAW' },
       { value: 'sine', text: 'SIN' },
