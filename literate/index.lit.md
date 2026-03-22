@@ -367,38 +367,14 @@ white when checked and draws a CSS-only checkmark via a pseudo-element.
 
 ```
 
-## Slider track and value badge
+## Ghosting toast, pedals height, and instructions
 
-Slider CSS (range input thumb/track, `.slider-track`, label overlay, value badge,
-editable `.badge-input`, reset button) is co-located in `app-slider.lit.md` and
-injected via `injectSliderCSS()` on first use.
-
-## TET preset marks and control row styles
-
-TET preset marks and slider info button positioning are co-located in
-`app-slider.lit.md`. `.midi-panel-row` provides a flex row for MIDI control
-label+input pairs in the INPUT section.
-
-``` {.html file=index.html}
-    #ghosting-toast { display: none; position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 30; background: rgba(0,0,0,0.85); border: 1px solid var(--dim); padding: 12px 16px; font-family: var(--font); font-size: 11px; color: var(--fg); flex-direction: row; align-items: flex-start; gap: 12px; max-width: 400px; }
-    #ghosting-toast span { flex: 1; line-height: 1.5; }
-    #ghosting-toast-dismiss { background: none; border: none; color: var(--dim); font-family: var(--font); font-size: 14px; cursor: pointer; padding: 0; line-height: 1; flex-shrink: 0; }
-    #pedals-panel { height: 44px; }
-    #pedals-mount { display: contents; }
-```
-
-## Dialog and about content styles
-
-Dialog and `.about-content` typography CSS is co-located in `app-slider.lit.md`
-alongside the info dialog wiring (`setupInfoDialogs`).
-
-## Chord graffiti overlay and instructions block
-
-The `.graffiti-overlay` is an SVG layer that sits above the keyboard canvas at
-`z-index: 5` with `mix-blend-mode: screen`, making the yellow roughjs chord
-shapes blend additively against the dark grid background. The `#instructions`
-block renders a compact keyboard shortcut reference with monospace `<kbd>`
-styling.
+Remaining cross-component styles: the ghosting toast notification, pedals panel
+height, and keyboard instructions block. All other component CSS is co-located
+in its respective `.lit.md` file (slider → `app-slider`, dialog → `app-slider`,
+top bar → `TopBar`, song bar → `SongBar`, overlay → `SettingsOverlay`,
+graffiti → `chord-graffiti`, grid overlay → `mount-grid-overlay`,
+vis overlay → `mount-vis-overlay`).
 
 ``` {.html file=index.html}
 
