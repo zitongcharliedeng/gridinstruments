@@ -54,6 +54,3 @@ export function createSelectAtSlot(
   return select;
 }
 ```
-
-``` {.typescript file=_generated/app-dom.ts}
-```
