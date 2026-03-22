@@ -1,0 +1,14 @@
+id: no-delegated-pointer-hold
+language: tsx
+rule:
+  kind: jsx_attribute
+  has:
+    kind: property_identifier
+    regex: ^(onPointerDown|onPointerUp)$
+message: |
+  Use native pointer events (on:pointerdown, on:pointerup) instead of
+  SolidJS delegated events. Delegated pointer events with preventDefault
+  can cause stuck active states. See HoldButton for the correct pattern.
+severity: warning
+files:
+  - "_generated/components/**"
