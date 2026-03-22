@@ -378,10 +378,6 @@ vis overlay → `mount-vis-overlay`).
 
 ``` {.html file=index.html}
 
-
-
-
-
     #instructions {
       font-size: 11px;
       color: var(--dim);
