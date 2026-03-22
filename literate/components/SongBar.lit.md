@@ -37,7 +37,27 @@ layout.
 
 ``` {.typescript file=_generated/components/SongBar.tsx}
 
+const SONGBAR_CSS = `#song-bar {
+  display:inline-flex; align-items:center; gap:8px; padding:2px 0;
+  font-size:11px; flex-wrap:wrap; margin-left:auto; max-width:700px;
+}
+#song-bar-calibrate, #song-bar-search, #song-bar-status {
+  display:inline-flex; align-items:center; gap:6px;
+}
+#calibrate-btn.active { color:var(--bg); background:var(--fg); border-color:var(--bg); cursor:default; }
+#song-bar.dropping { outline:2px solid rgba(255,255,255,0.7); outline-offset:-2px; }`;
+
+let songbarCssInjected = false;
+function injectSongBarCSS(): void {
+  if (songbarCssInjected) return;
+  const s = document.createElement('style');
+  s.textContent = SONGBAR_CSS;
+  document.head.appendChild(s);
+  songbarCssInjected = true;
+}
+
 export function SongBar(props: SongBarProps): JSX.Element {
+  injectSongBarCSS();
   const [maxKeys, setMaxKeys] = createSignal(props.initialMaxKeys ?? 8);
 
   const handleSearchInput = (e: Event): void => {

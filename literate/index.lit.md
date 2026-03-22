@@ -180,38 +180,8 @@ Top bar CSS (`#top-bar`, `#about-btn`, `#reset-layout`) is co-located in
 
 ## Song bar styles
 
-`#song-bar` floats on the right side of the header and wraps below the site
-title on narrow screens. Its three child sections — search, status/game, and
-calibrate — each use `inline-flex` to keep their controls tight. The
-`.dropping` outline flashes when a `.mid` file is dragged over the bar.
-
-``` {.html file=index.html}
-
-    #song-bar {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 2px 0;
-      font-size: 11px;
-      flex-wrap: wrap;
-      margin-left: auto;
-      max-width: 700px;
-    }
-    #song-bar-calibrate,
-    #song-bar-search,
-    #song-bar-status {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
-    #calibrate-btn.active { color: var(--bg); background: var(--fg); border-color: var(--bg); cursor: default; }
-    #song-bar.dropping {
-      outline: 2px solid rgba(255, 255, 255, 0.7);
-      outline-offset: -2px;
-    }
-
-
-```
+Song bar CSS (`#song-bar`, `#song-bar-calibrate/search/status`, `.dropping`)
+is co-located in `components/SongBar.lit.md`.
 
 ## Visualiser panel and resize handle
 
