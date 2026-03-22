@@ -494,7 +494,8 @@ The MIDI device panel renders a list of connected controllers with enable/disabl
     }
 
     const savedMax = this.loadSetting('maxKeys', '8');
-    this.maxSimultaneousKeys = parseInt(savedMax, 10);
+    const parsedMax = parseInt(savedMax, 10);
+    this.maxSimultaneousKeys = Number.isFinite(parsedMax) && parsedMax >= 1 ? parsedMax : 8;
 
     const songbarMountEl = document.getElementById('songbar-mount');
     if (songbarMountEl) {
