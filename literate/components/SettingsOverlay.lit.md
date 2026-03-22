@@ -126,6 +126,10 @@ function SliderRow(props: { def: SliderDef }): JSX.Element {
   const [value, setValue] = createSignal(defVal);
   const fmt = fmtFn ?? ((v: number) => v.toFixed(1));
 
+  const initFill = (el: HTMLInputElement): void => {
+    requestAnimationFrame(() => { applySliderFill(el); });
+  };
+
   const onInput = (e: Event): void => {
     const input = e.target as HTMLInputElement;
     const v = parseFloat(input.value);
@@ -145,6 +149,7 @@ function SliderRow(props: { def: SliderDef }): JSX.Element {
       <input
         type="range"
         id={props.def.id}
+        ref={initFill}
         min={props.def.min}
         max={props.def.max}
         step={props.def.step}

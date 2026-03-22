@@ -32,7 +32,14 @@ export function mountVisOverlay(
   cogBtn.addEventListener('click', () => {
     setVisible(v => !v);
     cogBtn.classList.toggle('active', visible());
-    if (visible()) requestAnimationFrame(() => { requestAnimationFrame(refreshAllSliderUI); });
+    if (visible()) {
+      const applyFills = (): void => {
+        const el = document.getElementById('vis-overlay');
+        if (!el || el.classList.contains('hidden')) { requestAnimationFrame(applyFills); return; }
+        refreshAllSliderUI();
+      };
+      requestAnimationFrame(applyFills);
+    }
   });
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && visible()) {
