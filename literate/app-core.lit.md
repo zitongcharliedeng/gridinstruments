@@ -1470,6 +1470,13 @@ the tuning slider and calibrate button to prevent mid-game tuning changes.
           }
           this.visualizer.setTargetNotes(allTargetCellIds);
 
+```
+
+The ghosting warning detects when a game chord requires more simultaneous keys
+than the user has demonstrated they can press. This helps keyboard users
+realise their hardware limit before frustration sets in.
+
+``` {.typescript file=_generated/app-core.ts}
           if (!this.ghostingWarningShown && allTargetCellIds.length > 3 && this.peakKeysThisSession > 0 && allTargetCellIds.length > this.peakKeysThisSession) {
             this.ghostingWarningShown = true;
             const hint = document.getElementById('song-bar-hint');
@@ -1942,6 +1949,13 @@ Pointer input (touch and mouse) uses the Pointer Events API for unified handling
     }
   }
 
+```
+
+Pointer-up releases the note, cleans up expression state, and releases
+pointer capture. The wiggle tracker is also cleaned up so vibrato stops
+when all fingers are lifted.
+
+``` {.typescript file=_generated/app-core.ts}
   private handlePointerUp(event: PointerEvent): void {
     const currentButton = this.pointerDown.get(event.pointerId);
     if (currentButton) this.stopPointerNote(event.pointerId, currentButton.coordX, currentButton.coordY);
