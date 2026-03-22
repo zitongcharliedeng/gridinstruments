@@ -2413,6 +2413,15 @@ The render method is throttled to one repaint per animation frame via `renderSch
 Calibration mode shows a banner instructing the user to play all reachable notes on their controller. Each note-on (from any input source) adds the cell to the calibrated set, which is persisted to localStorage. The game engine later uses this range to transpose songs and crop notes that fall outside the player's physical reach.
 
 ``` {.typescript file=_generated/app-core.ts}
+  private setCalibrationDimming(dim: boolean): void {
+    const method = dim ? 'add' : 'remove';
+    document.getElementById('visualiser-panel')?.classList[method]('dimmed');
+    document.getElementById('pedals-panel')?.classList[method]('dimmed');
+    document.querySelector('.top-bar-left')?.classList[method]('dimmed');
+    document.getElementById('song-bar-search')?.classList[method]('dimmed');
+    document.getElementById('song-bar-status')?.classList[method]('dimmed');
+  }
+
   private enterCalibrationMode(): void {
     this.calibrating = true;
     this.calibratedCells = new Set();
@@ -2439,11 +2448,7 @@ Calibration mode shows a banner instructing the user to play all reachable notes
       btn.classList.add('active');
       btn.disabled = true;
     }
-    document.getElementById('visualiser-panel')?.classList.add('dimmed');
-    document.getElementById('pedals-panel')?.classList.add('dimmed');
-    document.querySelector('.top-bar-left')?.classList.add('dimmed');
-    document.getElementById('song-bar-search')?.classList.add('dimmed');
-    document.getElementById('song-bar-status')?.classList.add('dimmed');
+    this.setCalibrationDimming(true);
     this.render();
   }
 
@@ -2474,11 +2479,7 @@ Calibration mode shows a banner instructing the user to play all reachable notes
       btn.classList.remove('active');
       btn.disabled = false;
     }
-    document.getElementById('visualiser-panel')?.classList.remove('dimmed');
-    document.getElementById('pedals-panel')?.classList.remove('dimmed');
-    document.querySelector('.top-bar-left')?.classList.remove('dimmed');
-    document.getElementById('song-bar-search')?.classList.remove('dimmed');
-    document.getElementById('song-bar-status')?.classList.remove('dimmed');
+    this.setCalibrationDimming(false);
     this.render();
   }
 ```
