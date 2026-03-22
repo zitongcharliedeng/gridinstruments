@@ -314,7 +314,6 @@ buttons that invert on hover.
       padding: 8px 12px 8px 40px;
     }
     .hidden { display: none !important; pointer-events: none !important; }
-
     #mpe-output-select {
       position: absolute !important;
       width: 1px !important;
@@ -326,13 +325,6 @@ buttons that invert on hover.
       padding: 0 !important;
       border-width: 0 !important;
     }
-```
-
-The overlay sections use `.overlay-section` as a vertical flex column for labelled control
-groups, and `.overlay-btn` as the standard action button style — uppercase, high-contrast,
-inverting on hover.
-
-``` {.html file=index.html}
 ```
 
 ## Search results and pedals panel
