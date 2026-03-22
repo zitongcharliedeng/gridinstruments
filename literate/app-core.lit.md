@@ -151,16 +151,6 @@ The constructor initializes the core subsystems (synth, MIDI, MPE, layout) and g
 
     this.canvas = getElement('keyboard-canvas', HTMLCanvasElement);
     this.historyCanvas = getElement('history-canvas', HTMLCanvasElement);
-    this.layoutSelect = null;
-    this.skewSlider = null;
-    this.bfactSlider = null;
-    this.tuningSlider = null;
-
-    this.volumeSlider = null;
-    this.vibratoIndicator = null;
-    this.sustainIndicator = null;
-    this.midiDeviceList = null;
-    this.zoomSlider = null;
 
     const savedPbRange = parseInt(this.loadSetting('midiPbRange', '24'), 10);
     this.midiPitchBendRange = (savedPbRange >= 2 && savedPbRange <= 96) ? savedPbRange : 24;
@@ -775,7 +765,7 @@ Wicked Shear (bfact) controls the row-offset angle of the lattice. At bfact=0 (D
         this.updateGraffiti?.();
         updateBfactBadge(val);
         updateBfactLabel(val);
-        this.updateSliderFill(bfactRef);
+        applySliderFill(bfactRef);
         this.saveSetting('bfact', bfactRef.value);
       });
 
@@ -799,7 +789,7 @@ Wicked Shear (bfact) controls the row-offset angle of the lattice. At bfact=0 (D
               const sMin = parseFloat(this.bfactSlider.min);
               const sMax = parseFloat(this.bfactSlider.max);
               this.bfactSlider.value = Math.max(sMin, Math.min(sMax, raw)).toString();
-              this.updateSliderFill(this.bfactSlider);
+              applySliderFill(this.bfactSlider);
             }
           } else {
             const current = parseFloat(this.bfactSlider?.value ?? '0');
@@ -860,7 +850,7 @@ The fifths tuning slider sets the generator interval in cents. This is the core 
 
         updateThumbBadge(value);
         updateTuningLabel(value);
-        this.updateSliderFill(tuningRef);
+        applySliderFill(tuningRef);
         this.saveSetting('tuning', tuningRef.value);
       });
 
@@ -870,7 +860,7 @@ The fifths tuning slider sets the generator interval in cents. This is the core 
         tuningRef.value = marker.fifth.toString();
         this.synth.setFifth(marker.fifth);
         this.visualizer?.setGenerator([marker.fifth, 1200]);
-        this.updateSliderFill(tuningRef);
+        applySliderFill(tuningRef);
         updateThumbBadge(marker.fifth);
         updateTuningLabel(marker.fifth);
       });
@@ -891,7 +881,7 @@ The fifths tuning slider sets the generator interval in cents. This is the core 
               this.visualizer?.setGenerator([raw, 1200]);
               this.updateGraffiti?.();
               updateThumbBadge(raw);
-              this.updateSliderFill(this.tuningSlider);
+              applySliderFill(this.tuningSlider);
               updateTuningLabel(raw);
             }
           } else {
@@ -972,7 +962,7 @@ The D-ref input accepts both raw Hz values and note names (e.g. "A4", "Bb3"). Th
         const min = parseFloat(dRefSlider.min);
         const max = parseFloat(dRefSlider.max);
         dRefSlider.value = Math.max(min, Math.min(max, hz)).toFixed(2);
-        this.updateSliderFill(dRefSlider);
+        applySliderFill(dRefSlider);
       }
       updateDRefLabel(hz);
     };
@@ -1036,7 +1026,7 @@ resets to the default 293.66 Hz if invalid.
       const hz = parseFloat(dRefSlider.value);
       if (isFinite(hz)) {
         applyDRefHz(hz);
-        this.updateSliderFill(dRefSlider);
+        applySliderFill(dRefSlider);
         this.saveSetting('dref', dRefSlider.value);
       }
     });
@@ -1724,7 +1714,7 @@ The MIDI search input queries multiple online MIDI repositories via `searchAllAd
 ```
 
 ``` {.typescript file=_generated/app-core.ts}
-    document.querySelectorAll<HTMLInputElement>('input[type="range"]').forEach(s => { this.updateSliderFill(s); });
+    document.querySelectorAll<HTMLInputElement>('input[type="range"]').forEach(s => { applySliderFill(s); });
   }
 ```
 
@@ -2391,10 +2381,6 @@ MPE vibrato uses `requestAnimationFrame` to oscillate pitch bend at approximatel
     slider.addEventListener('input', updateActive);
     updateActive();
 
-  }
-
-  private updateSliderFill(slider: HTMLInputElement): void {
-    applySliderFill(slider);
   }
 ```
 
