@@ -117,6 +117,17 @@ export function SongBar(props: SongBarProps): JSX.Element {
     input.value = '';
   };
 
+```
+
+## Song Bar JSX
+
+The song bar renders three inline-flex sections: search (MIDI song lookup with
+file upload), game status (progress bar, timer, score), and calibrate (playable
+area range with confirm/cancel). Each section is independently visible and
+wraps on narrow screens.
+
+``` {.typescript file=_generated/components/SongBar.tsx}
+
   return (
     <div id="song-bar">
 
