@@ -315,14 +315,12 @@ Overlay CSS (`.settings-overlay`, `.overlay-section`, `.grid-cog`) is co-located
 Search result CSS (`.search-result`) is co-located in `components/SongBar.lit.md`.
 Pedals CSS (`.pedal-btn`) is co-located in `components/PedalsPanel.lit.md`.
 
-## Control group and form input styles
+## Global form input styles
 
-`.ctrl-group` and `.ctrl-label` are the base layout primitives for labelled
-control rows throughout the overlay and top bar. All `<select>`, `<input
-type="range">`, `<input type="number">`, and `<input type="text">` elements
-inherit the monospace font and the design token colour scheme. The custom
-`.gi-checkbox` replaces the native checkbox with a 14×14 block that inverts to
-white when checked and draws a CSS-only checkmark via a pseudo-element.
+Global form element resets — `<select>`, `<input type="range/number/text">` get
+the monospace font and design token colours. `.ctrl-group` and `.ctrl-label`
+are co-located in `mount-grid-overlay.lit.md`. `.gi-checkbox` is co-located in
+`SettingsOverlay.lit.md`.
 
 ``` {.html file=index.html}
 
