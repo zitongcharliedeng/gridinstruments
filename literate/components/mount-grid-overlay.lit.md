@@ -30,7 +30,21 @@ const GRID_OVERLAY_CSS = `#mpe-output-select {
   position:absolute !important; width:1px !important; height:1px !important;
   opacity:0 !important; overflow:hidden !important; pointer-events:none !important;
   margin:0 !important; padding:0 !important; border-width:0 !important;
-}`;
+}
+.midi-panel-row { display:flex; align-items:center; gap:2px; font-size:11px; flex-wrap:wrap; }
+.mt-18 { margin-top:18px; }
+.expr-label { display:inline-flex; align-items:center; gap:4px; cursor:pointer; font-size:12px; }
+.ctrl-label { font-size:9px; text-transform:uppercase; white-space:nowrap; color:#fff; flex-shrink:0; }
+.text-white { color:#fff; }
+.text-white-12 { color:#fff; font-size:12px; }
+.text-dim { color:var(--dim); font-size:9px; }
+.text-dim-sm { color:var(--dim); font-size:10px; }
+.text-dim-plain { color:var(--dim); }
+.expr-label-sm { display:inline-flex; align-items:center; gap:3px; cursor:pointer; font-size:10px; }
+.expr-label-lg { display:inline-flex; align-items:center; gap:6px; cursor:pointer; font-size:12px; }
+.numeric-input { width:3ch; text-align:center; font-family:var(--font); font-size:10px; background:var(--bg); color:var(--fg); border:1px solid var(--border); padding:2px 3px; }
+.select-slot { min-width:120px; display:inline-block; }
+#d-ref-input { width:80px; text-transform:none; }`;
 let gridOverlayCssInjected = false;
 
 export function mountGridOverlay(
