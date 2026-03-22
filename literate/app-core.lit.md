@@ -1076,22 +1076,14 @@ CC74 (brightness), CC1 (mod wheel), and CC11 (expression) via a compact cycling
 button component.
 
 ``` {.typescript file=_generated/app-core.ts}
-    const exprBendCb = getElementOrNull('expr-bend', HTMLInputElement);
-    if (exprBendCb) {
-      exprBendCb.checked = this.expressionBend;
-      exprBendCb.addEventListener('change', () => {
-        this.expressionBend = exprBendCb.checked;
-        this.saveSetting('exprBend', exprBendCb.checked.toString());
-      });
-    }
-    const exprVelCb = getElementOrNull('expr-velocity', HTMLInputElement);
-    if (exprVelCb) {
-      exprVelCb.checked = this.expressionVelocity;
-      exprVelCb.addEventListener('change', () => {
-        this.expressionVelocity = exprVelCb.checked;
-        this.saveSetting('exprVelocity', exprVelCb.checked.toString());
-      });
-    }
+    const wireCheckbox = (id: string, key: keyof typeof DComposeApp.STORAGE_KEYS, get: () => boolean, set: (v: boolean) => void): void => {
+      const cb = getElementOrNull(id, HTMLInputElement);
+      if (!cb) return;
+      cb.checked = get();
+      cb.addEventListener('change', () => { set(cb.checked); this.saveSetting(key, cb.checked.toString()); });
+    };
+    wireCheckbox('expr-bend', 'exprBend', () => this.expressionBend, (v) => { this.expressionBend = v; });
+    wireCheckbox('expr-velocity', 'exprVelocity', () => this.expressionVelocity, (v) => { this.expressionVelocity = v; });
     const savedPressureMode = this.loadSetting('pressureMode', 'channel');
     this.expressionPressure = savedPressureMode !== 'off';
     const pressureModeSelect = createSelectAtSlot('pressure-mode-slot', 'pressure-mode', [
@@ -1108,23 +1100,8 @@ button component.
       void pmSS;
     }
 
-    const exprTimbreCb = getElementOrNull('expr-timbre', HTMLInputElement);
-    if (exprTimbreCb) {
-      exprTimbreCb.checked = this.expressionTimbre;
-      exprTimbreCb.addEventListener('change', () => {
-        this.expressionTimbre = exprTimbreCb.checked;
-        this.saveSetting('exprTimbre', exprTimbreCb.checked.toString());
-      });
-    }
-
-    const timbreRevCb = getElementOrNull('timbre-reverse', HTMLInputElement);
-    if (timbreRevCb) {
-      timbreRevCb.checked = this.timbreReverse;
-      timbreRevCb.addEventListener('change', () => {
-        this.timbreReverse = timbreRevCb.checked;
-        this.saveSetting('timbreReverse', timbreRevCb.checked.toString());
-      });
-    }
+    wireCheckbox('expr-timbre', 'exprTimbre', () => this.expressionTimbre, (v) => { this.expressionTimbre = v; });
+    wireCheckbox('timbre-reverse', 'timbreReverse', () => this.timbreReverse, (v) => { this.timbreReverse = v; });
 
     const savedTimbreMode = this.loadSetting('timbreCcMode', '74');
     this.applyTimbreCcMode(savedTimbreMode);
