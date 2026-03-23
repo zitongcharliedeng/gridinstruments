@@ -15,7 +15,9 @@ element (cog button) that shows/hides it, and an array of section definitions
 containing sliders and other controls.
 
 ``` {.typescript file=_generated/components/SettingsOverlay.tsx}
-import { createSignal, For, Show, type JSX } from 'solid-js';
+import { For, Show, type JSX } from 'solid-js';
+import { SliderRow } from './SliderRow';
+import type { SliderDef } from './SliderRow';
 
 const OVERLAY_CSS = `.settings-overlay {
   position: absolute; top: 0; left: 0; right: 0; bottom: 0;
@@ -84,16 +86,7 @@ function injectOverlayCSS(): void {
   overlayCssInjected = true;
 }
 
-export interface SliderDef {
-  id: string;
-  label: string;
-  min: number;
-  max: number;
-  step: number;
-  defaultValue: number;
-  formatBadge?: (v: number) => string;
-  onChange?: (v: number) => void;
-}
+export type { SliderDef } from './SliderRow';
 
 export interface SectionDef {
   title: string;
@@ -110,67 +103,8 @@ export interface SettingsOverlayProps {
 }
 ```
 
-## Slider Row — pure display component
-
-A pure reactive display component. No observers, no rAF, no imperative DOM.
-The fill gradient and badge position are derived signals from the value —
-SolidJS updates them automatically when the value changes. The editable badge
-always shows a faint border so the user knows it's clickable.
-
-``` {.typescript file=_generated/components/SettingsOverlay.tsx}
-
-function SliderRow(props: { def: SliderDef }): JSX.Element {
-  const defVal = props.def.defaultValue;
-  const fmtFn = props.def.formatBadge;
-  const [value, setValue] = createSignal(defVal);
-  const fmt = fmtFn ?? ((v: number) => v.toFixed(1));
-
-  const ratio = () => {
-    const range = props.def.max - props.def.min;
-    return range > 0 ? (value() - props.def.min) / range : 0;
-  };
-  const fillStyle = () => {
-    const pct = (ratio() * 100).toFixed(1);
-    return `linear-gradient(to right, var(--fg) ${pct}%, #000 ${pct}%)`;
-  };
-
-  const onInput = (e: Event): void => {
-    const v = parseFloat((e.target as HTMLInputElement).value);
-    setValue(v);
-    props.def.onChange?.(v);
-  };
-
-  return (
-    <div class="slider-track slider-row-track">
-      <span class="slider-label-overlay">{props.def.label}</span>
-      <input
-        type="range"
-        id={props.def.id}
-        min={props.def.min}
-        max={props.def.max}
-        step={props.def.step}
-        value={value()}
-        onInput={onInput}
-        style={{ background: fillStyle() }}
-      />
-      <input
-        type="text"
-        class="badge-input slider-badge-edit"
-        value={fmt(value())}
-        style={{ left: `${(ratio() * 100).toFixed(1)}%` }}
-        onFocus={(e) => { (e.target as HTMLInputElement).select(); }}
-        onChange={(e) => {
-          const v = parseFloat((e.target as HTMLInputElement).value);
-          if (Number.isFinite(v)) { setValue(Math.max(props.def.min, Math.min(props.def.max, v))); props.def.onChange?.(value()); }
-        }}
-      />
-      <button class="slider-reset icon-btn icon-md" onClick={() => { setValue(defVal); props.def.onChange?.(defVal); }}>
-        <i data-lucide="rotate-cw" />
-      </button>
-    </div>
-  );
-}
-```
+SliderRow is imported from `./SliderRow` — the shared pure display component
+used by both vis and grid overlays.
 
 ## Overlay Container
 
