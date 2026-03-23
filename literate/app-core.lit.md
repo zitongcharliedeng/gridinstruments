@@ -1219,37 +1219,40 @@ We target **23mm** (piano white key) as the default — it's the largest common 
 
 ### Key sizing — text-derived metric
 
-The target cell width is a standard white piano key: **23.5mm**. DPI detection
-(`matchMedia('(resolution: Ndpi)')`) is unreliable — CSS pixels are reference
-pixels, not physical pixels, and the mapping varies wildly across devices.
+### Key sizing — target metric and measurement
 
-The correct approach: **measure rendered monospace text**. At 12px, each
-JetBrains Mono character is approximately 2.35mm physical, so:
+The target cell side length is a standard white piano key width:
 
-    23.5mm target ÷ ~2.35mm/char ≈ 10 characters
+``` {.typescript file=_generated/app-core.ts}
+     const TARGET_KEY_MM = 23.5;
+```
 
-We render 10 monospace characters in a hidden span and use that pixel width as
-`pianoKeyPx` — the CSS pixel count that corresponds to 23.5mm on the current
-device. This replaces DPI as the primary sizing mechanism.
+**There is no browser API that reliably converts physical mm to CSS px.**
+CSS abandoned physical unit accuracy on screens in 2011 (CSS Values Level 3:
+"physical units might not match their physical measurements"). CSS `mm` units
+are derived from `px` (1mm = 3.7795px), not from the hardware. The
+`devicePixelRatio` is a perceptual heuristic, not a physical measurement.
 
-**Why text, not DPI?** There is no reliable browser API for physical mm →
-CSS px conversion. CSS `mm`/`in` units are not physically accurate on screen.
-`matchMedia('(resolution: Ndpi)')` returns screen resolution, not the
-CSS-to-physical mapping. `devicePixelRatio` tells you pixel density but not
-physical size. Text works better because the OS + browser calibrate font
-rendering for **readability at arm's length** — this calibration is the closest
-thing to a physical-size guarantee that exists in the web platform. The real
-primitive is the OS-level text rendering pipeline, not text itself. Any DOM
-element sized in CSS `px` inherits this calibration, but text is the most
-convenient to measure because `offsetWidth` on a span gives exact CSS px.
+Our best proxy: **measure rendered monospace text.** The OS + browser calibrate
+font rendering for readability at arm's length. At 12px, each JetBrains Mono
+character is empirically ~2.35mm — approximate, not guaranteed. We compute
+the number of characters needed to reach the target, measure that many, and
+use the resulting CSS px width. This is a perceptual approximation, not a
+metrological conversion. To change the target, change `TARGET_KEY_MM`.
 
-**Open question**: is there a more fundamental CSS primitive (e.g. `1cm` in
-a positioned element, or `env(viewport-segment-*)`) that would give physical
-dimensions directly? Worth researching — the text approach is a pragmatic
-proxy, not a theoretical ideal.
+``` {.typescript file=_generated/app-core.ts}
+     const MM_PER_CHAR_AT_12PX = 2.35;
+     const charsNeeded = Math.round(TARGET_KEY_MM / MM_PER_CHAR_AT_12PX);
+     const measureEl = document.createElement('span');
+     measureEl.style.cssText = 'position:absolute;visibility:hidden;font-family:"JetBrains Mono",monospace;font-size:12px;white-space:pre;';
+     measureEl.textContent = 'M'.repeat(charsNeeded);
+     document.body.appendChild(measureEl);
+     const pianoKeyPx = measureEl.offsetWidth;
+     document.body.removeChild(measureEl);
+```
 
-The DPI probe below is retained only as input to the grid geometry engine
-(which still needs `cssPxPerInch` for the lattice basis vectors).
+The DPI probe is retained only for the grid geometry engine (lattice basis
+vectors need `cssPxPerInch`). It does NOT affect the key sizing target.
 
 ``` {.typescript file=_generated/app-core.ts}
      const detectPhysicalDPI = (): number => {
@@ -1276,13 +1279,6 @@ The DPI probe below is retained only as input to the grid geometry engine
      if (physicalDPI !== this.detectedDpi) {
        this.visualizer?.setCssPxPerInch(physicalDPI);
      }
-     const measureEl = document.createElement('span');
-     measureEl.style.cssText = 'position:absolute;visibility:hidden;font-family:"JetBrains Mono",monospace;font-size:12px;white-space:pre;';
-     measureEl.textContent = 'MMMMMMMMMM';
-     document.body.appendChild(measureEl);
-     const tenCharWidth = measureEl.offsetWidth;
-     document.body.removeChild(measureEl);
-     const pianoKeyPx = tenCharWidth;
 ```
 
 The grid's cell size at zoom=1.0 comes from the lattice geometry half-vectors.
