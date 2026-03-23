@@ -155,9 +155,8 @@ fill gradient, badge text, badge position, preset active states — are
 computed from this signal. SolidJS's fine-grained reactivity means only
 the specific DOM attributes that depend on `value()` update when it changes.
 
-The `THUMB_W` constant (6px) matches the CSS thumb width. Fill, badge,
-and preset positions all use the same `calc(ratio * (100% - 6px) + 3px)`
-formula so they align pixel-perfectly with the native thumb.
+Fill, badge, and preset positions all use the same simple `ratio * 100%`
+percentage so they align pixel-perfectly with each other.
 
 ``` {.typescript file=_generated/components/SliderRow.tsx}
 
@@ -170,10 +169,9 @@ export function SliderRow(props: { def: SliderDef }): JSX.Element {
     const range = props.def.max - props.def.min;
     return range > 0 ? (value() - props.def.min) / range : 0;
   };
-  const THUMB_W = 6;
-  const thumbPos = (): string => `calc(${ratio().toFixed(6)} * (100% - ${THUMB_W}px) + ${THUMB_W / 2}px)`;
+  const pct = (): string => `${(ratio() * 100).toFixed(2)}%`;
   const fillStyle = (): string =>
-    `linear-gradient(to right, var(--fg) ${thumbPos()}, #000 ${thumbPos()})`;
+    `linear-gradient(to right, var(--fg) ${pct()}, #000 ${pct()})`;
 
   const onInput = (e: Event): void => {
     const v = parseFloat((e.target as HTMLInputElement).value);
@@ -215,7 +213,7 @@ fill, editable badge positioned at the thumb, and a reset button. If
           type="text"
           class="badge-input slider-badge-edit"
           value={fmt()(value())}
-          style={{ left: thumbPos() }}
+          style={{ left: pct() }}
           onFocus={(e: FocusEvent): void => { (e.target as HTMLInputElement).select(); }}
           onChange={(e: Event): void => {
             const v = parseFloat((e.target as HTMLInputElement).value);
@@ -237,7 +235,7 @@ fill, editable badge positioned at the thumb, and a reset button. If
                 <div
                   class="slider-preset-mark"
                   classList={{ active: isActive() }}
-                  style={{ left: `calc(${pRatio().toFixed(6)} * (100% - ${THUMB_W}px) + ${THUMB_W / 2}px)` }}
+                  style={{ left: `${(pRatio() * 100).toFixed(2)}%` }}
                 >
                   <div class={tickClass()} />
                   <button
