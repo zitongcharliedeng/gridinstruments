@@ -54,7 +54,7 @@ input.badge-input {
   position: absolute; bottom: 100%; transform: translateX(-50%);
   font-size: 9px; color: #fff; background: none; padding: 0 3px;
   white-space: nowrap; z-index: 2; line-height: 14px; height: 14px;
-  text-align: center; font-family: var(--font); border: 1px solid transparent;
+  text-align: center; font-family: var(--font); border: 1px solid var(--border);
   width: 50px; pointer-events: auto; cursor: text; outline: none;
 }
 input.badge-input:focus { border-color: var(--accent); background: var(--subtle); }
