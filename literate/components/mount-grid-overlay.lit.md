@@ -43,7 +43,7 @@ const GRID_OVERLAY_CSS = `#mpe-output-select {
 .text-dim-plain { color:var(--dim); }
 .expr-label-sm { display:inline-flex; align-items:center; gap:3px; cursor:pointer; font-size:10px; }
 .expr-label-lg { display:inline-flex; align-items:center; gap:6px; cursor:pointer; font-size:12px; }
-.numeric-input { width:3ch; text-align:center; font-family:var(--font); font-size:10px; background:var(--bg); color:var(--fg); border:1px solid var(--border); padding:2px 3px; }
+.numeric-input { width:4ch; text-align:center; font-family:var(--font); font-size:10px; background:var(--bg); color:var(--fg); border:1px solid var(--border); padding:2px 3px; }
 .select-slot { min-width:120px; display:inline-block; }
 #d-ref-input { width:80px; text-transform:none; }`;
 let gridOverlayCssInjected = false;
