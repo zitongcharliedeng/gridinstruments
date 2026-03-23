@@ -35,7 +35,7 @@ const OVERLAY_CSS = `.settings-overlay {
 }
 @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -100% 0; } }
 .hidden { display: none !important; pointer-events: none !important; }
-.overlay-section { display:flex; flex-direction:column; gap:5px; margin-left:40px; margin-bottom:8px; }
+.overlay-section { display:flex; flex-direction:column; gap:5px; margin-left:0; margin-bottom:8px; }
 .overlay-section .ctrl-label { color:#fff; }
 .overlay-section .slider-track { width:100%; }
 .overlay-section .tuning-slider-area { position:relative; width:100%; margin-bottom:40px; }
