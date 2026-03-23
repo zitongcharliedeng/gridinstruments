@@ -69,7 +69,8 @@ the filled and unfilled portions.
 .slider-track {
   position: relative; display: flex; align-items: center; gap: 2px; overflow: visible;
 }
-.slider-track input[type="range"] { flex: 1; min-width: 0; margin: 0; }
+.slider-input-area { flex: 1; min-width: 0; position: relative; }
+.slider-input-area input[type="range"] { width: 100%; margin: 0; }
 .slider-label-overlay {
   position: absolute; left: 4px; top: 50%; transform: translateY(-50%);
   font-size: 9px; color: #fff; mix-blend-mode: difference; text-transform: uppercase;
@@ -125,7 +126,7 @@ prevent label overlap on dense preset lists like TET markers.
 
 ``` {.css file=_generated/components/SliderRow.css}
 .slider-presets {
-  position: absolute; left: 0; right: 24px; top: 100%;
+  position: absolute; left: 0; right: 0; top: 100%;
   pointer-events: none; overflow: visible; min-height: 32px; padding-bottom: 4px;
 }
 .slider-preset-mark {
@@ -198,33 +199,31 @@ fill, editable badge positioned at the thumb, and a reset button. If
 ``` {.typescript file=_generated/components/SliderRow.tsx}
   return (
     <div class="slider-track slider-row-track">
-      <span class="slider-label-overlay">{props.def.label}</span>
-      <input
-        type="range"
-        id={props.def.id}
-        min={props.def.min}
-        max={props.def.max}
-        step={props.def.step}
-        value={value()}
-        onInput={onInput}
-        style={{ background: fillStyle() }}
-      />
-      <input
-        type="text"
-        class="badge-input slider-badge-edit"
-        value={fmt()(value())}
-        style={{ left: thumbPos() }}
-        onFocus={(e: FocusEvent): void => { (e.target as HTMLInputElement).select(); }}
-        onChange={(e: Event): void => {
-          const v = parseFloat((e.target as HTMLInputElement).value);
-          if (Number.isFinite(v)) { setValue(Math.max(props.def.min, Math.min(props.def.max, v))); props.def.onChange?.(value()); }
-        }}
-      />
-      <button class="slider-reset icon-btn icon-md" onClick={(): void => { setValue(defVal()); props.def.onChange?.(defVal()); }}>
-        <i data-lucide="rotate-cw" />
-      </button>
-      <Show when={props.def.presets}>
-        <div class="slider-presets" id={props.def.presetsId}>
+      <div class="slider-input-area">
+        <span class="slider-label-overlay">{props.def.label}</span>
+        <input
+          type="range"
+          id={props.def.id}
+          min={props.def.min}
+          max={props.def.max}
+          step={props.def.step}
+          value={value()}
+          onInput={onInput}
+          style={{ background: fillStyle() }}
+        />
+        <input
+          type="text"
+          class="badge-input slider-badge-edit"
+          value={fmt()(value())}
+          style={{ left: thumbPos() }}
+          onFocus={(e: FocusEvent): void => { (e.target as HTMLInputElement).select(); }}
+          onChange={(e: Event): void => {
+            const v = parseFloat((e.target as HTMLInputElement).value);
+            if (Number.isFinite(v)) { setValue(Math.max(props.def.min, Math.min(props.def.max, v))); props.def.onChange?.(value()); }
+          }}
+        />
+        <Show when={props.def.presets}>
+          <div class="slider-presets" id={props.def.presetsId}>
           <For each={sortedPresets()}>
             {(preset, i) => {
               const pRatio = (): number => {
@@ -254,8 +253,12 @@ fill, editable badge positioned at the thumb, and a reset button. If
               );
             }}
           </For>
-        </div>
-      </Show>
+          </div>
+        </Show>
+      </div>
+      <button class="slider-reset icon-btn icon-md" onClick={(): void => { setValue(defVal()); props.def.onChange?.(defVal()); }}>
+        <i data-lucide="rotate-cw" />
+      </button>
     </div>
   );
 }
