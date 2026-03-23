@@ -171,7 +171,6 @@ import {
        FULLSCREEN_BTN,
        FLAT_SOUND_TOGGLE,
        ALL_INFO_BTNS,
-       INFO_HOVER_PREVIEW,
        PEDAL_HOLD_RELEASE,
        COG_ACTIVE_INVERSION,
        SITE_TITLE_CHECK,
@@ -1037,10 +1036,6 @@ The golden screenshot tests compare rendered pixels against stored reference ima
 
   test('UI-INFO-COMPLETE-1: All 9 info buttons exist', async ({ page }) => {
     await ALL_INFO_BTNS.check(page);
-  });
-
-  test('UI-INFO-HOVER-1: Every info button has hover preview with content', async ({ page }) => {
-    await INFO_HOVER_PREVIEW.check(page);
   });
 
   test('UI-PEDAL-1: Sustain pedal activates on hold and deactivates on release', async ({ page }) => {

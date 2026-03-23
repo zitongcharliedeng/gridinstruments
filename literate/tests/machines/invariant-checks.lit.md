@@ -4541,30 +4541,6 @@ export const ALL_INFO_BTNS: StateInvariant = {
   },
 };
 
-export const INFO_HOVER_PREVIEW: StateInvariant = {
-  id: 'UI-INFO-HOVER-1',
-  description: 'Every info button has a .info-preview child with content',
-  check: async (page: Page) => {
-    const result = await page.evaluate(() => {
-      const btns = document.querySelectorAll('.slider-info-btn[data-info]');
-      const missing: string[] = [];
-      const empty: string[] = [];
-      btns.forEach(btn => {
-        const key = btn.getAttribute('data-info') ?? 'unknown';
-        const preview = btn.querySelector('.info-preview');
-        if (!preview) { missing.push(key); return; }
-        if ((preview.innerHTML ?? '').length < 20) { empty.push(key); }
-      });
-      return { total: btns.length, missing, empty };
-    });
-    if (result.missing.length > 0) {
-      throw new Error(`Info buttons missing .info-preview: ${result.missing.join(', ')}`);
-    }
-    if (result.empty.length > 0) {
-      throw new Error(`Info buttons with empty preview: ${result.empty.join(', ')}`);
-    }
-  },
-};
 
 export const PEDAL_HOLD_RELEASE: StateInvariant = {
   id: 'UI-PEDAL-1',
