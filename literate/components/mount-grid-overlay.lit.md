@@ -52,6 +52,8 @@ let gridOverlayCssInjected = false;
 export interface GridOverlayCallbacks {
   onVolumeChange: (v: number) => void;
   initialVolume: number;
+  onZoomChange: (v: number) => void;
+  initialZoom: number;
 }
 
 export function mountGridOverlay(
@@ -168,12 +170,14 @@ layout selector. Each slider wraps its info button in a `ctrl-group` flex row.
           <div class="tuning-slider-area mt-18">
             <div class="ctrl-group">
               <InfoButton infoKey="zoom" />
-              <div class="slider-track">
-                <span class="slider-label-overlay">ZOOM (x)</span>
-                <input type="range" id="zoom-slider" min="0.2" max="3" step="0.01" value="1" />
-                <span class="slider-value-badge" id="zoom-thumb-badge">1.00</span>
-                <button class="slider-reset icon-btn icon-md" id="zoom-reset"><i data-lucide="rotate-cw" /></button>
-              </div>
+              <SliderRow def={{
+                id: 'zoom-slider',
+                label: 'ZOOM (x)',
+                min: 0.2, max: 3, step: 0.01,
+                defaultValue: callbacks.initialZoom,
+                formatBadge: (v: number) => v.toFixed(2),
+                onChange: callbacks.onZoomChange,
+              }} />
             </div>
           </div>
           <div class="slider-track mt-18">

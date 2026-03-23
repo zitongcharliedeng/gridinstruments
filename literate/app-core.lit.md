@@ -488,6 +488,8 @@ The MIDI device panel renders a list of connected controllers with enable/disabl
       mountGridOverlay(gridOverlayMount, gridCog, {
         onVolumeChange: (v: number) => { this.synth.setMasterVolume(v); this.saveSetting('volume', String(v)); },
         initialVolume: parseFloat(this.loadSetting('volume', '0.3')),
+        onZoomChange: (v: number) => { this.visualizer?.setZoom(v); this.updateGraffiti?.(); this.saveSetting('zoom', String(v)); },
+        initialZoom: this.defaultZoom,
       });
     }
 
