@@ -1098,12 +1098,12 @@ The golden screenshot tests compare rendered pixels against stored reference ima
     await expect(btn).toHaveText('Calibrate Playable Area');
     await btn.click();
     await page.waitForTimeout(300);
-    await expect(btn).toHaveText('Calibrating...');
+    await expect(btn).toHaveClass(/active/);
     const banner = page.locator('#calibration-banner');
     await expect(banner).toBeVisible();
     await page.locator('#calibrate-cancel').click();
     await page.waitForTimeout(200);
-    await expect(btn).toHaveText('Calibrate Playable Area');
+    await expect(btn).not.toHaveClass(/active/);
   });
 
   test('SMOKE-6: Vis overlay opens with TIME and RANGE sliders', async ({ page }) => {

@@ -2451,7 +2451,6 @@ Calibration mode shows a banner instructing the user to play all reachable notes
     }
     const btn = document.getElementById('calibrate-btn') as HTMLButtonElement | null;
     if (btn) {
-      btn.textContent = 'Calibrating...';
       btn.classList.add('active');
       btn.disabled = true;
     }
