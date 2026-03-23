@@ -625,13 +625,11 @@ range from 500 Hz to 18 000 Hz.
 
 ### MPE Pressure (Channel Aftertouch)
 
-Pressure controls per-voice gain with a square-root curve (`value^0.5`),
-Velocity sets the ceiling (initial attack brightness), while pressure
-scales the ongoing sustained volume by combining velocity and pressure.
-The gain is `velocityGain * pressure` — a soft strike (low velocity) with
-full pressure reaches `velocityGain` (not full volume), preserving the
-dynamic range that the initial strike established. This matches the MPE
-standard where aftertouch modulates within the velocity-set envelope.
+Pressure controls per-voice gain independently of velocity. The user's
+spec: "the note sounds while holding should ONLY be determined by how
+it's held — the pressure while it's held." Velocity affects the initial
+attack timbre (filter cutoff) but NOT the sustained volume ceiling.
+Full pressure always reaches full volume regardless of strike velocity.
 A small floor (0.01) prevents total silence.
 
 ``` {.typescript file=_generated/lib/synth.ts}
@@ -640,7 +638,7 @@ A small floor (0.01) prevents total silence.
     const voice = this.voices.get(noteId);
     if (!voice) return;
     const clamped = Math.max(0, Math.min(1, value));
-    const gain = Math.max(0.01, voice.velocityGain * clamped);
+    const gain = Math.max(0.01, clamped);
     voice.gainNode.gain.setTargetAtTime(gain, this.context.currentTime, 0.01);
   }
 
