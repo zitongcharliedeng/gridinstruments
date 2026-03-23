@@ -16,7 +16,6 @@ containing sliders and other controls.
 
 ``` {.typescript file=_generated/components/SettingsOverlay.tsx}
 import { createSignal, For, Show, type JSX } from 'solid-js';
-import { applySliderFill } from '../app-slider';
 
 const OVERLAY_CSS = `.settings-overlay {
   position: absolute; top: 0; left: 0; right: 0; bottom: 0;
@@ -111,12 +110,12 @@ export interface SettingsOverlayProps {
 }
 ```
 
-## Slider Row
+## Slider Row — pure display component
 
-Each slider row renders the standard pattern: label overlay on the track,
-range input, value badge, and reset button. The `createSignal` for the current
-value ensures fine-grained updates — only the badge text re-renders when the
-slider moves, not the entire overlay.
+A pure reactive display component. No observers, no rAF, no imperative DOM.
+The fill gradient and badge position are derived signals from the value —
+SolidJS updates them automatically when the value changes. The editable badge
+always shows a faint border so the user knows it's clickable.
 
 ``` {.typescript file=_generated/components/SettingsOverlay.tsx}
 
@@ -126,24 +125,19 @@ function SliderRow(props: { def: SliderDef }): JSX.Element {
   const [value, setValue] = createSignal(defVal);
   const fmt = fmtFn ?? ((v: number) => v.toFixed(1));
 
-  const observeFill = (el: HTMLInputElement): void => {
-    const ro = new ResizeObserver(() => {
-      if (el.offsetWidth > 0) applySliderFill(el);
-    });
-    ro.observe(el);
+  const ratio = () => {
+    const range = props.def.max - props.def.min;
+    return range > 0 ? (value() - props.def.min) / range : 0;
+  };
+  const fillStyle = () => {
+    const pct = (ratio() * 100).toFixed(1);
+    return `linear-gradient(to right, var(--fg) ${pct}%, #000 ${pct}%)`;
   };
 
   const onInput = (e: Event): void => {
-    const input = e.target as HTMLInputElement;
-    const v = parseFloat(input.value);
+    const v = parseFloat((e.target as HTMLInputElement).value);
     setValue(v);
     props.def.onChange?.(v);
-    applySliderFill(input);
-  };
-
-  const onReset = (): void => {
-    setValue(props.def.defaultValue);
-    props.def.onChange?.(props.def.defaultValue);
   };
 
   return (
@@ -152,23 +146,25 @@ function SliderRow(props: { def: SliderDef }): JSX.Element {
       <input
         type="range"
         id={props.def.id}
-        ref={observeFill}
         min={props.def.min}
         max={props.def.max}
         step={props.def.step}
         value={value()}
         onInput={onInput}
+        style={{ background: fillStyle() }}
       />
       <input
         type="text"
         class="badge-input slider-badge-edit"
         value={fmt(value())}
+        style={{ left: `${(ratio() * 100).toFixed(1)}%` }}
+        onFocus={(e) => { (e.target as HTMLInputElement).select(); }}
         onChange={(e) => {
           const v = parseFloat((e.target as HTMLInputElement).value);
           if (Number.isFinite(v)) { setValue(Math.max(props.def.min, Math.min(props.def.max, v))); props.def.onChange?.(value()); }
         }}
       />
-      <button class="slider-reset icon-btn icon-md" onClick={onReset}>
+      <button class="slider-reset icon-btn icon-md" onClick={() => { setValue(defVal); props.def.onChange?.(defVal); }}>
         <i data-lucide="rotate-cw" />
       </button>
     </div>
