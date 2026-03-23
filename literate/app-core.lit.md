@@ -308,13 +308,7 @@ MIDI listener setup wires incoming note-on, note-off, pitch bend, slide (CC74), 
     const getVoicesForChannel = (deviceId: string, channel: number): string[] => {
       const channelKey = `${deviceId}_${channel}`;
       const lastNote = this.lastNotePerChannel.get(channelKey);
-      if (lastNote) return [lastNote];
-      const prefix = `${deviceId}_${channel}_`;
-      const ids: string[] = [];
-      for (const [key, noteId] of this.midiChannelVoice) {
-        if (key.startsWith(prefix)) ids.push(noteId);
-      }
-      return ids;
+      return lastNote ? [lastNote] : [];
     };
 
     this.midi.onPitchBend((channel, value, deviceId) => {
@@ -1228,17 +1222,33 @@ The target cell width is a standard white piano key: **23.5mm**. DPI detection
 (`matchMedia('(resolution: Ndpi)')`) is unreliable — CSS pixels are reference
 pixels, not physical pixels, and the mapping varies wildly across devices.
 
-The correct approach: **measure rendered monospace text**. Browsers calibrate
-font rendering to physical size far more consistently than they report DPI.
-At 12px, each JetBrains Mono character is approximately 2.35mm physical, so:
+The correct approach: **measure rendered monospace text**. At 12px, each
+JetBrains Mono character is approximately 2.35mm physical, so:
 
     23.5mm target ÷ ~2.35mm/char ≈ 10 characters
 
 We render 10 monospace characters in a hidden span and use that pixel width as
 `pianoKeyPx` — the CSS pixel count that corresponds to 23.5mm on the current
-device. This replaces DPI as the primary sizing mechanism. The DPI probe below
-is retained only as input to the grid geometry engine (which still needs
-`cssPxPerInch` for the lattice basis vectors).
+device. This replaces DPI as the primary sizing mechanism.
+
+**Why text, not DPI?** There is no reliable browser API for physical mm →
+CSS px conversion. CSS `mm`/`in` units are not physically accurate on screen.
+`matchMedia('(resolution: Ndpi)')` returns screen resolution, not the
+CSS-to-physical mapping. `devicePixelRatio` tells you pixel density but not
+physical size. Text works better because the OS + browser calibrate font
+rendering for **readability at arm's length** — this calibration is the closest
+thing to a physical-size guarantee that exists in the web platform. The real
+primitive is the OS-level text rendering pipeline, not text itself. Any DOM
+element sized in CSS `px` inherits this calibration, but text is the most
+convenient to measure because `offsetWidth` on a span gives exact CSS px.
+
+**Open question**: is there a more fundamental CSS primitive (e.g. `1cm` in
+a positioned element, or `env(viewport-segment-*)`) that would give physical
+dimensions directly? Worth researching — the text approach is a pragmatic
+proxy, not a theoretical ideal.
+
+The DPI probe below is retained only as input to the grid geometry engine
+(which still needs `cssPxPerInch` for the lattice basis vectors).
 
 ``` {.typescript file=_generated/app-core.ts}
      const detectPhysicalDPI = (): number => {
