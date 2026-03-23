@@ -161,7 +161,7 @@ layout of top bar → song bar → visualiser → grid → pedals.
       line-height: 1.4;
       height: 100%;
       overflow: hidden;
-      touch-action: none;
+      touch-action: manipulation;
     }
 
     #app {

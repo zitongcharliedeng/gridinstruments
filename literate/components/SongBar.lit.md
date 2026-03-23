@@ -81,7 +81,7 @@ const SONGBAR_CSS = `#song-bar {
 #midi-file-input { display:none; }
 .game-controls { display:flex; gap:6px; align-items:center; }
 #game-reset-btn { font-size:10px; padding:2px 6px; }
-.upload-btn { flex-shrink:0; }
+.upload-btn { flex-shrink:0; min-width:28px; min-height:28px; display:inline-flex; align-items:center; justify-content:center; }
 #game-progress-fill { height:100%; background:#fff; width:0%; transition:width 0.1s linear; }
 #game-elapsed-timer { font-size:10px; color:var(--dim); font-family:var(--font); min-width:3ch; text-align:right; }`;
 
