@@ -95,7 +95,6 @@ The second group of private fields covers DOM references and UI state: canvas el
   private sustainActor: ReturnType<typeof createActor<typeof pedalMachine>> | null = null;
   private vibratoActor: ReturnType<typeof createActor<typeof pedalMachine>> | null = null;
   private midiDeviceList: HTMLElement | null = null;
-  private zoomSlider: HTMLInputElement | null = null;
   private defaultZoom = 1.0;
   private detectedDpi = 96;
   private updateGraffiti: (() => void) | null = null;
@@ -176,7 +175,6 @@ cached element references once the shell components and dynamic selects exist.
     this.vibratoIndicator = getElementOrNull('vibrato-indicator', HTMLElement);
     this.sustainIndicator = getElementOrNull('sustain-indicator', HTMLElement);
     this.midiDeviceList = getElementOrNull('midi-device-list', HTMLElement);
-    this.zoomSlider = getElementOrNull('zoom-slider', HTMLInputElement);
   }
 ```
 
@@ -1293,24 +1291,7 @@ half-vector, double it (half → full side), and take the minimum:
      const dpiBasedZoom = pianoKeyPx / gridCellSidePx;
      this.defaultZoom = dpiBasedZoom;
      const savedZoom = this.loadSetting('zoom', this.defaultZoom.toString());
-     if (this.zoomSlider) {
-       this.zoomSlider.value = savedZoom;
-       this.visualizer?.setZoom(parseFloat(savedZoom));
-       const zoomRef = this.zoomSlider;
-       zoomRef.addEventListener('input', () => {
-         const zoom = parseFloat(zoomRef.value);
-         this.visualizer?.setZoom(zoom);
-         this.updateGraffiti?.();
-         this.saveSetting('zoom', zoomRef.value);
-       });
-     }
-     const zoomReset = getElementOrNull('zoom-reset', HTMLButtonElement);
-     zoomReset?.addEventListener('click', () => {
-       if (this.zoomSlider) {
-         this.zoomSlider.value = this.defaultZoom.toString();
-         this.zoomSlider.dispatchEvent(new Event('input'));
-       }
-     });
+     this.visualizer?.setZoom(parseFloat(savedZoom));
 ```
 
 The DPI override input lets users correct auto-detection on non-standard displays. When set, the value is persisted to localStorage and applied to the visualizer's `cssPxPerInch`, then the zoom reset target is recalculated so the physical key size stays accurate. The reset button clears the override and restores the auto-detected value.
@@ -1324,9 +1305,10 @@ The DPI override input lets users correct auto-detection on non-standard display
      }
      const applyDpi = (dpi: number): void => {
        this.visualizer?.setCssPxPerInch(dpi);
-       if (this.zoomSlider) {
-         this.zoomSlider.value = this.defaultZoom.toString();
-         this.zoomSlider.dispatchEvent(new Event('input'));
+       const zoomEl = document.getElementById('zoom-slider') as HTMLInputElement | null;
+       if (zoomEl) {
+         zoomEl.value = this.defaultZoom.toString();
+         zoomEl.dispatchEvent(new Event('input'));
        }
      };
      dpiOverride?.addEventListener('change', () => {
