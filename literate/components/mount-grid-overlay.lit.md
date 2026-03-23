@@ -54,6 +54,10 @@ export interface GridOverlayCallbacks {
   initialVolume: number;
   onZoomChange: (v: number) => void;
   initialZoom: number;
+  onSkewChange: (v: number) => void;
+  initialSkew: number;
+  onShearChange: (v: number) => void;
+  initialShear: number;
 }
 
 export function mountGridOverlay(
@@ -146,24 +150,28 @@ layout selector. Each slider wraps its info button in a `ctrl-group` flex row.
           <div class="tuning-slider-area">
             <div class="ctrl-group">
               <InfoButton infoKey="skew" />
-              <div class="slider-track">
-                <span class="slider-label-overlay" id="skew-label">MECH SKEW</span>
-                <input type="range" id="skew-slider" min="-0.5" max="1.5" step="0.01" value="0" />
-                <input type="text" class="badge-input" id="skew-thumb-badge" value="0.00" />
-                <button class="slider-reset icon-btn icon-md" id="skew-reset"><i data-lucide="rotate-cw" /></button>
-              </div>
+              <SliderRow def={{
+                id: 'skew-slider',
+                label: 'MECH SKEW',
+                min: -0.5, max: 1.5, step: 0.01,
+                defaultValue: 0,
+                formatBadge: (v: number) => v.toFixed(2),
+                onChange: callbacks.onSkewChange,
+              }} />
             </div>
             <div class="slider-presets" id="skew-presets" />
           </div>
           <div class="tuning-slider-area mt-18">
             <div class="ctrl-group">
               <InfoButton infoKey="shear" />
-              <div class="slider-track">
-                <span class="slider-label-overlay" id="bfact-label">WICKED SHEAR</span>
-                <input type="range" id="bfact-slider" min="-0.5" max="1.5" step="0.01" value="0" />
-                <input type="text" class="badge-input" id="bfact-thumb-badge" value="0.00" />
-                <button class="slider-reset icon-btn icon-md" id="bfact-reset"><i data-lucide="rotate-cw" /></button>
-              </div>
+              <SliderRow def={{
+                id: 'bfact-slider',
+                label: 'WICKED SHEAR',
+                min: -0.5, max: 1.5, step: 0.01,
+                defaultValue: 0,
+                formatBadge: (v: number) => v.toFixed(2),
+                onChange: callbacks.onShearChange,
+              }} />
             </div>
             <div class="slider-presets" id="bfact-presets" />
           </div>
