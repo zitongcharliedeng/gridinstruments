@@ -19,7 +19,7 @@ const INFO_BTN_CSS = `.slider-info-btn {
   width: 14px; height: 14px; padding: 0;
   display: inline-flex; align-items: center; justify-content: center;
   border: 1px solid #555; background: var(--bg); opacity: 1; outline: none;
-  cursor: pointer; flex-shrink: 0; vertical-align: middle; margin-right: 2px;
+  cursor: pointer; flex-shrink: 0; vertical-align: middle; margin: 0;
   font-family: var(--font); font-size: 9px; font-style: italic; line-height: 1;
 }
 .slider-info-btn svg { display: none; }
