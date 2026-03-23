@@ -239,14 +239,6 @@ export function setupInfoDialogs(): void {
       const content = (key && SLIDER_INFO[key]) ?? '';
       infoDialogActor.send({ type: 'OPEN', content });
     });
-    const key = btn.dataset.info;
-    const content = (key && SLIDER_INFO[key]) ?? '';
-    if (content) {
-      const preview = document.createElement('div');
-      preview.className = 'info-preview';
-      preview.innerHTML = content;
-      btn.appendChild(preview);
-    }
   });
 
   closeBtn?.addEventListener('click', () => { infoDialogActor.send({ type: 'CLOSE' }); });
