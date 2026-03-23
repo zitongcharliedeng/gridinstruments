@@ -2385,7 +2385,7 @@ export const gameSm10WrongNoteNoop: StateInvariant = {
       ],
     });
 
-    actor.send({ type: 'NOTE_PRESSED', cellId: '0_0', midiNote: 61 });
+    actor.send({ type: 'NOTE_PRESSED', cellId: '5_5', midiNote: 61 });
     const snap = actor.getSnapshot();
 
     actor.stop();
