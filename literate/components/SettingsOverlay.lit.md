@@ -126,8 +126,11 @@ function SliderRow(props: { def: SliderDef }): JSX.Element {
   const [value, setValue] = createSignal(defVal);
   const fmt = fmtFn ?? ((v: number) => v.toFixed(1));
 
-  const initFill = (el: HTMLInputElement): void => {
-    requestAnimationFrame(() => { applySliderFill(el); });
+  const observeFill = (el: HTMLInputElement): void => {
+    const ro = new ResizeObserver(() => {
+      if (el.offsetWidth > 0) applySliderFill(el);
+    });
+    ro.observe(el);
   };
 
   const onInput = (e: Event): void => {
@@ -149,7 +152,7 @@ function SliderRow(props: { def: SliderDef }): JSX.Element {
       <input
         type="range"
         id={props.def.id}
-        ref={initFill}
+        ref={observeFill}
         min={props.def.min}
         max={props.def.max}
         step={props.def.step}
