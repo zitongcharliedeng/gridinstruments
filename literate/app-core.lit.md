@@ -326,6 +326,7 @@ MIDI listener setup wires incoming note-on, note-off, pitch bend, slide (CC74), 
         if (this.expressionTimbre) this.synth.setTimbre(audioNoteId, v);
         this.mpe.sendSlide(audioNoteId, v);
       }
+      this.visualizer?.render();
     });
     this.midi.onPressure((channel, value, deviceId) => {
       for (const audioNoteId of getVoicesForChannel(deviceId, channel)) {
