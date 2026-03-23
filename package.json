@@ -43,6 +43,9 @@
     "vite": "^5.0.10"
   },
   "dependencies": {
+    "@solid-primitives/event-listener": "^2.4.5",
+    "@solid-primitives/media": "^2.3.5",
+    "@solid-primitives/resize-observer": "^2.1.5",
     "@tonejs/midi": "^2.0.28",
     "@xstate/solid": "^2.0.0",
     "effect": "^3.19.19",
@@ -52,6 +55,7 @@
     "roughjs": "^4.6.6",
     "slim-select": "^3.4.3",
     "solid-js": "^1.9.11",
+    "solid-primitives": "^0.0.1",
     "tonal": "^6.0.1",
     "vite-plugin-solid": "^2.11.11",
     "xstate": "^5.28.0"
