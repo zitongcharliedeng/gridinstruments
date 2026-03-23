@@ -2052,7 +2052,7 @@ Calibration mode shows a banner instructing the user to play all reachable notes
     }
     if (warning && (gameState === 'playing' || gameState === 'loading' || gameState === 'complete')) {
       warning.classList.add('show-flex');
-      warning.textContent = 'Song stopped';
+      warning.textContent = 'Song paused for calibration';
       setTimeout(() => { warning.classList.remove('show-flex'); }, 2000);
     } else if (warning) {
       warning.classList.remove('show-flex');
