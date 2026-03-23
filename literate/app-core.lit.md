@@ -527,6 +527,10 @@ The MIDI device panel renders a list of connected controllers with enable/disabl
         onMaxKeysChange: (n: number) => {
           this.maxSimultaneousKeys = n;
           this.saveSetting('maxKeys', String(n));
+          const gameState = this.gameActor ? String(this.gameActor.getSnapshot().value) : undefined;
+          if (gameState === 'playing' || gameState === 'complete') {
+            this.gameActor?.send({ type: 'GAME_RESET' });
+          }
         },
         initialMaxKeys: this.maxSimultaneousKeys,
       });
