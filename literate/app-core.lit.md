@@ -90,7 +90,6 @@ The second group of private fields covers DOM references and UI state: canvas el
   private bfactSlider: HTMLInputElement | null = null;
   private tuningSlider: HTMLInputElement | null = null;
 
-  private volumeSlider: HTMLInputElement | null = null;
   private vibratoIndicator: HTMLElement | null = null;
   private sustainIndicator: HTMLElement | null = null;
   private sustainActor: ReturnType<typeof createActor<typeof pedalMachine>> | null = null;
@@ -174,7 +173,6 @@ cached element references once the shell components and dynamic selects exist.
     this.skewSlider = getElementOrNull('skew-slider', HTMLInputElement);
     this.bfactSlider = getElementOrNull('bfact-slider', HTMLInputElement);
     this.tuningSlider = getElementOrNull('tuning-slider', HTMLInputElement);
-    this.volumeSlider = getElementOrNull('volume-slider', HTMLInputElement);
     this.vibratoIndicator = getElementOrNull('vibrato-indicator', HTMLElement);
     this.sustainIndicator = getElementOrNull('sustain-indicator', HTMLElement);
     this.midiDeviceList = getElementOrNull('midi-device-list', HTMLElement);
@@ -915,23 +913,7 @@ TET preset tick marks are generated from the `TUNING_MARKERS` array (5-TET throu
     }
 
      const savedVolume = this.loadSetting('volume', '0.3');
-     if (this.volumeSlider) {
-       this.volumeSlider.value = savedVolume;
-       this.synth.setMasterVolume(parseFloat(savedVolume));
-       const volRef = this.volumeSlider;
-       volRef.addEventListener('input', () => {
-         const val = parseFloat(volRef.value);
-         this.synth.setMasterVolume(val);
-         this.saveSetting('volume', volRef.value);
-       });
-     }
-     const volReset = getElementOrNull('volume-reset', HTMLButtonElement);
-     volReset?.addEventListener('click', () => {
-       if (this.volumeSlider) {
-         this.volumeSlider.value = '0.3';
-         this.volumeSlider.dispatchEvent(new Event('input'));
-       }
-     });
+     this.synth.setMasterVolume(parseFloat(savedVolume));
 ```
 
 The D-ref input accepts both raw Hz values and note names (e.g. "A4", "Bb3"). The slider and text input stay synchronized bidirectionally -- editing one updates the other. This lets users set the reference pitch by ear (slider) or by theory (note name).
