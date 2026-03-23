@@ -1282,18 +1282,24 @@ The DPI probe below is retained only as input to the grid geometry engine
      document.body.appendChild(measureEl);
      const tenCharWidth = measureEl.offsetWidth;
      document.body.removeChild(measureEl);
-     const pianoKeyPx = tenCharWidth > 0 ? tenCharWidth : 80;
+     const pianoKeyPx = tenCharWidth;
 ```
 
-The grid's cell width at zoom=1.0 comes from the lattice geometry — specifically the **half-vectors** `cellHv1` (wholetone direction) and `cellHv2` (octave direction). These change with the skew and shear sliders, so we measure them live:
+The grid's cell size at zoom=1.0 comes from the lattice geometry half-vectors.
+A cell is a parallelogram with sides along `cellHv1` (wholetone) and `cellHv2`
+(octave). The **shortest side length** — not the diagonal horizontal span —
+should match the target key width. We compute the Euclidean magnitude of each
+half-vector, double it (half → full side), and take the minimum:
 
 ``` {.typescript file=_generated/app-core.ts}
      if (!this.visualizer) throw new Error('visualizer must be initialized before zoom');
      const geometry = this.visualizer.getGridGeometry();
-     const gridCellWidthPx =
-       (Math.abs(geometry.cellHv1.x) + Math.abs(geometry.cellHv2.x)) * 2;
+     const hv1 = geometry.cellHv1, hv2 = geometry.cellHv2;
+     const side1 = 2 * Math.sqrt(hv1.x * hv1.x + hv1.y * hv1.y);
+     const side2 = 2 * Math.sqrt(hv2.x * hv2.x + hv2.y * hv2.y);
+     const gridCellSidePx = Math.min(side1, side2);
 
-     const dpiBasedZoom = pianoKeyPx / gridCellWidthPx;
+     const dpiBasedZoom = pianoKeyPx / gridCellSidePx;
      this.defaultZoom = dpiBasedZoom;
      const savedZoom = this.loadSetting('zoom', this.defaultZoom.toString());
      if (this.zoomSlider) {
