@@ -485,7 +485,10 @@ The MIDI device panel renders a list of connected controllers with enable/disabl
     const gridCog = getElementOrNull('grid-settings-btn', HTMLButtonElement);
     const gridOverlayMount = document.getElementById('grid-overlay-mount');
     if (gridCog && gridOverlayMount) {
-      mountGridOverlay(gridOverlayMount, gridCog);
+      mountGridOverlay(gridOverlayMount, gridCog, {
+        onVolumeChange: (v: number) => { this.synth.setMasterVolume(v); this.saveSetting('volume', String(v)); },
+        initialVolume: parseFloat(this.loadSetting('volume', '0.3')),
+      });
     }
 
     const savedMax = this.loadSetting('maxKeys', '8');

@@ -17,6 +17,7 @@ import { createSignal } from 'solid-js';
 import { SettingsOverlay } from './SettingsOverlay';
 import type { SectionDef } from './SettingsOverlay';
 import { InfoButton } from './InfoButton';
+import { SliderRow } from './SliderRow';
 import { refreshAllSliderUI } from '../app-slider';
 ```
 
@@ -48,9 +49,15 @@ const GRID_OVERLAY_CSS = `#mpe-output-select {
 #d-ref-input { width:80px; text-transform:none; }`;
 let gridOverlayCssInjected = false;
 
+export interface GridOverlayCallbacks {
+  onVolumeChange: (v: number) => void;
+  initialVolume: number;
+}
+
 export function mountGridOverlay(
   mountEl: HTMLElement,
   cogBtn: HTMLElement,
+  callbacks: GridOverlayCallbacks,
 ): { toggle: () => void; setVisible: (v: boolean) => void } {
   if (!gridOverlayCssInjected) {
     const s = document.createElement('style');
@@ -86,12 +93,14 @@ export function mountGridOverlay(
           </div>
           <div class="ctrl-group mt-18">
             <InfoButton infoKey="volume" />
-            <div class="slider-track">
-              <span class="slider-label-overlay">VOL (dB)</span>
-              <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.5" />
-              <span class="slider-value-badge" id="volume-thumb-badge">-10.5</span>
-              <button class="slider-reset icon-btn icon-md" id="volume-reset"><i data-lucide="rotate-cw" /></button>
-            </div>
+            <SliderRow def={{
+              id: 'volume-slider',
+              label: 'VOL (dB)',
+              min: 0, max: 1, step: 0.01,
+              defaultValue: callbacks.initialVolume,
+              formatBadge: (v: number) => (20 * Math.log10(Math.max(0.001, v))).toFixed(1),
+              onChange: callbacks.onVolumeChange,
+            }} />
           </div>
           <div class="tuning-slider-area mt-18">
             <div class="ctrl-group">
