@@ -1222,18 +1222,23 @@ We target **23mm** (piano white key) as the default — it's the largest common 
 
 #### DPI detection via matchMedia resolution probing
 
-The CSS `1px = 1/96 inch` spec constant is only a **reference pixel** for print
-layout — on screen, browsers do not guarantee this mapping. A 27" 1080p desktop
-monitor has ~82 physical DPI while a 13" MacBook retina has ~227 physical DPI,
-yet both nominally use 96 CSS px/inch. The result: `PIANO_KEY_MM * 96 / 25.4`
-produces a CSS pixel count that is ~2x too large on high-DPI laptops and ~1.5x
-too small on low-DPI TVs.
+### Key sizing — text-derived metric
 
-The correct approach: probe the actual physical DPI using
-[`matchMedia('(resolution: Ndpi)')`](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/resolution).
-This is how virtual ruler sites achieve real-world accuracy without device databases.
-We binary-search the DPI from 40 to 600, fall back to `96 * devicePixelRatio`
-if matchMedia is unavailable (headless/CI), and clamp to a sane range.
+The target cell width is a standard white piano key: **23.5mm**. DPI detection
+(`matchMedia('(resolution: Ndpi)')`) is unreliable — CSS pixels are reference
+pixels, not physical pixels, and the mapping varies wildly across devices.
+
+The correct approach: **measure rendered monospace text**. Browsers calibrate
+font rendering to physical size far more consistently than they report DPI.
+At 12px, each JetBrains Mono character is approximately 2.35mm physical, so:
+
+    23.5mm target ÷ ~2.35mm/char ≈ 10 characters
+
+We render 10 monospace characters in a hidden span and use that pixel width as
+`pianoKeyPx` — the CSS pixel count that corresponds to 23.5mm on the current
+device. This replaces DPI as the primary sizing mechanism. The DPI probe below
+is retained only as input to the grid geometry engine (which still needs
+`cssPxPerInch` for the lattice basis vectors).
 
 ``` {.typescript file=_generated/app-core.ts}
      const detectPhysicalDPI = (): number => {
