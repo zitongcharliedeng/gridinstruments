@@ -486,6 +486,7 @@ The MIDI device panel renders a list of connected controllers with enable/disabl
         initialTuning: parseFloat(this.loadSetting('tuning', '700')),
         onDRefChange: (v: number) => { this.synth.setD4Hz(v); this.visualizer?.setD4Hz(v); this.visualizer?.render(); this.saveSetting('dref', String(v)); },
         initialDRef: parseFloat(this.loadSetting('dref', '293.66')),
+        initialPbRange: this.midiPitchBendRange,
       });
     }
 

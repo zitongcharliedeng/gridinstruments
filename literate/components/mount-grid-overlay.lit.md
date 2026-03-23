@@ -62,6 +62,7 @@ export interface GridOverlayCallbacks {
   initialTuning: number;
   onDRefChange: (v: number) => void;
   initialDRef: number;
+  initialPbRange: number;
 }
 
 export function mountGridOverlay(
@@ -242,7 +243,7 @@ MPE dimensions are active. Pressure mode and CC source use slim-select dropdowns
                 <label class="expr-label">
                   <span class="gi-checkbox"><input type="checkbox" id="expr-bend" checked /><span class="gi-check" /></span>
                   <span class="text-white">Pitch Bend</span>
-                  <input type="text" inputmode="numeric" pattern="[0-9]*" id="midi-pb-range-expr" value="24" class="numeric-input" />
+                  <input type="text" inputmode="numeric" pattern="[0-9]*" id="midi-pb-range-expr" value={callbacks.initialPbRange} class="numeric-input" />
                   <span class="text-dim-sm">semitones</span>
                 </label>
               </div>
