@@ -30,7 +30,7 @@ const CUSTOM_WAVES: Record<string, { real: number[]; imag: number[] }> = {
   bass:   { real: [0,0,0,0,0], imag: [0,1,0.8,0.4,0.1] },
   bright: { real: [0,0,0,0,0,0,0,0,0,0,0,0,0], imag: [0,1,0.9,0.8,0.7,0.6,0.5,0.4,0.3,0.2,0.15,0.1,0.05] },
   warm:   { real: [0,0,0,0,0,0], imag: [0,1,0.5,0.15,0.04,0.01] },
-  guitar: { real: [0,0,0,0,0,0,0,0,0,0,0,0], imag: [0,0.7,1,0.8,0.4,0.25,0.15,0.03,0.08,0.04,0.02,0.01] },
+  guitar: { real: [0,0,0.3,0.2,0.1,0,0,0,0], imag: [0,0.5,1.0,0.6,0.25,0.1,0.04,0.015,0.005] },
 };
 
 function isNativeWaveform(w: string): w is OscillatorType {
