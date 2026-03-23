@@ -58,6 +58,10 @@ export interface GridOverlayCallbacks {
   initialSkew: number;
   onShearChange: (v: number) => void;
   initialShear: number;
+  onTuningChange: (v: number) => void;
+  initialTuning: number;
+  onDRefChange: (v: number) => void;
+  initialDRef: number;
 }
 
 export function mountGridOverlay(
@@ -111,24 +115,28 @@ export function mountGridOverlay(
           <div class="tuning-slider-area mt-18">
             <div class="ctrl-group">
               <InfoButton infoKey="tuning" />
-              <div class="slider-track">
-                <span class="slider-label-overlay" id="tuning-label">FIFTHS TUNING (cents)</span>
-                <input type="range" id="tuning-slider" min="683" max="722" step="0.01" value="700" />
-                <input type="text" class="badge-input" id="tuning-thumb-badge" value="700" />
-                <button class="slider-reset icon-btn icon-md" id="tuning-reset"><i data-lucide="rotate-cw" /></button>
-              </div>
+              <SliderRow def={{
+                id: 'tuning-slider',
+                label: 'FIFTHS TUNING (cents)',
+                min: 683, max: 722, step: 0.01,
+                defaultValue: 700,
+                formatBadge: (v: number) => v.toFixed(1),
+                onChange: callbacks.onTuningChange,
+              }} />
             </div>
             <div class="tet-presets" id="tet-presets" data-alternate-ticks />
           </div>
           <div class="tuning-slider-area mt-18">
             <div class="ctrl-group">
               <InfoButton infoKey="dref" />
-              <div class="slider-track">
-                <span class="slider-label-overlay" id="d-ref-label">D REF (Hz)</span>
-                <input type="range" id="d-ref-slider" min="73.42" max="1174.66" step="0.01" value="293.66" />
-                <input type="text" class="badge-input" id="d-ref-input" value="293.66" />
-                <button id="d-ref-reset" class="slider-reset icon-btn icon-md"><i data-lucide="rotate-cw" /></button>
-              </div>
+              <SliderRow def={{
+                id: 'd-ref-slider',
+                label: 'D REF (Hz)',
+                min: 73.42, max: 1174.66, step: 0.01,
+                defaultValue: 293.66,
+                formatBadge: (v: number) => v.toFixed(2),
+                onChange: callbacks.onDRefChange,
+              }} />
             </div>
           </div>
         </div>
