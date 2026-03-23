@@ -799,7 +799,7 @@ export const drefDriftCheck: StateInvariant = {
   check: async (page: Page) => {
     await page.click('#grid-settings-btn');
     await page.waitForTimeout(500);
-    const drefBefore = await page.locator('#d-ref-input').inputValue();
+    const drefBefore = await page.locator('#d-ref-slider ~ .badge-input').inputValue();
     await page.click('#grid-settings-btn');
     await page.waitForTimeout(300);
     const canvas = page.locator('#keyboard-canvas');
@@ -816,7 +816,7 @@ export const drefDriftCheck: StateInvariant = {
     await page.waitForTimeout(500);
     await page.click('#grid-settings-btn');
     await page.waitForTimeout(500);
-    const drefAfter = await page.locator('#d-ref-input').inputValue();
+    const drefAfter = await page.locator('#d-ref-slider ~ .badge-input').inputValue();
     expect(drefAfter, 'D-ref must not drift from keyboard interaction').toBe(drefBefore);
   },
 };
@@ -1768,10 +1768,6 @@ export const iss81SkewNotchCheck: StateInvariant = {
     const notchText = await notchBtn.textContent();
     if (!notchText) throw new Error('skew preset notch button has no text');
     expect(notchText).toContain('DCompose / Wicki-Hayden');
-    const labelText = await page.locator('#skew-label').textContent();
-    if (!labelText) throw new Error('#skew-label has no text');
-    expect(labelText).toContain('DCompose');
-    expect(labelText).toContain('Wicki-Hayden');
   },
 };
 

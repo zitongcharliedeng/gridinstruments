@@ -11,7 +11,6 @@ import { SettingsOverlay } from './SettingsOverlay';
 import type { SectionDef } from './SettingsOverlay';
 import type { NoteHistoryVisualizer } from '../lib/note-history-visualizer';
 import { D_REF_MIDI } from '../lib/keyboard-layouts';
-import { refreshAllSliderUI } from '../app-slider';
 
 const VIS_OVERLAY_CSS = `#vis-overlay { padding: 8px 12px 8px 40px; }`;
 let visOverlayCssInjected = false;
@@ -32,14 +31,6 @@ export function mountVisOverlay(
   cogBtn.addEventListener('click', () => {
     setVisible(v => !v);
     cogBtn.classList.toggle('active', visible());
-    if (visible()) {
-      const applyFills = (): void => {
-        const el = document.getElementById('vis-overlay');
-        if (!el || el.classList.contains('hidden')) { requestAnimationFrame(applyFills); return; }
-        refreshAllSliderUI();
-      };
-      requestAnimationFrame(applyFills);
-    }
   });
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && visible()) {

@@ -18,7 +18,7 @@ import { SettingsOverlay } from './SettingsOverlay';
 import type { SectionDef } from './SettingsOverlay';
 import { InfoButton } from './InfoButton';
 import { SliderRow } from './SliderRow';
-import { refreshAllSliderUI } from '../app-slider';
+import { TUNING_MARKERS } from '../lib/synth';
 ```
 
 The mount function accepts the container element and the cog button. It owns
@@ -80,7 +80,6 @@ export function mountGridOverlay(
   const toggle = (): void => {
     setVisible(v => !v);
     cogBtn.classList.toggle('active', visible());
-    if (visible()) requestAnimationFrame(() => { requestAnimationFrame(refreshAllSliderUI); });
   };
   const onEscape = (e: KeyboardEvent): void => {
     if (e.key === 'Escape' && visible()) {
@@ -122,9 +121,11 @@ export function mountGridOverlay(
                 defaultValue: 700,
                 formatBadge: (v: number) => v.toFixed(1),
                 onChange: callbacks.onTuningChange,
+                presetsId: 'tet-presets',
+                alternateTicks: true,
+                presets: TUNING_MARKERS.map(m => ({ value: m.fifth, label: m.name, description: `${m.description} (${m.fifth.toFixed(2)}\u00a2)` })),
               }} />
             </div>
-            <div class="tet-presets" id="tet-presets" data-alternate-ticks />
           </div>
           <div class="tuning-slider-area mt-18">
             <div class="ctrl-group">
@@ -165,9 +166,13 @@ layout selector. Each slider wraps its info button in a `ctrl-group` flex row.
                 defaultValue: 0,
                 formatBadge: (v: number) => v.toFixed(2),
                 onChange: callbacks.onSkewChange,
+                presetsId: 'skew-presets',
+                presets: [
+                  { value: 0, label: 'DCompose / Wicki-Hayden', description: 'DCompose: diagonal parallelogram grid (Striso angle). Wicki-Hayden shares this skew — use WICKED SHEAR to differentiate.' },
+                  { value: 1, label: 'MidiMech', description: 'MidiMech: orthogonal rectangular grid' },
+                ],
               }} />
             </div>
-            <div class="slider-presets" id="skew-presets" />
           </div>
           <div class="tuning-slider-area mt-18">
             <div class="ctrl-group">
@@ -179,9 +184,13 @@ layout selector. Each slider wraps its info button in a `ctrl-group` flex row.
                 defaultValue: 0,
                 formatBadge: (v: number) => v.toFixed(2),
                 onChange: callbacks.onShearChange,
+                presetsId: 'bfact-presets',
+                presets: [
+                  { value: 0, label: 'DCompose', description: 'DCompose: no row shear (default lattice)' },
+                  { value: 1, label: 'Wicki-Hayden', description: 'Wicki-Hayden: horizontal rows (shear mapping from Tonnetz)' },
+                ],
               }} />
             </div>
-            <div class="slider-presets" id="bfact-presets" />
           </div>
           <div class="tuning-slider-area mt-18">
             <div class="ctrl-group">

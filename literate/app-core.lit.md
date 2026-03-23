@@ -4,7 +4,7 @@ DComposeApp — the main application class managing synth, visualizer, MIDI, key
 
 ``` {.typescript file=_generated/app-core.ts}
 import { getLayout, KEYBOARD_VARIANTS, KeyboardLayout, codeToLabel, isDvorakLayout, type LabelLayout } from './lib/keyboard-layouts';
-import { Synth, WaveformType, FIFTH_MIN, FIFTH_MAX, FIFTH_DEFAULT, findNearestMarker, TUNING_MARKERS } from './lib/synth';
+import { Synth, WaveformType, findNearestMarker } from './lib/synth';
 import { KeyboardVisualizer } from './lib/keyboard-visualizer';
 import { NoteHistoryVisualizer } from './lib/note-history-visualizer';
 import { MidiInput, MidiDeviceInfo } from './lib/midi-input';
@@ -30,10 +30,8 @@ import { createActor } from 'xstate';
 import SlimSelect from 'slim-select';
 import { OverlayScrollbars } from 'overlayscrollbars';
 
-import { isWaveformType, parseNum, formatSliderAnnotation, noteNameToHz } from './app-helpers';
+import { isWaveformType, parseNum } from './app-helpers';
 import { createSelectAtSlot, getElement, getElementOrNull } from './app-dom';
-import { thumbCenterPx, clampBadgePosition, applySliderFill } from './app-slider';
-import { SHEAR_PRESETS, TUNING_LABEL_PRESETS } from './app-constants';
 ```
 
 All dependencies come from sibling modules tangled from their own literate files. The app wires together synth, visualizer, MIDI, MPE, game engine, and UI state machines into a single orchestrator class.
@@ -86,9 +84,6 @@ The second group of private fields covers DOM references and UI state: canvas el
   private canvas: HTMLCanvasElement;
   private historyCanvas: HTMLCanvasElement;
   private layoutSelect: HTMLSelectElement | null = null;
-  private skewSlider: HTMLInputElement | null = null;
-  private bfactSlider: HTMLInputElement | null = null;
-  private tuningSlider: HTMLInputElement | null = null;
 
   private vibratoIndicator: HTMLElement | null = null;
   private sustainIndicator: HTMLElement | null = null;
@@ -169,9 +164,6 @@ cached element references once the shell components and dynamic selects exist.
 ``` {.typescript file=_generated/app-core.ts}
   private bindMountedControls(): void {
     this.layoutSelect = getElementOrNull('layout-select', HTMLSelectElement);
-    this.skewSlider = getElementOrNull('skew-slider', HTMLInputElement);
-    this.bfactSlider = getElementOrNull('bfact-slider', HTMLInputElement);
-    this.tuningSlider = getElementOrNull('tuning-slider', HTMLInputElement);
     this.vibratoIndicator = getElementOrNull('vibrato-indicator', HTMLElement);
     this.sustainIndicator = getElementOrNull('sustain-indicator', HTMLElement);
     this.midiDeviceList = getElementOrNull('midi-device-list', HTMLElement);
@@ -683,352 +675,40 @@ The keyboard layout selector auto-detects ISO vs ANSI by probing the Keyboard AP
     }
 ```
 
-The skew slider smoothly morphs between DCompose (diagonal parallelogram, skew=0) and MidiMech (orthogonal rectangular, skew=1) geometries. The thumb badge shows the current numeric value and is directly editable for precise input.
+Slider presets (skew, bfact, tuning TET marks) are now rendered reactively by
+SliderRow via its `presets` prop. The only remaining imperative tuning hook is
+the double-click snap-to-nearest-TET behavior.
 
 ``` {.typescript file=_generated/app-core.ts}
-    if (this.skewSlider) {
-      const skewRef = this.skewSlider;
-      const skewBadge = getElementOrNull('skew-thumb-badge', HTMLInputElement);
-
-      const savedSkew = this.loadSetting('skew', '0');
-      skewRef.value = savedSkew;
-      this.visualizer?.setSkewFactor(parseFloat(savedSkew));
-
-      skewRef.addEventListener('input', () => {
-        const val = parseFloat(skewRef.value);
-        this.visualizer?.setSkewFactor(val);
-        this.updateGraffiti?.();
-        this.saveSetting('skew', skewRef.value);
-      });
-
-      const skewReset = getElementOrNull('skew-reset', HTMLButtonElement);
-      skewReset?.addEventListener('click', () => {
-        if (this.skewSlider) {
-          this.skewSlider.value = '0';
-          this.skewSlider.dispatchEvent(new Event('input'));
-        }
-      });
-
-      if (skewBadge) {
-        skewBadge.addEventListener('change', () => {
-          const raw = parseFloat(skewBadge.value);
-          if (isFinite(raw)) {
-            this.visualizer?.setSkewFactor(raw);
-            this.updateGraffiti?.();
-            if (this.skewSlider) {
-              const sMin = parseFloat(this.skewSlider.min);
-              const sMax = parseFloat(this.skewSlider.max);
-              this.skewSlider.value = Math.max(sMin, Math.min(sMax, raw)).toString();
-            }
-          } else {
-            const current = parseFloat(this.skewSlider?.value ?? '0');
-            skewBadge.value = current.toFixed(2);
-          }
-        });
-        skewBadge.addEventListener('focus', () => { skewBadge.select(); });
-      }
-
-      this.populateSliderPresets('skew-presets', this.skewSlider, [
-        { value: 0, label: 'DCompose / Wicki-Hayden', description: 'DCompose: diagonal parallelogram grid (Striso angle). Wicki-Hayden shares this skew — use WICKED SHEAR to differentiate.' },
-        { value: 1, label: 'MidiMech', description: 'MidiMech: orthogonal rectangular grid' },
-      ]);
-    }
-```
-
-Wicked Shear (bfact) controls the row-offset angle of the lattice. At bfact=0 (DCompose), rows stack diagonally; at bfact=1 (Wicki-Hayden), rows align horizontally. The label dynamically annotates which preset is closest to the current value.
-
-``` {.typescript file=_generated/app-core.ts}
-    if (this.bfactSlider) {
-      const bfactRef = this.bfactSlider;
-      const bfactBadge = getElementOrNull('bfact-thumb-badge', HTMLInputElement);
-      const bfactLabel = getElementOrNull('bfact-label', HTMLSpanElement);
-
-      const updateBfactLabel = (value: number): void => {
-        if (!bfactLabel) return;
-        const ann = formatSliderAnnotation(value, SHEAR_PRESETS, 2);
-        bfactLabel.textContent = `WICKED SHEAR ${ann}`;
-      };
-
-      const updateBfactBadge = (value: number): void => {
-        if (!bfactBadge) return;
-        const sliderMin = parseFloat(bfactRef.min);
-        const sliderMax = parseFloat(bfactRef.max);
-        const clampedForPos = Math.max(sliderMin, Math.min(sliderMax, value));
-        const ratio = (clampedForPos - sliderMin) / (sliderMax - sliderMin);
-        const centerPx = thumbCenterPx(ratio, bfactRef);
-        const clampedPx = clampBadgePosition(centerPx, bfactRef, 50);
-        bfactBadge.style.left = `${clampedPx}px`;
-        bfactBadge.value = value.toFixed(2);
-      };
-
-      const savedBfact = this.loadSetting('bfact', '0');
-      bfactRef.value = savedBfact;
-      updateBfactBadge(parseFloat(savedBfact));
-      updateBfactLabel(parseFloat(savedBfact));
-      this.visualizer?.setBFact(parseFloat(savedBfact));
-
-      bfactRef.addEventListener('input', () => {
-        const val = parseFloat(bfactRef.value);
-        this.visualizer?.setBFact(val);
-        this.updateGraffiti?.();
-        updateBfactBadge(val);
-        updateBfactLabel(val);
-        applySliderFill(bfactRef);
-        this.saveSetting('bfact', bfactRef.value);
-      });
-
-      const bfactReset = getElementOrNull('bfact-reset', HTMLButtonElement);
-      bfactReset?.addEventListener('click', () => {
-        if (this.bfactSlider) {
-          this.bfactSlider.value = '0';
-          this.bfactSlider.dispatchEvent(new Event('input'));
-        }
-      });
-
-      if (bfactBadge) {
-        bfactBadge.addEventListener('change', () => {
-          const raw = parseFloat(bfactBadge.value);
-          if (isFinite(raw)) {
-            this.visualizer?.setBFact(raw);
-            this.updateGraffiti?.();
-            updateBfactBadge(raw);
-            updateBfactLabel(raw);
-            if (this.bfactSlider) {
-              const sMin = parseFloat(this.bfactSlider.min);
-              const sMax = parseFloat(this.bfactSlider.max);
-              this.bfactSlider.value = Math.max(sMin, Math.min(sMax, raw)).toString();
-              applySliderFill(this.bfactSlider);
-            }
-          } else {
-            const current = parseFloat(this.bfactSlider?.value ?? '0');
-            bfactBadge.value = current.toFixed(2);
-          }
-        });
-        bfactBadge.addEventListener('focus', () => { bfactBadge.select(); });
-      }
-
-      this.populateSliderPresets('bfact-presets', this.bfactSlider, [
-        { value: 0, label: 'DCompose', description: 'DCompose: no row shear (default lattice)' },
-        { value: 1, label: 'Wicki-Hayden', description: 'Wicki-Hayden: horizontal rows (shear mapping from Tonnetz)' },
-      ]);
-    }
-```
-
-The fifths tuning slider sets the generator interval in cents. This is the core microtonality control: 700 cents = 12-TET, 701.96 = Pythagorean, 696.58 = quarter-comma meantone. Double-clicking snaps to the nearest named temperament marker. The thumb badge is editable for precise cent values.
-
-``` {.typescript file=_generated/app-core.ts}
-    if (this.tuningSlider) {
-      const tuningRef = this.tuningSlider;
-      tuningRef.min = FIFTH_MIN.toString();
-      tuningRef.max = FIFTH_MAX.toString();
-      tuningRef.step = '0.01';
-      tuningRef.value = FIFTH_DEFAULT.toString();
-
-      const thumbBadge = getElementOrNull('tuning-thumb-badge', HTMLInputElement);
-      const range = FIFTH_MAX - FIFTH_MIN;
-      const updateThumbBadge = (value: number): void => {
-        if (!thumbBadge) return;
-        const ratio = (value - FIFTH_MIN) / range;
-        const centerPx = thumbCenterPx(ratio, tuningRef);
-        const clampedPx = clampBadgePosition(centerPx, tuningRef, 50);
-        thumbBadge.style.left = `${clampedPx}px`;
-        thumbBadge.value = value.toFixed(1);
-      };
-      const tuningLabel = getElementOrNull('tuning-label', HTMLSpanElement);
-      const updateTuningLabel = (value: number): void => {
-        if (!tuningLabel) return;
-        const ann = formatSliderAnnotation(value, TUNING_LABEL_PRESETS, 1, '\u00a2');
-        tuningLabel.textContent = `FIFTHS TUNING (cents) ${ann}`;
-      };
-      updateTuningLabel(FIFTH_DEFAULT);
-      updateThumbBadge(FIFTH_DEFAULT);
-
-      const savedTuning = this.loadSetting('tuning', FIFTH_DEFAULT.toString());
-      tuningRef.value = savedTuning;
-      updateThumbBadge(parseFloat(savedTuning));
-      updateTuningLabel(parseFloat(savedTuning));
-      this.synth.setFifth(parseFloat(savedTuning));
-      this.visualizer?.setGenerator([parseFloat(savedTuning), 1200]);
-
-      tuningRef.addEventListener('input', () => {
-        const value = parseFloat(tuningRef.value);
-        this.synth.setFifth(value);
-        this.visualizer?.setGenerator([value, 1200]);
-        this.updateGraffiti?.();
-
-        updateThumbBadge(value);
-        updateTuningLabel(value);
-        applySliderFill(tuningRef);
-        this.saveSetting('tuning', tuningRef.value);
-      });
-
-      tuningRef.addEventListener('dblclick', () => {
-        const currentValue = parseFloat(tuningRef.value);
+    const tuningSliderEl = getElementOrNull('tuning-slider', HTMLInputElement);
+    if (tuningSliderEl) {
+      tuningSliderEl.addEventListener('dblclick', () => {
+        const currentValue = parseFloat(tuningSliderEl.value);
         const { marker } = findNearestMarker(currentValue);
-        tuningRef.value = marker.fifth.toString();
-        this.synth.setFifth(marker.fifth);
-        this.visualizer?.setGenerator([marker.fifth, 1200]);
-        applySliderFill(tuningRef);
-        updateThumbBadge(marker.fifth);
-        updateTuningLabel(marker.fifth);
+        tuningSliderEl.value = marker.fifth.toString();
+        tuningSliderEl.dispatchEvent(new Event('input', { bubbles: true }));
       });
-      const tuningReset = getElementOrNull('tuning-reset', HTMLButtonElement);
-      tuningReset?.addEventListener('click', () => {
-        if (this.tuningSlider) {
-          this.tuningSlider.value = FIFTH_DEFAULT.toString();
-          this.tuningSlider.dispatchEvent(new Event('input'));
-        }
-      });
-      if (thumbBadge) {
-        thumbBadge.addEventListener('change', () => {
-          const raw = parseFloat(thumbBadge.value);
-          if (isFinite(raw) && raw >= FIFTH_MIN && raw <= FIFTH_MAX) {
-            if (this.tuningSlider) {
-              this.tuningSlider.value = raw.toString();
-              this.synth.setFifth(raw);
-              this.visualizer?.setGenerator([raw, 1200]);
-              this.updateGraffiti?.();
-              updateThumbBadge(raw);
-              applySliderFill(this.tuningSlider);
-              updateTuningLabel(raw);
-            }
-          } else {
-            const current = parseFloat(this.tuningSlider?.value ?? FIFTH_DEFAULT.toString());
-            thumbBadge.value = current.toFixed(1);
-          }
-        });
-        thumbBadge.addEventListener('focus', () => { thumbBadge.select(); });
-      }
     }
 ```
-
-TET preset tick marks are generated from the `TUNING_MARKERS` array (5-TET through 53-TET and named temperaments). Each tick is a clickable button that snaps the tuning slider to that temperament's fifth size.
-
-``` {.typescript file=_generated/app-core.ts}
-    if (this.tuningSlider) {
-      const tetPresets = TUNING_MARKERS.map(m => ({
-        value: m.fifth,
-        label: m.name,
-        description: `${m.description} (${m.fifth.toFixed(2)}\u00a2)`,
-      }));
-      this.populateSliderPresets('tet-presets', this.tuningSlider, tetPresets);
-    }
 
      const savedVolume = this.loadSetting('volume', '0.3');
      this.synth.setMasterVolume(parseFloat(savedVolume));
+
+     this.synth.setFifth(parseFloat(this.loadSetting('tuning', '700')));
+     this.visualizer?.setGenerator([parseFloat(this.loadSetting('tuning', '700')), 1200]);
+     this.visualizer?.setSkewFactor(parseFloat(this.loadSetting('skew', '0')));
+     this.visualizer?.setBFact(parseFloat(this.loadSetting('bfact', '0')));
+     this.synth.setD4Hz(parseFloat(this.loadSetting('dref', '293.66')));
+     this.visualizer?.setD4Hz(parseFloat(this.loadSetting('dref', '293.66')));
 ```
 
-The D-ref input accepts both raw Hz values and note names (e.g. "A4", "Bb3"). The slider and text input stay synchronized bidirectionally -- editing one updates the other. This lets users set the reference pitch by ear (slider) or by theory (note name).
+The spacing input adjusts the pixel gap between keys. It is a debug/advanced control wired directly to the visualizer.
 
 ``` {.typescript file=_generated/app-core.ts}
     const spacingInput = getElementOrNull('spacing-input', HTMLInputElement);
     spacingInput?.addEventListener('input', () => {
       this.visualizer?.setButtonSpacing(parseNum(spacingInput.value, 0));
     });
-
-    const dRefInput = getElementOrNull('d-ref-input', HTMLInputElement);
-    const dRefSlider = getElementOrNull('d-ref-slider', HTMLInputElement);
-    const dRefLabel = getElementOrNull('d-ref-label', HTMLSpanElement);
-
-    const updateDRefLabel = (hz: number): void => {
-      if (!dRefLabel) return;
-      dRefLabel.textContent = `D REF (${hz.toFixed(1)} Hz)`;
-    };
-
-    const updateDRefDisplay = (hz: number): void => {
-      if (dRefInput && document.activeElement !== dRefInput) {
-        dRefInput.value = hz.toFixed(2);
-      }
-      if (dRefInput && dRefSlider) {
-        const min = parseFloat(dRefSlider.min);
-         const max = parseFloat(dRefSlider.max);
-         const clamped = Math.max(min, Math.min(max, hz));
-         const ratio = (clamped - min) / (max - min);
-         const centerPx = thumbCenterPx(ratio, dRefSlider);
-         const clampedPx = clampBadgePosition(centerPx, dRefSlider, 80);
-         dRefInput.style.left = `${clampedPx}px`;
-       }
-      if (dRefSlider && document.activeElement !== dRefSlider) {
-        const min = parseFloat(dRefSlider.min);
-        const max = parseFloat(dRefSlider.max);
-        dRefSlider.value = Math.max(min, Math.min(max, hz)).toFixed(2);
-        applySliderFill(dRefSlider);
-      }
-      updateDRefLabel(hz);
-    };
-
-    const applyDRefHz = (hz: number): void => {
-      this.synth.setD4Hz(hz);
-      this.visualizer?.setD4Hz(hz);
-      updateDRefDisplay(hz);
-    };
-
-```
-
-The D-ref input field handles both numeric Hz values and note name strings (e.g.
-"A4", "Bb3"). On each keystroke, it tries note-name parsing first via
-`noteNameToHz`, falling back to raw float parsing. Blur commits the value or
-resets to the default 293.66 Hz if invalid.
-
-``` {.typescript file=_generated/app-core.ts}
-    const parseDRefValue = (raw: string): number | null => {
-      const fromNote = noteNameToHz(raw);
-      if (fromNote !== null) return fromNote;
-      const hz = parseFloat(raw);
-      return (isFinite(hz) && hz >= 20 && hz <= 20000) ? hz : null;
-    };
-
-    dRefInput?.addEventListener('input', () => {
-      const raw = dRefInput.value.trim();
-      if (raw === '') return;
-      const hz = parseDRefValue(raw);
-      if (hz !== null) {
-        if (noteNameToHz(raw) !== null) dRefInput.value = hz.toFixed(2);
-        dRefInput.setCustomValidity('');
-        applyDRefHz(hz);
-      } else {
-        dRefInput.setCustomValidity('Invalid Hz or note name');
-      }
-    });
-
-    dRefInput?.addEventListener('blur', () => {
-      const raw = dRefInput.value.trim();
-      if (raw === '') { applyDRefHz(293.66); return; }
-      const hz = parseDRefValue(raw);
-      if (hz !== null) {
-        dRefInput.value = hz.toFixed(2);
-        dRefInput.setCustomValidity('');
-        applyDRefHz(hz);
-      } else {
-        applyDRefHz(293.66);
-      }
-    });
-
-    dRefInput?.addEventListener('focus', () => {
-      dRefInput.select();
-    });
-    dRefSlider?.addEventListener('input', () => {
-      const hz = parseFloat(dRefSlider.value);
-      if (isFinite(hz)) {
-        applyDRefHz(hz);
-        applySliderFill(dRefSlider);
-        this.saveSetting('dref', dRefSlider.value);
-      }
-    });
-
-    const savedDref = this.loadSetting('dref', '293.66');
-    if (dRefInput) dRefInput.value = savedDref;
-    if (dRefSlider) dRefSlider.value = savedDref;
-    updateDRefDisplay(parseFloat(savedDref));
-
-    const dRefReset = getElementOrNull('d-ref-reset', HTMLButtonElement);
-      dRefReset?.addEventListener('click', () => {
-        if (dRefInput) dRefInput.setCustomValidity('');
-        if (dRefSlider) {
-          dRefSlider.value = '293.66';
-          dRefSlider.dispatchEvent(new Event('input'));
-        }
-      });
 ```
 
 MIDI expression settings let the user configure pitch bend range (2-48 semitones) and toggle individual expression dimensions on or off. This is important because not all controllers send all MPE dimensions, and some players prefer deterministic behavior over expressive control.
@@ -1312,7 +992,7 @@ The DPI override input lets users correct auto-detection on non-standard display
        const zoomEl = document.getElementById('zoom-slider') as HTMLInputElement | null;
        if (zoomEl) {
          zoomEl.value = this.defaultZoom.toString();
-         zoomEl.dispatchEvent(new Event('input'));
+         zoomEl.dispatchEvent(new Event('input', { bubbles: true }));
        }
      };
      dpiOverride?.addEventListener('change', () => {
@@ -1447,7 +1127,8 @@ the tuning slider and calibrate button to prevent mid-game tuning changes.
       const elapsedTimer = document.querySelector<HTMLElement>('#game-elapsed-timer');
       const songBarHint = document.getElementById('song-bar-hint');
 
-      if (this.tuningSlider) this.tuningSlider.disabled = state === 'playing';
+      const tuningSliderDisable = getElementOrNull('tuning-slider', HTMLInputElement);
+      if (tuningSliderDisable) tuningSliderDisable.disabled = state === 'playing';
 
       const calibrateBtn = getElementOrNull('calibrate-btn', HTMLButtonElement);
       if (calibrateBtn) calibrateBtn.disabled = false;
@@ -1683,7 +1364,6 @@ The MIDI search input queries multiple online MIDI repositories via `searchAllAd
 ```
 
 ``` {.typescript file=_generated/app-core.ts}
-    document.querySelectorAll<HTMLInputElement>('input[type="range"]').forEach(s => { applySliderFill(s); });
   }
 ```
 
@@ -2166,7 +1846,7 @@ MIDI buffer loading is the shared entry point for both drag-and-drop files and s
         const dMin = parseFloat(dRefSlider.min);
         const dMax = parseFloat(dRefSlider.max);
         dRefSlider.value = Math.max(dMin, Math.min(dMax, adjustedMedianHz)).toFixed(2);
-        dRefSlider.dispatchEvent(new Event('input'));
+        dRefSlider.dispatchEvent(new Event('input', { bubbles: true }));
       }
 
       if (groups.length === 0) {
@@ -2174,11 +1854,12 @@ MIDI buffer loading is the shared entry point for both drag-and-drop files and s
         return;
       }
 
-      const currentTuning = parseFloat(this.tuningSlider?.value ?? '700');
+      const tuningSliderGame = getElementOrNull('tuning-slider', HTMLInputElement);
+      const currentTuning = parseFloat(tuningSliderGame?.value ?? '700');
       const needsTuningWarning = Math.abs(currentTuning - 700) > 0.5;
-      if (this.tuningSlider) {
-        this.tuningSlider.value = '700';
-        this.tuningSlider.dispatchEvent(new Event('input'));
+      if (tuningSliderGame) {
+        tuningSliderGame.value = '700';
+        tuningSliderGame.dispatchEvent(new Event('input', { bubbles: true }));
       }
       actor.send({ type: 'SONG_LOADED', noteGroups: groups });
       if (needsTuningWarning) {
@@ -2308,65 +1989,10 @@ MPE vibrato uses `requestAnimationFrame` to oscillate pitch bend at approximatel
   }
 ```
 
-`populateSliderPresets` generates the tick marks and clickable preset buttons beneath each slider. Presets are positioned proportionally along the slider track and get `active`/`preset-below`/`preset-above` classes for visual feedback relative to the current slider value.
+Slider presets (tick marks, active highlighting) are now rendered reactively by
+the SliderRow component via its `presets` prop — see `SliderRow.lit.md`.
 
 ``` {.typescript file=_generated/app-core.ts}
-  private populateSliderPresets(
-    containerId: string,
-    slider: HTMLInputElement,
-    presets: { value: number; label: string; description: string }[],
-  ): void {
-    const container = document.getElementById(containerId);
-    if (!container) return;
-    const sliderMin = parseFloat(slider.min);
-    const sliderMax = parseFloat(slider.max);
-    const range = sliderMax - sliderMin;
-    const alternate = container.hasAttribute('data-alternate-ticks');
-    const sorted = [...presets].sort((a, b) => a.value - b.value);
-
-    sorted.forEach((preset, i) => {
-      const ratio = (preset.value - sliderMin) / range;
-      if (ratio < 0 || ratio > 1) return;
-      const mark = document.createElement('div');
-      mark.className = 'slider-preset-mark';
-      mark.style.left = `calc(${ratio.toFixed(6)} * (100% - 3px) + 1.5px)`;
-
-      const tick = document.createElement('div');
-      const tickClass = alternate && i % 2 === 1 ? 'slider-tick-staggered' : 'slider-tick-long';
-      tick.className = `slider-tick ${tickClass}`;
-
-      const btn = document.createElement('button');
-      btn.className = 'slider-preset-btn';
-      btn.dataset.value = preset.value.toString();
-      btn.textContent = preset.label;
-      btn.dataset.description = preset.description;
-      btn.addEventListener('click', () => {
-        slider.value = preset.value.toString();
-        slider.dispatchEvent(new Event('input'));
-      });
-
-      mark.appendChild(tick);
-      mark.appendChild(btn);
-      container.appendChild(mark);
-    });
-
-    const updateActive = (): void => {
-      const val = parseFloat(slider.value);
-      container.querySelectorAll<HTMLElement>('.slider-preset-mark').forEach(mark => {
-        const btn = mark.querySelector<HTMLElement>('.slider-preset-btn');
-        if (!btn) return;
-        const pVal = parseFloat(btn.dataset.value ?? '');
-        const isActive = Math.abs(val - pVal) < 0.05;
-        btn.classList.toggle('active', isActive);
-        mark.classList.toggle('active', isActive);
-        mark.classList.toggle('preset-below', !isActive && pVal < val);
-        mark.classList.toggle('preset-above', !isActive && pVal > val);
-      });
-    };
-    slider.addEventListener('input', updateActive);
-    updateActive();
-
-  }
 ```
 
 The render method is throttled to one repaint per animation frame via `renderScheduled`. It computes which grid cells are active by projecting note coordinates through the current fifth-size tuning, then hands the set to the visualizer. This projection is necessary because in non-12-TET tunings, the same pitch can map to different grid positions.

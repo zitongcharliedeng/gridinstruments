@@ -118,13 +118,12 @@ before the user opens the panel.
 
 export function SettingsOverlay(props: SettingsOverlayProps): JSX.Element {
   injectOverlayCSS();
-  const sc = props.sectionClass;
-  const sectionClass = sc ?? 'overlay-section';
+  const sectionClass = (): string => props.sectionClass ?? 'overlay-section';
   return (
     <div id={props.overlayId} class="settings-overlay" classList={{ hidden: !props.visible() }}>
       <For each={props.sections}>
         {(section) => (
-          <div class={sectionClass}>
+          <div class={sectionClass()}>
             <div class="overlay-section-title">{section.title}</div>
             <Show when={section.sliders}>
               <For each={section.sliders}>

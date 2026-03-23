@@ -5,7 +5,6 @@ Slider UI helpers — thumb positioning, fill gradients, badge clamping, and inf
 ## Imports
 
 ``` {.typescript file=_generated/app-slider.ts}
-import { parseNum } from './app-helpers';
 import { SLIDER_INFO } from './app-constants';
 import { createActor } from 'xstate';
 import { dialogMachine } from './machines/dialogMachine';
@@ -65,8 +64,8 @@ input.badge-input:invalid { border-color: #cc3333; }
 }
 .slider-reset:hover { color: var(--fg); border-color: var(--accent); }
 .tuning-slider-area .slider-track { width: 100%; }
-.tet-presets, .slider-presets {
-  position: absolute; left: 18px; right: 26px; top: 100%;
+.slider-presets {
+  position: absolute; left: 0; right: 24px; top: 100%;
   pointer-events: none; overflow: visible; min-height: 32px; padding-bottom: 4px;
 }
 .slider-preset-mark {
@@ -124,80 +123,13 @@ function injectSliderCSS(): void {
 }
 ```
 
-## Thumb Center Calculation
+## Legacy Imperative Helpers (removed)
 
-`thumbCenterPx` computes the pixel offset of the thumb center given a normalised ratio (0–1) and the slider element. The thumb is 3 px wide; the track's effective travel is `offsetWidth - thumbW`, so the center sits at `ratio * travel + thumbW/2`.
-
-``` {.typescript file=_generated/app-slider.ts}
-export function thumbCenterPx(ratio: number, slider: HTMLInputElement): number {
-  const thumbW = 3;
-  const trackW = slider.offsetWidth;
-  return trackW > 0
-    ? ratio * (trackW - thumbW) + thumbW / 2
-    : 0;
-}
-```
-
-## Badge Position Clamping
-
-Badges use `transform: translateX(-50%)`, so their left offset equals the thumb center. `clampBadgePosition` keeps the badge fully inside the slider by constraining the center to `[halfBadgeW, trackW - halfBadgeW]`.
+`thumbCenterPx`, `clampBadgePosition`, `applySliderFill`, and `refreshAllSliderUI`
+were imperative DOM helpers for slider fill gradients and badge positioning. They are
+no longer needed — SliderRow handles all display reactively via SolidJS signals.
 
 ``` {.typescript file=_generated/app-slider.ts}
-export function clampBadgePosition(centerPx: number, slider: HTMLInputElement, badgeWidth = 50): number {
-  const trackW = slider.offsetWidth;
-  if (trackW <= 0) return centerPx;
-  const halfBadgeW = badgeWidth / 2;
-  return Math.max(halfBadgeW, Math.min(trackW - halfBadgeW, centerPx));
-}
-```
-
-## Slider Fill Gradient
-
-`applySliderFill` paints a `linear-gradient` on the range input so the filled portion uses `--fg` and the empty portion uses `#000`. The fill percentage is derived from the thumb center rather than the raw value ratio so it aligns pixel-perfectly with the thumb.
-
-``` {.typescript file=_generated/app-slider.ts}
-export function applySliderFill(slider: HTMLInputElement): void {
-  injectSliderCSS();
-  const min = parseNum(slider.min, 0);
-  const max = parseNum(slider.max, 100);
-  const val = parseNum(slider.value, 0);
-  const ratio = (val - min) / (max - min);
-  const trackW = slider.offsetWidth;
-  if (trackW > 0) {
-    const fillPct = (thumbCenterPx(ratio, slider) / trackW) * 100;
-    slider.style.background = `linear-gradient(to right, var(--fg) ${fillPct.toFixed(2)}%, #000 ${fillPct.toFixed(2)}%)`;
-  } else {
-    const pct = ratio * 100;
-    slider.style.background = `linear-gradient(to right, var(--fg) ${pct.toFixed(2)}%, #000 ${pct.toFixed(2)}%)`;
-  }
-}
-```
-
-## Bulk Slider Refresh
-
-`refreshAllSliderUI` recalculates fills and badge positions for every overlay slider. It must be called when the overlay becomes visible because `offsetWidth` returns 0 while `display: none`, making any earlier fill calculations incorrect.
-
-``` {.typescript file=_generated/app-slider.ts}
-export function refreshAllSliderUI(): void {
-  const allSliders = document.querySelectorAll<HTMLInputElement>('.slider-track input[type="range"]');
-  for (const slider of allSliders) {
-    if (slider.offsetWidth <= 0) continue;
-    applySliderFill(slider);
-    const track = slider.closest('.slider-track');
-    if (!track) continue;
-    const badge = track.querySelector<HTMLElement>('.slider-value-badge, .badge-input');
-    if (badge) {
-      const badgeWidth = 50;
-      const min = parseNum(slider.min, 0);
-      const max = parseNum(slider.max, 100);
-      const val = parseNum(slider.value, 0);
-      const ratio = (Math.max(min, Math.min(max, val)) - min) / (max - min);
-      const centerPx = thumbCenterPx(ratio, slider);
-      const clampedPx = clampBadgePosition(centerPx, slider, badgeWidth);
-      badge.style.left = `${clampedPx}px`;
-    }
-  }
-}
 ```
 
 ## Info Dialogs

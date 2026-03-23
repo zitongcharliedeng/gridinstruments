@@ -75,7 +75,7 @@ The Playwright actions drive the browser: `SET_VALUE` writes directly to the sli
         const s = document.querySelector<HTMLInputElement>(`#${cfg.sliderId}`);
         if (!s) return;
         s.value = cfg.modifiedValue;
-        s.dispatchEvent(new Event('input'));
+        s.dispatchEvent(new Event('input', { bubbles: true }));
         const w = window as unknown as { dcomposeApp?: { actor: { send: (e: { type: string; slider: string; value: number }) => void } } };
         w.dcomposeApp?.actor.send({ type: 'SLIDER_INPUT', slider: cfg.sliderKey, value: parseFloat(cfg.modifiedValue) });
       }, { sliderId: config.sliderId, modifiedValue: config.modifiedValue, sliderKey });

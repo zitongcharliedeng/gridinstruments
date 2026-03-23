@@ -1,4 +1,6 @@
 version = "2.0"
+watch_list = ["literate/**/*.lit.md"]
+ignore_list = ["node_modules/**", ".venv/**"]
 
 [[languages]]
 name = "TypeScript"
@@ -14,6 +16,3 @@ comment = { open = "<!-- ~~ ", close = " -->" }
 name = "CSS"
 identifiers = ["css"]
 comment = { open = "/* ~~ ", close = " */" }
-
-[entangled]
-watch_list = ["literate/**/*.lit.md"]

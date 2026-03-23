@@ -782,7 +782,7 @@ export const skewLabelPlaywrightActions: Record<SkewLabelEvent['type'], (page: P
       const s = document.querySelector<HTMLInputElement>('#skew-slider');
       if (!s) return;
       s.value = '1';
-      s.dispatchEvent(new Event('input'));
+      s.dispatchEvent(new Event('input', { bubbles: true }));
     });
   },
   SET_SKEW_MIN: async (page) => {
@@ -790,7 +790,7 @@ export const skewLabelPlaywrightActions: Record<SkewLabelEvent['type'], (page: P
       const s = document.querySelector<HTMLInputElement>('#skew-slider');
       if (!s) return;
       s.value = '0';
-      s.dispatchEvent(new Event('input'));
+      s.dispatchEvent(new Event('input', { bubbles: true }));
     });
   },
 };

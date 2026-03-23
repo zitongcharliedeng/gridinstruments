@@ -1,0 +1,9 @@
+id: no-non-bubbling-dispatch
+language: typescript
+rule:
+  pattern: $EL.dispatchEvent(new Event($NAME))
+message: |
+  BANNED: dispatchEvent without { bubbles: true }. SolidJS uses event
+  delegation (document-level listeners). Non-bubbling events never reach
+  SolidJS handlers. Use: new Event($NAME, { bubbles: true })
+severity: error
