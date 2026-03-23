@@ -54,10 +54,10 @@ export function SliderRow(props: { def: SliderDef }): JSX.Element {
     const range = props.def.max - props.def.min;
     return range > 0 ? (value() - props.def.min) / range : 0;
   };
-  const fillStyle = (): string => {
-    const pct = (ratio() * 100).toFixed(1);
-    return `linear-gradient(to right, var(--fg) ${pct}%, #000 ${pct}%)`;
-  };
+  const THUMB_W = 6;
+  const thumbPos = (): string => `calc(${ratio().toFixed(6)} * (100% - ${THUMB_W}px) + ${THUMB_W / 2}px)`;
+  const fillStyle = (): string =>
+    `linear-gradient(to right, var(--fg) ${thumbPos()}, #000 ${thumbPos()})`;
 
   const onInput = (e: Event): void => {
     const v = parseFloat((e.target as HTMLInputElement).value);
@@ -90,7 +90,7 @@ export function SliderRow(props: { def: SliderDef }): JSX.Element {
         type="text"
         class="badge-input slider-badge-edit"
         value={fmt()(value())}
-        style={{ left: `${(ratio() * 100).toFixed(1)}%` }}
+        style={{ left: thumbPos() }}
         onFocus={(e: FocusEvent): void => { (e.target as HTMLInputElement).select(); }}
         onChange={(e: Event): void => {
           const v = parseFloat((e.target as HTMLInputElement).value);
@@ -115,7 +115,7 @@ export function SliderRow(props: { def: SliderDef }): JSX.Element {
                 <div
                   class="slider-preset-mark"
                   classList={{ active: isActive() }}
-                  style={{ left: `calc(${pRatio().toFixed(6)} * (100% - 3px) + 1.5px)` }}
+                  style={{ left: `calc(${pRatio().toFixed(6)} * (100% - ${THUMB_W}px) + ${THUMB_W / 2}px)` }}
                 >
                   <div class={tickClass()} />
                   <button
