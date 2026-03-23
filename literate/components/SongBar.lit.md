@@ -67,13 +67,13 @@ const SONGBAR_CSS = `#song-bar {
 #song-bar-status { gap:8px; }
 #song-bar-calibrate { margin-left:auto; max-width:320px; gap:4px; overflow:hidden; }
 #song-bar-hint { display:none; margin-left:auto; transition:opacity 2s ease-in; }
-#calibrate-btn { font-family:var(--font); font-size:9px; background:none; color:var(--dim); border:1px solid var(--border); padding:2px 8px; cursor:pointer; white-space:nowrap; }
-#calibration-banner { display:none; font-family:var(--font); font-size:9px; gap:2px; align-items:center; white-space:nowrap; position:absolute; left:0; top:0; right:0; bottom:0; background:var(--bg); justify-content:center; }
+#calibrate-btn { font-family:var(--font); font-size:9px; background:none; color:var(--dim); border:none; padding:2px 8px; cursor:pointer; white-space:nowrap; width:100%; }
+#calibration-banner { display:none; font-family:var(--font); font-size:9px; gap:4px; align-items:center; white-space:nowrap; position:absolute; left:0; top:0; right:0; bottom:0; justify-content:center; }
 #calibration-warning { display:none; position:absolute; left:50%; top:-14px; transform:translateX(-50%); font-size:8px; color:var(--dim); white-space:nowrap; pointer-events:none; }
 #calibration-msg { color:var(--fg); }
 #calibrate-confirm { font-family:var(--font); font-size:9px; background:none; color:#4f4; border:1px solid #4f4; padding:1px 4px; cursor:pointer; line-height:1; }
 #calibrate-cancel { font-family:var(--font); font-size:9px; background:none; color:#f44; border:1px solid #f44; padding:1px 4px; cursor:pointer; line-height:1; }
-.calibrate-wrap { position:relative; display:inline-flex; align-items:center; min-width:160px; max-width:220px; overflow:hidden; }
+.calibrate-wrap { position:relative; display:inline-flex; align-items:center; min-width:160px; max-width:220px; overflow:hidden; border:1px solid var(--border); box-sizing:border-box; }
 .maxkeys-label { display:inline-flex; align-items:center; gap:2px; font-family:var(--font); font-size:9px; color:var(--dim); }
 .search-row { display:inline-flex; align-items:center; gap:4px; }
 .search-input-wrap { position:relative; display:inline-flex; align-items:center; }
