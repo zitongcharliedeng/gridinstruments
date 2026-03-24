@@ -23,7 +23,7 @@ all use CSS on Kobalte's data attributes — no inline styles needed.
 .slider-input-area { flex: 1; min-width: 0; position: relative; overflow: visible; }
 .slider-track-el {
   position: relative; display: flex; align-items: center;
-  height: 18px; width: 100%; background: transparent; cursor: pointer;
+  height: 18px; width: 100%; background: #111; cursor: pointer;
   overflow: hidden;
 }
 .slider-fill-el {
