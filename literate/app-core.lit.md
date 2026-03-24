@@ -145,7 +145,7 @@ The constructor initializes the core subsystems (synth, MIDI, MPE, layout) and g
     this.canvas = getElement('keyboard-canvas', HTMLCanvasElement);
     this.historyCanvas = getElement('history-canvas', HTMLCanvasElement);
 
-    const savedPbRange = parseInt(this.loadSetting('midiPbRange', '24'), 10);
+    const savedPbRange = parseFloat(this.loadSetting('midiPbRange', '24'));
     this.midiPitchBendRange = (Number.isFinite(savedPbRange) && savedPbRange > 0) ? savedPbRange : 24;
     this.expressionBend = this.loadSetting('exprBend', 'true') === 'true';
     this.expressionVelocity = this.loadSetting('exprVelocity', 'true') === 'true';
