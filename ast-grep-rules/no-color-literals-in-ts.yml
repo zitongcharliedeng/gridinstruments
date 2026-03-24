@@ -1,0 +1,10 @@
+id: no-color-literals-in-ts
+language: typescript
+rule:
+  any:
+    - pattern: "'#fff'"
+    - pattern: "'white'"
+files:
+  - "_generated/components/**"
+severity: warning
+message: "Color literal in component TS — use CSS custom properties for theming consistency."

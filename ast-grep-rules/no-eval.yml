@@ -1,0 +1,9 @@
+id: no-eval
+language: typescript
+rule:
+  pattern: eval($$$)
+files:
+  - "_generated/**"
+severity: error
+message: "eval() is banned — use structured code, not string evaluation."
+note: "XSS and CSP violation risk."
