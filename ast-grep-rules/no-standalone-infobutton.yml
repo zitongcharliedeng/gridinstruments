@@ -1,0 +1,13 @@
+id: no-standalone-infobutton
+language: tsx
+rule:
+  pattern: |
+    <InfoButton $$$/>
+  not:
+    inside:
+      kind: jsx_element
+      has:
+        pattern: InfoBox
+severity: warning
+message: "Standalone <InfoButton> — wrap in <InfoBox> instead. InfoBox is the universal wrapper for all settings."
+note: "InfoButton should only be used internally by InfoBox. Use <InfoBox infoKey=... infoContent=...> to wrap components. See #271."
