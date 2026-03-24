@@ -10,24 +10,24 @@ The overlay depends on `roughjs` for hand-drawn polygon rendering and on `Keyboa
 
 Chord shapes are expressed in fifth/octave grid coordinates `(fifth steps, octave steps)`. Root position gives the cleanest triangle geometry: the major triad points "up" (▲) and the minor triad points "down" (▽).
 
-``` {.typescript file=_generated/lib/chord-graffiti.ts}
-import rough from 'roughjs';
-import type { KeyboardVisualizer } from './keyboard-visualizer';
-
-const GRAFFITI_CSS = `.graffiti-overlay {
+``` {.css file=_generated/lib/chord-graffiti.css}
+.graffiti-overlay {
   position:absolute; pointer-events:none; mix-blend-mode:screen;
   z-index:5; transition:opacity 1.5s ease;
 }
 .graffiti-label {
   font-family:var(--font); font-size:14px; font-style:italic;
   fill:#FFD700; opacity:0.9;
-}`;
-if (!document.querySelector('style[data-graffiti]')) {
-  const s = document.createElement('style');
-  s.setAttribute('data-graffiti', '');
-  s.textContent = GRAFFITI_CSS;
-  document.head.appendChild(s);
 }
+.graffiti-svg {
+  position:absolute; top:0; left:0; pointer-events:none; overflow:visible;
+}
+```
+
+``` {.typescript file=_generated/lib/chord-graffiti.ts}
+import rough from 'roughjs';
+import type { KeyboardVisualizer } from './keyboard-visualizer';
+import './chord-graffiti.css';
 ```
 
 ``` {.typescript file=_generated/lib/chord-graffiti.ts}
@@ -100,12 +100,7 @@ The overlay SVG sits at position `0,0` with `pointer-events: none` so it never b
 ``` {.typescript file=_generated/lib/chord-graffiti.ts}
 function createSvgElement(): SVGSVGElement {
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  svg.classList.add('graffiti-overlay');
-  svg.style.position = 'absolute';
-  svg.style.top = '0';
-  svg.style.left = '0';
-  svg.style.pointerEvents = 'none';
-  svg.style.overflow = 'visible';
+  svg.classList.add('graffiti-overlay', 'graffiti-svg');
   return svg;
 }
 ```
