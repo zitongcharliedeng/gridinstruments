@@ -16,6 +16,8 @@ rule:
           kind: method_definition
           stopBy: end
 files:
+  - "_generated/components/**"
+  - "_generated/lib/**"
   - "_generated/main.ts"
 severity: error
 message: "classList.toggle() is banned in main.ts — use XState actor.send() and handle DOM in the subscriber."

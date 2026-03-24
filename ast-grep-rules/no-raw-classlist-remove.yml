@@ -8,6 +8,8 @@ rule:
           pattern: $ACTOR.subscribe($$$)
           stopBy: end
 files:
+  - "_generated/components/**"
+  - "_generated/lib/**"
   - "_generated/main.ts"
 severity: error
 message: "classList.remove() is banned in main.ts — use XState actor.send() and handle DOM in the subscriber."
