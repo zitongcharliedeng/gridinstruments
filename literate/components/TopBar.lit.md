@@ -117,8 +117,8 @@ export function TopBar(props: TopBarProps): JSX.Element {
         </a>
       </div>
       <InfoButton infoKey="fullscreen" content={FULLSCREEN_INFO} />
-      <button id="fullscreen-btn" class="icon-btn icon-md" onClick={onFullscreen}>
-        <i data-lucide="maximize" />
+      <button id="fullscreen-btn" onClick={onFullscreen}>
+        <span class="icon"><i data-lucide="maximize" /></span> Fullscreen
       </button>
       <InfoButton infoKey="reset-layout" content={RESET_PAGE_INFO} />
       <button id="reset-layout" onClick={onResetClick}>
