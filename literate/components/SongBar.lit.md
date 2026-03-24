@@ -151,7 +151,7 @@ edge-of-range conditions without blocking the action buttons.
 #calibration-msg { color:var(--fg); }
 #calibrate-confirm { font-family:var(--font); font-size:9px; background:none; color:#4f4; border:1px solid #4f4; padding:1px 4px; cursor:pointer; line-height:1; }
 #calibrate-cancel { font-family:var(--font); font-size:9px; background:none; color:#f44; border:1px solid #f44; padding:1px 4px; cursor:pointer; line-height:1; }
-.calibrate-wrap { position:relative; display:inline-flex; align-items:center; width:160px; height:18px; overflow:hidden; border:1px solid var(--border); box-sizing:border-box; flex-shrink:0; }
+.calibrate-wrap { position:relative; display:inline-flex; align-items:center; overflow:hidden; flex-shrink:0; }
 .maxkeys-label { display:inline-flex; align-items:center; gap:2px; font-family:var(--font); font-size:9px; color:var(--dim); }
 ```
 
