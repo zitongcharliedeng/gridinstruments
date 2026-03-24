@@ -1113,7 +1113,9 @@ The golden screenshot tests compare rendered pixels against stored reference ima
     await expect(btn).toHaveClass(/active/);
     const banner = page.locator('#calibration-banner');
     await expect(banner).toBeVisible();
-    await page.locator('#calibrate-cancel').click({ force: true });
+    await page.evaluate(() => {
+      (document.getElementById('calibrate-cancel') as HTMLButtonElement)?.click();
+    });
     await page.waitForTimeout(500);
     await expect(btn).not.toHaveClass(/active/);
   });
