@@ -29,7 +29,7 @@ all use CSS on Kobalte's data attributes — no inline styles needed.
   position: absolute !important; top: 0; bottom: 0; background: var(--fg); pointer-events: none;
 }
 .slider-thumb-el {
-  width: 6px; height: 18px; background: var(--fg); cursor: grab;
+  width: 6px; height: 18px; background: var(--dim); cursor: grab;
   display: block; outline: none;
 }
 .slider-thumb-el:active { cursor: grabbing; }
