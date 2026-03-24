@@ -11,7 +11,7 @@ or reset button directly — InfoBox handles both.
 
 ``` {.css file=_generated/components/InfoBox.css}
 .info-box {
-  display: flex; align-items: center; gap: 0;
+  display: flex; align-items: stretch; gap: 0;
   border: 1px solid var(--border); width: 100%;
 }
 .info-box > .slider-info-btn {
