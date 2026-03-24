@@ -154,6 +154,8 @@ import {
      SONGBAR_CAL_2,
      SONGBAR_CAL_3,
      SONGBAR_CAL_4,
+     GAME_SETTINGS_HIDDEN,
+     GAME_SETTINGS_COG,
      INFO_POPUP_1,
      INFO_POPUP_2,
      INFO_POPUP_3,
@@ -924,6 +926,14 @@ The SongBar progress and calibration tests verify that the in-game status elemen
 
   test('SONGBAR-CAL-4: #calibrate-btn exists in the song-bar area', async ({ page }) => {
     await SONGBAR_CAL_4.check(page);
+  });
+
+  test('GAME-SETTINGS-HIDDEN: game settings popup hidden by default', async ({ page }) => {
+    await GAME_SETTINGS_HIDDEN.check(page);
+  });
+
+  test('GAME-SETTINGS-COG: game settings btn uses grid-cog class', async ({ page }) => {
+    await GAME_SETTINGS_COG.check(page);
   });
 ```
 

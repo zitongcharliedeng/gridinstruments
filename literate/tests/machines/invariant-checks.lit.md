@@ -4252,6 +4252,32 @@ export const SONGBAR_CAL_4: StateInvariant = {
   },
 };
 
+export const GAME_SETTINGS_HIDDEN: StateInvariant = {
+  id: 'GAME-SETTINGS-HIDDEN',
+  description: 'Game settings popup hidden by default (classList hidden)',
+  check: async (page: Page) => {
+    const hidden = await page.evaluate(() => {
+      const popup = document.querySelector('.game-settings-popup');
+      if (!popup) throw new Error('.game-settings-popup not found');
+      return popup.classList.contains('hidden');
+    });
+    if (!hidden) throw new Error('Game settings popup is visible on page load — should be hidden');
+  },
+};
+
+export const GAME_SETTINGS_COG: StateInvariant = {
+  id: 'GAME-SETTINGS-COG',
+  description: '#game-settings-btn uses grid-cog class',
+  check: async (page: Page) => {
+    const hasClass = await page.evaluate(() => {
+      const btn = document.getElementById('game-settings-btn');
+      if (!btn) throw new Error('#game-settings-btn not found');
+      return btn.classList.contains('grid-cog');
+    });
+    if (!hasClass) throw new Error('#game-settings-btn must use grid-cog class');
+  },
+};
+
 ```
 
 ## Info Popup Invariants
