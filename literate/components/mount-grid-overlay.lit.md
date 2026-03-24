@@ -115,7 +115,7 @@ export function mountGridOverlay(
             <InfoButton infoKey="volume" content={VOLUME_INFO} />
             <SliderRow def={{
               id: 'volume-slider',
-              label: 'VOL (dB)',
+              label: 'VOL',
               min: 0, max: 1, step: 0.01,
               defaultValue: callbacks.initialVolume,
               formatBadge: (v: number) => (20 * Math.log10(Math.max(0.001, v))).toFixed(1),
@@ -127,7 +127,7 @@ export function mountGridOverlay(
               <InfoButton infoKey="tuning" content={TUNING_INFO} />
               <SliderRow def={{
                 id: 'tuning-slider',
-                label: 'FIFTHS TUNING (cents)',
+                label: 'FIFTHS (¢)',
                 min: 683, max: 722, step: 0.01,
                 defaultValue: 700,
                 formatBadge: (v: number) => v.toFixed(1),
@@ -143,7 +143,7 @@ export function mountGridOverlay(
               <InfoButton infoKey="dref" content={DREF_INFO} />
               <SliderRow def={{
                 id: 'd-ref-slider',
-                label: 'D REF (Hz)',
+                label: 'D-REF',
                 min: 73.42, max: 1174.66, step: 0.01,
                 defaultValue: 293.66,
                 formatBadge: (v: number) => v.toFixed(2),
@@ -172,7 +172,7 @@ layout selector. Each slider wraps its info button in a `ctrl-group` flex row.
               <InfoButton infoKey="skew" content={SKEW_INFO} />
               <SliderRow def={{
                 id: 'skew-slider',
-                label: 'MECH SKEW',
+                label: 'SKEW',
                 min: -0.5, max: 1.5, step: 0.01,
                 defaultValue: 0,
                 formatBadge: (v: number) => v.toFixed(2),
@@ -190,7 +190,7 @@ layout selector. Each slider wraps its info button in a `ctrl-group` flex row.
               <InfoButton infoKey="shear" content={SHEAR_INFO} />
               <SliderRow def={{
                 id: 'bfact-slider',
-                label: 'WICKED SHEAR',
+                label: 'SHEAR',
                 min: -0.5, max: 1.5, step: 0.01,
                 defaultValue: 0,
                 formatBadge: (v: number) => v.toFixed(2),
@@ -208,7 +208,7 @@ layout selector. Each slider wraps its info button in a `ctrl-group` flex row.
               <InfoButton infoKey="zoom" content={ZOOM_INFO} />
               <SliderRow def={{
                 id: 'zoom-slider',
-                label: 'ZOOM (x)',
+                label: 'ZOOM',
                 min: 0.2, max: 3, step: 0.01,
                 defaultValue: callbacks.initialZoom,
                 formatBadge: (v: number) => v.toFixed(2),
@@ -289,6 +289,7 @@ MPE dimensions are active. Pressure mode and CC source use slim-select dropdowns
                 <span class="text-white-12">Touch Dead Zone</span>
                 <input type="range" id="touch-dead-zone-slider" min="0" max="0.5" step="0.01" value="0.15" class="inline-slider" />
                 <span id="touch-dead-zone-badge" class="text-dim-sm">0.15</span>
+                <button class="slider-reset icon-btn icon-md" id="touch-dead-zone-reset"><i data-lucide="rotate-cw" /></button>
               </div>
               <div class="midi-panel-row" id="mpe-output-row">
                 <span class="ctrl-label">MPE Out:</span>

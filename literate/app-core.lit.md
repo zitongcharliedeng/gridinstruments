@@ -829,6 +829,15 @@ The touch dead zone slider controls the minimum finger velocity (in CSS px per m
           this.saveSetting('touchDeadZone', v.toString());
         }
       });
+      const dzReset = document.getElementById('touch-dead-zone-reset');
+      if (dzReset) {
+        dzReset.addEventListener('click', () => {
+          this.touchDeadZone = 0.15;
+          dzSlider.value = '0.15';
+          if (dzBadge) dzBadge.textContent = '0.15';
+          this.saveSetting('touchDeadZone', '0.15');
+        });
+      }
     }
 ```
 
