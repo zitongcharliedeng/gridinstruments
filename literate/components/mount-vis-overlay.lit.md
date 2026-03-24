@@ -13,6 +13,9 @@ import { render } from 'solid-js/web';
 import { createSignal } from 'solid-js';
 import { SettingsOverlay } from './SettingsOverlay';
 import type { SectionDef } from './SettingsOverlay';
+import { InfoBox } from './InfoBox';
+import { SliderRow } from './SliderRow';
+import { srcLink } from '../app-constants';
 import type { NoteHistoryVisualizer } from '../lib/note-history-visualizer';
 import { D_REF_MIDI } from '../lib/keyboard-layouts';
 import './mount-vis-overlay.css';
@@ -38,25 +41,31 @@ export function mountVisOverlay(
   const sections: SectionDef[] = [
     {
       title: 'VISUALISER',
-      sliders: [
-        {
-          id: 'vis-time-slider',
-          label: 'TIME (s)',
-          min: 1, max: 10, step: 0.5, defaultValue: 3,
-          formatBadge: (v: number) => v.toFixed(1),
-          onChange: (v: number) => { historyVis.setTimeWindow(v); },
-        },
-        {
-          id: 'vis-range-slider',
-          label: 'RANGE (octaves)',
-          min: 2, max: 8, step: 1, defaultValue: 5,
-          formatBadge: (v: number) => String(v),
-          onChange: (v: number) => {
-            const half = Math.floor(v * 12 / 2);
-            historyVis.setNoteRange(D_REF_MIDI - half, D_REF_MIDI + half);
-          },
-        },
-      ],
+      children: () => (
+        <div>
+          <InfoBox infoKey="vis-time" infoContent={`<h2>Time Window</h2><p>How many seconds of note history are visible in the waterfall.</p>${srcLink('note-history-visualizer.lit.md', 'Source')}`}>
+            <SliderRow def={{
+              id: 'vis-time-slider',
+              label: 'TIME (s)',
+              min: 1, max: 10, step: 0.5, defaultValue: 3,
+              formatBadge: (v: number) => v.toFixed(1),
+              onChange: (v: number) => { historyVis.setTimeWindow(v); },
+            }} />
+          </InfoBox>
+          <InfoBox infoKey="vis-range" infoContent={`<h2>Range</h2><p>How many octaves centered on D-ref are visible in the waterfall.</p>${srcLink('note-history-visualizer.lit.md', 'Source')}`}>
+            <SliderRow def={{
+              id: 'vis-range-slider',
+              label: 'RANGE',
+              min: 2, max: 8, step: 1, defaultValue: 5,
+              formatBadge: (v: number) => String(v),
+              onChange: (v: number) => {
+                const half = Math.floor(v * 12 / 2);
+                historyVis.setNoteRange(D_REF_MIDI - half, D_REF_MIDI + half);
+              },
+            }} />
+          </InfoBox>
+        </div>
+      ),
     },
   ];
 
