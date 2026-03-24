@@ -309,7 +309,7 @@ active — the song title, progress bar, elapsed timer, and restart button.
                 id="calibrate-btn"
                 onClick={() => { props.onCalibrateStart(); }}
               >
-                Calibrate
+                Calibrate Playable Area
               </button>
             </div>
           </div>

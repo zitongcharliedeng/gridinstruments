@@ -1672,6 +1672,7 @@ touch is stationary (snap to cell center) or sliding (continuous microtonal bend
           const newPressure = (this.expressionPressure && event.pressure > 0) ? event.pressure : (prevExpr?.pressure ?? 0);
           this.localExpression.set(noteId, { pressure: newPressure, pitchBend: semitones });
           this.visualizer?.setMPEExpression(this.localExpression);
+          this.render();
           this.mpe.sendPitchBend(noteId, semitones);
           this.mpe.sendSlide(noteId, normalizedY);
           this.mpe.sendPressure(noteId, event.pressure);
@@ -2131,7 +2132,7 @@ Calibration mode shows a banner instructing the user to play all reachable notes
       const msg = document.getElementById('calibration-msg');
       if (msg) {
         msg.textContent = count > 0 ? `Range saved (${count} keys)` : 'Range cleared — all keys playable';
-        setTimeout(() => { msg.textContent = 'Confirm?'; }, 2000);
+        setTimeout(() => { msg.textContent = 'Play all reachable notes, then confirm'; }, 2000);
       }
     }
     this.visualizer?.setCalibratedRange(this.calibratedRange);
@@ -2140,7 +2141,7 @@ Calibration mode shows a banner instructing the user to play all reachable notes
     if (banner) banner.classList.remove('show-flex');
     const btn = document.getElementById('calibrate-btn') as HTMLButtonElement | null;
     if (btn) {
-      btn.textContent = 'Calibrate';
+      btn.textContent = 'Calibrate Playable Area';
       btn.classList.remove('active');
       btn.disabled = false;
     }
