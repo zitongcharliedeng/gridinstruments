@@ -241,7 +241,7 @@ Each frame: trim stale history, clear the canvas, and either show the idle overl
     this.ctx.fillStyle = '#0d0d0d';
     this.ctx.fillRect(0, 0, width, height);
 
-    if (this.idleTarget > 0 || (this.history.length === 0 && this.activeNotes.size === 0)) {
+    if (this.history.length === 0 && this.activeNotes.size === 0) {
       if (this.idleAlpha < this.idleTarget) {
         this.idleAlpha = Math.min(this.idleTarget, this.idleAlpha + this.IDLE_LERP_SPEED);
       } else if (this.idleAlpha > this.idleTarget) {
@@ -266,6 +266,7 @@ Each frame: trim stale history, clear the canvas, and either show the idle overl
         ctx.fillText(line, width / 2, height / 2 + 24 + i * lineHeight);
       });
       ctx.globalAlpha = 1;
+      return;
     }
 
     this.drawChordPanel(0, chordW, height, now);
