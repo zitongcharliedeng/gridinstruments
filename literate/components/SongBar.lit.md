@@ -148,9 +148,9 @@ edge-of-range conditions without blocking the action buttons.
 #calibration-banner { display:none; font-family:var(--font); font-size:9px; gap:4px; align-items:center; white-space:nowrap; position:absolute; left:0; top:0; right:0; bottom:0; justify-content:center; background:var(--bg); z-index:1; }
 #calibration-warning { display:none; position:absolute; left:50%; top:-14px; transform:translateX(-50%); font-size:8px; color:var(--dim); white-space:nowrap; pointer-events:none; }
 #calibration-msg { color:var(--fg); }
-#calibrate-confirm { font-family:var(--font); font-size:11px; background:none; color:#4f4; border:1px solid #4f4; padding:4px 8px; cursor:pointer; line-height:1; min-width:28px; min-height:28px; }
-#calibrate-cancel { font-family:var(--font); font-size:11px; background:none; color:#f44; border:1px solid #f44; padding:4px 8px; cursor:pointer; line-height:1; min-width:28px; min-height:28px; }
-.calibrate-wrap { position:relative; display:inline-flex; align-items:center; overflow:hidden; flex-shrink:0; }
+#calibrate-confirm { font-family:var(--font); font-size:11px; background:none; color:#4f4; border:1px solid #4f4; padding:2px 8px; cursor:pointer; line-height:1; }
+#calibrate-cancel { font-family:var(--font); font-size:11px; background:none; color:#f44; border:1px solid #f44; padding:2px 8px; cursor:pointer; line-height:1; }
+.calibrate-wrap { position:relative; display:inline-flex; align-items:center; flex-shrink:0; }
 .maxkeys-label { display:inline-flex; align-items:center; gap:2px; font-family:var(--font); font-size:9px; color:var(--dim); }
 ```
 
