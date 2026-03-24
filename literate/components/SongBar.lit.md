@@ -11,7 +11,7 @@ manipulation inside.
 ## Props Interface
 
 ``` {.typescript file=_generated/components/SongBar.tsx}
-import { createSignal, Show, type JSX } from 'solid-js';
+import { createSignal, type JSX } from 'solid-js';
 import { InfoButton } from './InfoButton';
 import { srcLink } from '../app-constants';
 import './SongBar.css';
