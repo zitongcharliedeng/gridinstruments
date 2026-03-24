@@ -170,8 +170,6 @@ export function SliderRow(props: { def: SliderDef }): JSX.Element {
     return range > 0 ? (value() - props.def.min) / range : 0;
   };
   const pct = (): string => `${(ratio() * 100).toFixed(2)}%`;
-  const fillStyle = (): string =>
-    `linear-gradient(to right, var(--fg) ${pct()}, #000 ${pct()})`;
 
   const onInput = (e: Event): void => {
     const v = parseFloat((e.target as HTMLInputElement).value);
@@ -207,7 +205,7 @@ fill, editable badge positioned at the thumb, and a reset button. If
           step={props.def.step}
           value={value()}
           onInput={onInput}
-          style={{ background: fillStyle() }}
+          style={{ background: `linear-gradient(to right, var(--fg) ${pct()}, #000 ${pct()})` }}
         />
         <input
           type="text"
