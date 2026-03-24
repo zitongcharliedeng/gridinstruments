@@ -318,6 +318,7 @@ MIDI listener setup wires incoming note-on, note-off, pitch bend, slide (CC74), 
         this.localExpression.set(audioNoteId, { pressure: prev?.pressure ?? 0, pitchBend: value * this.midiPitchBendRange });
       }
       this.visualizer?.setMPEExpression(this.localExpression);
+      this.render();
     });
     this.midi.onSlide((channel, value, deviceId) => {
       const v = this.timbreReverse ? 1 - value : value;
@@ -335,6 +336,7 @@ MIDI listener setup wires incoming note-on, note-off, pitch bend, slide (CC74), 
         this.localExpression.set(audioNoteId, { pressure: value, pitchBend: prev?.pitchBend ?? 0 });
       }
       this.visualizer?.setMPEExpression(this.localExpression);
+      this.render();
     });
   }
 ```
