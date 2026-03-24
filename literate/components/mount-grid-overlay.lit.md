@@ -107,12 +107,10 @@ export function mountGridOverlay(
       title: 'SOUND (global)',
       children: () => (
         <div>
-          <div class="midi-panel-row">
-            <InfoButton infoKey="waveform" content={`<h2>Waveform</h2><p>Oscillator shape: sine (pure), triangle (soft), sawtooth (bright), square (hollow), guitar (plucked).</p>${srcLink('synth.lit.md', 'Source: synth.lit.md')}`} />
+          <InfoBox infoKey="waveform" infoContent={`<h2>Waveform</h2><p>Oscillator shape: sine, triangle, sawtooth, square, guitar.</p>${srcLink('synth.lit.md', 'Source: synth.lit.md')}`} resetId="wave-reset">
             <span class="ctrl-label">WAVE</span>
             <span id="wave-select-slot" />
-            <button class="slider-reset icon-btn icon-md" id="wave-reset"><i data-lucide="rotate-cw" /></button>
-          </div>
+          </InfoBox>
           <InfoBox infoKey="volume" infoContent={VOLUME_INFO}>
             <SliderRow def={{
               id: 'volume-slider',
