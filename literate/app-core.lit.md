@@ -2135,7 +2135,7 @@ Calibration mode shows a banner instructing the user to play all reachable notes
       const msg = document.getElementById('calibration-msg');
       if (msg) {
         msg.textContent = count > 0 ? `Range saved (${count} keys)` : 'Range cleared — all keys playable';
-        setTimeout(() => { msg.textContent = 'Play all reachable notes'; }, 2000);
+        setTimeout(() => { msg.textContent = 'Play all notes'; }, 2000);
       }
     }
     this.visualizer?.setCalibratedRange(this.calibratedRange);

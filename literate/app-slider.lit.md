@@ -39,8 +39,8 @@ dialog::backdrop { background: rgba(0,0,0,0.7); }
   max-width: min(90vw, 600px); max-height: 80vh; overflow-y: auto;
   border: 1px solid var(--border);
 }
-dialog button { position: absolute; top: 8px; right: 12px; color: var(--dim); }
-dialog button:hover { color: var(--fg); }
+#about-close, #info-close { position: absolute; top: 8px; right: 12px; color: var(--dim); z-index: 2; }
+#about-close:hover, #info-close:hover { color: var(--fg); }
 ```
 
 ## About Dialog Content

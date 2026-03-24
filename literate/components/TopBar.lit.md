@@ -31,6 +31,13 @@ the content to the existing script.
 }
 #about-btn { font-size:11px; color:var(--dim); padding:0 2px; }
 #about-btn:hover { color:var(--fg); }
+#fullscreen-btn {
+  font-family:var(--font); font-size:9px; color:var(--dim);
+  background:none; border:1px solid var(--border); padding:2px 6px;
+  cursor:pointer; margin-left:4px;
+}
+#fullscreen-btn:hover { color:var(--fg); border-color:var(--accent); }
+#fullscreen-btn.active { color:var(--bg); background:var(--fg); border-color:var(--fg); }
 #reset-layout {
   font-family:var(--font); font-size:9px; color:var(--dim);
   background:none; border:1px solid var(--border); padding:2px 6px;
