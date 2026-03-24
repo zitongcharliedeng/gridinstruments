@@ -13,7 +13,6 @@ manipulation inside.
 ``` {.typescript file=_generated/components/SongBar.tsx}
 import { createSignal, type JSX } from 'solid-js';
 import { InfoBox } from './InfoBox';
-import { InfoButton } from './InfoButton';
 import { srcLink } from '../app-constants';
 import './SongBar.css';
 
@@ -288,13 +287,11 @@ active — the song title, progress bar, elapsed timer, and restart button.
           <i data-lucide="settings" />
         </button>
         <div class="game-settings-popup" classList={{ hidden: !gameSettingsOpen() && !calibrating() }}>
-          <div style={{ display: 'flex', 'align-items': 'center', gap: '4px' }}>
-            <InfoButton infoKey="quantization" content={QUANT_INFO} />
+          <InfoBox infoKey="quantization" infoContent={QUANT_INFO}>
             <span class="text-dim-sm">Quant</span>
             <span id="quantization-select-slot" />
-          </div>
-          <div style={{ display: 'flex', 'align-items': 'center', gap: '4px' }}>
-            <InfoButton infoKey="maxkeys" content={MAXKEYS_INFO} />
+          </InfoBox>
+          <InfoBox infoKey="maxkeys" infoContent={MAXKEYS_INFO}>
             <label class="maxkeys-label">
               Max Keys
               <input
@@ -306,9 +303,8 @@ active — the song title, progress bar, elapsed timer, and restart button.
                 onChange={handleMaxKeysChange}
               />
             </label>
-          </div>
-          <div style={{ display: 'flex', 'align-items': 'center', gap: '4px' }}>
-            <InfoButton infoKey="calibrate" content={CALIBRATE_INFO} />
+          </InfoBox>
+          <InfoBox infoKey="calibrate" infoContent={CALIBRATE_INFO}>
             <div class="calibrate-wrap">
               <button
                 id="calibrate-btn"
@@ -333,7 +329,7 @@ active — the song title, progress bar, elapsed timer, and restart button.
                 </button>
               </span>
             </div>
-          </div>
+          </InfoBox>
         </div>
         <div id="game-status">
           <div id="game-song-title" />
