@@ -237,8 +237,8 @@ The mobile smart-zoom test verifies that on a 390px touch viewport the app's `ge
     await p.waitForTimeout(1500);
 
     const zoomValue = await p.evaluate(() => {
-      const slider = document.getElementById('zoom-slider') as HTMLInputElement | null;
-      return slider ? parseFloat(slider.value) : -1;
+      const input = document.querySelector('#zoom-slider input[type="range"]') as HTMLInputElement | null;
+      return input ? parseFloat(input.value) : -1;
     });
     expect(zoomValue).toBeGreaterThan(0);
     expect(zoomValue).toBeLessThanOrEqual(1.0);
