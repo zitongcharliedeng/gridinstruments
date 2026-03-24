@@ -18,8 +18,8 @@ marks. The `.ctrl-group` inside it arranges the info button and slider track.
 ``` {.css file=_generated/app-slider.css}
 .tuning-slider-area { position: relative; }
 .tuning-slider-area .ctrl-group { display: flex; align-items: center; gap: 5px; }
-.tuning-slider-area .ctrl-group .slider-track { flex: 1; min-width: 0; }
-.tuning-slider-area .slider-track { width: 100%; }
+.tuning-slider-area .ctrl-group .slider-row { flex: 1; min-width: 0; }
+.tuning-slider-area .slider-row { width: 100%; }
 ```
 
 ## Dialog Styling
