@@ -239,35 +239,33 @@ MPE dimensions are active. Pressure mode and CC source use slim-select dropdowns
           </div>
           <div class="mt-18">
             <div id="midi-settings-panel">
-              <span class="overlay-section-title">MIDI</span> <InfoButton infoKey="midi" content={MIDI_INFO} />
+              <InfoBox infoKey="midi" infoContent={MIDI_INFO}>
+                <span class="overlay-section-title">MIDI</span>
+              </InfoBox>
               <div id="midi-device-list" />
               <span class="overlay-section-title">EXPRESSION</span>
-              <div class="midi-panel-row" id="expr-bend-row">
-                <InfoButton infoKey="bend" content={BEND_INFO} />
+              <InfoBox infoKey="bend" infoContent={BEND_INFO}>
                 <label class="expr-label">
                   <span class="gi-checkbox"><input type="checkbox" id="expr-bend" checked /><span class="gi-check" /></span>
                   <span class="text-white">Pitch Bend</span>
                   <input type="text" inputmode="decimal" id="midi-pb-range-expr" value={callbacks.initialPbRange} class="numeric-input" />
                   <span class="text-dim-sm">semitones</span>
                 </label>
-              </div>
-              <div class="midi-panel-row" id="expr-velocity-row">
-                <InfoButton infoKey="velocity" content={VELOCITY_INFO} />
+              </InfoBox>
+              <InfoBox infoKey="velocity" infoContent={VELOCITY_INFO}>
                 <label class="expr-label">
                   <span class="gi-checkbox"><input type="checkbox" id="expr-velocity" checked /><span class="gi-check" /></span>
                   <span class="text-white">Note Velocity</span>
                 </label>
-              </div>
-              <div class="midi-panel-row" id="expr-pressure-row">
-                <InfoButton infoKey="pressure" content={PRESSURE_INFO} />
+              </InfoBox>
+              <InfoBox infoKey="pressure" infoContent={PRESSURE_INFO}>
                 <span class="text-white-12">Pressure</span>
                 <span class="text-dim">mode</span>
                 <span id="pressure-mode-slot" />
                 <span class="text-dim">source</span>
                 <span id="pressure-cc-source-slot" />
-              </div>
-              <div class="midi-panel-row" id="expr-timbre-row">
-                <InfoButton infoKey="timbre" content={TIMBRE_INFO} />
+              </InfoBox>
+              <InfoBox infoKey="timbre" infoContent={TIMBRE_INFO}>
                 <label class="expr-label">
                   <span class="gi-checkbox"><input type="checkbox" id="expr-timbre" checked /><span class="gi-check" /></span>
                   <span class="text-white">Timbre Slide</span>
@@ -277,14 +275,12 @@ MPE dimensions are active. Pressure mode and CC source use slim-select dropdowns
                   <span class="gi-checkbox"><input type="checkbox" id="timbre-reverse" /><span class="gi-check" /></span>
                   <span class="text-dim-plain">Rev</span>
                 </label>
-              </div>
-              <div class="midi-panel-row" id="touch-dead-zone-row">
-                <InfoButton infoKey="touchDeadZone" content={DEAD_ZONE_INFO} />
+              </InfoBox>
+              <InfoBox infoKey="touchDeadZone" infoContent={DEAD_ZONE_INFO} resetId="touch-dead-zone-reset">
                 <span class="text-white-12">Touch Dead Zone</span>
                 <input type="range" id="touch-dead-zone-slider" min="0" max="0.5" step="0.01" value="0.15" class="inline-slider" />
                 <span id="touch-dead-zone-badge" class="text-dim-sm">0.15</span>
-                <button class="slider-reset icon-btn icon-md" id="touch-dead-zone-reset"><i data-lucide="rotate-cw" /></button>
-              </div>
+              </InfoBox>
               <div class="midi-panel-row" id="mpe-output-row">
                 <span class="ctrl-label">MPE Out:</span>
                 <label class="expr-label">
