@@ -231,11 +231,10 @@ MPE dimensions are active. Pressure mode and CC source use slim-select dropdowns
       title: 'INPUT (global)',
       children: () => (
         <div>
-          <div class="slider-track">
+          <InfoBox infoKey="layout" infoContent={`<h2>Keyboard Layout</h2><p>ANSI (US), ISO (EU), Dvorak. Auto-detected via Keyboard API.</p>${srcLink('keyboard-layouts.lit.md', 'Source')}`} resetId="layout-reset">
             <span class="ctrl-label">KEYBOARD LAYOUT</span>
             <span id="layout-select-slot" />
-            <button class="slider-reset icon-btn icon-md" id="layout-reset"><i data-lucide="rotate-cw" /></button>
-          </div>
+          </InfoBox>
           <div class="mt-18">
             <div id="midi-settings-panel">
               <InfoBox infoKey="midi" infoContent={MIDI_INFO}>
