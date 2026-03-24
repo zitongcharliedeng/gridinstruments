@@ -145,7 +145,7 @@ edge-of-range conditions without blocking the action buttons.
 
 ``` {.css file=_generated/components/SongBar.css}
 #song-bar-calibrate { margin-left:auto; max-width:320px; gap:4px; overflow:hidden; }
-#calibrate-btn { font-family:var(--font); font-size:9px; background:none; color:var(--dim); border:none; padding:2px 8px; cursor:pointer; white-space:nowrap; width:100%; }
+#calibrate-btn { font-family:var(--font); font-size:9px; background:none; color:var(--dim); border:1px solid var(--border); padding:2px 8px; cursor:pointer; white-space:nowrap; }
 #calibration-banner { display:none; font-family:var(--font); font-size:9px; gap:4px; align-items:center; white-space:nowrap; position:absolute; left:0; top:0; right:0; bottom:0; justify-content:center; background:var(--bg); z-index:1; }
 #calibration-warning { display:none; position:absolute; left:50%; top:-14px; transform:translateX(-50%); font-size:8px; color:var(--dim); white-space:nowrap; pointer-events:none; }
 #calibration-msg { color:var(--fg); }

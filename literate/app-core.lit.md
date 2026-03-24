@@ -2131,7 +2131,7 @@ Calibration mode shows a banner instructing the user to play all reachable notes
       const msg = document.getElementById('calibration-msg');
       if (msg) {
         msg.textContent = count > 0 ? `Range saved (${count} keys)` : 'Range cleared — all keys playable';
-        setTimeout(() => { msg.textContent = 'Play notes'; }, 2000);
+        setTimeout(() => { msg.textContent = 'Confirm?'; }, 2000);
       }
     }
     this.visualizer?.setCalibratedRange(this.calibratedRange);
@@ -2140,7 +2140,7 @@ Calibration mode shows a banner instructing the user to play all reachable notes
     if (banner) banner.classList.remove('show-flex');
     const btn = document.getElementById('calibrate-btn') as HTMLButtonElement | null;
     if (btn) {
-      btn.textContent = 'Calibrate Playable Area';
+      btn.textContent = 'Calibrate';
       btn.classList.remove('active');
       btn.disabled = false;
     }
