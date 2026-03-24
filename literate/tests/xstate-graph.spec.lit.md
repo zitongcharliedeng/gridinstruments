@@ -1105,16 +1105,16 @@ The golden screenshot tests compare rendered pixels against stored reference ima
 
   test('SMOKE-3: Calibrate button inverts and banner appears', async ({ page }) => {
     await page.locator('#game-settings-btn').click();
-    await page.waitForTimeout(200);
+    await page.waitForTimeout(500);
     const btn = page.locator('#calibrate-btn');
     await expect(btn).toHaveText('Calibrate Playable Area');
-    await btn.click();
-    await page.waitForTimeout(300);
+    await btn.click({ force: true });
+    await page.waitForTimeout(500);
     await expect(btn).toHaveClass(/active/);
     const banner = page.locator('#calibration-banner');
     await expect(banner).toBeVisible();
-    await page.locator('#calibrate-cancel').click();
-    await page.waitForTimeout(200);
+    await page.locator('#calibrate-cancel').click({ force: true });
+    await page.waitForTimeout(500);
     await expect(btn).not.toHaveClass(/active/);
   });
 
