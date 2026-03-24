@@ -13,6 +13,7 @@ manipulation inside.
 ``` {.typescript file=_generated/components/SongBar.tsx}
 import { createSignal, type JSX } from 'solid-js';
 import { InfoBox } from './InfoBox';
+import { SettingsCog } from './SettingsCog';
 import { srcLink } from '../app-constants';
 import './SongBar.css';
 
@@ -274,15 +275,12 @@ active — the song title, progress bar, elapsed timer, and restart button.
 ``` {.typescript file=_generated/components/SongBar.tsx}
 
       <div id="song-bar-status">
-        <button
+        <SettingsCog
           id="game-settings-btn"
-          class="grid-cog"
-          classList={{ active: gameSettingsOpen() }}
+          active={gameSettingsOpen()}
           onClick={() => { if (!calibrating()) setGameSettingsOpen(v => !v); }}
-          aria-label="Game settings"
-        >
-          <i data-lucide="settings" />
-        </button>
+          position="relative"
+        />
         <div class="game-settings-popup" classList={{ hidden: !gameSettingsOpen() && !calibrating() }}>
           <InfoBox infoKey="quantization" infoContent={QUANT_INFO}>
             <span class="text-dim-sm">Quant</span>
