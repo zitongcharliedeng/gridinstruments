@@ -1,8 +1,9 @@
 # App Constants
 
-Shared presets, tuning table rows, and source link helper.
+Shared helpers: tuning table rows for info popups, source link generator, and the
+SliderPresetPoint type used by the SliderRow component.
 
-## Imports and preset types
+## Type and imports
 
 ``` {.typescript file=_generated/app-constants.ts}
 import { TUNING_MARKERS } from './lib/synth';
@@ -10,29 +11,10 @@ import { TUNING_MARKERS } from './lib/synth';
 export interface SliderPresetPoint { value: number; label: string }
 ```
 
-## Preset arrays
-
-`SKEW_PRESETS` and `SHEAR_PRESETS` name the two endpoints of their respective continuous
-parameters. `TUNING_LABEL_PRESETS` is derived from `TUNING_MARKERS` so the tuning slider
-tick labels stay in sync with the synth's marker table.
-
-``` {.typescript file=_generated/app-constants.ts}
-export const SKEW_PRESETS: SliderPresetPoint[] = [
-  { value: 0, label: 'DCompose / Wicki-Hayden' },
-  { value: 1, label: 'MidiMech' },
-];
-
-export const SHEAR_PRESETS: SliderPresetPoint[] = [
-  { value: 0, label: 'DCompose' },
-  { value: 1, label: 'Wicki-Hayden' },
-];
-
-export const TUNING_LABEL_PRESETS: SliderPresetPoint[] = TUNING_MARKERS.map(m => ({ value: m.fifth, label: m.name }));
-```
-
 ## Tuning table rows
 
 Built once at module load time from `TUNING_MARKERS` sorted by fifth size.
+Used by the tuning info popup content in mount-grid-overlay.
 
 ``` {.typescript file=_generated/app-constants.ts}
 const tuningTableRows = TUNING_MARKERS
@@ -44,6 +26,7 @@ const tuningTableRows = TUNING_MARKERS
 ## Source link helper
 
 Generates a small footer link pointing to the literate source file on GitHub.
+Used by all InfoBox content strings for the "Source: file.lit.md" footer.
 
 ``` {.typescript file=_generated/app-constants.ts}
 const SRC = 'https://github.com/zitongcharliedeng/gridinstruments/blob/main/literate';
