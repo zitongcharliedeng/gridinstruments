@@ -1131,7 +1131,7 @@ look like a physical keycap without competing with the centered note name.
 
     const qLabel = this.qwertyLabels.get(noteId);
     if (qLabel) {
-      const qSize = Math.max(7, fontSize * 0.38);
+      const qSize = Math.max(8, fontSize * 0.55);
       this.ctx.font = `bold ${qSize}px "JetBrains Mono", monospace`;
       const labelW = this.ctx.measureText(qLabel).width;
       const padX = 2;
