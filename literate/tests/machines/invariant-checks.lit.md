@@ -4311,6 +4311,8 @@ export const INFO_POPUP_3: StateInvariant = {
   id: 'INFO-POPUP-3',
   description: 'Clicking quantization info button opens #info-dialog',
   check: async (page: Page) => {
+    await page.locator('#game-settings-btn').click();
+    await page.waitForTimeout(200);
     const btn = page.locator('.slider-info-btn[data-info="quantization"]').first();
     await btn.click();
     const visible = await page.evaluate(() => {
@@ -4348,8 +4350,10 @@ export const INFO_POPUP_4: StateInvariant = {
 
 export const INFO_POPUP_5: StateInvariant = {
   id: 'INFO-POPUP-5',
-  description: 'SLIDER_INFO has quantization and calibration entries (non-empty)',
+  description: 'Quantization info content is non-empty when clicked',
   check: async (page: Page) => {
+    await page.locator('#game-settings-btn').click();
+    await page.waitForTimeout(200);
     const btn = page.locator('.slider-info-btn[data-info="quantization"]').first();
     await btn.click();
     const content = await page.evaluate(() => {
