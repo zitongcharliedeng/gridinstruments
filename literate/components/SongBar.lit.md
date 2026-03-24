@@ -305,30 +305,30 @@ active — the song title, progress bar, elapsed timer, and restart button.
             </div>
             <div style="display:flex;align-items:center;gap:4px">
               <InfoButton infoKey="calibrate" content={CALIBRATE_INFO} />
-              <button
-                id="calibrate-btn"
-                onClick={() => { props.onCalibrateStart(); }}
-              >
-                Calibrate Playable Area
-              </button>
-            </div>
-            <div class="calibrate-wrap">
-              <span id="calibration-banner">
-                <span id="calibration-warning" />
-                <span id="calibration-msg">Play all reachable notes, then confirm</span>
+              <div class="calibrate-wrap">
                 <button
-                  id="calibrate-confirm"
-                  onClick={() => { props.onCalibrateConfirm(); }}
+                  id="calibrate-btn"
+                  onClick={() => { props.onCalibrateStart(); }}
                 >
-                  &#x2713;
+                  Calibrate Playable Area
                 </button>
-                <button
-                  id="calibrate-cancel"
-                  onClick={() => { props.onCalibrateCancel(); }}
-                >
-                  &#x2717;
-                </button>
-              </span>
+                <span id="calibration-banner">
+                  <span id="calibration-warning" />
+                  <span id="calibration-msg">Play all reachable notes</span>
+                  <button
+                    id="calibrate-confirm"
+                    onClick={() => { props.onCalibrateConfirm(); }}
+                  >
+                    &#x2713;
+                  </button>
+                  <button
+                    id="calibrate-cancel"
+                    onClick={() => { props.onCalibrateCancel(); }}
+                  >
+                    &#x2717;
+                  </button>
+                </span>
+              </div>
             </div>
           </div>
         </Show>
