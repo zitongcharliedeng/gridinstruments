@@ -92,6 +92,7 @@ The second group of private fields covers DOM references and UI state: canvas el
   private vibratoActor: ReturnType<typeof createActor<typeof pedalMachine>> | null = null;
   private midiDeviceList: HTMLElement | null = null;
   private defaultZoom = 1.0;
+  private pianoKeyPx = 0;
   private detectedDpi = 96;
   private updateGraffiti: (() => void) | null = null;
   private gameActor: ReturnType<typeof createActor<typeof gameMachine>> | null = null;
@@ -488,9 +489,9 @@ The MIDI device panel renders a list of connected controllers with enable/disabl
         initialVolume: parseFloat(this.loadSetting('volume', '0.3')),
         onZoomChange: (v: number) => { this.visualizer?.setZoom(v); this.updateGraffiti?.(); this.saveSetting('zoom', String(v)); },
         initialZoom: this.defaultZoom,
-        onSkewChange: (v: number) => { this.visualizer?.setSkewFactor(v); this.updateGraffiti?.(); this.saveSetting('skew', String(v)); },
+        onSkewChange: (v: number) => { this.visualizer?.setSkewFactor(v); this.recalcDefaultZoom(); this.updateGraffiti?.(); this.saveSetting('skew', String(v)); },
         initialSkew: parseFloat(this.loadSetting('skew', '0')),
-        onShearChange: (v: number) => { this.visualizer?.setBFact(v); this.updateGraffiti?.(); this.saveSetting('bfact', String(v)); },
+        onShearChange: (v: number) => { this.visualizer?.setBFact(v); this.recalcDefaultZoom(); this.updateGraffiti?.(); this.saveSetting('bfact', String(v)); },
         initialShear: parseFloat(this.loadSetting('bfact', '0')),
         onTuningChange: (v: number) => { this.synth.setFifth(v); this.visualizer?.setGenerator([v, 1200]); this.visualizer?.render(); this.updateGraffiti?.(); this.saveSetting('tuning', String(v)); },
         initialTuning: parseFloat(this.loadSetting('tuning', '700')),
@@ -1002,6 +1003,7 @@ half-vector, double it (half → full side), and take the minimum:
      const side2 = 2 * Math.sqrt(hv2.x * hv2.x + hv2.y * hv2.y);
      const gridCellSidePx = Math.min(side1, side2);
 
+     this.pianoKeyPx = pianoKeyPx;
      const dpiBasedZoom = pianoKeyPx / gridCellSidePx;
      this.defaultZoom = dpiBasedZoom;
      const savedZoom = this.loadSetting('zoom', this.defaultZoom.toString());
@@ -1776,6 +1778,16 @@ Note tracking uses reference counting (`noteHoldCounts`) because multiple input 
 The idle timer controls the visibility of decorative elements (chord graffiti, song bar hint) that should fade out during active playing and reappear after 10 seconds of silence. During an active game session, the idle timer is suppressed entirely.
 
 ``` {.typescript file=_generated/app-core.ts}
+  private recalcDefaultZoom(): void {
+    if (!this.visualizer || this.pianoKeyPx <= 0) return;
+    const geometry = this.visualizer.getGridGeometry();
+    const hv1 = geometry.cellHv1, hv2 = geometry.cellHv2;
+    const side1 = 2 * Math.sqrt(hv1.x * hv1.x + hv1.y * hv1.y);
+    const side2 = 2 * Math.sqrt(hv2.x * hv2.x + hv2.y * hv2.y);
+    const gridCellSidePx = Math.min(side1, side2);
+    this.defaultZoom = this.pianoKeyPx / gridCellSidePx;
+  }
+
   private resetIdleTimer(): void {
     const gameState = this.gameActor ? String(this.gameActor.getSnapshot().value) : undefined;
     if (gameState === 'playing') return;
