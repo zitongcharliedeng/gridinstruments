@@ -156,6 +156,7 @@ import {
      SONGBAR_CAL_4,
      GAME_SETTINGS_HIDDEN,
      GAME_SETTINGS_COG,
+     INFOBOX_STRUCTURE,
      INFO_POPUP_1,
      INFO_POPUP_2,
      INFO_POPUP_3,
@@ -934,6 +935,10 @@ The SongBar progress and calibration tests verify that the in-game status elemen
 
   test('GAME-SETTINGS-COG: game settings btn uses grid-cog class', async ({ page }) => {
     await GAME_SETTINGS_COG.check(page);
+  });
+
+  test('INFOBOX-STRUCTURE: all InfoBox elements have required children', async ({ page }) => {
+    await INFOBOX_STRUCTURE.check(page);
   });
 ```
 

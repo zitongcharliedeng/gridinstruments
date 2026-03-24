@@ -4265,6 +4265,25 @@ export const GAME_SETTINGS_COG: StateInvariant = {
   },
 };
 
+export const INFOBOX_STRUCTURE: StateInvariant = {
+  id: 'INFOBOX-STRUCTURE',
+  description: 'All .info-box elements have .slider-info-btn + .info-box-content children',
+  check: async (page: Page) => {
+    await page.locator('#grid-settings-btn').click();
+    await page.waitForTimeout(500);
+    const result = await page.evaluate(() => {
+      const boxes = document.querySelectorAll('.info-box');
+      let broken = 0;
+      for (const box of boxes) {
+        if (!box.querySelector('.slider-info-btn') || !box.querySelector('.info-box-content')) broken++;
+      }
+      return { total: boxes.length, broken };
+    });
+    await page.keyboard.press('Escape');
+    if (result.total < 5) throw new Error(`Expected at least 5 InfoBox instances, found ${result.total}`);
+    if (result.broken > 0) throw new Error(`${result.broken} InfoBox elements missing required children`);
+  },
+};
 ```
 
 ## Info Popup Invariants
