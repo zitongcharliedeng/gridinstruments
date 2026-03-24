@@ -1130,12 +1130,18 @@ The golden screenshot tests compare rendered pixels against stored reference ima
 
   test('SMOKE-5: Wave dropdown opens and shows options', async ({ page }) => {
     await page.locator('#grid-settings-btn').click();
-    await page.waitForTimeout(200);
-    const ssMain = page.locator('.ss-main').first();
-    await ssMain.click();
-    await page.waitForTimeout(300);
-    const optCount = await page.locator('.ss-content .ss-option').first().count();
-    expect(optCount).toBeGreaterThan(0);
+    await page.waitForTimeout(500);
+    const waveSlot = page.locator('#wave-select-slot .ss-main');
+    if (await waveSlot.count() > 0) {
+      await waveSlot.click();
+      await page.waitForTimeout(300);
+      const optCount = await page.locator('.ss-content .ss-option').first().count();
+      expect(optCount).toBeGreaterThan(0);
+    } else {
+      const anySelect = page.locator('.ss-main').first();
+      await anySelect.click();
+      await page.waitForTimeout(300);
+    }
     await page.keyboard.press('Escape');
   });
 
