@@ -194,6 +194,7 @@ layout.
 export function SongBar(props: SongBarProps): JSX.Element {
   const [maxKeys, setMaxKeys] = createSignal(props.initialMaxKeys ?? 8);
   const [gameSettingsOpen, setGameSettingsOpen] = createSignal(false);
+  const [calibrating, setCalibrating] = createSignal(false);
 
   const handleSearchInput = (e: Event): void => {
     props.onSearch((e.target as HTMLInputElement).value);
@@ -277,12 +278,12 @@ active — the song title, progress bar, elapsed timer, and restart button.
           id="game-settings-btn"
           class="grid-cog"
           classList={{ active: gameSettingsOpen() }}
-          onClick={() => { setGameSettingsOpen(v => !v); }}
+          onClick={() => { if (!calibrating()) setGameSettingsOpen(v => !v); }}
           aria-label="Game settings"
         >
           <i data-lucide="settings" />
         </button>
-        <div class="game-settings-popup" classList={{ hidden: !gameSettingsOpen() }}>
+        <div class="game-settings-popup" classList={{ hidden: !gameSettingsOpen() && !calibrating() }}>
           <div style="display:flex;align-items:center;gap:4px">
             <InfoButton infoKey="quantization" content={QUANT_INFO} />
             <span class="text-dim-sm">Quant</span>
@@ -307,7 +308,7 @@ active — the song title, progress bar, elapsed timer, and restart button.
             <div class="calibrate-wrap">
               <button
                 id="calibrate-btn"
-                onClick={() => { props.onCalibrateStart(); }}
+                onClick={() => { setCalibrating(true); setGameSettingsOpen(true); props.onCalibrateStart(); }}
               >
                 Calibrate Playable Area
               </button>
@@ -316,13 +317,13 @@ active — the song title, progress bar, elapsed timer, and restart button.
                 <span id="calibration-msg">Play all reachable notes</span>
                 <button
                   id="calibrate-confirm"
-                  onClick={() => { props.onCalibrateConfirm(); }}
+                  onClick={() => { setCalibrating(false); props.onCalibrateConfirm(); }}
                 >
                   &#x2713;
                 </button>
                 <button
                   id="calibrate-cancel"
-                  onClick={() => { props.onCalibrateCancel(); }}
+                  onClick={() => { setCalibrating(false); props.onCalibrateCancel(); }}
                 >
                   &#x2717;
                 </button>
