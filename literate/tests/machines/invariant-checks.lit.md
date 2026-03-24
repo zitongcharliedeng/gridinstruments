@@ -414,7 +414,7 @@ export const drefAnnotationCheck: StateInvariant = {
 export const overlayControlsCheck: StateInvariant = {
   id: 'SM-STRUCT-OVERLAY',
   check: async (page: Page) => {
-    const resetIds = ['tuning-reset', 'skew-reset', 'zoom-reset', 'volume-reset', 'd-ref-reset'];
+    const resetIds = ['tuning-slider-reset', 'skew-slider-reset', 'zoom-slider-reset', 'volume-slider-reset', 'd-ref-slider-reset'];
     for (const id of resetIds) {
       const btn = page.locator(`#${id}`);
       await expect(btn).toBeVisible();

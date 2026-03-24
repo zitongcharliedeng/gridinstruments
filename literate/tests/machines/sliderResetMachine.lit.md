@@ -175,7 +175,7 @@ const zoomSliderBase = createSliderResetMachine({
   name: 'zoomSlider',
   sliderId: 'zoom-slider',
   badgeId: 'zoom-thumb-badge',
-  resetBtnId: 'zoom-reset',
+  resetBtnId: 'zoom-slider-reset',
   defaultDisplay: '0.75',
   modifiedValue: '2.5',
   badgeReadMode: 'textContent',
