@@ -29,16 +29,16 @@
         "repl-session_flake": "repl-session_flake"
       },
       "locked": {
-        "lastModified": 1769719364,
-        "narHash": "sha256-Eyw9INHFI+ZnAiNCy0jJBfy/1zuFpTmi8pBKaYaUQ+c=",
-        "owner": "entangled",
-        "repo": "entangled.py",
-        "rev": "42d63f58072b1cd50c04100ffefb9ad5ec27c41e",
+        "lastModified": 1774352654,
+        "narHash": "sha256-s4xTF2hWIcrpvulvHPKKtUg9c0h9+sWzSdzH5kQxSR0=",
+        "owner": "zitongcharliedeng",
+        "repo": "entangled",
+        "rev": "c4ff4b193251ea356ae17eebed93d5116254aa26",
         "type": "github"
       },
       "original": {
-        "owner": "entangled",
-        "repo": "entangled.py",
+        "owner": "zitongcharliedeng",
+        "repo": "entangled",
         "type": "github"
       }
     },
@@ -102,11 +102,11 @@
         "nixpkgs": "nixpkgs_4"
       },
       "locked": {
-        "lastModified": 1774330230,
-        "narHash": "sha256-/ZFTb7KqeKLTq2DksVpaNaKPNsgdEyf9JQIpCPcojTs=",
+        "lastModified": 1774352699,
+        "narHash": "sha256-p6x1kWnXVxc7Cgp3+bET+TTuMKmwMWId4iwJToumYZs=",
         "owner": "zitongcharliedeng",
         "repo": "build-state-machines-from-literate-wiki",
-        "rev": "e01a7510cf463c390ed0ac2495e1cc5165565181",
+        "rev": "8c1b4bc14bbf411fa1240f264ba2d92e4507a887",
         "type": "github"
       },
       "original": {
@@ -218,11 +218,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1773190977,
-        "narHash": "sha256-fkJvOxz80cJViPz6GVaayC8BVCs5fclJ8qHDaNUpoEA=",
+        "lastModified": 1773909723,
+        "narHash": "sha256-HmcZQ/hMPHR22Ri/6Sl7Z0B5J8nZa9bRnZJtDFInM7I=",
         "owner": "pyproject-nix",
         "repo": "pyproject.nix",
-        "rev": "10ebca8a137bf26b7fbd3e94b339bf68cee18693",
+        "rev": "d37dcf34ac7194eac4b0d10520d01298c434267d",
         "type": "github"
       },
       "original": {
