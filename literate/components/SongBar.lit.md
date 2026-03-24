@@ -12,6 +12,7 @@ manipulation inside.
 
 ``` {.typescript file=_generated/components/SongBar.tsx}
 import { createSignal, type JSX } from 'solid-js';
+import { InfoBox } from './InfoBox';
 import { InfoButton } from './InfoButton';
 import { srcLink } from '../app-constants';
 import './SongBar.css';
@@ -233,7 +234,7 @@ wraps on narrow screens.
 
       <div id="song-bar-search">
         <div class="search-row">
-        <InfoButton infoKey="search" content={SEARCH_INFO} />
+        <InfoBox infoKey="search" infoContent={SEARCH_INFO}>
         <div class="search-input-wrap">
           <i
             data-lucide="search"
@@ -264,6 +265,7 @@ wraps on narrow screens.
         <div
           id="midi-search-results"
         />
+        </InfoBox>
         </div>
       </div>
 ```
