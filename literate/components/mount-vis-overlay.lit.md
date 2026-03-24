@@ -4,6 +4,10 @@ Mounts the SolidJS SettingsOverlay component into the visualiser panel.
 This is the bridge between the vanilla TS app and the Solid component system.
 The `mountVisOverlay` function is called from app-core during initialization.
 
+``` {.css file=_generated/components/mount-vis-overlay.css}
+#vis-overlay { padding: 8px 12px 8px 40px; }
+```
+
 ``` {.typescript file=_generated/components/mount-vis-overlay.tsx}
 import { render } from 'solid-js/web';
 import { createSignal } from 'solid-js';
@@ -11,21 +15,13 @@ import { SettingsOverlay } from './SettingsOverlay';
 import type { SectionDef } from './SettingsOverlay';
 import type { NoteHistoryVisualizer } from '../lib/note-history-visualizer';
 import { D_REF_MIDI } from '../lib/keyboard-layouts';
-
-const VIS_OVERLAY_CSS = `#vis-overlay { padding: 8px 12px 8px 40px; }`;
-let visOverlayCssInjected = false;
+import './mount-vis-overlay.css';
 
 export function mountVisOverlay(
   mountEl: HTMLElement,
   cogBtn: HTMLElement,
   historyVis: NoteHistoryVisualizer,
 ): void {
-  if (!visOverlayCssInjected) {
-    const s = document.createElement('style');
-    s.textContent = VIS_OVERLAY_CSS;
-    document.head.appendChild(s);
-    visOverlayCssInjected = true;
-  }
   const [visible, setVisible] = createSignal(false);
 
   cogBtn.addEventListener('click', () => {

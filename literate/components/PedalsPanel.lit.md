@@ -4,15 +4,10 @@ SolidJS component for the sustain and vibrato pedal buttons. The two buttons
 occupy equal halves of the pedals row and invert to white-on-black while held,
 driven by the `.active` class toggled by the state machine via props callbacks.
 
-## Component Interface
+## Styles
 
-Props expose four pointer-event callbacks — down and up for each pedal — so the
-parent can wire the `pedalMachine` actors without any direct DOM access.
-
-``` {.typescript file=_generated/components/PedalsPanel.tsx}
-import { type JSX } from 'solid-js';
-
-const PEDALS_CSS = `#pedals-panel {
+``` {.css file=_generated/components/PedalsPanel.css}
+#pedals-panel {
   flex-shrink:0; display:flex; gap:0; background:var(--bg); height:44px;
   overflow:visible; position:relative; z-index:1; border-top:1px solid var(--border);
 }
@@ -27,9 +22,17 @@ const PEDALS_CSS = `#pedals-panel {
 }
 @media (hover:hover) { .pedal-btn:hover { color:var(--fg); background:var(--subtle); } }
 .pedal-btn:last-child { border-right:none; }
-.pedal-btn.active { color:var(--bg); background:var(--fg); }`;
+.pedal-btn.active { color:var(--bg); background:var(--fg); }
+```
 
-let pedalsCssInjected = false;
+## Component Interface
+
+Props expose four pointer-event callbacks — down and up for each pedal — so the
+parent can wire the `pedalMachine` actors without any direct DOM access.
+
+``` {.typescript file=_generated/components/PedalsPanel.tsx}
+import { type JSX } from 'solid-js';
+import './PedalsPanel.css';
 
 export interface PedalsPanelProps {
   onSustainDown: () => void;
@@ -79,7 +82,6 @@ function HoldButton(props: {
 }
 
 export function PedalsPanel(props: PedalsPanelProps): JSX.Element {
-  if (!pedalsCssInjected) { const s = document.createElement('style'); s.textContent = PEDALS_CSS; document.head.appendChild(s); pedalsCssInjected = true; }
   return (
     <>
       <HoldButton id="sustain-indicator" label="SUSTAIN" onDown={() => { props.onSustainDown(); }} onUp={() => { props.onSustainUp(); }} />

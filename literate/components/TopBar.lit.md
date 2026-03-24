@@ -8,17 +8,10 @@ The GitHub star count badge is populated by an inline script in `index.html`
 writing to `#star-count-badge`; the component renders that element and leaves
 the content to the existing script.
 
-## Component Interface
+## Styles
 
-Three callbacks cover the interactive elements that require app-level wiring.
-The fullscreen toggle is self-contained (inline `onclick`) so no callback is
-needed for it.
-
-``` {.typescript file=_generated/components/TopBar.tsx}
-import { type JSX } from 'solid-js';
-import { InfoButton } from './InfoButton';
-
-const TOPBAR_CSS = `.top-bar-left { display:flex; align-items:center; gap:8px; min-width:0; }
+``` {.css file=_generated/components/TopBar.css}
+.top-bar-left { display:flex; align-items:center; gap:8px; min-width:0; }
 .site-title { font-weight:700; font-size:11px; color:#fff; letter-spacing:0.04em; }
 .gh-actions { display:inline-flex; align-items:center; border:1px solid var(--border); font-size:10px; }
 .gh-mark { padding:2px 6px; border-right:1px solid var(--border); background:var(--subtle); }
@@ -43,8 +36,19 @@ const TOPBAR_CSS = `.top-bar-left { display:flex; align-items:center; gap:8px; m
   background:none; border:1px solid var(--border); padding:2px 6px;
   cursor:pointer; margin-left:4px;
 }
-#reset-layout:hover { color:var(--fg); border-color:var(--accent); }`;
-let topbarCssInjected = false;
+#reset-layout:hover { color:var(--fg); border-color:var(--accent); }
+```
+
+## Component Interface
+
+Three callbacks cover the interactive elements that require app-level wiring.
+The fullscreen toggle is self-contained (inline `onclick`) so no callback is
+needed for it.
+
+``` {.typescript file=_generated/components/TopBar.tsx}
+import { type JSX } from 'solid-js';
+import { InfoButton } from './InfoButton';
+import './TopBar.css';
 
 export interface TopBarProps {
   onAbout: () => void;
@@ -61,7 +65,6 @@ call in app-core after mount.
 ``` {.typescript file=_generated/components/TopBar.tsx}
 
 export function TopBar(props: TopBarProps): JSX.Element {
-  if (!topbarCssInjected) { const s = document.createElement('style'); s.textContent = TOPBAR_CSS; document.head.appendChild(s); topbarCssInjected = true; }
   const onAboutClick = (): void => {
     props.onAbout();
   };

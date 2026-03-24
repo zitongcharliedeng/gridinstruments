@@ -25,9 +25,8 @@ The mount function accepts the container element and the cog button. It owns
 the `visible` signal and toggles it on cog clicks, returning a `toggle`
 function so app-core can drive visibility from the `overlayMachine` actor.
 
-``` {.typescript file=_generated/components/mount-grid-overlay.tsx}
-
-const GRID_OVERLAY_CSS = `#mpe-output-select {
+``` {.css file=_generated/components/mount-grid-overlay.css}
+#mpe-output-select {
   position:absolute !important; width:1px !important; height:1px !important;
   opacity:0 !important; overflow:hidden !important; pointer-events:none !important;
   margin:0 !important; padding:0 !important; border-width:0 !important;
@@ -46,8 +45,11 @@ const GRID_OVERLAY_CSS = `#mpe-output-select {
 .expr-label-lg { display:inline-flex; align-items:center; gap:6px; cursor:pointer; font-size:12px; }
 .numeric-input { width:4ch; text-align:center; font-family:var(--font); font-size:10px; background:var(--bg); color:var(--fg); border:1px solid var(--border); padding:2px 3px; }
 .select-slot { min-width:120px; display:inline-block; }
-#d-ref-input { width:80px; text-transform:none; }`;
-let gridOverlayCssInjected = false;
+#d-ref-input { width:80px; text-transform:none; }
+```
+
+``` {.typescript file=_generated/components/mount-grid-overlay.tsx}
+import './mount-grid-overlay.css';
 
 export interface GridOverlayCallbacks {
   onVolumeChange: (v: number) => void;
@@ -70,12 +72,6 @@ export function mountGridOverlay(
   cogBtn: HTMLElement,
   callbacks: GridOverlayCallbacks,
 ): { toggle: () => void; setVisible: (v: boolean) => void } {
-  if (!gridOverlayCssInjected) {
-    const s = document.createElement('style');
-    s.textContent = GRID_OVERLAY_CSS;
-    document.head.appendChild(s);
-    gridOverlayCssInjected = true;
-  }
   const [visible, setVisible] = createSignal(false);
 
   const toggle = (): void => {
