@@ -58,10 +58,10 @@ input.badge-input {
 input.badge-input:focus { border-color: var(--accent); background: var(--subtle); }
 input.badge-input:invalid { border-color: #cc3333; }
 .slider-reset {
-  color: var(--dim); background: var(--bg); border: 1px solid var(--border);
+  color: var(--dim); background: var(--bg); border: none; border-left: 1px solid var(--border);
   width: 22px; height: 18px; padding: 0; flex-shrink: 0; box-sizing: border-box;
 }
-.slider-reset:hover { color: var(--fg); border-color: var(--accent); }
+.slider-reset:hover { color: var(--fg); }
 .slider-row-flex { display: flex; align-items: center; gap: 0; width: 100%; border: 1px solid var(--border); }
 ```
 
