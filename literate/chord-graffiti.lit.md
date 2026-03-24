@@ -58,11 +58,6 @@ interface ButtonLike { x: number; y: number; coordX: number; coordY: number }
 export function createChordGraffiti(config: GraffitiConfig): () => void {
   const { container, visualizer } = config;
 
-  const cs = getComputedStyle(container);
-  if (cs.position === 'static') {
-    container.style.position = 'relative';
-  }
-
   const svg = createSvgElement();
   container.appendChild(svg);
 
