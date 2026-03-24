@@ -59,6 +59,7 @@ export class DComposeApp {
   private expressionPressure = true;
   private expressionTimbre = true;
   private timbreReverse = false;
+  private touchDeadZone = 0.15;
 
   private pointerDown = new Map<number, { coordX: number; coordY: number } | null>();
   private pointerWiggle = new Map<number, { xs: number[]; ys: number[]; times: number[]; lastDir: number; changes: number }>();
@@ -113,6 +114,7 @@ The second group of private fields covers DOM references and UI state: canvas el
     timbreReverse: 'gi_timbre_reverse',
     dpi: 'gi_dpi',
     pressureCcSource: 'gi_pressure_cc_source',
+    touchDeadZone: 'gi_touch_dead_zone',
   } as const;
 
   private loadSetting(key: keyof typeof DComposeApp.STORAGE_KEYS, fallback: string): string {
@@ -152,6 +154,8 @@ The constructor initializes the core subsystems (synth, MIDI, MPE, layout) and g
     this.expressionPressure = this.loadSetting('exprPressure', 'true') === 'true';
     this.expressionTimbre = this.loadSetting('exprTimbre', 'true') === 'true';
     this.timbreReverse = this.loadSetting('timbreReverse', 'false') === 'true';
+    const savedDeadZone = parseFloat(this.loadSetting('touchDeadZone', '0.15'));
+    this.touchDeadZone = (Number.isFinite(savedDeadZone) && savedDeadZone >= 0) ? savedDeadZone : 0.15;
 
     void this.init();
   }
@@ -805,6 +809,25 @@ button component.
         afterChange: (newVal) => { const mode = newVal[0]?.value ?? 'aftertouch'; this.midi.setPressureCC(mode === 'aftertouch' ? null : parseInt(mode, 10)); this.saveSetting('pressureCcSource', mode); },
       }});
       void pcSS;
+    }
+```
+
+The touch dead zone slider controls the minimum finger velocity (in CSS px per ms) that triggers continuous pitch bend. Below this threshold, touch input snaps to the cell center. Higher values require faster finger movement before microtonal bends engage.
+
+``` {.typescript file=_generated/app-core.ts}
+    const dzSlider = getElementOrNull('touch-dead-zone-slider', HTMLInputElement);
+    const dzBadge = document.getElementById('touch-dead-zone-badge');
+    if (dzSlider) {
+      dzSlider.value = this.touchDeadZone.toString();
+      if (dzBadge) dzBadge.textContent = this.touchDeadZone.toFixed(2);
+      dzSlider.addEventListener('input', () => {
+        const v = parseFloat(dzSlider.value);
+        if (Number.isFinite(v) && v >= 0) {
+          this.touchDeadZone = v;
+          if (dzBadge) dzBadge.textContent = v.toFixed(2);
+          this.saveSetting('touchDeadZone', v.toString());
+        }
+      });
     }
 ```
 
@@ -1624,7 +1647,7 @@ touch is stationary (snap to cell center) or sliding (continuous microtonal bend
             const tdy = pw.ys[n - 1] - pw.ys[lookback];
             return Math.sqrt(tdx * tdx + tdy * tdy) / dt;
           })();
-          const isActivelySliding = velocityPxPerMs > 0.15;
+          const isActivelySliding = velocityPxPerMs > this.touchDeadZone;
           const semitones = isActivelySliding ? rawSemitones : 0;
 
           const timbreDirLen = Math.sqrt(cellHv2.x * cellHv2.x + cellHv2.y * cellHv2.y);

@@ -136,8 +136,9 @@ export function setupInfoDialogs(): void {
       if (activeInfoBtn) activeInfoBtn.classList.remove('active');
       activeInfoBtn = btn;
       btn.classList.add('active');
+      const inline = btn.dataset.infoContent;
       const key = btn.dataset.info;
-      const content = (key && SLIDER_INFO[key]) ?? '';
+      const content = inline ?? (key && SLIDER_INFO[key]) ?? '';
       infoDialogActor.send({ type: 'OPEN', content });
     });
   });

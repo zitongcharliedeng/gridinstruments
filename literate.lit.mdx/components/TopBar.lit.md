@@ -48,6 +48,7 @@ needed for it.
 ``` {.typescript file=_generated/components/TopBar.tsx}
 import { type JSX } from 'solid-js';
 import { InfoButton } from './InfoButton';
+import { srcLink } from '../app-constants';
 import './TopBar.css';
 
 export interface TopBarProps {
@@ -63,6 +64,20 @@ The component renders the exact same markup as the original `index.html`
 call in app-core after mount.
 
 ``` {.typescript file=_generated/components/TopBar.tsx}
+
+const FULLSCREEN_INFO = `
+<h2>Fullscreen</h2>
+<p>Expands the app to fill the entire screen, hiding the browser chrome. The keyboard grid scales to the full viewport for a more immersive playing experience.</p>
+<p>Press <strong>Esc</strong> or click the button again to exit fullscreen.</p>
+<p>On iOS Safari, true fullscreen is not available — the app fills the viewport but the browser bar remains.</p>
+${srcLink('components/TopBar.lit.md', 'Source: TopBar.lit.md — fullscreen toggle')}`;
+
+const RESET_PAGE_INFO = `
+<h2>Reset Page</h2>
+<p>Clears <strong>all</strong> saved settings (tuning, zoom, skew, volume, waveform, D-ref, panel sizes, calibration, MIDI settings) and reloads the page. Everything returns to factory defaults.</p>
+<p>Individual slider reset buttons (the ↺ icon) reset only that slider to its default value for the current grid geometry. Reset Page resets <strong>everything</strong> and recalculates all defaults from scratch.</p>
+<p>Settings are saved to <code>localStorage</code> and persist across sessions. Use this button to start completely fresh.</p>
+${srcLink('components/TopBar.lit.md', 'Source: TopBar.lit.md — reset page button')}`;
 
 export function TopBar(props: TopBarProps): JSX.Element {
   const onAboutClick = (): void => {
@@ -103,11 +118,11 @@ export function TopBar(props: TopBarProps): JSX.Element {
           Suggest
         </a>
       </div>
-      <InfoButton infoKey="fullscreen" />
+      <InfoButton infoKey="fullscreen" content={FULLSCREEN_INFO} />
       <button id="fullscreen-btn" class="icon-btn icon-md" onClick={onFullscreen}>
         <i data-lucide="maximize" />
       </button>
-      <InfoButton infoKey="reset-layout" />
+      <InfoButton infoKey="reset-layout" content={RESET_PAGE_INFO} />
       <button id="reset-layout" onClick={onResetClick}>
         <span class="icon"><i data-lucide="rotate-ccw" /></span> Reset Page
       </button>

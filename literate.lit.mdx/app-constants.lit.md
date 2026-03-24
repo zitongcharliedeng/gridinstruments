@@ -47,8 +47,9 @@ Generates a small footer link pointing to the literate source file on GitHub.
 
 ``` {.typescript file=_generated/app-constants.ts}
 const SRC = 'https://github.com/zitongcharliedeng/gridinstruments/blob/main/literate';
-const srcLink = (file: string, label = 'Source'): string =>
+export const srcLink = (file: string, label = 'Source'): string =>
   `<p style="margin-top:16px;padding-top:8px;border-top:1px solid #222;font-size:10px;"><a href="${SRC}/${file}" target="_blank" rel="noopener" style="color:var(--dim);">📄 ${label}</a></p>`;
+export { tuningTableRows };
 ```
 
 ## SLIDER_INFO
@@ -374,5 +375,17 @@ ${srcLink('components/TopBar.lit.md', 'Source: TopBar.lit.md — fullscreen togg
 <p>Individual slider reset buttons (the ↺ icon) reset only that slider to its default value for the current grid geometry. Reset Page resets <strong>everything</strong> and recalculates all defaults from scratch.</p>
 <p>Settings are saved to <code>localStorage</code> and persist across sessions. Use this button to start completely fresh.</p>
 ${srcLink('components/TopBar.lit.md', 'Source: TopBar.lit.md — reset page button')}`,
+
+  touchDeadZone: `
+<h2>Touch Dead Zone</h2>
+<p>Minimum finger velocity (CSS px/ms) before continuous pitch bend engages. Below this threshold, touch input snaps to the cell center — no microtonal bends.</p>
+<p>Humans naturally have slight finger tremor. This dead zone prevents accidental microtonal bends when you intend to hold a single note steady.</p>
+<table>
+<tr><td><strong>0.00</strong></td><td>No dead zone — every finger movement produces a bend (very sensitive)</td></tr>
+<tr><td><strong>0.15</strong></td><td>Default — filters typical finger tremor</td></tr>
+<tr><td><strong>0.30+</strong></td><td>Requires deliberate sliding to trigger bends</td></tr>
+</table>
+<p>Inspired by the <a href="https://github.com/nicholasgasior/midimech" target="_blank" rel="noopener">MidiMech</a> instantaneous velocity approach: the threshold is compared against the displacement of the last 4 pointer samples divided by elapsed time.</p>
+${srcLink('app-core.lit.md', 'Source: app-core.lit.md — pointer move handler')}`,
 };
 ```

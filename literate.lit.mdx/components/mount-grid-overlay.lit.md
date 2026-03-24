@@ -270,6 +270,12 @@ MPE dimensions are active. Pressure mode and CC source use slim-select dropdowns
                   <span class="text-dim-plain">Rev</span>
                 </label>
               </div>
+              <div class="midi-panel-row" id="touch-dead-zone-row">
+                <InfoButton infoKey="touchDeadZone" />
+                <span class="text-white-12">Touch Dead Zone</span>
+                <input type="range" id="touch-dead-zone-slider" min="0" max="0.5" step="0.01" value="0.15" class="inline-slider" />
+                <span id="touch-dead-zone-badge" class="text-dim-sm">0.15</span>
+              </div>
               <div class="midi-panel-row" id="mpe-output-row">
                 <span class="ctrl-label">MPE Out:</span>
                 <label class="expr-label">
