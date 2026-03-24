@@ -1609,7 +1609,8 @@ touch is stationary (snap to cell center) or sliding (continuous microtonal bend
           const pitchDirLen = Math.sqrt(cellHv1.x * cellHv1.x + cellHv1.y * cellHv1.y);
           const pitchOffset = (dx * cellHv1.x + dy * cellHv1.y) / pitchDirLen;
           const cellWidth = pitchDirLen * 2;
-          const rawSemitones = pitchOffset / cellWidth * 2;
+          const centsPerCell = this.synth.getGenerator()[0];
+          const rawSemitones = (pitchOffset / cellWidth) * centsPerCell / 100;
           const pw = this.pointerWiggle.get(event.pointerId);
           const velocityPxPerMs = (() => {
             if (!pw || pw.xs.length < 2) return 0;
