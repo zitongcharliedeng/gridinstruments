@@ -1103,8 +1103,9 @@ The golden screenshot tests compare rendered pixels against stored reference ima
   test('SMOKE-2: Key press plays note — visualizer responds', async ({ page }) => {
     const canvas = page.locator('#keyboard-canvas');
     await expect(canvas).toBeVisible();
-    await page.keyboard.press('KeyH');
     await page.waitForTimeout(500);
+    await page.keyboard.press('KeyH');
+    await page.waitForTimeout(300);
     await page.keyboard.up('KeyH');
   });
 
