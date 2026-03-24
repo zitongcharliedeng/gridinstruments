@@ -19,6 +19,102 @@ import type { SectionDef } from './SettingsOverlay';
 import { InfoButton } from './InfoButton';
 import { SliderRow } from './SliderRow';
 import { TUNING_MARKERS } from '../lib/synth';
+import { srcLink, tuningTableRows } from '../app-constants';
+
+const TUNING_INFO = `
+<h2>Fifths Tuning</h2>
+<p>Sets the size of the <strong>perfect fifth</strong> generator in <a href="https://en.wikipedia.org/wiki/Cent_(music)" target="_blank" rel="noopener">cents</a>. This single parameter determines the entire tuning system.</p>
+<table>
+${tuningTableRows}
+</table>
+<p>The notch marks below the slider show where <a href="https://en.wikipedia.org/wiki/Equal_temperament" target="_blank" rel="noopener">equal temperaments</a> and named temperaments fall. Click a marker to snap to it.</p>
+${srcLink('synth.lit.md', 'Source: synth.lit.md — tuning system implementation')}`;
+
+const SKEW_INFO = `
+<h2>Mech Skew</h2>
+<p>Continuously interpolates the lattice basis vectors between two named keyboard layouts:</p>
+<table>
+<tr><td><strong>0</strong></td><td><strong>DCompose / Wicki-Hayden</strong> — diagonal parallelogram grid at the Striso angle</td></tr>
+<tr><td><strong>1</strong></td><td><strong>MidiMech</strong> — orthogonal rectangular grid</td></tr>
+</table>
+<p>Values beyond [0, 1] extrapolate past these endpoints.</p>
+${srcLink('note-colors.lit.md', 'Source: note-colors.lit.md — skew interpolation math')}`;
+
+const VOLUME_INFO = `
+<h2>Volume</h2>
+<p>Master output volume. Controls the gain node at the end of the audio chain.</p>
+${srcLink('synth.lit.md', 'Source: synth.lit.md — master volume')}`;
+
+const ZOOM_INFO = `
+<h2>Zoom</h2>
+<p>Scales the grid cell size. Default is calculated from physical key width (23.5mm piano key target) using text measurement as a metric proxy.</p>
+${srcLink('app-core.lit.md', 'Source: app-core.lit.md — zoom and key sizing')}`;
+
+const BEND_INFO = `
+<h2>Pitch Bend</h2>
+<p>Controls the pitch bend range — how far a MIDI pitch bend wheel or MPE finger slide changes the pitch.</p>
+<p>Set from <strong>±2</strong> (subtle vibrato) to <strong>±48 semitones</strong> (four octaves).</p>
+${srcLink('mpe-service.lit.md', 'Source: mpe-service.lit.md — MPE pitch bend handling')}`;
+
+const VELOCITY_INFO = `
+<h2>Velocity</h2>
+<p>Note-on velocity measures how hard each note is struck, controlling initial volume and timbre brightness.</p>
+<ul>
+<li><strong>MIDI controllers</strong>: velocity from key/pad sensor (0–127)</li>
+<li><strong>Computer keyboard</strong>: fixed velocity</li>
+<li><strong>Touch screen</strong>: velocity mapped from touch pressure where supported</li>
+</ul>
+${srcLink('keyboard-visualizer.lit.md', 'Source: keyboard-visualizer.lit.md — velocity visualization')}`;
+
+const PRESSURE_INFO = `
+<h2>Pressure (Aftertouch)</h2>
+<p>Continuous force applied <em>after</em> the initial note strike.</p>
+<table>
+<tr><td><strong>Channel pressure</strong></td><td>One value for all notes</td></tr>
+<tr><td><strong>Poly pressure</strong></td><td>Independent per note — MPE devices</td></tr>
+</table>
+${srcLink('mpe-service.lit.md', 'Source: mpe-service.lit.md — pressure/aftertouch handling')}`;
+
+const TIMBRE_INFO = `
+<h2>Timbre (CC74)</h2>
+<p>Controls brightness/timbre via MIDI CC74. In MPE, this is the standard "slide" dimension.</p>
+<table>
+<tr><td><strong>CC74</strong></td><td>MPE standard — "Brightness"</td></tr>
+<tr><td><strong>CC11</strong></td><td>Expression — orchestral instruments</td></tr>
+<tr><td><strong>Poly pressure</strong></td><td>Some devices route Y-axis here</td></tr>
+</table>
+${srcLink('mpe-service.lit.md', 'Source: mpe-service.lit.md — timbre CC routing')}`;
+
+const MIDI_INFO = `
+<h2>MIDI Input</h2>
+<p>External MIDI controllers send <strong>note numbers</strong> (0–127), not grid coordinates.</p>
+<h3>Limitations</h3>
+<ul>
+<li><strong>12-note constraint</strong>: MIDI encodes pitch as integers mod 12. Microtonal tunings produce duplicate mappings.</li>
+<li><strong>Mirror notes</strong>: Same pitch at multiple grid positions — all matching cells highlight.</li>
+<li><strong>Workaround</strong>: Use <strong>Calibrate Playable Area</strong> to restrict the active range.</li>
+</ul>
+${srcLink('midi-input.lit.md', 'Source: midi-input.lit.md — MIDI device management')}`;
+
+const LAYOUT_INFO = `
+<h2>Keyboard Layout</h2>
+<table>
+<tr><td><strong>ANSI</strong></td><td>US QWERTY (default)</td></tr>
+<tr><td><strong>ISO</strong></td><td>European (extra key left of Z)</td></tr>
+<tr><td><strong>Dvorak</strong></td><td>ANSI Dvorak remapped labels</td></tr>
+</table>
+<p>Auto-detected via Keyboard API on Chrome/Edge. Falls back to ANSI.</p>
+${srcLink('keyboard-layouts.lit.md', 'Source: keyboard-layouts.lit.md — layout definitions')}`;
+
+const DEAD_ZONE_INFO = `
+<h2>Touch Dead Zone</h2>
+<p>Minimum finger velocity (CSS px/ms) before pitch bend engages. Below this, touch snaps to cell center.</p>
+<table>
+<tr><td><strong>0.00</strong></td><td>No dead zone — very sensitive</td></tr>
+<tr><td><strong>0.15</strong></td><td>Default — filters finger tremor</td></tr>
+<tr><td><strong>0.30+</strong></td><td>Requires deliberate sliding</td></tr>
+</table>
+${srcLink('app-core.lit.md', 'Source: app-core.lit.md — pointer move handler')}`;
 ```
 
 The mount function accepts the container element and the cog button. It owns
