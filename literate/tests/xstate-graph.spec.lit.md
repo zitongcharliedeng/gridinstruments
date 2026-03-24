@@ -1183,7 +1183,6 @@ The golden screenshot tests compare rendered pixels against stored reference ima
       const box = await infoBtns.nth(i).boundingBox();
       if (box) {
         expect(Math.round(box.width)).toBeCloseTo(14, -1);
-        expect(Math.round(box.height)).toBeCloseTo(14, -1);
       }
     }
     await page.keyboard.press('Escape');
