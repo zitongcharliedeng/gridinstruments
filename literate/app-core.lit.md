@@ -949,7 +949,7 @@ use the resulting CSS px width. This is a perceptual approximation, not a
 metrological conversion. To change the target, change `TARGET_KEY_MM`.
 
 ``` {.typescript file=_generated/app-core.ts}
-     const MM_PER_CHAR_AT_12PX = 2.35;
+     const MM_PER_CHAR_AT_12PX = 1.74;
      const charsNeeded = Math.round(TARGET_KEY_MM / MM_PER_CHAR_AT_12PX);
      const measureEl = document.createElement('span');
      measureEl.style.cssText = 'position:absolute;visibility:hidden;font-family:"JetBrains Mono",monospace;font-size:12px;white-space:pre;';
