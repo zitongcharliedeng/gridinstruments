@@ -491,6 +491,7 @@ The MIDI device panel renders a list of connected controllers with enable/disabl
         initialVolume: parseFloat(this.loadSetting('volume', '0.3')),
         onZoomChange: (v: number) => { this.visualizer?.setZoom(v); this.updateGraffiti?.(); this.saveSetting('zoom', String(v)); },
         initialZoom: this.defaultZoom,
+        getDefaultZoom: () => this.defaultZoom,
         onSkewChange: (v: number) => { this.visualizer?.setSkewFactor(v); this.recalcDefaultZoom(); this.updateGraffiti?.(); this.saveSetting('skew', String(v)); },
         initialSkew: parseFloat(this.loadSetting('skew', '0')),
         onShearChange: (v: number) => { this.visualizer?.setBFact(v); this.recalcDefaultZoom(); this.updateGraffiti?.(); this.saveSetting('bfact', String(v)); },

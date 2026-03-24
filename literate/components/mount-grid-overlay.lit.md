@@ -70,6 +70,7 @@ export interface GridOverlayCallbacks {
   initialVolume: number;
   onZoomChange: (v: number) => void;
   initialZoom: number;
+  getDefaultZoom: () => number;
   onSkewChange: (v: number) => void;
   initialSkew: number;
   onShearChange: (v: number) => void;
@@ -113,6 +114,7 @@ export function mountGridOverlay(
           <InfoBox infoKey="volume" infoContent={VOLUME_INFO}>
             <SliderRow def={{
               id: 'volume-slider',
+              badgeId: 'volume-thumb-badge',
               label: 'VOL',
               min: 0, max: 1, step: 0.01,
               defaultValue: callbacks.initialVolume,
@@ -124,6 +126,7 @@ export function mountGridOverlay(
             <InfoBox infoKey="tuning" infoContent={TUNING_INFO}>
               <SliderRow def={{
                 id: 'tuning-slider',
+                badgeId: 'tuning-thumb-badge',
                 label: 'FIFTHS (¢)',
                 min: 683, max: 722, step: 0.01,
                 defaultValue: 700,
@@ -139,6 +142,7 @@ export function mountGridOverlay(
             <InfoBox infoKey="dref" infoContent={DREF_INFO}>
               <SliderRow def={{
                 id: 'd-ref-slider',
+                badgeId: 'dref-thumb-badge',
                 label: 'D-REF',
                 min: 73.42, max: 1174.66, step: 0.01,
                 defaultValue: 293.66,
@@ -167,6 +171,7 @@ layout selector. Each slider wraps its info button in a `ctrl-group` flex row.
             <InfoBox infoKey="skew" infoContent={SKEW_INFO}>
               <SliderRow def={{
                 id: 'skew-slider',
+                badgeId: 'skew-thumb-badge',
                 label: 'SKEW',
                 min: -0.5, max: 1.5, step: 0.01,
                 defaultValue: 0,
@@ -184,6 +189,7 @@ layout selector. Each slider wraps its info button in a `ctrl-group` flex row.
             <InfoBox infoKey="shear" infoContent={SHEAR_INFO}>
               <SliderRow def={{
                 id: 'bfact-slider',
+                badgeId: 'shear-thumb-badge',
                 label: 'SHEAR',
                 min: -0.5, max: 1.5, step: 0.01,
                 defaultValue: 0,
@@ -201,9 +207,11 @@ layout selector. Each slider wraps its info button in a `ctrl-group` flex row.
             <InfoBox infoKey="zoom" infoContent={ZOOM_INFO}>
               <SliderRow def={{
                 id: 'zoom-slider',
+                badgeId: 'zoom-thumb-badge',
                 label: 'ZOOM',
                 min: 0.2, max: 3, step: 0.01,
                 defaultValue: callbacks.initialZoom,
+                getDefaultValue: callbacks.getDefaultZoom,
                 formatBadge: (v: number) => v.toFixed(2),
                 onChange: callbacks.onZoomChange,
               }} />

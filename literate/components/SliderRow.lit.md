@@ -108,11 +108,13 @@ export interface PresetDef {
 
 export interface SliderDef {
   id: string;
+  badgeId?: string;
   label: string;
   min: number;
   max: number;
   step: number;
   defaultValue: number;
+  getDefaultValue?: () => number;
   formatBadge?: (v: number) => string;
   onChange?: (v: number) => void;
   presets?: PresetDef[];
@@ -130,7 +132,7 @@ and optional preset marks.
 ``` {.typescript file=_generated/components/SliderRow.tsx}
 
 export function SliderRow(props: { def: SliderDef }): JSX.Element {
-  const defVal = (): number => props.def.defaultValue;
+  const defVal = (): number => props.def.getDefaultValue ? props.def.getDefaultValue() : props.def.defaultValue;
   const fmt = (): ((v: number) => string) => props.def.formatBadge ?? ((v: number): string => v.toFixed(1));
   const [value, setValue] = createSignal(props.def.defaultValue);
 
@@ -171,6 +173,7 @@ export function SliderRow(props: { def: SliderDef }): JSX.Element {
           <input
             type="text"
             class="badge-input slider-badge-edit"
+            id={props.def.badgeId}
             value={fmt()(value())}
             style={{ left: pct() }}
             onFocus={(e: FocusEvent): void => { (e.target as HTMLInputElement).select(); }}
