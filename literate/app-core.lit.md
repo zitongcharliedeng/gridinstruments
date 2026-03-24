@@ -2141,7 +2141,6 @@ Calibration mode shows a banner instructing the user to play all reachable notes
     if (banner) banner.classList.remove('show-flex');
     const btn = document.getElementById('calibrate-btn') as HTMLButtonElement | null;
     if (btn) {
-      btn.textContent = 'Calibrate Playable Area';
       btn.classList.remove('active');
       btn.disabled = false;
     }
