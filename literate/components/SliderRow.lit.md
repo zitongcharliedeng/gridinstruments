@@ -24,6 +24,7 @@ all use CSS on Kobalte's data attributes — no inline styles needed.
 .slider-track-el {
   position: relative; display: flex; align-items: center;
   height: 18px; width: 100%; background: #000; cursor: pointer;
+  overflow: hidden;
 }
 .slider-fill-el {
   position: absolute !important; top: 0; bottom: 0; background: var(--fg); pointer-events: none;
