@@ -1017,8 +1017,9 @@ half-vector, double it (half → full side), and take the minimum:
      this.pianoKeyPx = pianoKeyPx;
      const dpiBasedZoom = pianoKeyPx / gridCellSidePx;
      this.defaultZoom = dpiBasedZoom;
-     const savedZoom = this.loadSetting('zoom', this.defaultZoom.toString());
-     this.visualizer?.setZoom(parseFloat(savedZoom));
+     const savedZoom = parseFloat(this.loadSetting('zoom', this.defaultZoom.toString()));
+     const zoomToApply = (Number.isFinite(savedZoom) && savedZoom > 0.1 && savedZoom < 10) ? savedZoom : this.defaultZoom;
+     this.visualizer?.setZoom(zoomToApply);
 ```
 
 The DPI override input lets users correct auto-detection on non-standard displays. When set, the value is persisted to localStorage and applied to the visualizer's `cssPxPerInch`, then the zoom reset target is recalculated so the physical key size stays accurate. The reset button clears the override and restores the auto-detected value.
@@ -2091,7 +2092,6 @@ Calibration mode shows a banner instructing the user to play all reachable notes
     document.getElementById('pedals-panel')?.classList[method]('dimmed');
     document.querySelector('.top-bar-left')?.classList[method]('dimmed');
     document.getElementById('song-bar-search')?.classList[method]('dimmed');
-    document.getElementById('song-bar-status')?.classList[method]('dimmed');
   }
 
   private enterCalibrationMode(): void {
