@@ -312,6 +312,24 @@ active — the song title, progress bar, elapsed timer, and restart button.
                 Calibrate Playable Area
               </button>
             </div>
+            <div class="calibrate-wrap">
+              <span id="calibration-banner">
+                <span id="calibration-warning" />
+                <span id="calibration-msg">Play all reachable notes, then confirm</span>
+                <button
+                  id="calibrate-confirm"
+                  onClick={() => { props.onCalibrateConfirm(); }}
+                >
+                  &#x2713;
+                </button>
+                <button
+                  id="calibrate-cancel"
+                  onClick={() => { props.onCalibrateCancel(); }}
+                >
+                  &#x2717;
+                </button>
+              </span>
+            </div>
           </div>
         </Show>
         <div id="game-status">
@@ -344,26 +362,7 @@ range. The banner with confirm/cancel actions appears when calibration is active
 
       <span id="song-bar-hint" />
 
-      <div id="song-bar-calibrate">
-        <div class="calibrate-wrap">
-          <span id="calibration-banner">
-            <span id="calibration-warning" />
-            <span id="calibration-msg">Confirm?</span>
-          <button
-            id="calibrate-confirm"
-            onClick={() => { props.onCalibrateConfirm(); }}
-          >
-            &#x2713;
-          </button>
-          <button
-            id="calibrate-cancel"
-            onClick={() => { props.onCalibrateCancel(); }}
-          >
-            &#x2717;
-          </button>
-        </span>
-        </div>
-      </div>
+      <div id="song-bar-calibrate" />
 
     </div>
   );
