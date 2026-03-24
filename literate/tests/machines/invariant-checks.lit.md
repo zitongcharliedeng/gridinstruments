@@ -3860,9 +3860,9 @@ export const songBarSm3: StateInvariant = {
 
 export const songBarSm4: StateInvariant = {
   id: 'SONGBAR-SM-4',
-  description: '#calibrate-btn exists inside #song-bar-calibrate',
+  description: '#calibrate-btn exists inside #song-bar',
   check: async (page) => {
-    await expect(page.locator('#song-bar-calibrate #calibrate-btn')).toBeAttached();
+    await expect(page.locator('#song-bar #calibrate-btn')).toBeAttached();
   },
 };
 
