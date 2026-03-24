@@ -4034,29 +4034,16 @@ export const SONGBAR_HINT_1: StateInvariant = {
 
 export const SONGBAR_HINT_2: StateInvariant = {
   id: 'SONGBAR-HINT-2',
-  description: '#calibrate-btn right edge is near #song-bar right edge',
+  description: '#game-settings-btn exists in song-bar-status',
   check: async (page: Page) => {
-    const originalViewport = page.viewportSize();
-    await page.setViewportSize({ width: 1920, height: 1080 });
-    try {
-      const result = await page.evaluate(() => {
-        const btn = document.getElementById('calibrate-btn');
-        const songBar = document.getElementById('song-bar');
-        if (!btn) throw new Error('#calibrate-btn not found');
-        if (!songBar) throw new Error('#song-bar not found');
-        const btnBox = btn.getBoundingClientRect();
-        const barBox = songBar.getBoundingClientRect();
-        return { btnRight: btnBox.right, barRight: barBox.right };
-      });
-      const diff = Math.abs(result.barRight - result.btnRight);
-      if (diff > 40) {
-        throw new Error(`#calibrate-btn right edge (${result.btnRight}) is ${diff}px from #song-bar right edge (${result.barRight}) — expected within 40px`);
-      }
-    } finally {
-      if (originalViewport) {
-        await page.setViewportSize(originalViewport);
-      }
-    }
+    const exists = await page.evaluate(() => {
+      const btn = document.getElementById('game-settings-btn');
+      const status = document.getElementById('song-bar-status');
+      if (!btn) throw new Error('#game-settings-btn not found');
+      if (!status) throw new Error('#song-bar-status not found');
+      return status.contains(btn);
+    });
+    if (!exists) throw new Error('#game-settings-btn not inside #song-bar-status');
   },
 };
 
