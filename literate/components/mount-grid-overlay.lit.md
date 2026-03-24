@@ -113,8 +113,7 @@ export function mountGridOverlay(
             <button class="slider-reset icon-btn icon-md" id="wave-reset"><i data-lucide="rotate-cw" /></button>
           </div>
           <div class="ctrl-group mt-18">
-            <InfoButton infoKey="volume" content={VOLUME_INFO} />
-            <SliderRow def={{
+            <SliderRow infoKey="volume" infoContent={VOLUME_INFO} def={{
               id: 'volume-slider',
               label: 'VOL',
               min: 0, max: 1, step: 0.01,
@@ -125,8 +124,7 @@ export function mountGridOverlay(
           </div>
           <div class="tuning-slider-area mt-18">
             <div class="ctrl-group">
-              <InfoButton infoKey="tuning" content={TUNING_INFO} />
-              <SliderRow def={{
+              <SliderRow infoKey="tuning" infoContent={TUNING_INFO} def={{
                 id: 'tuning-slider',
                 label: 'FIFTHS (¢)',
                 min: 683, max: 722, step: 0.01,
@@ -141,8 +139,7 @@ export function mountGridOverlay(
           </div>
           <div class="tuning-slider-area mt-18">
             <div class="ctrl-group">
-              <InfoButton infoKey="dref" content={DREF_INFO} />
-              <SliderRow def={{
+              <SliderRow infoKey="dref" infoContent={DREF_INFO} def={{
                 id: 'd-ref-slider',
                 label: 'D-REF',
                 min: 73.42, max: 1174.66, step: 0.01,
@@ -170,8 +167,7 @@ layout selector. Each slider wraps its info button in a `ctrl-group` flex row.
         <div>
           <div class="tuning-slider-area">
             <div class="ctrl-group">
-              <InfoButton infoKey="skew" content={SKEW_INFO} />
-              <SliderRow def={{
+              <SliderRow infoKey="skew" infoContent={SKEW_INFO} def={{
                 id: 'skew-slider',
                 label: 'SKEW',
                 min: -0.5, max: 1.5, step: 0.01,
@@ -188,8 +184,7 @@ layout selector. Each slider wraps its info button in a `ctrl-group` flex row.
           </div>
           <div class="tuning-slider-area mt-18">
             <div class="ctrl-group">
-              <InfoButton infoKey="shear" content={SHEAR_INFO} />
-              <SliderRow def={{
+              <SliderRow infoKey="shear" infoContent={SHEAR_INFO} def={{
                 id: 'bfact-slider',
                 label: 'SHEAR',
                 min: -0.5, max: 1.5, step: 0.01,
@@ -206,8 +201,7 @@ layout selector. Each slider wraps its info button in a `ctrl-group` flex row.
           </div>
           <div class="tuning-slider-area mt-18">
             <div class="ctrl-group">
-              <InfoButton infoKey="zoom" content={ZOOM_INFO} />
-              <SliderRow def={{
+              <SliderRow infoKey="zoom" infoContent={ZOOM_INFO} def={{
                 id: 'zoom-slider',
                 label: 'ZOOM',
                 min: 0.2, max: 3, step: 0.01,
