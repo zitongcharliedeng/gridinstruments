@@ -4284,6 +4284,26 @@ export const INFOBOX_STRUCTURE: StateInvariant = {
     if (result.broken > 0) throw new Error(`${result.broken} InfoBox elements missing required children`);
   },
 };
+
+export const CAL_NOT_DIMMED: StateInvariant = {
+  id: 'CAL-NOT-DIMMED',
+  description: 'During calibration, song-bar-status is NOT dimmed (calibrate buttons clickable)',
+  check: async (page: Page) => {
+    await page.locator('#game-settings-btn').click();
+    await page.waitForTimeout(500);
+    await page.locator('#calibrate-btn').click({ force: true });
+    await page.waitForTimeout(500);
+    const dimmed = await page.evaluate(() =>
+      document.getElementById('song-bar-status')?.classList.contains('dimmed') ?? false
+    );
+    await page.evaluate(() => {
+      (document.getElementById('calibrate-cancel') as HTMLButtonElement)?.click();
+    });
+    await page.waitForTimeout(300);
+    await page.keyboard.press('Escape');
+    if (dimmed) throw new Error('song-bar-status is dimmed during calibration — blocks touch events on confirm/cancel');
+  },
+};
 ```
 
 ## Info Popup Invariants

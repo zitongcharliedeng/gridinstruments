@@ -157,6 +157,7 @@ import {
      GAME_SETTINGS_HIDDEN,
      GAME_SETTINGS_COG,
      INFOBOX_STRUCTURE,
+     CAL_NOT_DIMMED,
      INFO_POPUP_1,
      INFO_POPUP_2,
      INFO_POPUP_3,
@@ -939,6 +940,10 @@ The SongBar progress and calibration tests verify that the in-game status elemen
 
   test('INFOBOX-STRUCTURE: all InfoBox elements have required children', async ({ page }) => {
     await INFOBOX_STRUCTURE.check(page);
+  });
+
+  test('CAL-NOT-DIMMED: song-bar-status not dimmed during calibration', async ({ page }) => {
+    await CAL_NOT_DIMMED.check(page);
   });
 ```
 
