@@ -1013,7 +1013,7 @@ color shift — real-time visual feedback of where the pitch is heading on the
 
     if (mpeExpr && isActive && Math.abs(mpeExpr.pitchBend) > 0.01) {
       const bendPitchCents = button.pitchCents + mpeExpr.pitchBend * 100;
-      const bendSteps = Math.round(mpeExpr.pitchBend * 2);
+      const bendSteps = Math.round(mpeExpr.pitchBend * 100 / this.options.generator[0]);
       const targetCoordX = coordX + (bendSteps !== 0 ? bendSteps : (mpeExpr.pitchBend > 0 ? 1 : -1));
       const { fill: bendFill } = cellColors(targetCoordX, 'active', bendPitchCents);
       this.ctx.globalAlpha = Math.min(0.85, Math.abs(mpeExpr.pitchBend) * 1.2);
