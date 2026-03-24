@@ -19,6 +19,20 @@ import type { SectionDef } from './SettingsOverlay';
 import { InfoButton } from './InfoButton';
 import { SliderRow } from './SliderRow';
 import { TUNING_MARKERS } from '../lib/synth';
+import { srcLink, tuningTableRows } from '../app-constants';
+
+const VOLUME_INFO = `<h2>Volume</h2><p>Master output volume.</p>${srcLink('synth.lit.md', 'Source: synth.lit.md')}`;
+const TUNING_INFO = `<h2>Fifths Tuning</h2><p>Sets the perfect fifth generator in cents. This single parameter determines the entire tuning system.</p><table>${tuningTableRows}</table><p>Click a marker to snap to an equal temperament.</p>${srcLink('synth.lit.md', 'Source: synth.lit.md')}`;
+const DREF_INFO = `<h2>D-ref Frequency</h2><p>The reference pitch at grid origin [0,0]. Default 293.66 Hz (D4 in 12-TET). Adjustable to any frequency.</p>${srcLink('keyboard-layouts.lit.md', 'Source: keyboard-layouts.lit.md')}`;
+const SKEW_INFO = `<h2>Mech Skew</h2><p>Interpolates between DCompose/Wicki-Hayden (0) and MidiMech (1) grid layouts.</p>${srcLink('note-colors.lit.md', 'Source: note-colors.lit.md')}`;
+const SHEAR_INFO = `<h2>Wicked Shear</h2><p>Shear mapping: 0=DCompose (natural angle), 1=Wicki-Hayden (horizontal rows). Area-preserving.</p>${srcLink('note-colors.lit.md', 'Source: note-colors.lit.md')}`;
+const ZOOM_INFO = `<h2>Zoom</h2><p>Scales grid cell size. Default calculated from physical key width (23.5mm piano key target).</p>${srcLink('app-core.lit.md', 'Source: app-core.lit.md')}`;
+const MIDI_INFO = `<h2>MIDI Input</h2><p>External MIDI controllers send note numbers (0-127). 12-note constraint: microtonal tunings produce duplicate mappings. Use Calibrate to restrict range.</p>${srcLink('midi-input.lit.md', 'Source: midi-input.lit.md')}`;
+const BEND_INFO = `<h2>Pitch Bend</h2><p>Bend range ±2 to ±48 semitones. MPE: per-note bend. Standard: all notes.</p>${srcLink('mpe-service.lit.md', 'Source: mpe-service.lit.md')}`;
+const VELOCITY_INFO = `<h2>Velocity</h2><p>Note-on strike force → initial volume + timbre. MIDI: 0-127 sensor. Keyboard: fixed. Touch: pressure.</p>${srcLink('keyboard-visualizer.lit.md', 'Source: keyboard-visualizer.lit.md')}`;
+const PRESSURE_INFO = `<h2>Pressure</h2><p>Aftertouch force after strike. Channel (all notes) or Poly (per note, MPE).</p>${srcLink('mpe-service.lit.md', 'Source: mpe-service.lit.md')}`;
+const TIMBRE_INFO = `<h2>Timbre (CC74)</h2><p>Brightness/slide via CC74 (MPE standard), CC11 (expression), or poly pressure.</p>${srcLink('mpe-service.lit.md', 'Source: mpe-service.lit.md')}`;
+const DEAD_ZONE_INFO = `<h2>Touch Dead Zone</h2><p>Min finger velocity (px/ms) for pitch bend. 0=sensitive, 0.15=default, 0.3+=deliberate.</p>${srcLink('app-core.lit.md', 'Source: app-core.lit.md')}`;
 ```
 
 The mount function accepts the container element and the cog button. It owns
@@ -98,7 +112,7 @@ export function mountGridOverlay(
             <button class="slider-reset icon-btn icon-md" id="wave-reset"><i data-lucide="rotate-cw" /></button>
           </div>
           <div class="ctrl-group mt-18">
-            <InfoButton infoKey="volume" />
+            <InfoButton infoKey="volume" content={VOLUME_INFO} />
             <SliderRow def={{
               id: 'volume-slider',
               label: 'VOL (dB)',
@@ -110,7 +124,7 @@ export function mountGridOverlay(
           </div>
           <div class="tuning-slider-area mt-18">
             <div class="ctrl-group">
-              <InfoButton infoKey="tuning" />
+              <InfoButton infoKey="tuning" content={TUNING_INFO} />
               <SliderRow def={{
                 id: 'tuning-slider',
                 label: 'FIFTHS TUNING (cents)',
@@ -126,7 +140,7 @@ export function mountGridOverlay(
           </div>
           <div class="tuning-slider-area mt-18">
             <div class="ctrl-group">
-              <InfoButton infoKey="dref" />
+              <InfoButton infoKey="dref" content={DREF_INFO} />
               <SliderRow def={{
                 id: 'd-ref-slider',
                 label: 'D REF (Hz)',
@@ -155,7 +169,7 @@ layout selector. Each slider wraps its info button in a `ctrl-group` flex row.
         <div>
           <div class="tuning-slider-area">
             <div class="ctrl-group">
-              <InfoButton infoKey="skew" />
+              <InfoButton infoKey="skew" content={SKEW_INFO} />
               <SliderRow def={{
                 id: 'skew-slider',
                 label: 'MECH SKEW',
@@ -173,7 +187,7 @@ layout selector. Each slider wraps its info button in a `ctrl-group` flex row.
           </div>
           <div class="tuning-slider-area mt-18">
             <div class="ctrl-group">
-              <InfoButton infoKey="shear" />
+              <InfoButton infoKey="shear" content={SHEAR_INFO} />
               <SliderRow def={{
                 id: 'bfact-slider',
                 label: 'WICKED SHEAR',
@@ -191,7 +205,7 @@ layout selector. Each slider wraps its info button in a `ctrl-group` flex row.
           </div>
           <div class="tuning-slider-area mt-18">
             <div class="ctrl-group">
-              <InfoButton infoKey="zoom" />
+              <InfoButton infoKey="zoom" content={ZOOM_INFO} />
               <SliderRow def={{
                 id: 'zoom-slider',
                 label: 'ZOOM (x)',
@@ -231,11 +245,11 @@ MPE dimensions are active. Pressure mode and CC source use slim-select dropdowns
           </div>
           <div class="mt-18">
             <div id="midi-settings-panel">
-              <span class="overlay-section-title">MIDI</span> <InfoButton infoKey="midi" />
+              <span class="overlay-section-title">MIDI</span> <InfoButton infoKey="midi" content={MIDI_INFO} />
               <div id="midi-device-list" />
               <span class="overlay-section-title">EXPRESSION</span>
               <div class="midi-panel-row" id="expr-bend-row">
-                <InfoButton infoKey="bend" />
+                <InfoButton infoKey="bend" content={BEND_INFO} />
                 <label class="expr-label">
                   <span class="gi-checkbox"><input type="checkbox" id="expr-bend" checked /><span class="gi-check" /></span>
                   <span class="text-white">Pitch Bend</span>
@@ -244,14 +258,14 @@ MPE dimensions are active. Pressure mode and CC source use slim-select dropdowns
                 </label>
               </div>
               <div class="midi-panel-row" id="expr-velocity-row">
-                <InfoButton infoKey="velocity" />
+                <InfoButton infoKey="velocity" content={VELOCITY_INFO} />
                 <label class="expr-label">
                   <span class="gi-checkbox"><input type="checkbox" id="expr-velocity" checked /><span class="gi-check" /></span>
                   <span class="text-white">Note Velocity</span>
                 </label>
               </div>
               <div class="midi-panel-row" id="expr-pressure-row">
-                <InfoButton infoKey="pressure" />
+                <InfoButton infoKey="pressure" content={PRESSURE_INFO} />
                 <span class="text-white-12">Pressure</span>
                 <span class="text-dim">mode</span>
                 <span id="pressure-mode-slot" />
@@ -259,7 +273,7 @@ MPE dimensions are active. Pressure mode and CC source use slim-select dropdowns
                 <span id="pressure-cc-source-slot" />
               </div>
               <div class="midi-panel-row" id="expr-timbre-row">
-                <InfoButton infoKey="timbre" />
+                <InfoButton infoKey="timbre" content={TIMBRE_INFO} />
                 <label class="expr-label">
                   <span class="gi-checkbox"><input type="checkbox" id="expr-timbre" checked /><span class="gi-check" /></span>
                   <span class="text-white">Timbre Slide</span>
@@ -271,7 +285,7 @@ MPE dimensions are active. Pressure mode and CC source use slim-select dropdowns
                 </label>
               </div>
               <div class="midi-panel-row" id="touch-dead-zone-row">
-                <InfoButton infoKey="touchDeadZone" />
+                <InfoButton infoKey="touchDeadZone" content={DEAD_ZONE_INFO} />
                 <span class="text-white-12">Touch Dead Zone</span>
                 <input type="range" id="touch-dead-zone-slider" min="0" max="0.5" step="0.01" value="0.15" class="inline-slider" />
                 <span id="touch-dead-zone-badge" class="text-dim-sm">0.15</span>

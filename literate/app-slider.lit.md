@@ -5,7 +5,7 @@ Slider UI helpers — thumb positioning, fill gradients, badge clamping, and inf
 ## Imports
 
 ``` {.typescript file=_generated/app-slider.ts}
-import { SLIDER_INFO } from './app-constants';
+const SLIDER_INFO: Record<string, string> = {};
 import { createActor } from 'xstate';
 import { dialogMachine } from './machines/dialogMachine';
 ```
