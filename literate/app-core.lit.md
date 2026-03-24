@@ -296,7 +296,13 @@ MIDI listener setup wires incoming note-on, note-off, pitch bend, slide (CC74), 
     const getVoicesForChannel = (deviceId: string, channel: number): string[] => {
       const channelKey = `${deviceId}_${channel}`;
       const lastNote = this.lastNotePerChannel.get(channelKey);
-      return lastNote ? [lastNote] : [];
+      if (lastNote) return [lastNote];
+      const prefix = `${deviceId}_${channel}_`;
+      const fallback: string[] = [];
+      for (const [key, audioId] of this.midiChannelVoice) {
+        if (key.startsWith(prefix)) fallback.push(audioId);
+      }
+      return fallback;
     };
 
     this.midi.onPitchBend((channel, value, deviceId) => {
