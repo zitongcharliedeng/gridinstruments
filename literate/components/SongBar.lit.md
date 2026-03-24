@@ -286,12 +286,12 @@ active — the song title, progress bar, elapsed timer, and restart button.
           <i data-lucide="settings" />
         </button>
         <div class="game-settings-popup" classList={{ hidden: !gameSettingsOpen() && !calibrating() }}>
-          <div style="display:flex;align-items:center;gap:4px">
+          <div style={{ display: 'flex', 'align-items': 'center', gap: '4px' }}>
             <InfoButton infoKey="quantization" content={QUANT_INFO} />
             <span class="text-dim-sm">Quant</span>
             <span id="quantization-select-slot" />
           </div>
-          <div style="display:flex;align-items:center;gap:4px">
+          <div style={{ display: 'flex', 'align-items': 'center', gap: '4px' }}>
             <InfoButton infoKey="maxkeys" content={MAXKEYS_INFO} />
             <label class="maxkeys-label">
               Max Keys
@@ -305,7 +305,7 @@ active — the song title, progress bar, elapsed timer, and restart button.
               />
             </label>
           </div>
-          <div style="display:flex;align-items:center;gap:4px">
+          <div style={{ display: 'flex', 'align-items': 'center', gap: '4px' }}>
             <InfoButton infoKey="calibrate" content={CALIBRATE_INFO} />
             <div class="calibrate-wrap">
               <button

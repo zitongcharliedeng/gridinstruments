@@ -44,7 +44,7 @@ export interface InfoButtonProps {
 
 function extractTitle(html: string | undefined): string {
   if (!html) return '';
-  const m = html.match(/<h2>(.*?)<\/h2>/);
+  const m = (/<h2>(.*?)<\/h2>/).exec(html);
   return m ? m[1] : '';
 }
 
