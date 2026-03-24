@@ -815,7 +815,7 @@ The quantization tests verify `quantizeNotes` at each supported resolution: `non
    });
 ```
 
-The SongBar state machine tests confirm that the machine's states are defined, that `#song-bar-hint` is accessible, that the search input lives inside `#song-bar-search`, that the calibrate button is inside `#song-bar-calibrate`, and that calibration confirm/cancel buttons exist inside `#calibration-banner`. The mirror-highlight test confirms that a single MIDI note maps to multiple isomorphic grid positions.
+The SongBar state machine tests confirm that the machine's states are defined, that `#song-bar-hint` is accessible, that the search input lives inside `#song-bar-search`, that the calibrate button exists in the song bar (inside the game settings popup in `#song-bar-status`), and that calibration confirm/cancel buttons exist inside `#calibration-banner`. The mirror-highlight test confirms that a single MIDI note maps to multiple isomorphic grid positions.
 
 ``` {.typescript file=_generated/tests/xstate-graph.spec.ts}
   test('SONGBAR-SM-1: songBarMachine states exist', async ({ page }) => {
