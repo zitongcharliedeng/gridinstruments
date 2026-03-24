@@ -146,7 +146,7 @@ The constructor initializes the core subsystems (synth, MIDI, MPE, layout) and g
     this.historyCanvas = getElement('history-canvas', HTMLCanvasElement);
 
     const savedPbRange = parseInt(this.loadSetting('midiPbRange', '24'), 10);
-    this.midiPitchBendRange = (savedPbRange >= 2 && savedPbRange <= 96) ? savedPbRange : 24;
+    this.midiPitchBendRange = (Number.isFinite(savedPbRange) && savedPbRange > 0) ? savedPbRange : 24;
     this.expressionBend = this.loadSetting('exprBend', 'true') === 'true';
     this.expressionVelocity = this.loadSetting('exprVelocity', 'true') === 'true';
     this.expressionPressure = this.loadSetting('exprPressure', 'true') === 'true';
@@ -725,8 +725,8 @@ MIDI expression settings let the user configure pitch bend range (2-48 semitones
     if (pbRangeInput) {
       pbRangeInput.value = this.midiPitchBendRange.toString();
       pbRangeInput.addEventListener('change', () => {
-        const val = parseInt(pbRangeInput.value, 10);
-        if (val >= 2 && val <= 96) {
+        const val = parseFloat(pbRangeInput.value);
+        if (Number.isFinite(val) && val > 0) {
           this.midiPitchBendRange = val;
           this.saveSetting('midiPbRange', val.toString());
         } else {
@@ -734,11 +734,11 @@ MIDI expression settings let the user configure pitch bend range (2-48 semitones
         }
       });
       pbRangeInput.addEventListener('blur', () => {
-        const val = parseInt(pbRangeInput.value, 10);
-        const clamped = Math.max(2, Math.min(96, Number.isFinite(val) ? val : 24));
-        pbRangeInput.value = clamped.toString();
-        this.midiPitchBendRange = clamped;
-        this.saveSetting('midiPbRange', clamped.toString());
+        const val = parseFloat(pbRangeInput.value);
+        const resolved = (Number.isFinite(val) && val > 0) ? val : 24;
+        pbRangeInput.value = resolved.toString();
+        this.midiPitchBendRange = resolved;
+        this.saveSetting('midiPbRange', resolved.toString());
       });
     }
 

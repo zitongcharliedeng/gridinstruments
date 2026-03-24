@@ -43,7 +43,7 @@ function so app-core can drive visibility from the `overlayMachine` actor.
 .text-dim-plain { color:var(--dim); }
 .expr-label-sm { display:inline-flex; align-items:center; gap:3px; cursor:pointer; font-size:10px; }
 .expr-label-lg { display:inline-flex; align-items:center; gap:6px; cursor:pointer; font-size:12px; }
-.numeric-input { width:4ch; text-align:center; font-family:var(--font); font-size:10px; background:var(--bg); color:var(--fg); border:1px solid var(--border); padding:2px 3px; }
+.numeric-input { width:6ch; text-align:center; font-family:var(--font); font-size:10px; background:var(--bg); color:var(--fg); border:1px solid var(--border); padding:2px 3px; }
 .select-slot { min-width:120px; display:inline-block; }
 #d-ref-input { width:80px; text-transform:none; }
 ```
@@ -239,7 +239,7 @@ MPE dimensions are active. Pressure mode and CC source use slim-select dropdowns
                 <label class="expr-label">
                   <span class="gi-checkbox"><input type="checkbox" id="expr-bend" checked /><span class="gi-check" /></span>
                   <span class="text-white">Pitch Bend</span>
-                  <input type="text" inputmode="numeric" pattern="[0-9]*" id="midi-pb-range-expr" value={callbacks.initialPbRange} class="numeric-input" />
+                  <input type="text" inputmode="decimal" id="midi-pb-range-expr" value={callbacks.initialPbRange} class="numeric-input" />
                   <span class="text-dim-sm">semitones</span>
                 </label>
               </div>
