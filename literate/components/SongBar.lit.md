@@ -303,35 +303,33 @@ active — the song title, progress bar, elapsed timer, and restart button.
                 />
               </label>
             </div>
-            <div style="display:flex;align-items:center;gap:4px">
-              <InfoButton infoKey="calibrate" content={CALIBRATE_INFO} />
-              <div class="calibrate-wrap">
-                <button
-                  id="calibrate-btn"
-                  onClick={() => { props.onCalibrateStart(); }}
-                >
-                  Calibrate Playable Area
-                </button>
-                <span id="calibration-banner">
-                  <span id="calibration-warning" />
-                  <span id="calibration-msg">Play all reachable notes</span>
-                  <button
-                    id="calibrate-confirm"
-                    onClick={() => { props.onCalibrateConfirm(); }}
-                  >
-                    &#x2713;
-                  </button>
-                  <button
-                    id="calibrate-cancel"
-                    onClick={() => { props.onCalibrateCancel(); }}
-                  >
-                    &#x2717;
-                  </button>
-                </span>
-              </div>
-            </div>
           </div>
         </Show>
+        <InfoButton infoKey="calibrate" content={CALIBRATE_INFO} />
+        <div class="calibrate-wrap">
+          <button
+            id="calibrate-btn"
+            onClick={() => { props.onCalibrateStart(); }}
+          >
+            Calibrate Playable Area
+          </button>
+          <span id="calibration-banner">
+            <span id="calibration-warning" />
+            <span id="calibration-msg">Play all reachable notes</span>
+            <button
+              id="calibrate-confirm"
+              onClick={() => { props.onCalibrateConfirm(); }}
+            >
+              &#x2713;
+            </button>
+            <button
+              id="calibrate-cancel"
+              onClick={() => { props.onCalibrateCancel(); }}
+            >
+              &#x2717;
+            </button>
+          </span>
+        </div>
         <div id="game-status">
           <div id="game-song-title" />
           <div class="game-controls">
