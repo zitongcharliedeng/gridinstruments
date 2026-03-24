@@ -1174,7 +1174,7 @@ the tuning slider and calibrate button to prevent mid-game tuning changes.
       if (tuningSliderDisable) tuningSliderDisable.disabled = state === 'playing';
 
       const calibrateBtn = getElementOrNull('calibrate-btn', HTMLButtonElement);
-      if (calibrateBtn) calibrateBtn.disabled = false;
+      if (calibrateBtn) calibrateBtn.disabled = state === 'playing';
 
       if (state === 'playing') {
         if (this.idleTimeout !== null) {
