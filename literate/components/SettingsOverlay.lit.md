@@ -101,9 +101,9 @@ that floats above the slider thumb.
 ``` {.css file=_generated/components/SettingsOverlay.css}
 .overlay-section { display:flex; flex-direction:column; gap:5px; margin-left:0; margin-bottom:8px; }
 .overlay-section .ctrl-label { color:#fff; }
-.overlay-section .slider-track { width:100%; }
+.overlay-section .slider-row { width:100%; }
 .overlay-section .tuning-slider-area { position:relative; width:100%; margin-bottom:40px; }
-.overlay-section .tuning-slider-area .slider-track { width:calc(100% - 18px); }
+.overlay-section .tuning-slider-area .slider-row { width:calc(100% - 18px); }
 .overlay-section-title {
   font-size:11px; color:var(--dim); text-transform:uppercase; letter-spacing:0.08em;
   font-family:var(--font); font-weight:700; display:flex; align-items:center; gap:6px;

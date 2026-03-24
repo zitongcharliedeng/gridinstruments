@@ -1845,7 +1845,7 @@ export const iss98AlignmentCheck: StateInvariant = {
   check: async (page: Page) => {
     await page.locator('#grid-settings-btn').click();
     await page.waitForTimeout(300);
-    const tracks = page.locator('#grid-overlay .slider-track');
+    const tracks = page.locator('#grid-overlay .slider-row');
     const count = await tracks.count();
     expect(count).toBeGreaterThanOrEqual(3);
     const rights: number[] = [];
@@ -4596,19 +4596,22 @@ export const SLIDER_FILL_CHECK: StateInvariant = {
   check: async (page: Page) => {
     await page.locator('#grid-settings-btn').click();
     await page.waitForTimeout(200);
-    const unfilled = await page.evaluate(() => {
-      const sliders = document.querySelectorAll<HTMLInputElement>('.slider-track input[type="range"]');
+    const result = await page.evaluate(() => {
+      const sliders = document.querySelectorAll('.slider-row');
       const missing: string[] = [];
       sliders.forEach(s => {
-        if (s.offsetWidth > 0 && !s.style.background.includes('gradient')) {
-          missing.push(s.id || 'unknown');
-        }
+        if (s.offsetWidth <= 0) return;
+        const fill = s.querySelector('.slider-fill-el');
+        if (!fill) missing.push(s.querySelector('[id]')?.id ?? 'unknown');
       });
-      return missing;
+      return { total: sliders.length, missing };
     });
     await page.locator('#grid-settings-btn').click();
-    if (unfilled.length > 0) {
-      throw new Error(`Sliders without fill gradient: ${unfilled.join(', ')}`);
+    if (result.missing.length > 0) {
+      throw new Error(`Sliders without fill element: ${result.missing.join(', ')}`);
+    }
+    if (result.total < 3) {
+      throw new Error(`Expected at least 3 sliders, found ${result.total}`);
     }
   },
 };
