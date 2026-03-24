@@ -282,53 +282,53 @@ active — the song title, progress bar, elapsed timer, and restart button.
         >
           <i data-lucide="settings" />
         </button>
-        <Show when={gameSettingsOpen()}>
-          <div class="game-settings-popup">
-            <div style="display:flex;align-items:center;gap:4px">
-              <InfoButton infoKey="quantization" content={QUANT_INFO} />
-              <span class="text-dim-sm">Quant</span>
-              <span id="quantization-select-slot" />
-            </div>
-            <div style="display:flex;align-items:center;gap:4px">
-              <InfoButton infoKey="maxkeys" content={MAXKEYS_INFO} />
-              <label class="maxkeys-label">
-                Max Keys
-                <input
-                  type="text"
-                  inputmode="numeric"
-                  pattern="[0-9]*"
-                  id="max-keys-input"
-                  value={maxKeys()}
-                  onChange={handleMaxKeysChange}
-                />
-              </label>
+        <div class="game-settings-popup" classList={{ hidden: !gameSettingsOpen() }}>
+          <div style="display:flex;align-items:center;gap:4px">
+            <InfoButton infoKey="quantization" content={QUANT_INFO} />
+            <span class="text-dim-sm">Quant</span>
+            <span id="quantization-select-slot" />
+          </div>
+          <div style="display:flex;align-items:center;gap:4px">
+            <InfoButton infoKey="maxkeys" content={MAXKEYS_INFO} />
+            <label class="maxkeys-label">
+              Max Keys
+              <input
+                type="text"
+                inputmode="numeric"
+                pattern="[0-9]*"
+                id="max-keys-input"
+                value={maxKeys()}
+                onChange={handleMaxKeysChange}
+              />
+            </label>
+          </div>
+          <div style="display:flex;align-items:center;gap:4px">
+            <InfoButton infoKey="calibrate" content={CALIBRATE_INFO} />
+            <div class="calibrate-wrap">
+              <button
+                id="calibrate-btn"
+                onClick={() => { props.onCalibrateStart(); }}
+              >
+                Calibrate Playable Area
+              </button>
+              <span id="calibration-banner">
+                <span id="calibration-warning" />
+                <span id="calibration-msg">Play all reachable notes</span>
+                <button
+                  id="calibrate-confirm"
+                  onClick={() => { props.onCalibrateConfirm(); }}
+                >
+                  &#x2713;
+                </button>
+                <button
+                  id="calibrate-cancel"
+                  onClick={() => { props.onCalibrateCancel(); }}
+                >
+                  &#x2717;
+                </button>
+              </span>
             </div>
           </div>
-        </Show>
-        <InfoButton infoKey="calibrate" content={CALIBRATE_INFO} />
-        <div class="calibrate-wrap">
-          <button
-            id="calibrate-btn"
-            onClick={() => { props.onCalibrateStart(); }}
-          >
-            Calibrate Playable Area
-          </button>
-          <span id="calibration-banner">
-            <span id="calibration-warning" />
-            <span id="calibration-msg">Play all reachable notes</span>
-            <button
-              id="calibrate-confirm"
-              onClick={() => { props.onCalibrateConfirm(); }}
-            >
-              &#x2713;
-            </button>
-            <button
-              id="calibrate-cancel"
-              onClick={() => { props.onCalibrateCancel(); }}
-            >
-              &#x2717;
-            </button>
-          </span>
         </div>
         <div id="game-status">
           <div id="game-song-title" />
