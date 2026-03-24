@@ -219,7 +219,7 @@ export function SliderRow(props: { def: SliderDef }): JSX.Element {
             </div>
           </Show>
         </Slider>
-        <button class="slider-reset icon-btn icon-md" onClick={(): void => { setValue(defVal()); props.def.onChange?.(defVal()); }}>
+        <button class="slider-reset icon-btn icon-md" id={`${props.def.id}-reset`} onClick={(): void => { setValue(defVal()); props.def.onChange?.(defVal()); }}>
           <i data-lucide="rotate-cw" />
         </button>
       </div>
