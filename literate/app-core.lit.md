@@ -1235,6 +1235,7 @@ The remaining game states handle loading (show progress bar, hide hint), complet
         this.visualizer?.setTargetNotes([]);
         this.visualizer?.setPressedTargetNotes([]);
         this.historyVisualizer?.setGhostNote(null);
+        this.resetIdleTimer();
         this.render();
         const elapsedMs = ctx.finishTimeMs - ctx.startTimeMs;
         const elapsedSec = (elapsedMs / 1000).toFixed(1);
@@ -1256,6 +1257,7 @@ The remaining game states handle loading (show progress bar, hide hint), complet
         this.visualizer?.setTargetNotes([]);
         this.visualizer?.setPressedTargetNotes([]);
         this.historyVisualizer?.setGhostNote(null);
+        this.resetIdleTimer();
         this.render();
         if (statusEl) statusEl.classList.remove('show-flex');
         if (songBarHint) songBarHint.classList.add('show-inline');

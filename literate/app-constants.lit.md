@@ -369,10 +369,10 @@ ${srcLink('game-engine.lit.md', 'Source: game-engine.lit.md — note grouping by
 ${srcLink('components/TopBar.lit.md', 'Source: TopBar.lit.md — fullscreen toggle')}`,
 
   'reset-layout': `
-<h2>Reset Page Layout</h2>
-<p>Restores the default panel sizes and positions — the visualiser panel height and pedals panel height return to their initial values.</p>
-<p>This does <strong>not</strong> reset any grid settings, tuning, waveform, or other instrument parameters. Only the visual panel layout is affected.</p>
-<p>Panel sizes are saved to <code>localStorage</code> and persist across sessions. Use this button if panels get into an unusable state.</p>
-${srcLink('app-panels.lit.md', 'Source: app-panels.lit.md — panel resize and layout')}`,
+<h2>Reset Page</h2>
+<p>Clears <strong>all</strong> saved settings (tuning, zoom, skew, volume, waveform, D-ref, panel sizes, calibration, MIDI settings) and reloads the page. Everything returns to factory defaults.</p>
+<p>Individual slider reset buttons (the ↺ icon) reset only that slider to its default value for the current grid geometry. Reset Page resets <strong>everything</strong> and recalculates all defaults from scratch.</p>
+<p>Settings are saved to <code>localStorage</code> and persist across sessions. Use this button to start completely fresh.</p>
+${srcLink('components/TopBar.lit.md', 'Source: TopBar.lit.md — reset page button')}`,
 };
 ```
