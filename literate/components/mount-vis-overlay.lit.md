@@ -5,7 +5,7 @@ This is the bridge between the vanilla TS app and the Solid component system.
 The `mountVisOverlay` function is called from app-core during initialization.
 
 ``` {.css file=_generated/components/mount-vis-overlay.css}
-#vis-overlay { padding: 8px 12px 8px 40px; }
+#vis-overlay { padding: 8px 40px 8px 12px; }
 ```
 
 ``` {.typescript file=_generated/components/mount-vis-overlay.tsx}
