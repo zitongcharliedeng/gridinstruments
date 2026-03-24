@@ -1,14 +1,11 @@
 {
   "name": "gridinstruments",
   "version": "1.0.0",
-  "description": "Web-based isomorphic grid keyboard synthesizer — GridInstruments",
+  "description": "Web-based isomorphic grid keyboard synthesizer \u2014 GridInstruments",
   "type": "module",
   "scripts": {
-    "tangle": "bash scripts/tangle.sh",
-    "prebuild": "npm run tangle",
     "build": "tsc && vite build",
-    "pretest": "npm run tangle",
-    "dev": "npm run tangle && vite",
+    "dev": "vite",
     "preview": "vite preview",
     "lint": "eslint _generated/",
     "lint:ast": "ast-grep scan",

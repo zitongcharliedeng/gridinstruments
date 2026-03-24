@@ -69,3 +69,8 @@ MEMORY/
 .opencode/
 .continues-handoff.md
 ISSUE_PRIORITY_ORDER.md
+_generated/
+tangled-output
+result
+dist/
+node_modules/
