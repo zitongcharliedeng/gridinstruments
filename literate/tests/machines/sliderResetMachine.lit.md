@@ -72,7 +72,7 @@ The Playwright actions drive the browser: `SET_VALUE` writes directly to the sli
     SET_VALUE: async (page: Page) => {
       const sliderKey = config.sliderId.replace('-slider', '');
       await page.evaluate((cfg) => {
-        const s = document.querySelector<HTMLInputElement>(`#${cfg.sliderId}`);
+        const s = document.querySelector<HTMLInputElement>(`#${cfg.sliderId} input[type="range"]`);
         if (!s) return;
         s.value = cfg.modifiedValue;
         s.dispatchEvent(new Event('input', { bubbles: true }));

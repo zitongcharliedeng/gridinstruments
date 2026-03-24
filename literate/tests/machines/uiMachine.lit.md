@@ -779,7 +779,7 @@ The skew label Playwright actions set the slider value programmatically and fire
 export const skewLabelPlaywrightActions: Record<SkewLabelEvent['type'], (page: Page) => Promise<void>> = {
   SET_SKEW_MAX: async (page) => {
     await page.evaluate(() => {
-      const s = document.querySelector<HTMLInputElement>('#skew-slider');
+      const s = document.querySelector<HTMLInputElement>('#skew-slider input[type="range"]');
       if (!s) return;
       s.value = '1';
       s.dispatchEvent(new Event('input', { bubbles: true }));
@@ -787,7 +787,7 @@ export const skewLabelPlaywrightActions: Record<SkewLabelEvent['type'], (page: P
   },
   SET_SKEW_MIN: async (page) => {
     await page.evaluate(() => {
-      const s = document.querySelector<HTMLInputElement>('#skew-slider');
+      const s = document.querySelector<HTMLInputElement>('#skew-slider input[type="range"]');
       if (!s) return;
       s.value = '0';
       s.dispatchEvent(new Event('input', { bubbles: true }));
