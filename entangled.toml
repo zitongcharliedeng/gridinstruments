@@ -1,5 +1,5 @@
 version = "2.0"
-watch_list = ["literate/**/*.lit.md"]
+watch_list = ["literate.lit.mdx/**/*.lit.md"]
 ignore_list = ["node_modules/**", ".venv/**"]
 
 [[languages]]

@@ -1,40 +1,31 @@
 {
-  description = "dcompose-web dev shell — Playwright Firefox via nixpkgs (no system libs)";
+  description = "gridinstruments — built with literate-state-machine-wiki";
 
-  inputs.nixpkgs.url = "nixpkgs";  # resolved via flake registry → system-cached nixpkgs
+  inputs = {
+    nixpkgs.url = "nixpkgs";
+    literate-state-machine-wiki.url = "github:zitongcharliedeng/build-state-machines-from-literate-wiki/lsmw-gridinstruments-verify-gate-20260316";
+  };
 
-  outputs = { self, nixpkgs }:
+  outputs = { self, nixpkgs, literate-state-machine-wiki }:
     let
       system = "x86_64-linux";
-      pkgs   = nixpkgs.legacyPackages.${system};
-    in {
-      devShells.${system}.default = pkgs.mkShell {
-        # Only tools needed for testing — project uses its own node_modules
-        packages = [ pkgs.nodejs_22 pkgs.python313 ];
-
-        shellHook = ''
-          # Point playwright to nixpkgs-provided browser binaries (NixOS-patched)
-          export PLAYWRIGHT_BROWSERS_PATH=${pkgs.playwright-driver.browsers}
-          export PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
-          export PLAYWRIGHT_NODEJS_PATH=${pkgs.nodejs_22}/bin/node
-          echo "[devshell] PLAYWRIGHT_BROWSERS_PATH=$PLAYWRIGHT_BROWSERS_PATH"
-          echo "[devshell] Firefox: $(ls $PLAYWRIGHT_BROWSERS_PATH/ | grep firefox)"
-
-          # Entangled literate programming tool (Python venv)
-          if [ ! -f "$PWD/.venv/bin/entangled" ]; then
-            echo "[devshell] Installing entangled-cli..."
-            python3 -m venv .venv
-            .venv/bin/pip install -q -r requirements.txt
-          fi
-          export PATH="$PWD/.venv/bin:$PATH"
-          echo "[devshell] entangled: $(entangled --version 2>/dev/null || echo 'NOT FOUND')"
-
-          # Auto-tangle on devshell entry (only if .lit.md files exist)
-          if ls "$PWD/literate/"*.lit.md &>/dev/null 2>&1; then
-            echo "[devshell] Auto-tangling from literate source..."
-            bash "$PWD/scripts/tangle.sh"
-          fi
-        '';
+      pkgs = nixpkgs.legacyPackages.${system};
+    in
+      (literate-state-machine-wiki.lib.init {
+        inherit pkgs;
+        src = ./.;
+        sourceDir = "literate.lit.mdx";
+        minProseLines = 1;
+        maxBlockLength = 100;
+      }) // {
+        devShells.${system}.default = pkgs.mkShell {
+          packages = [ pkgs.nodejs_22 pkgs.python313 ];
+          shellHook = ''
+            export PLAYWRIGHT_BROWSERS_PATH=${pkgs.playwright-driver.browsers}
+            export PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
+            export PLAYWRIGHT_NODEJS_PATH=${pkgs.nodejs_22}/bin/node
+            echo "[gridinstruments] Playwright ready. Use: nix flake check"
+          '';
+        };
       };
-    };
 }
