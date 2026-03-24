@@ -10,29 +10,24 @@ import { createActor } from 'xstate';
 import { dialogMachine } from './machines/dialogMachine';
 ```
 
-## Slider CSS
+## Tuning Slider Area Layout
 
-Dialog and tuning-slider-area layout CSS. Slider display CSS has moved to
-SliderRow (co-located with the component). This file retains only dialog
-styling and the tuning area layout helpers.
+The `.tuning-slider-area` wrapper provides `position: relative` for preset
+marks. The `.ctrl-group` inside it arranges the info button and slider track.
 
-``` {.typescript file=_generated/app-slider.ts}
-
-const DIALOG_CSS = `.tuning-slider-area { position: relative; }
+``` {.css file=_generated/app-slider.css}
+.tuning-slider-area { position: relative; }
 .tuning-slider-area .ctrl-group { display: flex; align-items: center; gap: 5px; }
 .tuning-slider-area .ctrl-group .slider-track { flex: 1; min-width: 0; }
 .tuning-slider-area .slider-track { width: 100%; }
-.about-content h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent, #4af); margin: 24px 0 8px; border-bottom: 1px solid #222; padding-bottom: 4px; }
-.about-content h3 { font-size: 12px; color: #aaa; margin: 16px 0 4px; }
-.about-content p { font-size: 12px; line-height: 1.6; color: #ccc; margin: 8px 0; }
-.about-content ul { margin: 8px 0; padding-left: 16px; }
-.about-content li { font-size: 12px; line-height: 1.6; color: #ccc; margin: 2px 0; }
-.about-content a { color: var(--accent, #4af); text-decoration: none; }
-.about-content a:hover { text-decoration: underline; }
-.about-content code { font-size: 11px; color: #f9a; background: #1a1a1a; padding: 1px 4px; }
-.about-content table { width: 100%; border-collapse: collapse; margin: 8px 0; }
-.about-content td { padding: 4px 8px; border-bottom: 1px solid #222; font-size: 11px; color: #ccc; }
-.about-content td:first-child { white-space: nowrap; }
+```
+
+## Dialog Styling
+
+Info and about dialogs use the same dark theme. Centered via fixed
+positioning with transform. The backdrop dims the page.
+
+``` {.css file=_generated/app-slider.css}
 dialog {
   background: var(--bg); color: var(--fg); border: 1px solid var(--border);
   padding: 24px; max-width: 560px; width: 90%; max-height: 80vh;
@@ -45,16 +40,31 @@ dialog::backdrop { background: rgba(0,0,0,0.7); }
   border: 1px solid var(--border);
 }
 dialog button { position: absolute; top: 8px; right: 12px; color: var(--dim); }
-dialog button:hover { color: var(--fg); }`;
+dialog button:hover { color: var(--fg); }
+```
 
-let dialogCssInjected = false;
-function injectDialogCSS(): void {
-  if (dialogCssInjected) return;
-  const s = document.createElement('style');
-  s.textContent = DIALOG_CSS;
-  document.head.appendChild(s);
-  dialogCssInjected = true;
-}
+## About Dialog Content
+
+Typography for the about dialog's markdown-rendered content.
+
+``` {.css file=_generated/app-slider.css}
+.about-content h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent, #4af); margin: 24px 0 8px; border-bottom: 1px solid #222; padding-bottom: 4px; }
+.about-content h3 { font-size: 12px; color: #aaa; margin: 16px 0 4px; }
+.about-content p { font-size: 12px; line-height: 1.6; color: #ccc; margin: 8px 0; }
+.about-content ul { margin: 8px 0; padding-left: 16px; }
+.about-content li { font-size: 12px; line-height: 1.6; color: #ccc; margin: 2px 0; }
+.about-content a { color: var(--accent, #4af); text-decoration: none; }
+.about-content a:hover { text-decoration: underline; }
+.about-content code { font-size: 11px; color: #f9a; background: #1a1a1a; padding: 1px 4px; }
+.about-content table { width: 100%; border-collapse: collapse; margin: 8px 0; }
+.about-content td { padding: 4px 8px; border-bottom: 1px solid #222; font-size: 11px; color: #ccc; }
+.about-content td:first-child { white-space: nowrap; }
+```
+
+## Imports
+
+``` {.typescript file=_generated/app-slider.ts}
+import './app-slider.css';
 ```
 
 ## Legacy Imperative Helpers (removed)
@@ -72,7 +82,6 @@ no longer needed — SliderRow handles all display reactively via SolidJS signal
 
 ``` {.typescript file=_generated/app-slider.ts}
 export function setupInfoDialogs(): void {
-  injectDialogCSS();
   const dialog = document.getElementById('info-dialog');
   const closeBtn = document.getElementById('info-close');
   const contentEl = document.getElementById('info-content');
