@@ -1,90 +1,49 @@
-# Slider Row — pure display component
+# Slider Row — Kobalte headless slider
 
-The ONE slider component used everywhere. A pure reactive display component —
-no observers, no rAF, no imperative DOM. Fill gradient and badge position are
-derived signals from the value. SolidJS updates them when value changes.
+The ONE slider component used everywhere. Built on `@kobalte/core` Slider
+which provides accessible fill, thumb, track, and value label out of the box.
+No hand-rolled gradients or thumb positioning hacks.
+
+Optional `presets` render tick marks below the slider. Active state highlighting
+is a derived signal — no imperative DOM updates.
 
 This is a **display component** (dumb): it receives props and renders.
 The **state component** (smart parent) manages localStorage, visualizer calls,
 and business logic via the `onChange` callback.
 
-## Imports and Types
+## CSS
 
-``` {.typescript file=_generated/components/SliderRow.tsx}
-import { createSignal, For, Show, type JSX } from 'solid-js';
-import './SliderRow.css';
-
-export interface PresetDef {
-  value: number;
-  label: string;
-  description?: string;
-}
-
-export interface SliderDef {
-  id: string;
-  label: string;
-  min: number;
-  max: number;
-  step: number;
-  defaultValue: number;
-  formatBadge?: (v: number) => string;
-  onChange?: (v: number) => void;
-  presets?: PresetDef[];
-  presetsId?: string;
-  alternateTicks?: boolean;
-}
-```
-
-## Range Input Styling
-
-The native range input is fully restyled. Both WebKit and Firefox thumb
-pseudo-elements get a 6px-wide grab cursor. The track inherits its
-background from the parent (so the fill gradient applied via `style` works).
+Kobalte renders semantic elements (`[data-orientation="horizontal"]`) that we
+style to match the app's dark design language. The fill, track, and thumb
+all use CSS on Kobalte's data attributes — no inline styles needed.
 
 ``` {.css file=_generated/components/SliderRow.css}
-input[type="range"] {
-  padding: 0; height: 18px; border: none; cursor: pointer;
-  background: #000; -webkit-appearance: none; appearance: none;
+.slider-row { position: relative; margin-top: 8px; }
+.slider-row [data-orientation="horizontal"] { position: relative; }
+.slider-track-el {
+  position: relative; display: flex; align-items: center;
+  height: 18px; width: 100%; background: #000; cursor: pointer;
 }
-input[type="range"]::-webkit-slider-runnable-track { height: 18px; background: inherit; }
-input[type="range"]::-moz-range-track { height: 18px; background: inherit; border: none; }
-input[type="range"]::-webkit-slider-thumb {
-  -webkit-appearance: none; width: 6px; height: 18px; background: var(--fg); cursor: grab;
+.slider-fill-el {
+  height: 100%; background: var(--fg); pointer-events: none;
 }
-input[type="range"]::-webkit-slider-thumb:active { cursor: grabbing; }
-input[type="range"]::-moz-range-thumb {
-  width: 6px; height: 18px; background: var(--fg); cursor: grab; border: none; border-radius: 0;
+.slider-thumb-el {
+  width: 6px; height: 18px; background: var(--fg); cursor: grab;
+  display: block; outline: none;
 }
-input[type="range"]::-moz-range-thumb:active { cursor: grabbing; }
-```
-
-## Track Layout
-
-The `.slider-track` is a flex row: range input (flex: 1), an absolutely
-positioned badge above, and a reset button at the end. The label overlays
-the slider using `mix-blend-mode: difference` so it's readable on both
-the filled and unfilled portions.
-
-``` {.css file=_generated/components/SliderRow.css}
-.slider-track {
-  position: relative; display: flex; align-items: center; gap: 2px; overflow: visible;
-}
-.slider-input-area { flex: 1; min-width: 0; position: relative; }
-.slider-input-area input[type="range"] { width: 100%; margin: 0; }
+.slider-thumb-el:active { cursor: grabbing; }
+.slider-thumb-el:focus-visible { outline: 1px solid var(--accent); }
 .slider-label-overlay {
   position: absolute; left: 4px; top: 50%; transform: translateY(-50%);
   font-size: 9px; color: #fff; mix-blend-mode: difference; text-transform: uppercase;
   letter-spacing: 0.06em; pointer-events: none; z-index: 1; white-space: nowrap;
   line-height: 1; overflow: hidden; text-overflow: ellipsis; max-width: calc(100% - 30px);
 }
-.slider-row-track { margin-top: 8px; }
 ```
 
-## Editable Badge
+## Badge and Reset
 
-The badge floats above the slider thumb, showing the formatted value. It's
-always a text input with a faint border so the user knows it's clickable.
-Focus highlights it with the accent color; invalid input turns the border red.
+The editable badge floats above the thumb. The reset button sits at the end.
 
 ``` {.css file=_generated/components/SliderRow.css}
 input.badge-input {
@@ -96,33 +55,17 @@ input.badge-input {
 }
 input.badge-input:focus { border-color: var(--accent); background: var(--subtle); }
 input.badge-input:invalid { border-color: #cc3333; }
-```
-
-## Reset Button
-
-The reset button sits at the right edge of the track. `box-sizing: border-box`
-ensures its 1px border is included in the 22px width — this is critical for
-pixel-perfect alignment with the preset marks below (which use `right: 24px`
-= 22px button + 2px flex gap).
-
-``` {.css file=_generated/components/SliderRow.css}
 .slider-reset {
   color: var(--dim); background: var(--bg); border: 1px solid var(--border);
   width: 22px; height: 18px; padding: 0; flex-shrink: 0; box-sizing: border-box;
 }
 .slider-reset:hover { color: var(--fg); border-color: var(--accent); }
+.slider-row-flex { display: flex; align-items: center; gap: 2px; }
 ```
 
 ## Preset Marks
 
-Optional tick marks below the slider snap to named values (like "12-TET",
-"DCompose", "Pythagorean"). The container spans the range input's width
-(`right: 24px` accounts for the reset button + gap). Each mark is
-absolutely positioned at the same `calc()` formula as the thumb — ensuring
-the tick aligns with where the thumb would be at that value.
-
-Active presets highlight in green. Alternating tick heights (`slider-tick-staggered`)
-prevent label overlap on dense preset lists like TET markers.
+Tick marks below the slider snap to named values. Active presets highlight green.
 
 ``` {.css file=_generated/components/SliderRow.css}
 .slider-presets {
@@ -148,15 +91,39 @@ prevent label overlap on dense preset lists like TET markers.
 .slider-preset-mark.active .slider-preset-btn { color: #4f4; }
 ```
 
-## Component — Reactive State
+## Interface
 
-The component owns a single `value` signal. All derived values — ratio,
-fill gradient, badge text, badge position, preset active states — are
-computed from this signal. SolidJS's fine-grained reactivity means only
-the specific DOM attributes that depend on `value()` update when it changes.
+``` {.typescript file=_generated/components/SliderRow.tsx}
+import { createSignal, For, Show, type JSX } from 'solid-js';
+import { Slider } from '@kobalte/core/slider';
+import './SliderRow.css';
 
-Fill, badge, and preset positions all use the same simple `ratio * 100%`
-percentage so they align pixel-perfectly with each other.
+export interface PresetDef {
+  value: number;
+  label: string;
+  description?: string;
+}
+
+export interface SliderDef {
+  id: string;
+  label: string;
+  min: number;
+  max: number;
+  step: number;
+  defaultValue: number;
+  formatBadge?: (v: number) => string;
+  onChange?: (v: number) => void;
+  presets?: PresetDef[];
+  presetsId?: string;
+  alternateTicks?: boolean;
+}
+```
+
+## Component
+
+Kobalte's `Slider.Root` manages value state, accessibility, and keyboard
+navigation. We wrap it with our label overlay, editable badge, reset button,
+and optional preset marks.
 
 ``` {.typescript file=_generated/components/SliderRow.tsx}
 
@@ -171,8 +138,8 @@ export function SliderRow(props: { def: SliderDef }): JSX.Element {
   };
   const pct = (): string => `${(ratio() * 100).toFixed(2)}%`;
 
-  const onInput = (e: Event): void => {
-    const v = parseFloat((e.target as HTMLInputElement).value);
+  const handleChange = (vals: number[]): void => {
+    const v = vals[0];
     setValue(v);
     props.def.onChange?.(v);
   };
@@ -184,77 +151,76 @@ export function SliderRow(props: { def: SliderDef }): JSX.Element {
 
   const sortedPresets = (): PresetDef[] =>
     props.def.presets ? [...props.def.presets].sort((a, b) => a.value - b.value) : [];
-```
 
-## Component — JSX Template
-
-The template renders a flex row: label overlay, range input with reactive
-fill, editable badge positioned at the thumb, and a reset button. If
-`presets` are provided, they render below the track as reactive tick marks.
-
-``` {.typescript file=_generated/components/SliderRow.tsx}
   return (
-    <div class="slider-track slider-row-track">
-      <div class="slider-input-area">
-        <span class="slider-label-overlay">{props.def.label}</span>
-        <input
-          type="range"
-          id={props.def.id}
-          min={props.def.min}
-          max={props.def.max}
+    <div class="slider-row">
+      <div class="slider-row-flex">
+        <Slider
+          value={[value()]}
+          onChange={handleChange}
+          minValue={props.def.min}
+          maxValue={props.def.max}
           step={props.def.step}
-          value={value()}
-          onInput={onInput}
-          style={{ background: `linear-gradient(to right, var(--fg) ${pct()}, #000 ${pct()})` }}
-        />
-        <input
-          type="text"
-          class="badge-input slider-badge-edit"
-          value={fmt()(value())}
-          style={{ left: pct() }}
-          onFocus={(e: FocusEvent): void => { (e.target as HTMLInputElement).select(); }}
-          onChange={(e: Event): void => {
-            const v = parseFloat((e.target as HTMLInputElement).value);
-            if (Number.isFinite(v)) { setValue(Math.max(props.def.min, Math.min(props.def.max, v))); props.def.onChange?.(value()); }
-          }}
-        />
-        <Show when={props.def.presets}>
-          <div class="slider-presets" id={props.def.presetsId}>
-          <For each={sortedPresets()}>
-            {(preset, i) => {
-              const pRatio = (): number => {
-                const range = props.def.max - props.def.min;
-                return range > 0 ? (preset.value - props.def.min) / range : 0;
-              };
-              const isActive = (): boolean => Math.abs(value() - preset.value) < 0.05;
-              const tickClass = (): string =>
-                props.def.alternateTicks && i() % 2 === 1 ? 'slider-tick slider-tick-staggered' : 'slider-tick slider-tick-long';
-              return (
-                <div
-                  class="slider-preset-mark"
-                  classList={{ active: isActive() }}
-                  style={{ left: `${(pRatio() * 100).toFixed(2)}%` }}
-                >
-                  <div class={tickClass()} />
-                  <button
-                    class="slider-preset-btn"
-                    classList={{ active: isActive() }}
-                    data-value={preset.value.toString()}
-                    data-description={preset.description}
-                    onClick={(): void => { applyPreset(preset.value); }}
-                  >
-                    {preset.label}
-                  </button>
-                </div>
-              );
+          orientation="horizontal"
+          class="slider-input-area"
+          id={props.def.id}
+        >
+          <span class="slider-label-overlay">{props.def.label}</span>
+          <input
+            type="text"
+            class="badge-input slider-badge-edit"
+            value={fmt()(value())}
+            style={{ left: pct() }}
+            onFocus={(e: FocusEvent): void => { (e.target as HTMLInputElement).select(); }}
+            onChange={(e: Event): void => {
+              const v = parseFloat((e.target as HTMLInputElement).value);
+              if (Number.isFinite(v)) { setValue(Math.max(props.def.min, Math.min(props.def.max, v))); props.def.onChange?.(value()); }
             }}
-          </For>
-          </div>
-        </Show>
+          />
+          <Slider.Track class="slider-track-el">
+            <Slider.Fill class="slider-fill-el" />
+            <Slider.Thumb class="slider-thumb-el">
+              <Slider.Input />
+            </Slider.Thumb>
+          </Slider.Track>
+          <Show when={props.def.presets}>
+            <div class="slider-presets" id={props.def.presetsId}>
+              <For each={sortedPresets()}>
+                {(preset, i) => {
+                  const pRatio = (): number => {
+                    const range = props.def.max - props.def.min;
+                    return range > 0 ? (preset.value - props.def.min) / range : 0;
+                  };
+                  const isActive = (): boolean => Math.abs(value() - preset.value) < 0.05;
+                  const tickClass = (): string =>
+                    props.def.alternateTicks && i() % 2 === 1 ? 'slider-tick slider-tick-staggered' : 'slider-tick slider-tick-long';
+                  return (
+                    <div
+                      class="slider-preset-mark"
+                      classList={{ active: isActive() }}
+                      style={{ left: `${(pRatio() * 100).toFixed(2)}%` }}
+                    >
+                      <div class={tickClass()} />
+                      <button
+                        class="slider-preset-btn"
+                        classList={{ active: isActive() }}
+                        data-value={preset.value.toString()}
+                        data-description={preset.description}
+                        onClick={(): void => { applyPreset(preset.value); }}
+                      >
+                        {preset.label}
+                      </button>
+                    </div>
+                  );
+                }}
+              </For>
+            </div>
+          </Show>
+        </Slider>
+        <button class="slider-reset icon-btn icon-md" onClick={(): void => { setValue(defVal()); props.def.onChange?.(defVal()); }}>
+          <i data-lucide="rotate-cw" />
+        </button>
       </div>
-      <button class="slider-reset icon-btn icon-md" onClick={(): void => { setValue(defVal()); props.def.onChange?.(defVal()); }}>
-        <i data-lucide="rotate-cw" />
-      </button>
     </div>
   );
 }
