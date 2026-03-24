@@ -1,0 +1,15 @@
+id: no-scroll-overflow-auto
+language: css
+rule:
+  any:
+    - pattern: "overflow: auto"
+    - pattern: "overflow: scroll"
+    - pattern: "overflow-y: auto"
+    - pattern: "overflow-y: scroll"
+    - pattern: "overflow-x: auto"
+    - pattern: "overflow-x: scroll"
+files:
+  - "index.html"
+severity: warning
+message: "overflow:auto/scroll at page level — the instrument must be fully visible without scroll. Use overflow:hidden."
+note: "See CLAUDE.md: no scroll on the page. Panels use OverlayScrollbars for internal scroll."

@@ -1,0 +1,16 @@
+id: no-magic-numbers-timing
+language: typescript
+rule:
+  all:
+    - pattern: setTimeout($FN, $MS)
+    - not:
+        inside:
+          pattern: $ACTOR.subscribe($$$)
+          stopBy: end
+files:
+  - "_generated/components/**"
+  - "_generated/lib/**"
+  - "_generated/main.ts"
+severity: warning
+message: "setTimeout in component/library code — prefer XState delayed transitions or actor-based timing."
+note: "XState handles timing declaratively. setTimeout creates hidden state outside the machine."

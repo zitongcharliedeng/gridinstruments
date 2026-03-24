@@ -1,0 +1,24 @@
+id: no-d4-in-ui-text
+language: typescript
+rule:
+  all:
+    - any:
+        - pattern: "'D4'"
+        - pattern: '"D4"'
+    - not:
+        any:
+          - inside:
+              pattern: "setD4Hz($$$)"
+              stopBy: end
+          - inside:
+              pattern: "getD4Hz($$$)"
+              stopBy: end
+          - inside:
+              pattern: "_d4Hz"
+              stopBy: end
+files:
+  - "_generated/components/**"
+  - "_generated/lib/**"
+severity: error
+message: "String 'D4' in component code — use 'D-ref' for user-facing text. Legacy API names (setD4Hz/getD4Hz) are allowed."
+note: "See CLAUDE.md: D-ref naming convention. The reference pitch is adjustable, not fixed to D4."

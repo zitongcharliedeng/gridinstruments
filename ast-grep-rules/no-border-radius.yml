@@ -1,0 +1,10 @@
+id: no-border-radius
+language: css
+rule:
+  pattern: "border-radius: $VAL"
+files:
+  - "_generated/**"
+  - "index.html"
+severity: error
+message: "border-radius is banned — the design language uses sharp corners only."
+note: "See CLAUDE.md anti-patterns: no border-radius anywhere."
