@@ -168,7 +168,7 @@ The progress fill animates width smoothly at 0.1 s.
 .search-icon { position:absolute; left:6px; width:12px; height:12px; color:var(--dim); pointer-events:none; }
 #midi-file-input { display:none; }
 .game-controls { display:flex; gap:6px; align-items:center; }
-#game-reset-btn { font-size:10px; padding:2px 6px; }
+#game-reset-btn { flex-shrink:0; }
 #game-settings-btn { position:relative; flex-shrink:0; }
 #game-settings-btn.active { color:var(--fg); }
 .game-settings-popup {
@@ -337,10 +337,11 @@ active — the song title, progress bar, elapsed timer, and restart button.
           <span id="game-elapsed-timer" />
           <button
             id="game-reset-btn"
-            class="overlay-btn"
+            class="icon-btn icon-md"
             onClick={() => { props.onGameReset(); }}
+            aria-label="Restart song"
           >
-            &#x27F2; Restart
+            <i data-lucide="rotate-cw" />
           </button>
         </div>
       </div>
