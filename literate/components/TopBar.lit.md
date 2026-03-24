@@ -54,7 +54,7 @@ needed for it.
 
 ``` {.typescript file=_generated/components/TopBar.tsx}
 import { type JSX } from 'solid-js';
-import { InfoButton } from './InfoButton';
+import { InfoBox } from './InfoBox';
 import { srcLink } from '../app-constants';
 import './TopBar.css';
 
@@ -123,14 +123,16 @@ export function TopBar(props: TopBarProps): JSX.Element {
           Suggest
         </a>
       </div>
-      <InfoButton infoKey="fullscreen" content={FULLSCREEN_INFO} />
-      <button id="fullscreen-btn" onClick={onFullscreen}>
-        <span class="icon"><i data-lucide="maximize" /></span> Fullscreen
-      </button>
-      <InfoButton infoKey="reset-layout" content={RESET_PAGE_INFO} />
-      <button id="reset-layout" onClick={onResetClick}>
-        <span class="icon"><i data-lucide="rotate-ccw" /></span> Reset Page
-      </button>
+      <InfoBox infoKey="fullscreen" infoContent={FULLSCREEN_INFO}>
+        <button id="fullscreen-btn" onClick={onFullscreen}>
+          <span class="icon"><i data-lucide="maximize" /></span> Fullscreen
+        </button>
+      </InfoBox>
+      <InfoBox infoKey="reset-layout" infoContent={RESET_PAGE_INFO}>
+        <button id="reset-layout" onClick={onResetClick}>
+          <span class="icon"><i data-lucide="rotate-ccw" /></span> Reset Page
+        </button>
+      </InfoBox>
     </>
   );
 }
