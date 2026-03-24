@@ -26,7 +26,7 @@ all use CSS on Kobalte's data attributes — no inline styles needed.
   height: 18px; width: 100%; background: #000; cursor: pointer;
 }
 .slider-fill-el {
-  height: 100%; background: var(--fg); pointer-events: none;
+  position: absolute !important; top: 0; bottom: 0; background: var(--fg); pointer-events: none;
 }
 .slider-thumb-el {
   width: 6px; height: 18px; background: var(--fg); cursor: grab;
