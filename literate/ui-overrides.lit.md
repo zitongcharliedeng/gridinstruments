@@ -105,6 +105,12 @@ OverlayScrollbars overrides apply the `gi-scrollbar` class. The 12 px track widt
   min-height: 40px;
 }
 
+#about-close, #info-close {
+  position: absolute !important;
+  top: 8px !important;
+  right: 12px !important;
+}
+
 #grid-overlay {
   padding: 0;
   position: absolute !important;
