@@ -13,6 +13,7 @@ manipulation inside.
 ``` {.typescript file=_generated/components/SongBar.tsx}
 import { createSignal, type JSX } from 'solid-js';
 import { InfoButton } from './InfoButton';
+import './SongBar.css';
 
 export interface SongBarProps {
   onSearch: (query: string) => void;
@@ -35,9 +36,8 @@ magnifying-glass icon, and the results dropdown. The dropdown is absolutely
 positioned below the input wrapper so it overlays content below without pushing
 layout.
 
-``` {.typescript file=_generated/components/SongBar.tsx}
-
-const SONGBAR_CSS = `#song-bar {
+``` {.css file=_generated/components/SongBar.css}
+#song-bar {
   display:inline-flex; align-items:center; gap:8px; padding:2px 0;
   font-size:11px; flex-wrap:wrap; margin-left:auto; max-width:700px;
 }
@@ -83,19 +83,12 @@ const SONGBAR_CSS = `#song-bar {
 #game-reset-btn { font-size:10px; padding:2px 6px; }
 .upload-btn { flex-shrink:0; min-width:28px; min-height:28px; display:inline-flex; align-items:center; justify-content:center; }
 #game-progress-fill { height:100%; background:#fff; width:0%; transition:width 0.1s linear; }
-#game-elapsed-timer { font-size:10px; color:var(--dim); font-family:var(--font); min-width:3ch; text-align:right; }`;
+#game-elapsed-timer { font-size:10px; color:var(--dim); font-family:var(--font); min-width:3ch; text-align:right; }
+```
 
-let songbarCssInjected = false;
-function injectSongBarCSS(): void {
-  if (songbarCssInjected) return;
-  const s = document.createElement('style');
-  s.textContent = SONGBAR_CSS;
-  document.head.appendChild(s);
-  songbarCssInjected = true;
-}
+``` {.typescript file=_generated/components/SongBar.tsx}
 
 export function SongBar(props: SongBarProps): JSX.Element {
-  injectSongBarCSS();
   const [maxKeys, setMaxKeys] = createSignal(props.initialMaxKeys ?? 8);
 
   const handleSearchInput = (e: Event): void => {

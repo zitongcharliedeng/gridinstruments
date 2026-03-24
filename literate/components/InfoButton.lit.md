@@ -7,14 +7,8 @@ Click opens the info dialog. Hover shows a preview snippet.
 This is the single source of truth for all info buttons in the app.
 No other pattern should be used for contextual help icons.
 
-``` {.typescript file=_generated/components/InfoButton.tsx}
-import { type JSX } from 'solid-js';
-
-export interface InfoButtonProps {
-  infoKey: string;
-}
-
-const INFO_BTN_CSS = `.slider-info-btn {
+``` {.css file=_generated/components/InfoButton.css}
+.slider-info-btn {
   position: relative; transform: none; z-index: 3; color: var(--dim);
   width: 14px; height: 14px; padding: 0;
   display: inline-flex; align-items: center; justify-content: center;
@@ -25,17 +19,17 @@ const INFO_BTN_CSS = `.slider-info-btn {
 .slider-info-btn svg { display: none; }
 .slider-info-btn:hover { opacity: 1; color: var(--accent, #4af); border-color: var(--accent, #4af); }
 .slider-info-btn.active { color: var(--bg); background: var(--fg); border-color: var(--fg); }
-`;
+```
 
-let cssInjected = false;
+``` {.typescript file=_generated/components/InfoButton.tsx}
+import { type JSX } from 'solid-js';
+import './InfoButton.css';
+
+export interface InfoButtonProps {
+  infoKey: string;
+}
 
 export function InfoButton(props: InfoButtonProps): JSX.Element {
-  if (!cssInjected) {
-    const style = document.createElement('style');
-    style.textContent = INFO_BTN_CSS;
-    document.head.appendChild(style);
-    cssInjected = true;
-  }
   return (
     <button class="slider-info-btn" data-info={props.infoKey}>
       i

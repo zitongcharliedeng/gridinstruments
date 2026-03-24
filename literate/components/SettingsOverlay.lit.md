@@ -18,73 +18,7 @@ containing sliders and other controls.
 import { For, Show, type JSX } from 'solid-js';
 import { SliderRow } from './SliderRow';
 import type { SliderDef } from './SliderRow';
-
-const OVERLAY_CSS = `.settings-overlay {
-  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(30, 30, 32, 0.78); z-index: 12;
-  padding: 40px 12px 12px 40px; overflow-y: auto; overflow-x: hidden;
-  scrollbar-width: thin; scrollbar-color: var(--dim) transparent;
-  touch-action: auto !important; -webkit-overflow-scrolling: touch;
-}
-.settings-overlay::before {
-  content: ''; position: absolute; inset: 0;
-  background: linear-gradient(110deg, rgba(255,255,255,0.04) 20%, rgba(255,255,255,0.10) 40%, rgba(255,255,255,0.14) 50%, rgba(255,255,255,0.10) 60%, rgba(255,255,255,0.04) 80%);
-  box-shadow: inset 0 0 40px rgba(255,255,255,0.04);
-  background-size: 300% 100%; animation: shimmer 60s linear infinite;
-  pointer-events: none; z-index: 0;
-}
-@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -100% 0; } }
-.hidden { display: none !important; pointer-events: none !important; }
-.overlay-section { display:flex; flex-direction:column; gap:5px; margin-left:0; margin-bottom:8px; }
-.overlay-section .ctrl-label { color:#fff; }
-.overlay-section .slider-track { width:100%; }
-.overlay-section .tuning-slider-area { position:relative; width:100%; margin-bottom:40px; }
-.overlay-section .tuning-slider-area .slider-track { width:calc(100% - 18px); }
-.overlay-section-title {
-  font-size:11px; color:var(--dim); text-transform:uppercase; letter-spacing:0.08em;
-  font-family:var(--font); font-weight:700; display:flex; align-items:center; gap:6px;
-}
-.overlay-section-title:hover { color:var(--fg); }
-.overlay-btn {
-  font-family:var(--font); font-size:11px; font-weight:700;
-  text-transform:uppercase; letter-spacing:0.08em; background:#000;
-  color:#fff; border:1px solid var(--dim); padding:6px 12px;
-  cursor:pointer; user-select:none;
-}
-.overlay-btn:hover { border-color:var(--fg); }
-.overlay-btn:active { background:var(--subtle); }
-.dimmed { opacity:0.3; pointer-events:none; transition:opacity 0.3s ease; }
-.slider-row-track { margin-top: 8px; }
-.slider-badge-edit { width:50px; text-align:center; font-family:var(--font); font-size:10px; background:var(--bg); color:var(--fg); border:1px solid var(--border); padding:1px 3px; }
-.grid-cog {
-  position:absolute; z-index:15; width:32px; height:32px; font-size:16px;
-  background:var(--bg); color:var(--dim); border:1px solid var(--border);
-  cursor:pointer; display:flex; align-items:center; justify-content:center;
-  font-family:var(--font);
-}
-#grid-settings-btn { top:8px; left:8px; }
-#vis-settings-btn { top:4px; left:8px; }
-.grid-cog:hover { color:var(--fg); border-color:var(--accent); }
-.grid-cog.active { color:var(--bg); background:var(--fg); border-color:var(--fg); }
-.gi-checkbox { position:relative; display:inline-block; width:14px; height:14px; cursor:pointer; vertical-align:middle; }
-.gi-checkbox input { position:absolute; inset:0; margin:0; cursor:pointer; appearance:none; -webkit-appearance:none; background:transparent; border:none; z-index:1; }
-.gi-checkbox .gi-check { display:block; width:14px; height:14px; border:1px solid var(--border); background:var(--bg); pointer-events:none; }
-.gi-checkbox input:checked + .gi-check { background:var(--fg); border-color:var(--fg); }
-.gi-checkbox input:checked + .gi-check::after { content:''; position:absolute; left:4px; top:1px; width:4px; height:8px; border:solid var(--bg); border-width:0 2px 2px 0; transform:rotate(45deg); }
-.gi-checkbox input:focus-visible + .gi-check { border-color:var(--accent); }
-.show-flex { display: flex !important; }
-.show-inline { display: inline-flex !important; }
-.faded { opacity: 0; }
-.visible-full { opacity: 1; }`;
-
-let overlayCssInjected = false;
-function injectOverlayCSS(): void {
-  if (overlayCssInjected) return;
-  const s = document.createElement('style');
-  s.textContent = OVERLAY_CSS;
-  document.head.appendChild(s);
-  overlayCssInjected = true;
-}
+import './SettingsOverlay.css';
 
 export type { SliderDef } from './SliderRow';
 
@@ -106,6 +40,134 @@ export interface SettingsOverlayProps {
 SliderRow is imported from `./SliderRow` — the shared pure display component
 used by both vis and grid overlays.
 
+## Overlay Layout
+
+The overlay fills its containing block absolutely, sitting at z-index 12 above
+the canvas. It uses a dark semi-transparent background and enables scrolling for
+long settings lists. Touch scrolling is explicitly allowed so mobile users can
+scroll the panel without triggering notes.
+
+``` {.css file=_generated/components/SettingsOverlay.css}
+.settings-overlay {
+  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(30, 30, 32, 0.78); z-index: 12;
+  padding: 40px 12px 12px 40px; overflow-y: auto; overflow-x: hidden;
+  scrollbar-width: thin; scrollbar-color: var(--dim) transparent;
+  touch-action: auto !important; -webkit-overflow-scrolling: touch;
+}
+```
+
+## Shimmer Animation
+
+A slow-moving light sweep pseudo-element gives the overlay a subtle depth
+without any DOM overhead. The gradient runs at 300% width so the sweep travels
+fully across in 60 seconds at a constant pace. `pointer-events: none` keeps it
+non-interactive.
+
+``` {.css file=_generated/components/SettingsOverlay.css}
+.settings-overlay::before {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(110deg, rgba(255,255,255,0.04) 20%, rgba(255,255,255,0.10) 40%, rgba(255,255,255,0.14) 50%, rgba(255,255,255,0.10) 60%, rgba(255,255,255,0.04) 80%);
+  box-shadow: inset 0 0 40px rgba(255,255,255,0.04);
+  background-size: 300% 100%; animation: shimmer 60s linear infinite;
+  pointer-events: none; z-index: 0;
+}
+@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -100% 0; } }
+```
+
+## Utility Classes
+
+`.hidden` completely removes an element from layout and interaction. `.show-flex`
+and `.show-inline` force display back on for elements that are conditionally
+revealed. `.faded` and `.visible-full` control opacity transitions.
+
+``` {.css file=_generated/components/SettingsOverlay.css}
+.hidden { display: none !important; pointer-events: none !important; }
+.show-flex { display: flex !important; }
+.show-inline { display: inline-flex !important; }
+.faded { opacity: 0; }
+.visible-full { opacity: 1; }
+```
+
+## Section Layout
+
+Each settings section is a vertical flex column with a title and its controls.
+The `.overlay-section-title` uses the `--dim` colour and uppercase tracking to
+read as a category header. `.dimmed` disables an entire section when it is
+contextually unavailable. `.slider-row-track` adds top margin so sliders don't
+crowd their section title. `.slider-badge-edit` styles the inline numeric input
+that floats above the slider thumb.
+
+``` {.css file=_generated/components/SettingsOverlay.css}
+.overlay-section { display:flex; flex-direction:column; gap:5px; margin-left:0; margin-bottom:8px; }
+.overlay-section .ctrl-label { color:#fff; }
+.overlay-section .slider-track { width:100%; }
+.overlay-section .tuning-slider-area { position:relative; width:100%; margin-bottom:40px; }
+.overlay-section .tuning-slider-area .slider-track { width:calc(100% - 18px); }
+.overlay-section-title {
+  font-size:11px; color:var(--dim); text-transform:uppercase; letter-spacing:0.08em;
+  font-family:var(--font); font-weight:700; display:flex; align-items:center; gap:6px;
+}
+.overlay-section-title:hover { color:var(--fg); }
+.dimmed { opacity:0.3; pointer-events:none; transition:opacity 0.3s ease; }
+.slider-row-track { margin-top: 8px; }
+.slider-badge-edit { width:50px; text-align:center; font-family:var(--font); font-size:10px; background:var(--bg); color:var(--fg); border:1px solid var(--border); padding:1px 3px; }
+```
+
+## Buttons
+
+`.overlay-btn` is the standard action button used inside overlays — uppercase
+monospace, black background, 1px border in the dim colour. Hover brightens the
+border; active press fills with the subtle background.
+
+``` {.css file=_generated/components/SettingsOverlay.css}
+.overlay-btn {
+  font-family:var(--font); font-size:11px; font-weight:700;
+  text-transform:uppercase; letter-spacing:0.08em; background:#000;
+  color:#fff; border:1px solid var(--dim); padding:6px 12px;
+  cursor:pointer; user-select:none;
+}
+.overlay-btn:hover { border-color:var(--fg); }
+.overlay-btn:active { background:var(--subtle); }
+```
+
+## Cog Button
+
+`.grid-cog` is the 32×32 settings toggle button that sits at the top-left of
+its container at z-index 15. The two instances are positioned by their IDs:
+`#grid-settings-btn` for the keyboard overlay and `#vis-settings-btn` for the
+visualiser. The `.active` class inverts colours to signal the open state.
+
+``` {.css file=_generated/components/SettingsOverlay.css}
+.grid-cog {
+  position:absolute; z-index:15; width:32px; height:32px; font-size:16px;
+  background:var(--bg); color:var(--dim); border:1px solid var(--border);
+  cursor:pointer; display:flex; align-items:center; justify-content:center;
+  font-family:var(--font);
+}
+#grid-settings-btn { top:8px; left:8px; }
+#vis-settings-btn { top:4px; left:8px; }
+.grid-cog:hover { color:var(--fg); border-color:var(--accent); }
+.grid-cog.active { color:var(--bg); background:var(--fg); border-color:var(--fg); }
+```
+
+## Checkbox
+
+`.gi-checkbox` is the custom checkbox used throughout the overlay. A hidden
+native `<input type="checkbox">` sits above a styled `.gi-check` block element.
+The checked state fills the block with the foreground colour and draws a
+CSS-only checkmark via an `::after` pseudo-element. Focus-visible shows an
+accent border for keyboard navigation.
+
+``` {.css file=_generated/components/SettingsOverlay.css}
+.gi-checkbox { position:relative; display:inline-block; width:14px; height:14px; cursor:pointer; vertical-align:middle; }
+.gi-checkbox input { position:absolute; inset:0; margin:0; cursor:pointer; appearance:none; -webkit-appearance:none; background:transparent; border:none; z-index:1; }
+.gi-checkbox .gi-check { display:block; width:14px; height:14px; border:1px solid var(--border); background:var(--bg); pointer-events:none; }
+.gi-checkbox input:checked + .gi-check { background:var(--fg); border-color:var(--fg); }
+.gi-checkbox input:checked + .gi-check::after { content:''; position:absolute; left:4px; top:1px; width:4px; height:8px; border:solid var(--bg); border-width:0 2px 2px 0; transform:rotate(45deg); }
+.gi-checkbox input:focus-visible + .gi-check { border-color:var(--accent); }
+```
+
 ## Overlay Container
 
 The overlay container uses the shared `.settings-overlay` CSS class for the
@@ -117,7 +179,6 @@ before the user opens the panel.
 ``` {.typescript file=_generated/components/SettingsOverlay.tsx}
 
 export function SettingsOverlay(props: SettingsOverlayProps): JSX.Element {
-  injectOverlayCSS();
   const sectionClass = (): string => props.sectionClass ?? 'overlay-section';
   return (
     <div id={props.overlayId} class="settings-overlay" classList={{ hidden: !props.visible() }}>
