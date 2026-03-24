@@ -4254,14 +4254,14 @@ export const GAME_SETTINGS_HIDDEN: StateInvariant = {
 
 export const GAME_SETTINGS_COG: StateInvariant = {
   id: 'GAME-SETTINGS-COG',
-  description: '#game-settings-btn uses grid-cog class',
+  description: '#game-settings-btn uses settings-cog class (SettingsCog component)',
   check: async (page: Page) => {
     const hasClass = await page.evaluate(() => {
       const btn = document.getElementById('game-settings-btn');
       if (!btn) throw new Error('#game-settings-btn not found');
-      return btn.classList.contains('grid-cog');
+      return btn.classList.contains('settings-cog');
     });
-    if (!hasClass) throw new Error('#game-settings-btn must use grid-cog class');
+    if (!hasClass) throw new Error('#game-settings-btn must use settings-cog class (SettingsCog component)');
   },
 };
 
@@ -4461,18 +4461,16 @@ export const EXPR_JOINT_3: StateInvariant = {
 
 export const EXPR_JOINT_4: StateInvariant = {
   id: 'EXPR-JOINT-4',
-  description: '.slider-info-btn[data-info="timbre"] exists and timbre has CC mode dropdown',
+  description: '.slider-info-btn[data-info="timbre"] exists and timbre checkbox exists',
   check: async (page: Page) => {
     const exists = await page.evaluate(() =>
       document.querySelector('.slider-info-btn[data-info="timbre"]') !== null
     );
     if (!exists) throw new Error('.slider-info-btn[data-info="timbre"] not found');
-    const hasSelect = await page.evaluate(() => {
-      const el = document.getElementById('timbre-cc-mode');
-      if (!el) return false;
-      return el.tagName === 'SELECT';
-    });
-    if (!hasSelect) throw new Error('No <select id="timbre-cc-mode"> found');
+    const hasCheckbox = await page.evaluate(() =>
+      document.getElementById('expr-timbre') !== null
+    );
+    if (!hasCheckbox) throw new Error('No #expr-timbre checkbox found');
   },
 };
 
