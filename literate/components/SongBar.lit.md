@@ -79,7 +79,7 @@ state. The dropping highlight provides visual feedback during MIDI drag-and-drop
   display:inline-flex; align-items:center; gap:8px; padding:2px 0;
   font-size:11px; flex-wrap:wrap; margin-left:auto; max-width:700px;
 }
-#song-bar-calibrate, #song-bar-search, #song-bar-status {
+#song-bar-search, #song-bar-status {
   display:inline-flex; align-items:center; gap:6px;
 }
 #calibrate-btn.active { color:var(--bg); background:var(--fg); border-color:var(--accent, #4af); cursor:default; }
@@ -144,7 +144,6 @@ and red accent colors. The warning label floats above the banner to signal
 edge-of-range conditions without blocking the action buttons.
 
 ``` {.css file=_generated/components/SongBar.css}
-#song-bar-calibrate { margin-left:auto; max-width:320px; gap:4px; overflow:hidden; }
 #calibrate-btn { font-family:var(--font); font-size:9px; background:none; color:var(--dim); border:1px solid var(--border); padding:2px 8px; cursor:pointer; white-space:nowrap; }
 #calibration-banner { display:none; font-family:var(--font); font-size:9px; gap:4px; align-items:center; white-space:nowrap; position:absolute; left:0; top:0; right:0; bottom:0; justify-content:center; background:var(--bg); z-index:1; }
 #calibration-warning { display:none; position:absolute; left:50%; top:-14px; transform:translateX(-50%); font-size:8px; color:var(--dim); white-space:nowrap; pointer-events:none; }
@@ -364,7 +363,6 @@ range. The banner with confirm/cancel actions appears when calibration is active
 
       <span id="song-bar-hint" />
 
-      <div id="song-bar-calibrate" />
 
     </div>
   );
