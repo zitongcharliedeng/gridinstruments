@@ -16,7 +16,7 @@ or reset button directly — InfoBox handles both.
 }
 .info-box > .slider-info-btn {
   border: none; border-right: 1px solid var(--border); margin: 0;
-  height: 100%; align-self: stretch;
+  height: auto; align-self: stretch; width: 14px;
 }
 .info-box > .info-box-content { flex: 1; min-width: 0; }
 .info-box > .slider-reset {
