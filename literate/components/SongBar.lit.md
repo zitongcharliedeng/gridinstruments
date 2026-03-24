@@ -11,7 +11,7 @@ manipulation inside.
 ## Props Interface
 
 ``` {.typescript file=_generated/components/SongBar.tsx}
-import { createSignal, type JSX } from 'solid-js';
+import { createSignal, Show, type JSX } from 'solid-js';
 import { InfoButton } from './InfoButton';
 import { srcLink } from '../app-constants';
 import './SongBar.css';
@@ -282,27 +282,29 @@ active — the song title, progress bar, elapsed timer, and restart button.
         >
           <i data-lucide="settings" />
         </button>
-        <div class="game-settings-popup" classList={{ hidden: !gameSettingsOpen() }}>
-          <div style="display:flex;align-items:center;gap:4px">
-            <InfoButton infoKey="quantization" content={QUANT_INFO} />
-            <span class="text-dim-sm">Quant</span>
-            <span id="quantization-select-slot" />
+        <Show when={gameSettingsOpen()}>
+          <div class="game-settings-popup">
+            <div style="display:flex;align-items:center;gap:4px">
+              <InfoButton infoKey="quantization" content={QUANT_INFO} />
+              <span class="text-dim-sm">Quant</span>
+              <span id="quantization-select-slot" />
+            </div>
+            <div style="display:flex;align-items:center;gap:4px">
+              <InfoButton infoKey="maxkeys" content={MAXKEYS_INFO} />
+              <label class="maxkeys-label">
+                Max Keys
+                <input
+                  type="text"
+                  inputmode="numeric"
+                  pattern="[0-9]*"
+                  id="max-keys-input"
+                  value={maxKeys()}
+                  onChange={handleMaxKeysChange}
+                />
+              </label>
+            </div>
           </div>
-          <div style="display:flex;align-items:center;gap:4px">
-            <InfoButton infoKey="maxkeys" content={MAXKEYS_INFO} />
-            <label class="maxkeys-label">
-              Max Keys
-              <input
-                type="text"
-                inputmode="numeric"
-                pattern="[0-9]*"
-                id="max-keys-input"
-                value={maxKeys()}
-                onChange={handleMaxKeysChange}
-              />
-            </label>
-          </div>
-        </div>
+        </Show>
         <div id="game-status">
           <div id="game-song-title" />
           <div class="game-controls">
