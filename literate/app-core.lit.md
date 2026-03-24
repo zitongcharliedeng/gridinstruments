@@ -2097,7 +2097,6 @@ Calibration mode shows a banner instructing the user to play all reachable notes
     this.calibratedCells = new Set();
     this.visualizer?.setCalibratedRange(new Set<string>());
     const banner = document.getElementById('calibration-banner');
-    const msg = document.getElementById('calibration-msg');
     const warning = document.getElementById('calibration-warning');
     if (banner) banner.classList.add('show-flex');
     const gameState = this.gameActor ? String(this.gameActor.getSnapshot().value) : undefined;
