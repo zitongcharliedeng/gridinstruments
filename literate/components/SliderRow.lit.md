@@ -18,7 +18,7 @@ style to match the app's dark design language. The fill, track, and thumb
 all use CSS on Kobalte's data attributes — no inline styles needed.
 
 ``` {.css file=_generated/components/SliderRow.css}
-.slider-row { position: relative; margin-top: 8px; }
+.slider-row { position: relative; margin-top: 8px; width: 100%; }
 .slider-row [data-orientation="horizontal"] { position: relative; overflow: visible; }
 .slider-input-area { flex: 1; min-width: 0; position: relative; overflow: visible; }
 .slider-track-el {
