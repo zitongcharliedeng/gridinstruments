@@ -1,0 +1,11 @@
+id: no-infobutton-without-content
+language: tsx
+rule:
+  pattern: |
+    <InfoButton infoKey=$KEY />
+  not:
+    has:
+      pattern: content={$_}
+severity: warning
+message: "InfoButton missing content prop — info content must be co-located with the component, not in a centralized map"
+note: "Every InfoButton must have a content prop with inline HTML. See #266."
