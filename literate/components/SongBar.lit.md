@@ -275,7 +275,7 @@ active — the song title, progress bar, elapsed timer, and restart button.
       <div id="song-bar-status">
         <button
           id="game-settings-btn"
-          class="icon-btn icon-md"
+          class="grid-cog"
           classList={{ active: gameSettingsOpen() }}
           onClick={() => { setGameSettingsOpen(v => !v); }}
           aria-label="Game settings"
