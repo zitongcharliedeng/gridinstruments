@@ -6,8 +6,8 @@ button (right). The wrapper forms ONE continuous bordered box:
 
 ``` {.css file=_generated/components/InfoBox.css}
 .info-box {
-  display: inline-flex; align-items: stretch; gap: 0;
-  border: 1px solid var(--border);
+  display: flex; align-items: stretch; gap: 0;
+  border: 1px solid var(--border); width: 100%;
 }
 .info-box > .slider-info-btn {
   border: none; border-right: 1px solid var(--border); margin: 0;
