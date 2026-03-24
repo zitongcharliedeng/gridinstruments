@@ -1,27 +1,24 @@
 # InfoBox — universal wrapper for settings components
 
-A generic wrapper that adds an info button (left) and optional reset button
-(right) around ANY child component. The wrapper forms a single bordered box:
-`[i | child content | ↺]`. Works with sliders, checkboxes, dropdowns, or
-any other setting control.
-
-This is the standard pattern for ALL settings in the app. Every setting
-should be wrapped in an InfoBox. No setting should render an InfoButton
-or reset button directly — InfoBox handles both.
+Wraps ANY child component with an info button (left) and optional reset
+button (right). The wrapper forms ONE continuous bordered box:
+`[i | child content | ↺]`. No gaps. Same height. One border.
 
 ``` {.css file=_generated/components/InfoBox.css}
 .info-box {
-  display: flex; align-items: stretch; gap: 0;
-  border: 1px solid var(--border); width: 100%;
+  display: inline-flex; align-items: stretch; gap: 0;
+  border: 1px solid var(--border);
 }
 .info-box > .slider-info-btn {
   border: none; border-right: 1px solid var(--border); margin: 0;
-  height: auto; align-self: stretch; width: 14px;
+  height: auto; width: 14px;
 }
-.info-box > .info-box-content { flex: 1; min-width: 0; }
+.info-box > .info-box-content {
+  flex: 1; min-width: 0; display: flex; align-items: center;
+}
 .info-box > .slider-reset {
   border: none; border-left: 1px solid var(--border);
-  align-self: stretch; height: auto;
+  height: auto;
 }
 ```
 

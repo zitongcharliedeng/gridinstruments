@@ -266,7 +266,6 @@ Each frame: trim stale history, clear the canvas, and either show the idle overl
         ctx.fillText(line, width / 2, height / 2 + 24 + i * lineHeight);
       });
       ctx.globalAlpha = 1;
-      return;
     }
 
     this.drawChordPanel(0, chordW, height, now);
