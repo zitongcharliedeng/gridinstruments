@@ -4022,13 +4022,13 @@ Song hint display, progress indicator visibility, and calibration state checks.
 ``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const SONGBAR_HINT_1: StateInvariant = {
   id: 'SONGBAR-HINT-1',
-  description: '#song-bar-calibrate exists and is flex-aligned right in song-bar',
+  description: '#game-settings-btn exists in song-bar-status (calibrate moved to popup)',
   check: async (page: Page) => {
     const exists = await page.evaluate(() => {
-      const el = document.getElementById('song-bar-calibrate');
+      const el = document.getElementById('game-settings-btn');
       return el !== null;
     });
-    if (!exists) throw new Error('#song-bar-calibrate not found');
+    if (!exists) throw new Error('#game-settings-btn not found');
   },
 };
 
