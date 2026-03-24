@@ -1889,18 +1889,17 @@ Game UI overlays are created programmatically rather than in HTML because they a
 
     const overlay = document.createElement('div');
     overlay.id = 'game-score-overlay';
-    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:"JetBrains Mono",monospace;color:#fff;';
 
     const heading = document.createElement('div');
-    heading.style.cssText = 'font-size:48px;font-weight:700;margin-bottom:16px;';
+    heading.className = 'score-heading';
     heading.textContent = 'Complete!';
 
     const time = document.createElement('div');
-    time.style.cssText = 'font-size:24px;color:#888;margin-bottom:32px;';
+    time.className = 'score-time';
     time.textContent = `${elapsedSec}s`;
 
     const btn = document.createElement('button');
-    btn.style.cssText = 'font-family:"JetBrains Mono",monospace;font-size:14px;color:#fff;background:#000;border:1px solid #333;padding:12px 24px;cursor:pointer;';
+    btn.className = 'score-btn';
     btn.textContent = 'Play again';
     btn.addEventListener('click', () => {
       overlay.remove();
@@ -1919,7 +1918,6 @@ Game UI overlays are created programmatically rather than in HTML because they a
 
     const banner = document.createElement('div');
     banner.id = 'game-tuning-warning';
-    banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:50;background:#000;color:#fff;font-family:"JetBrains Mono",monospace;font-size:12px;padding:8px 16px;text-align:center;border-bottom:1px solid #333;cursor:pointer;';
     banner.textContent = 'Tuning set to 12-TET for game mode';
 
      const dismiss = (): void => { banner.remove(); };

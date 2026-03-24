@@ -61,6 +61,32 @@ Typography for the about dialog's markdown-rendered content.
 .about-content td:first-child { white-space: nowrap; }
 ```
 
+## Game Overlays
+
+Score overlay and tuning warning banner for game mode. These used to be
+inline styles on dynamically created DOM elements — now they're CSS
+classes so the JS just sets `className` instead of `style.cssText`.
+
+``` {.css file=_generated/app-slider.css}
+#game-score-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 100;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  font-family: var(--font); color: #fff;
+}
+#game-score-overlay .score-heading { font-size: 48px; font-weight: 700; margin-bottom: 16px; }
+#game-score-overlay .score-time { font-size: 24px; color: #888; margin-bottom: 32px; }
+#game-score-overlay .score-btn {
+  font-family: var(--font); font-size: 14px; color: #fff; background: #000;
+  border: 1px solid #333; padding: 12px 24px; cursor: pointer;
+}
+#game-score-overlay .score-btn:hover { border-color: var(--fg); }
+#game-tuning-warning {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+  background: #000; color: #fff; font-family: var(--font); font-size: 12px;
+  padding: 8px 16px; text-align: center; border-bottom: 1px solid #333; cursor: pointer;
+}
+```
+
 ## Imports
 
 ``` {.typescript file=_generated/app-slider.ts}
