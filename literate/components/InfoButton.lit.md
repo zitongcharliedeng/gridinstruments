@@ -27,11 +27,16 @@ import './InfoButton.css';
 
 export interface InfoButtonProps {
   infoKey: string;
+  content?: string;
 }
 
 export function InfoButton(props: InfoButtonProps): JSX.Element {
   return (
-    <button class="slider-info-btn" data-info={props.infoKey}>
+    <button
+      class="slider-info-btn"
+      data-info={props.infoKey}
+      data-info-content={props.content}
+    >
       i
     </button>
   );

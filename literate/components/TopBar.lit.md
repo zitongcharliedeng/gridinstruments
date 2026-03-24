@@ -48,7 +48,20 @@ needed for it.
 ``` {.typescript file=_generated/components/TopBar.tsx}
 import { type JSX } from 'solid-js';
 import { InfoButton } from './InfoButton';
+import { srcLink } from '../app-constants';
 import './TopBar.css';
+
+const FULLSCREEN_INFO = `
+<h2>Fullscreen</h2>
+<p>Expands the app to fill the entire screen. Press <strong>Esc</strong> or click again to exit.</p>
+<p>On iOS Safari, true fullscreen is not available — the browser bar remains.</p>
+${srcLink('components/TopBar.lit.md', 'Source: TopBar.lit.md')}`;
+
+const RESET_PAGE_INFO = `
+<h2>Reset Page</h2>
+<p>Clears <strong>all</strong> saved settings and reloads. Everything returns to factory defaults.</p>
+<p>Individual slider resets (↺) reset only that slider. Reset Page resets <strong>everything</strong>.</p>
+${srcLink('components/TopBar.lit.md', 'Source: TopBar.lit.md')}`;
 
 export interface TopBarProps {
   onAbout: () => void;
@@ -103,11 +116,11 @@ export function TopBar(props: TopBarProps): JSX.Element {
           Suggest
         </a>
       </div>
-      <InfoButton infoKey="fullscreen" />
+      <InfoButton infoKey="fullscreen" content={FULLSCREEN_INFO} />
       <button id="fullscreen-btn" class="icon-btn icon-md" onClick={onFullscreen}>
         <i data-lucide="maximize" />
       </button>
-      <InfoButton infoKey="reset-layout" />
+      <InfoButton infoKey="reset-layout" content={RESET_PAGE_INFO} />
       <button id="reset-layout" onClick={onResetClick}>
         <span class="icon"><i data-lucide="rotate-ccw" /></span> Reset Page
       </button>

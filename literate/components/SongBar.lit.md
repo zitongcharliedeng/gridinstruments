@@ -13,7 +13,45 @@ manipulation inside.
 ``` {.typescript file=_generated/components/SongBar.tsx}
 import { createSignal, type JSX } from 'solid-js';
 import { InfoButton } from './InfoButton';
+import { srcLink } from '../app-constants';
 import './SongBar.css';
+
+const SEARCH_INFO = `
+<h2>Song Search</h2>
+<p>Search for MIDI files across online libraries. Results stream in as you type.</p>
+<h3>Sources</h3>
+<table>
+<tr><td><strong>GitHub</strong></td><td>Open-source MIDI collections</td></tr>
+<tr><td><strong>Midishare</strong></td><td>Community-contributed MIDI arrangements</td></tr>
+</table>
+${srcLink('midi-search.lit.md', 'Source: midi-search.lit.md')}`;
+
+const QUANT_INFO = `
+<h2>Quantization</h2>
+<p>Snaps note timings to a beat grid for Piano Tiles-style gameplay.</p>
+<table>
+<tr><td><strong>None</strong></td><td>Raw MIDI timing</td></tr>
+<tr><td><strong>1/4</strong></td><td>Quarter note grid — beginner</td></tr>
+<tr><td><strong>1/8</strong></td><td>Eighth note — intermediate</td></tr>
+<tr><td><strong>1/16</strong></td><td>Sixteenth note — advanced</td></tr>
+</table>
+${srcLink('game-engine.lit.md', 'Source: game-engine.lit.md')}`;
+
+const MAXKEYS_INFO = `
+<h2>Max Simultaneous Keys</h2>
+<p>Keyboard rollover limit. Most laptops: 3-6. Gaming keyboards: 10+. MIDI: no limit.</p>
+<p>Game engine trims chords to this size. Default 8.</p>
+${srcLink('game-engine.lit.md', 'Source: game-engine.lit.md')}`;
+
+const CALIBRATE_INFO = `
+<h2>Calibrate Playable Area</h2>
+<p>Defines which notes your input device can reach. After calibration, unreachable cells grey out and the game auto-transposes.</p>
+<ol>
+<li>Click <strong>Calibrate</strong> — cells turn grey</li>
+<li>Play every reachable note — cells light up</li>
+<li><strong>Confirm</strong> to save, <strong>Cancel</strong> to discard</li>
+</ol>
+${srcLink('calibration.lit.md', 'Source: calibration.lit.md')}`;
 
 export interface SongBarProps {
   onSearch: (query: string) => void;
@@ -131,6 +169,14 @@ The progress fill animates width smoothly at 0.1 s.
 #midi-file-input { display:none; }
 .game-controls { display:flex; gap:6px; align-items:center; }
 #game-reset-btn { font-size:10px; padding:2px 6px; }
+#game-settings-btn { position:relative; }
+#game-settings-btn.active { color:var(--fg); }
+.game-settings-popup {
+  position:absolute; top:100%; right:0; z-index:25;
+  background:var(--bg); border:1px solid var(--border); padding:8px;
+  display:flex; flex-direction:column; gap:6px; min-width:180px;
+}
+.game-settings-popup.hidden { display:none; }
 .upload-btn { flex-shrink:0; min-width:28px; min-height:28px; display:inline-flex; align-items:center; justify-content:center; }
 #game-progress-fill { height:100%; background:#fff; width:0%; transition:width 0.1s linear; }
 #game-elapsed-timer { font-size:10px; color:var(--dim); font-family:var(--font); min-width:3ch; text-align:right; }
@@ -147,6 +193,7 @@ layout.
 
 export function SongBar(props: SongBarProps): JSX.Element {
   const [maxKeys, setMaxKeys] = createSignal(props.initialMaxKeys ?? 8);
+  const [gameSettingsOpen, setGameSettingsOpen] = createSignal(false);
 
   const handleSearchInput = (e: Event): void => {
     props.onSearch((e.target as HTMLInputElement).value);
@@ -183,7 +230,7 @@ wraps on narrow screens.
 
       <div id="song-bar-search">
         <div class="search-row">
-        <InfoButton infoKey="search" />
+        <InfoButton infoKey="search" content={SEARCH_INFO} />
         <div class="search-input-wrap">
           <i
             data-lucide="search"
@@ -226,9 +273,36 @@ active — the song title, progress bar, elapsed timer, and restart button.
 ``` {.typescript file=_generated/components/SongBar.tsx}
 
       <div id="song-bar-status">
-        <InfoButton infoKey="quantization" />
-        <span class="text-dim-sm">Quant</span>
-        <span id="quantization-select-slot" />
+        <button
+          id="game-settings-btn"
+          class="icon-btn icon-md"
+          classList={{ active: gameSettingsOpen() }}
+          onClick={() => { setGameSettingsOpen(v => !v); }}
+          aria-label="Game settings"
+        >
+          <i data-lucide="settings" />
+        </button>
+        <div class="game-settings-popup" classList={{ hidden: !gameSettingsOpen() }}>
+          <div style="display:flex;align-items:center;gap:4px">
+            <InfoButton infoKey="quantization" content={QUANT_INFO} />
+            <span class="text-dim-sm">Quant</span>
+            <span id="quantization-select-slot" />
+          </div>
+          <div style="display:flex;align-items:center;gap:4px">
+            <InfoButton infoKey="maxkeys" content={MAXKEYS_INFO} />
+            <label class="maxkeys-label">
+              Max Keys
+              <input
+                type="text"
+                inputmode="numeric"
+                pattern="[0-9]*"
+                id="max-keys-input"
+                value={maxKeys()}
+                onChange={handleMaxKeysChange}
+              />
+            </label>
+          </div>
+        </div>
         <div id="game-status">
           <div id="game-song-title" />
           <div class="game-controls">
@@ -260,19 +334,7 @@ range. The banner with confirm/cancel actions appears when calibration is active
       <span id="song-bar-hint" />
 
       <div id="song-bar-calibrate">
-        <InfoButton infoKey="maxkeys" />
-        <label class="maxkeys-label">
-          Max Keys
-          <input
-            type="text"
-            inputmode="numeric"
-            pattern="[0-9]*"
-            id="max-keys-input"
-            value={maxKeys()}
-            onChange={handleMaxKeysChange}
-          />
-        </label>
-        <InfoButton infoKey="calibrate" />
+        <InfoButton infoKey="calibrate" content={CALIBRATE_INFO} />
         <div class="calibrate-wrap">
           <button
             id="calibrate-btn"
