@@ -16,7 +16,6 @@ import { render } from 'solid-js/web';
 import { createSignal } from 'solid-js';
 import { SettingsOverlay } from './SettingsOverlay';
 import type { SectionDef } from './SettingsOverlay';
-import { InfoButton } from './InfoButton';
 import { InfoBox } from './InfoBox';
 import { SliderRow } from './SliderRow';
 import { TUNING_MARKERS } from '../lib/synth';
