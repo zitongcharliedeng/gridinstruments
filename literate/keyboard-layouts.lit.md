@@ -51,9 +51,21 @@ function iqToDCompose(iqX: number, iqY: number): KeyCoordinate {
 }
 ```
 
+## Numpad Coordinate Transform
+
+The numpad is a regular rectangular grid with no row stagger — unlike the main keyboard where each row shifts right. Feeding numpad keys through `iqToDCompose` (which applies main-keyboard stagger) produces coordinates that overlap with the WASD area. Instead, `numpadToDCompose` uses the same isomorphic DCompose formula but without stagger and without the main keyboard's centering offset (-12). A fixed offset of 20 on the X axis places the numpad grid to the right of the main keyboard (main keyboard X range is -14 to 12, numpad raw X range is -4 to 6, so offset 20 gives 16 to 26).
+
+``` {.typescript file=_generated/lib/keyboard-layouts.ts}
+const NUMPAD_X_OFFSET = 20;
+
+function numpadToDCompose(iqX: number, iqY: number): KeyCoordinate {
+  return [2 * iqX - iqY + NUMPAD_X_OFFSET, -iqX + 4];
+}
+```
+
 ## Building Layer Maps
 
-All layer-1 (main keyboard, z=1) and layer-3 (numpad, z=3) entries from `COORDS_BY_CODE` are transformed and stored in separate maps for later layout filtering.
+All layer-1 (main keyboard, z=1) entries use `iqToDCompose` with row stagger. Layer-3 (numpad, z=3) entries use `numpadToDCompose` which applies no stagger and offsets to the right.
 
 ``` {.typescript file=_generated/lib/keyboard-layouts.ts}
 const LAYER1_KEY_MAP: Record<string, KeyCoordinate> = {};
@@ -63,8 +75,7 @@ for (const [code, [iqX, iqY, iqZ]] of COORDS_BY_CODE) {
   if (iqZ === 1) {
     LAYER1_KEY_MAP[code] = iqToDCompose(iqX, iqY);
   } else if (iqZ === 3) {
-    const [cx, cy] = iqToDCompose(iqX, iqY);
-    NUMPAD_KEY_MAP[code] = [cx + 28, cy];
+    NUMPAD_KEY_MAP[code] = numpadToDCompose(iqX, iqY);
   }
 }
 ```

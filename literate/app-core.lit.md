@@ -491,7 +491,6 @@ The MIDI device panel renders a list of connected controllers with enable/disabl
         initialVolume: parseFloat(this.loadSetting('volume', '0.3')),
         onZoomChange: (v: number) => { this.visualizer?.setZoom(v); this.updateGraffiti?.(); this.saveSetting('zoom', String(v)); },
         initialZoom: this.defaultZoom,
-        getDefaultZoom: () => this.defaultZoom,
         onSkewChange: (v: number) => { this.visualizer?.setSkewFactor(v); this.recalcDefaultZoom(); this.updateGraffiti?.(); this.saveSetting('skew', String(v)); },
         initialSkew: parseFloat(this.loadSetting('skew', '0')),
         onShearChange: (v: number) => { this.visualizer?.setBFact(v); this.recalcDefaultZoom(); this.updateGraffiti?.(); this.saveSetting('bfact', String(v)); },
@@ -1183,7 +1182,6 @@ the tuning slider and calibrate button to prevent mid-game tuning changes.
           clearTimeout(this.idleTimeout);
           this.idleTimeout = null;
         }
-        this.setIdleState(false);
 
         const currentGroup = ctx.noteGroups[ctx.currentGroupIndex];
         if (currentGroup && this.visualizer) {
@@ -1792,7 +1790,7 @@ Note tracking uses reference counting (`noteHoldCounts`) because multiple input 
   }
 ```
 
-The idle timer controls the visibility of decorative elements (chord graffiti, song bar hint) that should fade out during active playing and reappear after 10 seconds of silence. During an active game session, the idle timer is suppressed entirely.
+The idle timer controls the visibility of decorative elements (chord graffiti, song bar hint) that should fade out during active free-play and reappear after 3 seconds of silence. During an active game session, the idle timer is suppressed and graffiti stays visible -- chord shape hints are a teaching aid that should persist throughout gameplay.
 
 ``` {.typescript file=_generated/app-core.ts}
   private recalcDefaultZoom(): void {

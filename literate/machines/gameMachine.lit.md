@@ -36,7 +36,10 @@ export interface NoteGroup {
 }
 ```
 
-The full context for the game machine.
+The full context for the game machine. `pressedMidiNotes` tracks which target
+MIDI notes the player has satisfied so far in the current chord group. This is
+separate from `pressedCellIds` because mirror cells (different grid positions
+producing the same 12-TET pitch) should count toward chord completion.
 
 ``` {.typescript file=_generated/machines/gameMachine.ts}
 export interface GameContext {
@@ -44,6 +47,7 @@ export interface GameContext {
   currentGroupIndex: number;
   targetCellIds: string[];
   pressedCellIds: string[];
+  pressedMidiNotes: number[];
   startTimeMs: number;
   finishTimeMs: number;
   error: string | null;
@@ -81,11 +85,13 @@ export const gameMachine = setup({
     assignSongLoaded: assign(({ event }) => {
       assertEvent(event, 'SONG_LOADED');
       const pressedCellIds: string[] = [];
+      const pressedMidiNotes: number[] = [];
       return {
         noteGroups: event.noteGroups,
         currentGroupIndex: 0,
         targetCellIds: event.noteGroups[0]?.cellIds ?? [],
         pressedCellIds,
+        pressedMidiNotes,
         startTimeMs: Date.now(),
         finishTimeMs: 0,
         error: null,
@@ -97,10 +103,13 @@ export const gameMachine = setup({
     }),
     accumulateNote: assign(({ context, event }) => {
       assertEvent(event, 'NOTE_PRESSED');
-      if (context.pressedCellIds.includes(event.cellId)) {
-        return { pressedCellIds: context.pressedCellIds };
-      }
-      return { pressedCellIds: [...context.pressedCellIds, event.cellId] };
+      const newCellIds = context.pressedCellIds.includes(event.cellId)
+        ? context.pressedCellIds
+        : [...context.pressedCellIds, event.cellId];
+      const newMidiNotes = context.pressedMidiNotes.includes(event.midiNote)
+        ? context.pressedMidiNotes
+        : [...context.pressedMidiNotes, event.midiNote];
+      return { pressedCellIds: newCellIds, pressedMidiNotes: newMidiNotes };
     }),
 ```
 
@@ -110,10 +119,12 @@ The remaining actions advance to the next chord group, record the finish timesta
     advanceGroup: assign(({ context }) => {
       const nextIndex = context.currentGroupIndex + 1;
       const pressedCellIds: string[] = [];
+      const pressedMidiNotes: number[] = [];
       return {
         currentGroupIndex: nextIndex,
         targetCellIds: context.noteGroups[nextIndex]?.cellIds ?? [],
         pressedCellIds,
+        pressedMidiNotes,
       };
     }),
     setFinishTime: assign(() => ({ finishTimeMs: Date.now() })),
@@ -122,6 +133,7 @@ The remaining actions advance to the next chord group, record the finish timesta
       currentGroupIndex: 0,
       targetCellIds: [],
       pressedCellIds: [],
+      pressedMidiNotes: [],
       startTimeMs: 0,
       finishTimeMs: 0,
       error: null,
@@ -129,10 +141,12 @@ The remaining actions advance to the next chord group, record the finish timesta
     })),
     restartGame: assign(({ context }) => {
       const pressedCellIds: string[] = [];
+      const pressedMidiNotes: number[] = [];
       return {
         currentGroupIndex: 0,
         targetCellIds: context.noteGroups[0]?.cellIds ?? [],
         pressedCellIds,
+        pressedMidiNotes,
         startTimeMs: Date.now(),
         finishTimeMs: 0,
       };
@@ -143,22 +157,38 @@ The remaining actions advance to the next chord group, record the finish timesta
 
 ### Guards
 
-`isCorrectNote` checks the current group's `midiNotes` array. `isChordComplete` checks whether
-adding the new note would satisfy all notes in the group. `isLastGroup` checks if advancing
-would exhaust the groups array.
+`isCorrectNote` accepts a press if the event's cellId matches a canonical target
+OR if the event's midiNote matches a target midiNote. The midiNote fallback is
+necessary because mirror grid positions (different cellId, same 12-TET pitch)
+are valid places to play the note. Since the game forces 12-TET on song load,
+midiNote equivalence is pitch equivalence.
+
+`isChordComplete` checks whether every note in the target group has been
+satisfied by at least one press. A target note at index `i` is satisfied if
+either its cellId (`group.cellIds[i]`) has been pressed or its midiNote
+(`group.midiNotes[i]`) has been pressed. This dual-path check means both
+canonical positions and mirror positions count toward completion.
+
+`isLastGroup` checks if advancing would exhaust the groups array.
 
 ``` {.typescript file=_generated/machines/gameMachine.ts}
   guards: {
     isCorrectNote: ({ context, event }) => {
       assertEvent(event, 'NOTE_PRESSED');
-      return context.noteGroups[context.currentGroupIndex]?.cellIds.includes(event.cellId) ?? false;
+      const group = context.noteGroups[context.currentGroupIndex];
+      if (!group) return false;
+      return group.cellIds.includes(event.cellId) || group.midiNotes.includes(event.midiNote);
     },
     isChordComplete: ({ context, event }) => {
       assertEvent(event, 'NOTE_PRESSED');
       const group = context.noteGroups[context.currentGroupIndex];
       if (!group) return false;
-      const withNew = new Set([...context.pressedCellIds, event.cellId]);
-      return group.cellIds.every(id => withNew.has(id));
+      const allCellIds = new Set([...context.pressedCellIds, event.cellId]);
+      const allMidiNotes = new Set([...context.pressedMidiNotes, event.midiNote]);
+      return group.cellIds.every((id, i) => {
+        const midi = group.midiNotes[i];
+        return allCellIds.has(id) || (midi !== undefined && allMidiNotes.has(midi));
+      });
     },
     isLastGroup: ({ context }) =>
       context.currentGroupIndex + 1 >= context.noteGroups.length,
@@ -177,6 +207,7 @@ The initial context zeroes all runtime fields. `idle` and `loading` are waiting 
     currentGroupIndex: 0,
     targetCellIds: [],
     pressedCellIds: [],
+    pressedMidiNotes: [],
     startTimeMs: 0,
     finishTimeMs: 0,
     error: null,
