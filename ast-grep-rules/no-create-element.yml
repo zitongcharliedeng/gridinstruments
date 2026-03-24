@@ -1,0 +1,8 @@
+id: no-create-element
+language: typescript
+rule:
+  pattern: document.createElement($$$)
+files:
+  - "_generated/components/**"
+severity: warning
+message: "createElement in SolidJS component — use JSX instead of imperative element creation."

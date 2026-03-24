@@ -1,0 +1,12 @@
+id: no-class-component
+language: typescript
+rule:
+  all:
+    - pattern: "class $NAME extends $BASE {$$$}"
+    - any:
+        - has:
+            pattern: render()
+files:
+  - "_generated/components/**"
+severity: error
+message: "Class components are banned — use SolidJS functional components."

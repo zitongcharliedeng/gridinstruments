@@ -1,0 +1,8 @@
+id: no-nested-ternary
+language: typescript
+rule:
+  pattern: "$A ? $B : $C ? $D : $E"
+files:
+  - "_generated/**"
+severity: warning
+message: "Nested ternary — use if/else or early return for readability."

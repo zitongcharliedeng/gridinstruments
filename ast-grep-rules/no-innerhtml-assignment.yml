@@ -1,0 +1,8 @@
+id: no-innerhtml-assignment
+language: typescript
+rule:
+  pattern: "$EL.outerHTML = $VAL"
+files:
+  - "_generated/**"
+severity: error
+message: "outerHTML assignment is banned — use DOM APIs."

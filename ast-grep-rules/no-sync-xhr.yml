@@ -1,0 +1,8 @@
+id: no-sync-xhr
+language: typescript
+rule:
+  pattern: new XMLHttpRequest()
+files:
+  - "_generated/**"
+severity: error
+message: "XMLHttpRequest is banned — use fetch() API."
