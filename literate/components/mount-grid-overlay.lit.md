@@ -17,6 +17,7 @@ import { createSignal } from 'solid-js';
 import { SettingsOverlay } from './SettingsOverlay';
 import type { SectionDef } from './SettingsOverlay';
 import { InfoButton } from './InfoButton';
+import { InfoBox } from './InfoBox';
 import { SliderRow } from './SliderRow';
 import { TUNING_MARKERS } from '../lib/synth';
 import { srcLink, tuningTableRows } from '../app-constants';
@@ -112,8 +113,8 @@ export function mountGridOverlay(
             <span id="wave-select-slot" />
             <button class="slider-reset icon-btn icon-md" id="wave-reset"><i data-lucide="rotate-cw" /></button>
           </div>
-          <div class="ctrl-group mt-18">
-            <SliderRow infoKey="volume" infoContent={VOLUME_INFO} def={{
+          <InfoBox infoKey="volume" infoContent={VOLUME_INFO}>
+            <SliderRow def={{
               id: 'volume-slider',
               label: 'VOL',
               min: 0, max: 1, step: 0.01,
@@ -121,10 +122,10 @@ export function mountGridOverlay(
               formatBadge: (v: number) => (20 * Math.log10(Math.max(0.001, v))).toFixed(1),
               onChange: callbacks.onVolumeChange,
             }} />
-          </div>
+          </InfoBox>
           <div class="tuning-slider-area mt-18">
-            <div class="ctrl-group">
-              <SliderRow infoKey="tuning" infoContent={TUNING_INFO} def={{
+            <InfoBox infoKey="tuning" infoContent={TUNING_INFO}>
+              <SliderRow def={{
                 id: 'tuning-slider',
                 label: 'FIFTHS (¢)',
                 min: 683, max: 722, step: 0.01,
@@ -135,11 +136,11 @@ export function mountGridOverlay(
                 alternateTicks: true,
                 presets: TUNING_MARKERS.map(m => ({ value: m.fifth, label: m.name, description: `${m.description} (${m.fifth.toFixed(2)}\u00a2)` })),
               }} />
-            </div>
+            </InfoBox>
           </div>
           <div class="tuning-slider-area mt-18">
-            <div class="ctrl-group">
-              <SliderRow infoKey="dref" infoContent={DREF_INFO} def={{
+            <InfoBox infoKey="dref" infoContent={DREF_INFO}>
+              <SliderRow def={{
                 id: 'd-ref-slider',
                 label: 'D-REF',
                 min: 73.42, max: 1174.66, step: 0.01,
@@ -147,7 +148,7 @@ export function mountGridOverlay(
                 formatBadge: (v: number) => v.toFixed(2),
                 onChange: callbacks.onDRefChange,
               }} />
-            </div>
+            </InfoBox>
           </div>
         </div>
       ),
@@ -166,8 +167,8 @@ layout selector. Each slider wraps its info button in a `ctrl-group` flex row.
       children: () => (
         <div>
           <div class="tuning-slider-area">
-            <div class="ctrl-group">
-              <SliderRow infoKey="skew" infoContent={SKEW_INFO} def={{
+            <InfoBox infoKey="skew" infoContent={SKEW_INFO}>
+              <SliderRow def={{
                 id: 'skew-slider',
                 label: 'SKEW',
                 min: -0.5, max: 1.5, step: 0.01,
@@ -180,11 +181,11 @@ layout selector. Each slider wraps its info button in a `ctrl-group` flex row.
                   { value: 1, label: 'MidiMech', description: 'MidiMech: orthogonal rectangular grid' },
                 ],
               }} />
-            </div>
+            </InfoBox>
           </div>
           <div class="tuning-slider-area mt-18">
-            <div class="ctrl-group">
-              <SliderRow infoKey="shear" infoContent={SHEAR_INFO} def={{
+            <InfoBox infoKey="shear" infoContent={SHEAR_INFO}>
+              <SliderRow def={{
                 id: 'bfact-slider',
                 label: 'SHEAR',
                 min: -0.5, max: 1.5, step: 0.01,
@@ -197,11 +198,11 @@ layout selector. Each slider wraps its info button in a `ctrl-group` flex row.
                   { value: 1, label: 'Wicki-Hayden', description: 'Wicki-Hayden: horizontal rows (shear mapping from Tonnetz)' },
                 ],
               }} />
-            </div>
+            </InfoBox>
           </div>
           <div class="tuning-slider-area mt-18">
-            <div class="ctrl-group">
-              <SliderRow infoKey="zoom" infoContent={ZOOM_INFO} def={{
+            <InfoBox infoKey="zoom" infoContent={ZOOM_INFO}>
+              <SliderRow def={{
                 id: 'zoom-slider',
                 label: 'ZOOM',
                 min: 0.2, max: 3, step: 0.01,
@@ -209,7 +210,7 @@ layout selector. Each slider wraps its info button in a `ctrl-group` flex row.
                 formatBadge: (v: number) => v.toFixed(2),
                 onChange: callbacks.onZoomChange,
               }} />
-            </div>
+            </InfoBox>
           </div>
           <div class="slider-track mt-18">
             <label class="expr-label-lg">

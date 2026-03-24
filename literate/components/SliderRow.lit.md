@@ -100,7 +100,6 @@ Tick marks below the slider snap to named values. Active presets highlight green
 ``` {.typescript file=_generated/components/SliderRow.tsx}
 import { createSignal, For, Show, type JSX } from 'solid-js';
 import { Slider } from '@kobalte/core/slider';
-import { InfoButton } from './InfoButton';
 import './SliderRow.css';
 
 export interface PresetDef {
@@ -132,7 +131,7 @@ and optional preset marks.
 
 ``` {.typescript file=_generated/components/SliderRow.tsx}
 
-export function SliderRow(props: { def: SliderDef; infoKey?: string; infoContent?: string }): JSX.Element {
+export function SliderRow(props: { def: SliderDef }): JSX.Element {
   const defVal = (): number => props.def.defaultValue;
   const fmt = (): ((v: number) => string) => props.def.formatBadge ?? ((v: number): string => v.toFixed(1));
   const [value, setValue] = createSignal(props.def.defaultValue);
@@ -160,9 +159,6 @@ export function SliderRow(props: { def: SliderDef; infoKey?: string; infoContent
   return (
     <div class="slider-row">
       <div class="slider-row-flex">
-        <Show when={props.infoKey}>
-          <InfoButton infoKey={props.infoKey!} content={props.infoContent} />
-        </Show>
         <Slider
           value={[value()]}
           onChange={handleChange}
