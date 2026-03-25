@@ -40,12 +40,10 @@ dialog::backdrop { background: rgba(0,0,0,0.7); }
   border: 1px solid var(--border);
 }
 .dialog-close-btn {
-  display: none; position: fixed; z-index: 10001;
-  background: var(--bg); color: var(--dim); width: 28px; height: 28px;
+  float: right; background: none; color: var(--dim); width: 28px; height: 28px;
   border: 1px solid var(--border); font-size: 16px; font-family: var(--font);
-  cursor: pointer; align-items: center; justify-content: center;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
 }
-.dialog-close-btn.visible { display: flex; }
 .dialog-close-btn:hover { color: var(--fg); border-color: var(--accent); }
 ```
 
