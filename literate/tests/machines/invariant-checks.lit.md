@@ -4266,6 +4266,24 @@ export const GAME_SETTINGS_COG: StateInvariant = {
   },
 };
 
+export const ALL_COGS_CONSISTENT: StateInvariant = {
+  id: 'ALL-COGS-CONSISTENT',
+  description: 'All 3 settings cogs use settings-cog class (SettingsCog SolidJS component)',
+  check: async (page: Page) => {
+    const cogs = await page.evaluate(() => {
+      const ids = ['grid-settings-btn', 'vis-settings-btn', 'game-settings-btn'];
+      return ids.map(id => {
+        const el = document.getElementById(id);
+        return { id, exists: !!el, hasClass: el?.classList.contains('settings-cog') ?? false };
+      });
+    });
+    for (const c of cogs) {
+      if (!c.exists) throw new Error(`#${c.id} not found`);
+      if (!c.hasClass) throw new Error(`#${c.id} must use settings-cog class — got: ${JSON.stringify(c)}`);
+    }
+  },
+};
+
 export const INFOBOX_STRUCTURE: StateInvariant = {
   id: 'INFOBOX-STRUCTURE',
   description: 'All .info-box elements have .slider-info-btn + .info-box-content children',
