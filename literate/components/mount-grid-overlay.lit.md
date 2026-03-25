@@ -89,6 +89,12 @@ export function mountGridOverlay(
   callbacks: GridOverlayCallbacks,
 ): { toggle: () => void; setVisible: (v: boolean) => void } {
   const [visible, setVisible] = createSignal(false);
+  const [volVal, setVolVal] = createSignal(callbacks.initialVolume);
+  const [tuneVal, setTuneVal] = createSignal(parseFloat(String(callbacks.initialTuning)) || 700);
+  const [drefVal, setDrefVal] = createSignal(parseFloat(String(callbacks.initialDRef)) || 293.66);
+  const [skewVal, setSkewVal] = createSignal(parseFloat(String(callbacks.initialSkew)) || 0);
+  const [shearVal, setShearVal] = createSignal(parseFloat(String(callbacks.initialShear)) || 0);
+  const [zoomVal, setZoomVal] = createSignal(callbacks.initialZoom);
 
   const toggle = (): void => { setVisible(v => !v); };
   const onEscape = (e: KeyboardEvent): void => {
@@ -108,27 +114,29 @@ export function mountGridOverlay(
             <span class="ctrl-label">WAVE</span>
             <span id="wave-select-slot" />
           </InfoBox>
-          <InfoBox infoKey="volume" infoContent={VOLUME_INFO} resetId="volume-slider-reset" onReset={() => callbacks.onVolumeChange(0.3)}>
+          <InfoBox infoKey="volume" infoContent={VOLUME_INFO} resetId="volume-slider-reset" onReset={() => { setVolVal(0.3); callbacks.onVolumeChange(0.3); }}>
             <SliderRow def={{
               id: 'volume-slider',
               badgeId: 'volume-thumb-badge',
               label: 'VOL',
               min: 0, max: 1, step: 0.01,
               defaultValue: callbacks.initialVolume,
+              value: volVal(),
               formatBadge: (v: number) => (20 * Math.log10(Math.max(0.001, v))).toFixed(1),
-              onChange: callbacks.onVolumeChange,
+              onChange: (v: number) => { setVolVal(v); callbacks.onVolumeChange(v); },
             }} />
           </InfoBox>
           <div class="tuning-slider-area mt-18">
-            <InfoBox infoKey="tuning" infoContent={TUNING_INFO} resetId="tuning-slider-reset" onReset={() => callbacks.onTuningChange(700)}>
+            <InfoBox infoKey="tuning" infoContent={TUNING_INFO} resetId="tuning-slider-reset" onReset={() => { setTuneVal(700); callbacks.onTuningChange(700); }}>
               <SliderRow def={{
                 id: 'tuning-slider',
                 badgeId: 'tuning-thumb-badge',
                 label: 'FIFTHS (¢)',
                 min: 683, max: 722, step: 0.01,
                 defaultValue: 700,
+                value: tuneVal(),
                 formatBadge: (v: number) => v.toFixed(1),
-                onChange: callbacks.onTuningChange,
+                onChange: (v: number) => { setTuneVal(v); callbacks.onTuningChange(v); },
                 presetsId: 'tet-presets',
                 alternateTicks: true,
                 presets: TUNING_MARKERS.map(m => ({ value: m.fifth, label: m.name, description: `${m.description} (${m.fifth.toFixed(2)}\u00a2)` })),
@@ -136,15 +144,16 @@ export function mountGridOverlay(
             </InfoBox>
           </div>
           <div class="tuning-slider-area mt-18">
-            <InfoBox infoKey="dref" infoContent={DREF_INFO} resetId="d-ref-slider-reset" onReset={() => callbacks.onDRefChange(293.66)}>
+            <InfoBox infoKey="dref" infoContent={DREF_INFO} resetId="d-ref-slider-reset" onReset={() => { setDrefVal(293.66); callbacks.onDRefChange(293.66); }}>
               <SliderRow def={{
                 id: 'd-ref-slider',
                 badgeId: 'dref-thumb-badge',
                 label: 'D-REF',
                 min: 73.42, max: 1174.66, step: 0.01,
                 defaultValue: 293.66,
+                value: drefVal(),
                 formatBadge: (v: number) => v.toFixed(2),
-                onChange: callbacks.onDRefChange,
+                onChange: (v: number) => { setDrefVal(v); callbacks.onDRefChange(v); },
               }} />
             </InfoBox>
           </div>
@@ -165,15 +174,16 @@ layout selector. Each slider wraps its info button in a `ctrl-group` flex row.
       children: () => (
         <div>
           <div class="tuning-slider-area">
-            <InfoBox infoKey="skew" infoContent={SKEW_INFO} resetId="skew-slider-reset" onReset={() => callbacks.onSkewChange(0)}>
+            <InfoBox infoKey="skew" infoContent={SKEW_INFO} resetId="skew-slider-reset" onReset={() => { setSkewVal(0); callbacks.onSkewChange(0); }}>
               <SliderRow def={{
                 id: 'skew-slider',
                 badgeId: 'skew-thumb-badge',
                 label: 'SKEW',
                 min: -0.5, max: 1.5, step: 0.01,
                 defaultValue: 0,
+                value: skewVal(),
                 formatBadge: (v: number) => v.toFixed(2),
-                onChange: callbacks.onSkewChange,
+                onChange: (v: number) => { setSkewVal(v); callbacks.onSkewChange(v); },
                 presetsId: 'skew-presets',
                 presets: [
                   { value: 0, label: 'DCompose / Wicki-Hayden', description: 'DCompose: diagonal parallelogram grid (Striso angle). Wicki-Hayden shares this skew — use WICKED SHEAR to differentiate.' },
@@ -183,15 +193,16 @@ layout selector. Each slider wraps its info button in a `ctrl-group` flex row.
             </InfoBox>
           </div>
           <div class="tuning-slider-area mt-18">
-            <InfoBox infoKey="shear" infoContent={SHEAR_INFO} resetId="bfact-slider-reset" onReset={() => callbacks.onShearChange(0)}>
+            <InfoBox infoKey="shear" infoContent={SHEAR_INFO} resetId="bfact-slider-reset" onReset={() => { setShearVal(0); callbacks.onShearChange(0); }}>
               <SliderRow def={{
                 id: 'bfact-slider',
                 badgeId: 'shear-thumb-badge',
                 label: 'SHEAR',
                 min: -0.5, max: 1.5, step: 0.01,
                 defaultValue: 0,
+                value: shearVal(),
                 formatBadge: (v: number) => v.toFixed(2),
-                onChange: callbacks.onShearChange,
+                onChange: (v: number) => { setShearVal(v); callbacks.onShearChange(v); },
                 presetsId: 'bfact-presets',
                 presets: [
                   { value: 0, label: 'DCompose', description: 'DCompose: no row shear (default lattice)' },
@@ -201,16 +212,17 @@ layout selector. Each slider wraps its info button in a `ctrl-group` flex row.
             </InfoBox>
           </div>
           <div class="tuning-slider-area mt-18">
-            <InfoBox infoKey="zoom" infoContent={ZOOM_INFO} resetId="zoom-slider-reset" onReset={() => callbacks.onZoomChange(callbacks.getDefaultZoom())}>
+            <InfoBox infoKey="zoom" infoContent={ZOOM_INFO} resetId="zoom-slider-reset" onReset={() => { const d = callbacks.getDefaultZoom(); setZoomVal(d); callbacks.onZoomChange(d); }}>
               <SliderRow def={{
                 id: 'zoom-slider',
                 badgeId: 'zoom-thumb-badge',
                 label: 'ZOOM',
                 min: 0.2, max: 3, step: 0.01,
                 defaultValue: callbacks.initialZoom,
+                value: zoomVal(),
                 getDefaultValue: callbacks.getDefaultZoom,
                 formatBadge: (v: number) => v.toFixed(2),
-                onChange: callbacks.onZoomChange,
+                onChange: (v: number) => { setZoomVal(v); callbacks.onZoomChange(v); },
               }} />
             </InfoBox>
           </div>
