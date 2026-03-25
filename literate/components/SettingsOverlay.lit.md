@@ -99,11 +99,9 @@ crowd their section title. `.slider-badge-edit` styles the inline numeric input
 that floats above the slider thumb.
 
 ``` {.css file=_generated/components/SettingsOverlay.css}
-.overlay-section { display:grid; grid-template-columns:repeat(auto-fill, minmax(180px, 1fr)); gap:5px 8px; margin-left:0; margin-bottom:8px; }
-.overlay-section > div { display:contents; }
+.overlay-section { margin-left:0; margin-bottom:8px; }
+.overlay-section > * { margin-bottom:5px; }
 .overlay-section .info-box { min-width:0; }
-.overlay-section .tuning-slider-area,
-.overlay-section .info-box:has(.slider-row) { grid-column:1 / -1; }
 .overlay-section .ctrl-label { color:#fff; }
 .overlay-section .tuning-slider-area { position:relative; width:100%; margin-bottom:40px; grid-column:1 / -1; }
 .overlay-section .tuning-slider-area .slider-row { width:100%; }
