@@ -52,6 +52,7 @@
     "effect": "^3.19.19",
     "isomorphic-qwerty": "^0.0.4",
     "lucide": "^0.577.0",
+    "muuri": "^0.9.5",
     "overlayscrollbars": "^2.14.0",
     "roughjs": "^4.6.6",
     "slim-select": "^3.4.3",
