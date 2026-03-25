@@ -180,9 +180,21 @@ export function SettingsOverlay(props: SettingsOverlayProps): JSX.Element {
   onMount(() => {
     if (!overlayRef) return;
     const sections = overlayRef.querySelectorAll('.' + sectionClass().replace(/ /g, '.'));
-    sections.forEach(el => {
-      if (el.children.length > 0) {
-        new Muuri(el as HTMLElement, { layout: { fillGaps: true }, dragEnabled: false });
+    sections.forEach(container => {
+      const children = Array.from(container.children);
+      children.forEach(child => {
+        if (!child.classList.contains('muuri-item')) {
+          const wrapper = document.createElement('div');
+          wrapper.className = 'muuri-item';
+          const content = document.createElement('div');
+          content.className = 'muuri-item-content';
+          child.parentNode?.insertBefore(wrapper, child);
+          content.appendChild(child);
+          wrapper.appendChild(content);
+        }
+      });
+      if (container.children.length > 0) {
+        new Muuri(container as HTMLElement, { layout: { fillGaps: true }, dragEnabled: false });
       }
     });
   });
