@@ -2,7 +2,7 @@
 
 A single SolidJS component used by ALL three settings panels (grid, vis, game).
 Renders a 32x32 cog button with consistent styling. The active state shows an
-accent-colored border, not a white inversion.
+white color inversion (toggled = white bg, black text) matching the design language.
 
 ``` {.css file=_generated/components/SettingsCog.css}
 .settings-cog {
@@ -12,7 +12,7 @@ accent-colored border, not a white inversion.
   font-family: var(--font); flex-shrink: 0;
 }
 .settings-cog:hover { color: var(--fg); border-color: var(--accent); }
-.settings-cog.active { color: var(--fg); border-color: var(--accent, #4af); }
+.settings-cog.active { color: var(--bg); background: var(--fg); border-color: var(--fg); }
 ```
 
 ``` {.typescript file=_generated/components/SettingsCog.tsx}

@@ -150,8 +150,8 @@ visualiser. The `.active` class inverts colours to signal the open state.
 #grid-settings-btn { top:8px; left:8px; }
 #vis-settings-btn { top:4px; right:8px; }
 .grid-cog:hover { color:var(--fg); border-color:var(--accent); }
-.grid-cog.active { color:var(--fg); border-color:var(--accent, #4af); }
-#game-settings-btn.active { color:var(--fg); border-color:var(--accent, #4af); }
+.grid-cog.active { color:var(--bg); background:var(--fg); border-color:var(--fg); }
+#game-settings-btn.active { color:var(--bg); background:var(--fg); border-color:var(--fg); }
 ```
 
 ## Checkbox
