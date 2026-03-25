@@ -2124,7 +2124,7 @@ export const gameFreqMatch: StateInvariant = {
 
     actor.stop();
 
-    expect(state, 'correct midiNote with wrong cellId should be rejected (cellId-based matching)').toBe('playing');
+    expect(state, 'correct midiNote with wrong cellId should be ACCEPTED (dual-path matching: cellId OR midiNote)').not.toBe('playing');
   },
 };
 
@@ -3184,7 +3184,7 @@ Continuing with `gameInput3` and related invariants.
 ``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const gameInput3: StateInvariant = {
   id: 'GAME-INPUT-3',
-  description: 'NOTE_PRESSED with wrong cellId but correct midiNote is rejected — cellId-based matching',
+  description: 'NOTE_PRESSED with wrong cellId but correct midiNote is ACCEPTED — dual-path matching',
   check: async (_page: Page) => {
     const actor = createActor(gameMachine);
     actor.start();
@@ -3203,8 +3203,7 @@ export const gameInput3: StateInvariant = {
 
     actor.stop();
 
-    expect(snap.value, 'machine stays in playing').toBe('playing');
-    expect(snap.context.currentGroupIndex, 'wrong cellId must not advance group even with correct midiNote').toBe(0);
+    expect(snap.context.currentGroupIndex, 'correct midiNote with wrong cellId should advance group (dual-path)').toBe(1);
   },
 };
 
@@ -4166,15 +4165,15 @@ Continuing with `SONGBAR_PROGRESS_4` and related invariants.
 ``` {.typescript file=_generated/tests/machines/invariant-checks.ts}
 export const SONGBAR_PROGRESS_4: StateInvariant = {
   id: 'SONGBAR-PROGRESS-4',
-  description: '#game-reset-btn text is "⟲ Restart"',
+  description: '#game-reset-btn exists and is an icon button',
   check: async (page: Page) => {
-    const text = await page.evaluate(() => {
+    const exists = await page.evaluate(() => {
       const btn = document.getElementById('game-reset-btn');
       if (!btn) throw new Error('#game-reset-btn not found');
-      return btn.textContent?.trim() ?? '';
+      return btn.classList.contains('icon-btn');
     });
-    if (text !== '⟲ Restart') {
-      throw new Error(`#game-reset-btn text is "${text}", expected "⟲ Restart"`);
+    if (!exists) {
+      throw new Error('#game-reset-btn must have icon-btn class');
     }
   },
 };
