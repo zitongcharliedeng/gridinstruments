@@ -1,0 +1,9 @@
+id: no-grid-cog-class
+language: html
+rule:
+  pattern: 'class="grid-cog"'
+files:
+  - "index.html"
+severity: error
+message: "grid-cog class is dead — all cogs must use the SettingsCog SolidJS component (class=settings-cog)."
+note: "See #269: ONE component for all 3 cogs. No raw HTML cog buttons."
