@@ -483,10 +483,10 @@ The MIDI device panel renders a list of connected controllers with enable/disabl
       );
     }
 
-    const gridCog = getElementOrNull('grid-settings-btn', HTMLButtonElement);
+    const gridCogMount = document.getElementById('grid-cog-mount');
     const gridOverlayMount = document.getElementById('grid-overlay-mount');
-    if (gridCog && gridOverlayMount) {
-      mountGridOverlay(gridOverlayMount, gridCog, {
+    if (gridOverlayMount) {
+      mountGridOverlay(gridOverlayMount, gridCogMount, {
         onVolumeChange: (v: number) => { this.synth.setMasterVolume(v); this.saveSetting('volume', String(v)); },
         initialVolume: parseFloat(this.loadSetting('volume', '0.3')),
         onZoomChange: (v: number) => { this.visualizer?.setZoom(v); this.updateGraffiti?.(); this.saveSetting('zoom', String(v)); },
@@ -597,7 +597,7 @@ then wired to its backing state with a change listener and localStorage persiste
           autoHide: 'never',
         },
       });
-      gridCog?.addEventListener('click', () => {
+      document.getElementById('grid-settings-btn')?.addEventListener('click', () => {
         requestAnimationFrame(() => { requestAnimationFrame(() => { overlayScrollbars.update(); }); });
       });
     }

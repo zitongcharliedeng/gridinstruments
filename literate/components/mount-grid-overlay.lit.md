@@ -63,6 +63,7 @@ function so app-core can drive visibility from the `overlayMachine` actor.
 ```
 
 ``` {.typescript file=_generated/components/mount-grid-overlay.tsx}
+import { SettingsCog } from './SettingsCog';
 import './mount-grid-overlay.css';
 
 export interface GridOverlayCallbacks {
@@ -84,23 +85,19 @@ export interface GridOverlayCallbacks {
 
 export function mountGridOverlay(
   mountEl: HTMLElement,
-  cogBtn: HTMLElement,
+  cogMountEl: HTMLElement | null,
   callbacks: GridOverlayCallbacks,
 ): { toggle: () => void; setVisible: (v: boolean) => void } {
   const [visible, setVisible] = createSignal(false);
 
-  const toggle = (): void => {
-    setVisible(v => !v);
-    cogBtn.classList.toggle('active', visible());
-  };
+  const toggle = (): void => { setVisible(v => !v); };
   const onEscape = (e: KeyboardEvent): void => {
-    if (e.key === 'Escape' && visible()) {
-      setVisible(false);
-      cogBtn.classList.remove('active');
-    }
+    if (e.key === 'Escape' && visible()) { setVisible(false); }
   };
   document.addEventListener('keydown', onEscape);
-  cogBtn.addEventListener('click', toggle);
+  if (cogMountEl) {
+    render(() => <SettingsCog id="grid-settings-btn" active={visible()} onClick={toggle} position="absolute" style={{ top: '8px', left: '8px', 'z-index': '15' }} />, cogMountEl);
+  }
 
   const sections: SectionDef[] = [
     {
@@ -310,7 +307,7 @@ MPE dimensions are active. Pressure mode and CC source use slim-select dropdowns
   mountEl.addEventListener('click', (e) => {
     const target = e.target;
     if (!(target instanceof HTMLElement)) return;
-    if (target.id === 'grid-overlay') { setVisible(false); cogBtn.classList.remove('active'); }
+    if (target.id === 'grid-overlay') { setVisible(false); }
   });
 
   return { toggle, setVisible };

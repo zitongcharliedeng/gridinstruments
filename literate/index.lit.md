@@ -527,7 +527,7 @@ bottom border; `data-*` attributes declare the min/max/default heights and the
     <!-- Visualiser panel -->
     <div id="visualiser-panel">
       <canvas id="history-canvas" height="120"></canvas>
-      <button id="vis-settings-btn" class="grid-cog"><i data-lucide="settings"></i></button>
+      <span id="vis-cog-mount"></span>
       <div id="vis-overlay-mount"></div>
       <div class="panel-resize-handle-wrap">
          <div class="panel-resize-handle" tabindex="0" role="separator" aria-orientation="horizontal" aria-label="Resize visualiser" data-target="visualiser-panel" data-min="60" data-max="400" data-default="120" data-key="gi_visualiser_h" data-hidden-key="gi_history_hidden"><span class="grip-lines"><span class="grip-line"></span><span class="grip-line"></span><span class="grip-line"></span></span><span class="handle-label">VISUALISER</span><span class="grip-lines"><span class="grip-line"></span><span class="grip-line"></span><span class="grip-line"></span></span></div>
@@ -549,7 +549,7 @@ becomes a Solid component.
     <div id="grid-area">
       <div id="keyboard-container">
         <canvas id="keyboard-canvas"></canvas>
-         <button id="grid-settings-btn" class="grid-cog"><i data-lucide="settings"></i></button>
+         <span id="grid-cog-mount"></span>
 
         <!-- Grid settings overlay — mounted by SolidJS (see mount-grid-overlay.tsx) -->
         <div id="grid-overlay-mount"></div>
