@@ -596,6 +596,7 @@ then wired to its backing state with a change listener and localStorage persiste
     }
 
     this.bindMountedControls();
+    createIcons({ icons: { Info, Search, Star, Maximize, RotateCcw, RotateCw, Settings, Settings2, Upload, X } });
 
     const gridOverlay = getElementOrNull('grid-overlay', HTMLDivElement);
     if (gridOverlay) {

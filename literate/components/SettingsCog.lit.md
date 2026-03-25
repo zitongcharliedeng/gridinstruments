@@ -37,7 +37,7 @@ export function SettingsCog(props: SettingsCogProps): JSX.Element {
       style={{ position: props.position ?? 'absolute', ...props.style }}
       aria-label="Settings"
     >
-&#x2699;
+      <i data-lucide="settings" />
     </button>
   );
 }
