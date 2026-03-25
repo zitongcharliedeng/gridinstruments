@@ -529,7 +529,14 @@ The MIDI device panel renders a list of connected controllers with enable/disabl
           }
         },
         onQuantizationCycle: () => { /* value read on-demand by loadMidiFromBuffer */ },
-        onGameReset: () => { this.gameActor?.send({ type: 'GAME_RESTART' }); },
+        onGameReset: () => {
+          if (this.lastMidiBuffer) {
+            this.gameActor?.send({ type: 'GAME_RESET' });
+            this.loadMidiFromBuffer(this.lastMidiBuffer, this.lastMidiTitle);
+          } else {
+            this.gameActor?.send({ type: 'GAME_RESTART' });
+          }
+        },
         onCalibrateStart: () => { this.enterCalibrationMode(); },
         onCalibrateConfirm: () => { this.exitCalibrationMode(true); },
         onCalibrateCancel: () => { this.exitCalibrationMode(false); },
