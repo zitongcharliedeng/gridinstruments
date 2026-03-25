@@ -104,7 +104,7 @@ that floats above the slider thumb.
 .overlay-section .ctrl-label { color:#fff; }
 .overlay-section .slider-row { width:100%; grid-column:1 / -1; }
 .overlay-section .tuning-slider-area { position:relative; width:100%; margin-bottom:40px; grid-column:1 / -1; }
-.overlay-section .tuning-slider-area .slider-row { width:calc(100% - 18px); }
+.overlay-section .tuning-slider-area .slider-row { width:100%; }
 .overlay-section .midi-panel-row { min-width:0; }
 .overlay-section-title {
   font-size:11px; color:var(--dim); text-transform:uppercase; letter-spacing:0.08em;

@@ -650,20 +650,40 @@ yellow text on a semi-transparent black pill for maximum contrast.
 
 [MPE (MIDI Polyphonic Expression)](https://www.midi.org/midi-articles/midi-polyphonic-expression-mpe)
 provides per-note pressure and pitch bend data. The visualizer stores this as a
-Map from note ID to `{ pressure, pitchBend }` and uses it during rendering to
-modulate cell appearance:
+Map from cell coordinate ID (`coordX_coordY`) to `{ pressure, pitchBend }` and
+uses it during rendering to modulate cell appearance:
 
 - **Pressure** (0-1): controls cell opacity. At pressure=0 the cell renders at
-  85% opacity; at pressure=1 it renders at 100%. This subtle dimming makes
-  light touches visually distinct from firm presses.
+  30% opacity; at pressure=1 it renders at 100%. This full-range modulation
+  makes pressure differences clearly visible -- light touches appear translucent
+  while firm presses are fully opaque.
 - **Pitch bend** (-1 to +1): overlays the color of the target pitch. A bend of
   +0.5 (one semitone up) blends toward the color of the note one fifth-step
   away, providing real-time visual feedback of where the pitch is heading.
 
+The incoming expression map from app-core is keyed by `audioNoteId` (e.g.
+`midi_0_0_62_3_1`, `key_KeyA_-3_1`, `ptr_1_0_0`). All of these formats end
+with `_coordX_coordY`. The setter re-keys these to the `coordX_coordY` format
+that `drawCell` uses for lookup. When multiple audio sources map to the same
+cell (e.g. two MIDI channels playing the same note), the entry with the higher
+pressure wins.
+
 ``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
 
   setMPEExpression(expressions: Map<string, { pressure: number; pitchBend: number }>): void {
-    this.mpeExpression = expressions;
+    const coordPattern = /(-?\d+)_(-?\d+)$/;
+    const reKeyed = new Map<string, { pressure: number; pitchBend: number }>();
+    for (const [audioId, expr] of expressions) {
+      const m = coordPattern.exec(audioId);
+      if (m) {
+        const coordId = `${m[1]}_${m[2]}`;
+        const existing = reKeyed.get(coordId);
+        if (!existing || expr.pressure > existing.pressure) {
+          reKeyed.set(coordId, expr);
+        }
+      }
+    }
+    this.mpeExpression = reKeyed;
   }
 
   setGameState(_state: string): void {
