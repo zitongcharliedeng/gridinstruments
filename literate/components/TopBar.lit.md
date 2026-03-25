@@ -104,7 +104,7 @@ export function TopBar(props: TopBarProps): JSX.Element {
   return (
     <>
       <div class="info-box" style={{ width: 'auto' }}>
-        <button id="about-btn" class="slider-info-btn" data-info="about" onClick={onAboutClick}>i</button>
+        <button id="about-btn" class="slider-info-btn" onClick={onAboutClick}>i</button>
         <div class="info-box-content"><span class="site-title">gridinstruments.xyz</span></div>
       </div>
       <div class="gh-actions">
