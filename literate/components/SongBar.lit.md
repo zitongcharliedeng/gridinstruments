@@ -170,7 +170,6 @@ The progress fill animates width smoothly at 0.1 s.
 .game-controls { display:flex; gap:6px; align-items:center; }
 #game-reset-btn { flex-shrink:0; }
 #game-settings-btn { position:relative; flex-shrink:0; }
-#game-settings-btn.active { color:var(--fg); }
 .game-settings-popup {
   position:absolute; top:100%; right:0; z-index:25;
   background:var(--bg); border:1px solid var(--border); padding:8px;
