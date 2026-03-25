@@ -49,6 +49,8 @@ export class DComposeApp {
   private transposeOffset = 0;
 
   private activeNotes = new Map<string, { coordX: number; coordY: number }>();
+  private lastMidiBuffer: ArrayBuffer | null = null;
+  private lastMidiTitle = '';
   private noteHoldCounts = new Map<string, number>();
   private keyRepeat = new Set<string>();
   private midiChannelVoice = new Map<string, string>();
@@ -1341,6 +1343,8 @@ Drag-and-drop MIDI file loading lets users drop a `.mid` file anywhere on the pa
 
       const songTitle = file.name.replace(/\.(mid|midi)$/i, '');
       file.arrayBuffer().then((buffer) => {
+        this.lastMidiBuffer = buffer;
+        this.lastMidiTitle = songTitle;
         this.loadMidiFromBuffer(buffer, songTitle);
       }).catch((err: unknown) => {
         const msg = err instanceof Error ? err.message : 'Failed to read file';
@@ -1353,6 +1357,8 @@ Drag-and-drop MIDI file loading lets users drop a `.mid` file anywhere on the pa
       const file = e.detail;
       const songTitle = file.name.replace(/\.(mid|midi)$/i, '');
       file.arrayBuffer().then((buffer) => {
+        this.lastMidiBuffer = buffer;
+        this.lastMidiTitle = songTitle;
         this.loadMidiFromBuffer(buffer, songTitle);
       }).catch(() => { /* handled by game actor */ });
     }) as EventListener);
@@ -2149,6 +2155,9 @@ Calibration mode shows a banner instructing the user to play all reachable notes
       btn.disabled = false;
     }
     this.setCalibrationDimming(false);
+    if (confirm && this.lastMidiBuffer) {
+      this.loadMidiFromBuffer(this.lastMidiBuffer, this.lastMidiTitle);
+    }
     this.render();
   }
 ```
