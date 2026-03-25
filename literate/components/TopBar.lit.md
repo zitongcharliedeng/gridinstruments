@@ -103,10 +103,9 @@ export function TopBar(props: TopBarProps): JSX.Element {
 
   return (
     <>
-      <button id="about-btn" class="slider-info-btn" onClick={onAboutClick}>
-        i
-      </button>
-      <span class="site-title">gridinstruments.xyz</span>
+      <InfoBox infoKey="about" infoContent={`<h2>About GridInstruments</h2><p>Browser synthesizer with isomorphic keyboard layouts. Click for full about dialog.</p>${srcLink('components/TopBar.lit.md', 'Source: TopBar.lit.md')}`}>
+        <button id="about-btn" class="site-title" onClick={onAboutClick}>gridinstruments.xyz</button>
+      </InfoBox>
       <div class="gh-actions">
         <span class="gh-mark icon">
           <svg viewBox="0 0 16 16">
