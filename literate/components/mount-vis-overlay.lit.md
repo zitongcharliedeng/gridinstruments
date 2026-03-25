@@ -13,6 +13,7 @@ import { render } from 'solid-js/web';
 import { createSignal } from 'solid-js';
 import { SettingsOverlay } from './SettingsOverlay';
 import type { SectionDef } from './SettingsOverlay';
+import { SettingsCog } from './SettingsCog';
 import { InfoBox } from './InfoBox';
 import { SliderRow } from './SliderRow';
 import { srcLink } from '../app-constants';
@@ -22,20 +23,17 @@ import './mount-vis-overlay.css';
 
 export function mountVisOverlay(
   mountEl: HTMLElement,
-  cogBtn: HTMLElement,
+  cogMountEl: HTMLElement | null,
   historyVis: NoteHistoryVisualizer,
 ): void {
   const [visible, setVisible] = createSignal(false);
+  const toggle = (): void => { setVisible(v => !v); };
 
-  cogBtn.addEventListener('click', () => {
-    setVisible(v => !v);
-    cogBtn.classList.toggle('active', visible());
-  });
+  if (cogMountEl) {
+    render(() => <SettingsCog id="vis-settings-btn" active={visible()} onClick={toggle} position="absolute" style={{ top: '4px', right: '8px', 'z-index': '15' }} />, cogMountEl);
+  }
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && visible()) {
-      setVisible(false);
-      cogBtn.classList.remove('active');
-    }
+    if (e.key === 'Escape' && visible()) { setVisible(false); }
   });
 
   const sections: SectionDef[] = [
@@ -69,6 +67,6 @@ export function mountVisOverlay(
     },
   ];
 
-  render(() => <SettingsOverlay overlayId="vis-overlay" sections={sections} visible={visible} onToggle={() => { setVisible(v => !v); cogBtn.classList.toggle('active', visible()); }} />, mountEl);
+  render(() => <SettingsOverlay overlayId="vis-overlay" sections={sections} visible={visible} onToggle={toggle} />, mountEl);
 }
 ```

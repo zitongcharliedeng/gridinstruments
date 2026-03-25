@@ -465,10 +465,10 @@ The MIDI device panel renders a list of connected controllers with enable/disabl
     this.canvas.addEventListener('pointercancel', this.handlePointerUp.bind(this));
     this.canvas.addEventListener('contextmenu', (e) => { e.preventDefault(); });
 
-    const visSettingsBtn = document.getElementById('vis-settings-btn');
+    const visCogMount = document.getElementById('vis-cog-mount');
     const visOverlayMount = document.getElementById('vis-overlay-mount');
-    if (visSettingsBtn && visOverlayMount && this.historyVisualizer) {
-      mountVisOverlay(visOverlayMount, visSettingsBtn, this.historyVisualizer);
+    if (visOverlayMount && this.historyVisualizer) {
+      mountVisOverlay(visOverlayMount, visCogMount, this.historyVisualizer);
     }
 
     const topbarMountEl = document.getElementById('topbar-mount');
