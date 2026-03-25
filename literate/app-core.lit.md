@@ -967,10 +967,8 @@ metrological conversion. To change the target, change `TARGET_KEY_MM`.
      measureEl.style.cssText = 'position:absolute;visibility:hidden;font-family:"JetBrains Mono",monospace;font-size:12px;white-space:pre;';
      measureEl.textContent = 'M'.repeat(charsNeeded);
      document.body.appendChild(measureEl);
-     const rawPianoKeyPx = measureEl.offsetWidth;
+     const pianoKeyPx = measureEl.offsetWidth;
      document.body.removeChild(measureEl);
-     const maxKeyPx = Math.min(window.innerWidth, window.innerHeight) / 8;
-     const pianoKeyPx = Math.min(rawPianoKeyPx, maxKeyPx);
 ```
 
 The DPI probe is retained only for the grid geometry engine (lattice basis
