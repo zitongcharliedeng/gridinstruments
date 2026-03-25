@@ -1,0 +1,13 @@
+id: no-vendor-prefix-css
+language: css
+rule:
+  any:
+    - pattern: "-webkit-$PROP: $VAL"
+    - pattern: "-moz-$PROP: $VAL"
+    - pattern: "-ms-$PROP: $VAL"
+files:
+  - "_generated/**"
+  - "index.html"
+severity: error
+message: "Vendor-prefixed CSS is banned — use only standard properties that work identically in ALL browsers."
+note: "User rule: NO browser-vendor-specific features anywhere. If it needs a prefix, don't use it."

@@ -25,7 +25,7 @@ The visualizer depends on two sibling modules:
 
 ``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
 import { getNoteNameFromCoord, get12TETName, getCentDeviation, relativeOctave, D_REF_MIDI } from './keyboard-layouts';
-import { cellColors } from './note-colors';
+import { cellColors, cellColorsFromHue, pitchCentsToHue, lerpHue } from './note-colors';
 ```
 
 ## VisualizerOptions
@@ -960,15 +960,19 @@ colors for the resolved state.
       : isUncalibrated ? (isBlackKey ? 'uncalibrated-black' : 'uncalibrated-white')
       : isBlackKey ? 'black'
       : 'white';
-    const { fill: fillColor, text: textColor } = cellColors(coordX, state, button.pitchCents);
 ```
 
-### MPE pressure -- opacity modulation
+### MPE pressure and pitch bend -- pre-compute expression
 
-When MPE expression data is available for an active cell, the pressure value
-(0-1) modulates the cell's opacity across the full visible range: 0.3 at
-minimum pressure to 1.0 at maximum. This makes pressure differences clearly
-visible — light touches appear translucent while firm presses are fully opaque.
+MPE expression data is retrieved before color computation so that pitch bend
+can influence the cell's base color. When a pitch bend exceeds the 0.01
+semitone threshold, the cell's OKLCH hue interpolates between the base note's
+hue and the bent pitch's hue using shortest-path arc interpolation on the
+360-degree hue circle. The blend factor is the absolute bend magnitude
+clamped to [0, 1], so a half-semitone bend produces a color halfway between
+the two notes, and a full semitone or more produces the target note's color.
+
+Pressure modulates opacity: 0.3 at minimum to 1.0 at maximum.
 
 ``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
 
@@ -976,6 +980,19 @@ visible — light touches appear translucent while firm presses are fully opaque
     let cellAlpha = 1.0;
     if (mpeExpr && isActive) {
       cellAlpha = 0.3 + mpeExpr.pressure * 0.7;
+    }
+
+    let fillColor: string;
+    let textColor: string;
+    if (mpeExpr && effectiveActive && Math.abs(mpeExpr.pitchBend) > 0.01) {
+      const baseHue = pitchCentsToHue(button.pitchCents);
+      const bentCents = button.pitchCents + mpeExpr.pitchBend * 100;
+      const bentHue = pitchCentsToHue(bentCents);
+      const t = Math.min(1, Math.abs(mpeExpr.pitchBend));
+      const blendedHue = lerpHue(baseHue, bentHue, t);
+      ({ fill: fillColor, text: textColor } = cellColorsFromHue(blendedHue, state));
+    } else {
+      ({ fill: fillColor, text: textColor } = cellColors(coordX, state, button.pitchCents));
     }
 ```
 
@@ -1018,36 +1035,12 @@ computed as center +/- (hv1 * s) +/- (hv2 * s).
     this.ctx.globalAlpha = 1;
 ```
 
-### MPE pitch bend -- color slide
-
-When an active cell has a pitch bend value exceeding 0.01 (in semitone units),
-the cell is overlaid with a **continuous** OKLCH color representing the bent
-pitch. Instead of snapping to discrete grid steps, the target pitch in cents
-is computed continuously and mapped through `cellColors` with the exact bent
-frequency. The overlay alpha scales smoothly with bend magnitude (capped at
-0.85), so subtle bends produce a faint tint while large bends produce a vivid
-color shift — real-time visual feedback of where the pitch is heading on the
-[circle of fifths](https://en.wikipedia.org/wiki/Circle_of_fifths) color wheel.
-
-``` {.typescript file=_generated/lib/keyboard-visualizer.ts}
-
-    if (mpeExpr && isActive && Math.abs(mpeExpr.pitchBend) > 0.01) {
-      const bendPitchCents = button.pitchCents + mpeExpr.pitchBend * 100;
-      const bendSteps = Math.round(mpeExpr.pitchBend * 100 / this.options.generator[0]);
-      const targetCoordX = coordX + (bendSteps !== 0 ? bendSteps : (mpeExpr.pitchBend > 0 ? 1 : -1));
-      const { fill: bendFill } = cellColors(targetCoordX, 'active', bendPitchCents);
-      this.ctx.globalAlpha = Math.min(0.85, Math.abs(mpeExpr.pitchBend) * 1.2);
-      this.ctx.fillStyle = bendFill;
-      this.ctx.beginPath();
-      this.ctx.moveTo(px(-1, -1), py(-1, -1));
-      this.ctx.lineTo(px( 1, -1), py( 1, -1));
-      this.ctx.lineTo(px( 1,  1), py( 1,  1));
-      this.ctx.lineTo(px(-1,  1), py(-1,  1));
-      this.ctx.closePath();
-      this.ctx.fill();
-      this.ctx.globalAlpha = 1;
-    }
-```
+MPE pitch bend color is handled directly in the base cell fill: the OKLCH hue
+interpolation in the
+[pre-compute expression](#mpe-pressure-and-pitch-bend----pre-compute-expression)
+section above blends the cell's hue from its resting note toward the bent
+pitch's hue proportionally to the bend magnitude. No overlay pass is needed --
+the cell's fill color is the interpolated result.
 
 ### Note name label
 

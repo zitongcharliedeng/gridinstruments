@@ -135,7 +135,7 @@ function chromaticHue(coordX: number): number {
   return pcHue(pc);
 }
 
-function pitchCentsToHue(pitchCents: number): number {
+export function pitchCentsToHue(pitchCents: number): number {
   const centsInOctave = ((pitchCents % 1200) + 1200) % 1200;
   return (centsInOctave / 1200 * 360 + 29) % 360;
 }
@@ -287,6 +287,62 @@ export function cellColors(
   pitchCents = 0,
 ): { fill: string; text: string } {
   const h = pitchCents !== 0 ? pitchCentsToHue(pitchCents) : chromaticHue(coordX);
+  switch (state) {
+    case 'active':
+      return { fill: oklch(0.72, 0.19, h), text: '#ffffff' };
+    case 'target':
+      return { fill: oklch(0.96, 0.03, h), text: '#000000' };
+    case 'target-pressed':
+      return { fill: oklch(0.55, 0.01, h), text: oklch(0.80, 0.01, h) };
+    case 'sustained':
+      return { fill: oklch(0.38, 0.11, h), text: oklch(0.82, 0.16, h) };
+    case 'uncalibrated-white':
+      return { fill: oklch(0.24, 0, h), text: oklch(0.50, 0, h) };
+    case 'uncalibrated-black':
+      return { fill: oklch(0.24, 0, h), text: oklch(0.50, 0, h) };
+    case 'white':
+      return { fill: oklch(0.24, 0.055, h), text: oklch(0.75, 0.14, h) };
+    case 'black':
+      return { fill: oklch(0.24, 0.055, h), text: oklch(0.75, 0.14, h) };
+  }
+}
+```
+
+
+## Hue Interpolation for MPE Pitch Slides
+
+When an MPE controller bends a note's pitch between two grid positions, the
+cell color should smoothly interpolate between the two notes' OKLCH hue
+values. The hue circle is 360 degrees, so interpolation must take the
+shortest arc -- a bend from hue 350 toward hue 10 should travel 20 degrees
+forward through 0, not 340 degrees backward.
+
+`lerpHue` performs shortest-path linear interpolation on the 360-degree hue
+circle. The parameter `t` is clamped to [0, 1]: at t=0 the result is `h0`,
+at t=1 the result is `h1`. The algorithm computes the signed difference,
+wraps it to [-180, +180] to find the shorter arc, then interpolates along
+that arc.
+
+`cellColorsFromHue` is a variant of `cellColors` that accepts a pre-computed
+hue angle directly, bypassing the coordinate-to-hue lookup. This is used by
+the keyboard visualizer when it has already interpolated the hue from a pitch
+bend and does not want the hue recomputed from a grid coordinate.
+
+``` {.typescript file=_generated/lib/note-colors.ts}
+
+export function lerpHue(h0: number, h1: number, t: number): number {
+  const ct = Math.max(0, Math.min(1, t));
+  let diff = h1 - h0;
+  if (diff > 180) diff -= 360;
+  if (diff < -180) diff += 360;
+  return ((h0 + diff * ct) % 360 + 360) % 360;
+}
+
+export function cellColorsFromHue(
+  hue: number,
+  state: 'active' | 'target' | 'target-pressed' | 'sustained' | 'uncalibrated-white' | 'uncalibrated-black' | 'white' | 'black',
+): { fill: string; text: string } {
+  const h = hue;
   switch (state) {
     case 'active':
       return { fill: oklch(0.72, 0.19, h), text: '#ffffff' };
