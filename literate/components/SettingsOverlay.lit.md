@@ -178,13 +178,18 @@ export function SettingsOverlay(props: SettingsOverlayProps): JSX.Element {
 
   onMount(() => {
     if (!overlayRef) return;
+    const containerWidth = overlayRef.getBoundingClientRect().width - 52;
     const sections = overlayRef.querySelectorAll('.' + sectionClass().replace(/ /g, '.'));
     sections.forEach(container => {
       const children = Array.from(container.children);
       children.forEach(child => {
         if (!child.classList.contains('muuri-item')) {
+          const hasPresets = child.querySelector('.slider-presets') !== null;
+          const isWide = hasPresets || child.classList.contains('tuning-slider-area');
+          const width = isWide ? containerWidth : Math.max(180, Math.floor(containerWidth / 2) - 4);
           const wrapper = document.createElement('div');
           wrapper.className = 'muuri-item';
+          wrapper.style.width = width + 'px';
           const content = document.createElement('div');
           content.className = 'muuri-item-content';
           child.parentNode?.insertBefore(wrapper, child);
