@@ -36,12 +36,18 @@ dialog {
 dialog::backdrop { background: rgba(0,0,0,0.7); }
 #info-dialog, #about-dialog {
   position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-  max-width: min(90vw, 600px); max-height: 80vh; overflow: hidden;
-  border: 1px solid var(--border); display: flex; flex-direction: column;
+  max-width: min(90vw, 600px); max-height: 80vh; overflow-y: auto;
+  border: 1px solid var(--border);
 }
-#about-close, #info-close { position: absolute; top: 8px; right: 12px; color: var(--dim); z-index: 2; }
-#about-close:hover, #info-close:hover { color: var(--fg); }
-.about-content { overflow-y: auto; flex: 1; padding-right: 8px; }
+#about-close, #info-close {
+  position: sticky; top: 8px; float: right;
+  margin: 0 8px 0 0; color: var(--dim); z-index: 2;
+  background: var(--bg); width: 24px; height: 24px;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--border); font-size: 14px;
+  font-family: var(--font); cursor: pointer;
+}
+#about-close:hover, #info-close:hover { color: var(--fg); border-color: var(--accent); }
 ```
 
 ## About Dialog Content
