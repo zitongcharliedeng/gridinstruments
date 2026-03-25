@@ -157,6 +157,7 @@ import {
      GAME_SETTINGS_HIDDEN,
      GAME_SETTINGS_COG,
      ALL_COGS_CONSISTENT,
+     DIALOG_SINGLE_CLOSE,
      INFOBOX_STRUCTURE,
      CAL_NOT_DIMMED,
      INFO_POPUP_1,
@@ -941,6 +942,10 @@ The SongBar progress and calibration tests verify that the in-game status elemen
 
   test('ALL-COGS-CONSISTENT: all 3 cogs use SettingsCog component', async ({ page }) => {
     await ALL_COGS_CONSISTENT.check(page);
+  });
+
+  test('DIALOG-SINGLE-CLOSE: about dialog has exactly 1 close button', async ({ page }) => {
+    await DIALOG_SINGLE_CLOSE.check(page);
   });
 
   test('INFOBOX-STRUCTURE: all InfoBox elements have required children', async ({ page }) => {
