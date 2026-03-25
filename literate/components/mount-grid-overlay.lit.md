@@ -87,7 +87,7 @@ export function mountGridOverlay(
   mountEl: HTMLElement,
   cogMountEl: HTMLElement | null,
   callbacks: GridOverlayCallbacks,
-): { toggle: () => void; setVisible: (v: boolean) => void } {
+): { toggle: () => void; setVisible: (v: boolean) => void; setZoomValue: (v: number) => void } {
   const [visible, setVisible] = createSignal(false);
   const [volVal, setVolVal] = createSignal(callbacks.initialVolume);
   const [tuneVal, setTuneVal] = createSignal(parseFloat(String(callbacks.initialTuning)) || 700);
@@ -322,6 +322,6 @@ MPE dimensions are active. Pressure mode and CC source use slim-select dropdowns
     if (target.id === 'grid-overlay') { setVisible(false); }
   });
 
-  return { toggle, setVisible };
+  return { toggle, setVisible, setZoomValue: setZoomVal };
 }
 ```

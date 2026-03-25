@@ -39,15 +39,14 @@ dialog::backdrop { background: rgba(0,0,0,0.7); }
   max-width: min(90vw, 600px); max-height: 80vh; overflow-y: auto;
   border: 1px solid var(--border);
 }
-#about-close, #info-close {
-  position: sticky; top: 8px; float: right;
-  margin: 0 8px 0 0; color: var(--dim); z-index: 2;
-  background: var(--bg); width: 24px; height: 24px;
-  display: flex; align-items: center; justify-content: center;
-  border: 1px solid var(--border); font-size: 14px;
-  font-family: var(--font); cursor: pointer;
+.dialog-close-btn {
+  display: none; position: fixed; z-index: 10001;
+  background: var(--bg); color: var(--dim); width: 28px; height: 28px;
+  border: 1px solid var(--border); font-size: 16px; font-family: var(--font);
+  cursor: pointer; align-items: center; justify-content: center;
 }
-#about-close:hover, #info-close:hover { color: var(--fg); border-color: var(--accent); }
+.dialog-close-btn.visible { display: flex; }
+.dialog-close-btn:hover { color: var(--fg); border-color: var(--accent); }
 ```
 
 ## About Dialog Content

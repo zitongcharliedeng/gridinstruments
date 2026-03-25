@@ -598,14 +598,14 @@ strokes a hand-drawn texture.
    </div>
 
    <dialog id="about-dialog">
-    <button id="about-close" class="dialog-close-btn" autofocus>&#x2715;</button>
     <div id="about-content" class="about-content"></div>
   </dialog>
+  <button id="about-close" class="dialog-close-btn">&#x2715;</button>
 
   <dialog id="info-dialog">
-    <button id="info-close" class="dialog-close-btn" autofocus>&#x2715;</button>
     <div id="info-content" class="about-content"></div>
   </dialog>
+  <button id="info-close" class="dialog-close-btn">&#x2715;</button>
 
   <script type="module" src="/_generated/main.ts"></script>
   <script>

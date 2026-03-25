@@ -94,6 +94,7 @@ The second group of private fields covers DOM references and UI state: canvas el
   private vibratoActor: ReturnType<typeof createActor<typeof pedalMachine>> | null = null;
   private midiDeviceList: HTMLElement | null = null;
   private defaultZoom = 1.0;
+  private gridOverlayHandle: { toggle: () => void; setVisible: (v: boolean) => void; setZoomValue: (v: number) => void } | null = null;
   private pianoKeyPx = 0;
   private detectedDpi = 96;
   private updateGraffiti: (() => void) | null = null;
@@ -488,7 +489,7 @@ The MIDI device panel renders a list of connected controllers with enable/disabl
     const gridCogMount = document.getElementById('grid-cog-mount');
     const gridOverlayMount = document.getElementById('grid-overlay-mount');
     if (gridOverlayMount) {
-      mountGridOverlay(gridOverlayMount, gridCogMount, {
+      this.gridOverlayHandle = mountGridOverlay(gridOverlayMount, gridCogMount, {
         onVolumeChange: (v: number) => { this.synth.setMasterVolume(v); this.saveSetting('volume', String(v)); },
         initialVolume: parseFloat(this.loadSetting('volume', '0.3')),
         onZoomChange: (v: number) => { this.visualizer?.setZoom(v); this.updateGraffiti?.(); this.saveSetting('zoom', String(v)); },
@@ -1031,6 +1032,7 @@ half-vector, double it (half → full side), and take the minimum:
      const savedZoom = parseFloat(this.loadSetting('zoom', this.defaultZoom.toString()));
      const zoomToApply = (Number.isFinite(savedZoom) && savedZoom > 0.1 && savedZoom < 10) ? savedZoom : this.defaultZoom;
      this.visualizer?.setZoom(zoomToApply);
+     this.gridOverlayHandle?.setZoomValue(zoomToApply);
 ```
 
 The DPI override input lets users correct auto-detection on non-standard displays. When set, the value is persisted to localStorage and applied to the visualizer's `cssPxPerInch`, then the zoom reset target is recalculated so the physical key size stays accurate. The reset button clears the override and restores the auto-detected value.

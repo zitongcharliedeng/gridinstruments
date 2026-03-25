@@ -107,6 +107,19 @@ rendered to HTML once at startup.
     aboutDialog.addEventListener('click', (e) => {
       if (e.target === aboutDialog) aboutDialogActor.send({ type: 'CLOSE' });
     });
+    const posCloseBtn = (dlg: HTMLDialogElement, btn: HTMLElement): void => {
+      const r = dlg.getBoundingClientRect();
+      btn.style.top = (r.top + 8) + 'px';
+      btn.style.left = (r.right - 36) + 'px';
+    };
+    aboutDialogActor.subscribe((snap) => {
+      if (snap.value === 'open' && aboutClose) {
+        aboutClose.classList.add('visible');
+        requestAnimationFrame(() => posCloseBtn(aboutDialog, aboutClose));
+      } else if (aboutClose) {
+        aboutClose.classList.remove('visible');
+      }
+    });
   }
 ```
 
