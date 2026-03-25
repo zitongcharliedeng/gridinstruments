@@ -15,7 +15,8 @@ element (cog button) that shows/hides it, and an array of section definitions
 containing sliders and other controls.
 
 ``` {.typescript file=_generated/components/SettingsOverlay.tsx}
-import { For, Show, type JSX } from 'solid-js';
+import { For, Show, onMount, type JSX } from 'solid-js';
+import Muuri from 'muuri';
 import { SliderRow } from './SliderRow';
 import type { SliderDef } from './SliderRow';
 import './SettingsOverlay.css';
@@ -99,8 +100,10 @@ crowd their section title. `.slider-badge-edit` styles the inline numeric input
 that floats above the slider thumb.
 
 ``` {.css file=_generated/components/SettingsOverlay.css}
-.overlay-section { margin-left:0; margin-bottom:8px; }
-.overlay-section > * { margin-bottom:5px; }
+.overlay-section { position:relative; margin-left:0; margin-bottom:8px; }
+.overlay-section .muuri-item { position:absolute; display:block; z-index:1; }
+.overlay-section .muuri-item.muuri-item-positioning { z-index:2; }
+.overlay-section .muuri-item-content { position:relative; }
 .overlay-section .info-box { min-width:0; }
 .overlay-section .ctrl-label { color:#fff; }
 .overlay-section .tuning-slider-area { position:relative; width:100%; margin-bottom:40px; grid-column:1 / -1; }
@@ -172,21 +175,35 @@ before the user opens the panel.
 
 export function SettingsOverlay(props: SettingsOverlayProps): JSX.Element {
   const sectionClass = (): string => props.sectionClass ?? 'overlay-section';
+  let overlayRef: HTMLDivElement | undefined;
+
+  onMount(() => {
+    if (!overlayRef) return;
+    const sections = overlayRef.querySelectorAll('.' + sectionClass().replace(/ /g, '.'));
+    sections.forEach(el => {
+      if (el.children.length > 0) {
+        new Muuri(el as HTMLElement, { layout: { fillGaps: true }, dragEnabled: false });
+      }
+    });
+  });
+
   return (
-    <div id={props.overlayId} class="settings-overlay" classList={{ hidden: !props.visible() }}>
+    <div ref={overlayRef} id={props.overlayId} class="settings-overlay" classList={{ hidden: !props.visible() }}>
       <For each={props.sections}>
         {(section) => (
-          <div class={sectionClass()}>
+          <>
             <div class="overlay-section-title">{section.title}</div>
-            <Show when={section.sliders}>
-              <For each={section.sliders}>
-                {(slider) => <SliderRow def={slider} />}
-              </For>
-            </Show>
-            <Show when={section.children}>
-              {section.children?.()}
-            </Show>
-          </div>
+            <div class={sectionClass()}>
+              <Show when={section.sliders}>
+                <For each={section.sliders}>
+                  {(slider) => <div class="muuri-item"><div class="muuri-item-content"><SliderRow def={slider} /></div></div>}
+                </For>
+              </Show>
+              <Show when={section.children}>
+                {section.children?.()}
+              </Show>
+            </div>
+          </>
         )}
       </For>
     </div>
