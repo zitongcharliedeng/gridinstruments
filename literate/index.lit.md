@@ -598,12 +598,12 @@ strokes a hand-drawn texture.
    </div>
 
    <dialog id="about-dialog">
-    <div class="dialog-chrome"><button id="about-close" class="icon-btn icon-md" autofocus><i data-lucide="x"></i></button></div>
+    <button id="about-close" class="icon-btn icon-md dialog-close-btn" autofocus><i data-lucide="x"></i></button>
     <div id="about-content" class="about-content"></div>
   </dialog>
 
   <dialog id="info-dialog">
-    <div class="dialog-chrome"><button id="info-close" class="icon-btn icon-md" autofocus><i data-lucide="x"></i></button></div>
+    <button id="info-close" class="icon-btn icon-md dialog-close-btn" autofocus><i data-lucide="x"></i></button>
     <div id="info-content" class="about-content"></div>
   </dialog>
 
