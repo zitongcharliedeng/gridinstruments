@@ -109,7 +109,7 @@ export function mountGridOverlay(
     {
       title: 'SOUND (global)',
       children: () => (
-        <div>
+        <>
           <InfoBox infoKey="waveform" infoContent={`<h2>Waveform</h2><p>Oscillator shape: sine, triangle, sawtooth, square, guitar.</p>${srcLink('synth.lit.md', 'Source: synth.lit.md')}`} resetId="wave-reset">
             <span class="ctrl-label">WAVE</span>
             <span id="wave-select-slot" />
@@ -157,7 +157,7 @@ export function mountGridOverlay(
               }} />
             </InfoBox>
           </div>
-        </div>
+        </>
       ),
     },
 ```
@@ -172,7 +172,7 @@ layout selector. Each slider wraps its info button in a `ctrl-group` flex row.
     {
       title: 'VISUAL (per grid)',
       children: () => (
-        <div>
+        <>
           <div class="tuning-slider-area">
             <InfoBox infoKey="skew" infoContent={SKEW_INFO} resetId="skew-slider-reset" onReset={() => { setSkewVal(0); callbacks.onSkewChange(0); }}>
               <SliderRow def={{
@@ -232,7 +232,7 @@ layout selector. Each slider wraps its info button in a `ctrl-group` flex row.
               <span class="text-white">COMPUTER KEYBOARD LABELS</span>
             </label>
           </div>
-        </div>
+        </>
       ),
     },
 ```
@@ -247,7 +247,7 @@ MPE dimensions are active. Pressure mode and CC source use slim-select dropdowns
     {
       title: 'INPUT (global)',
       children: () => (
-        <div>
+        <>
           <InfoBox infoKey="layout" infoContent={`<h2>Keyboard Layout</h2><p>ANSI (US), ISO (EU), Dvorak. Auto-detected via Keyboard API.</p>${srcLink('keyboard-layouts.lit.md', 'Source')}`} resetId="layout-reset">
             <span class="ctrl-label">KEYBOARD LAYOUT</span>
             <span id="layout-select-slot" />
@@ -306,7 +306,7 @@ MPE dimensions are active. Pressure mode and CC source use slim-select dropdowns
               </div>
             </div>
           </div>
-        </div>
+        </>
       ),
     },
   ];
