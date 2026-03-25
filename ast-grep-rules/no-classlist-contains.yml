@@ -1,0 +1,16 @@
+id: no-classlist-contains
+language: typescript
+rule:
+  all:
+    - pattern: $EL.classList.contains($$$)
+    - not:
+        inside:
+          any:
+            - pattern: "page.evaluate($$$)"
+            - pattern: "$ACTOR.subscribe($$$)"
+          stopBy: end
+files:
+  - "_generated/components/**"
+  - "_generated/main.ts"
+severity: warning
+message: "classList.contains in non-subscriber code — use SolidJS classList prop for reactive class checking."

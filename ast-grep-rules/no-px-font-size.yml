@@ -1,0 +1,23 @@
+id: no-px-font-size
+language: css
+rule:
+  all:
+    - pattern: "font-size: $VALpx"
+    - not:
+        any:
+          - has:
+              pattern: "9px"
+          - has:
+              pattern: "10px"
+          - has:
+              pattern: "11px"
+          - has:
+              pattern: "12px"
+          - has:
+              pattern: "16px"
+          - has:
+              pattern: "8px"
+files:
+  - "_generated/**"
+severity: warning
+message: "Non-standard font-size — use 8/9/10/11/12/16px for consistency."
