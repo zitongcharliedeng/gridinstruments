@@ -108,7 +108,7 @@ export function mountGridOverlay(
             <span class="ctrl-label">WAVE</span>
             <span id="wave-select-slot" />
           </InfoBox>
-          <InfoBox infoKey="volume" infoContent={VOLUME_INFO}>
+          <InfoBox infoKey="volume" infoContent={VOLUME_INFO} resetId="volume-slider-reset" onReset={() => callbacks.onVolumeChange(0.3)}>
             <SliderRow def={{
               id: 'volume-slider',
               badgeId: 'volume-thumb-badge',
@@ -120,7 +120,7 @@ export function mountGridOverlay(
             }} />
           </InfoBox>
           <div class="tuning-slider-area mt-18">
-            <InfoBox infoKey="tuning" infoContent={TUNING_INFO}>
+            <InfoBox infoKey="tuning" infoContent={TUNING_INFO} resetId="tuning-slider-reset" onReset={() => callbacks.onTuningChange(700)}>
               <SliderRow def={{
                 id: 'tuning-slider',
                 badgeId: 'tuning-thumb-badge',
@@ -136,7 +136,7 @@ export function mountGridOverlay(
             </InfoBox>
           </div>
           <div class="tuning-slider-area mt-18">
-            <InfoBox infoKey="dref" infoContent={DREF_INFO}>
+            <InfoBox infoKey="dref" infoContent={DREF_INFO} resetId="d-ref-slider-reset" onReset={() => callbacks.onDRefChange(293.66)}>
               <SliderRow def={{
                 id: 'd-ref-slider',
                 badgeId: 'dref-thumb-badge',
@@ -165,7 +165,7 @@ layout selector. Each slider wraps its info button in a `ctrl-group` flex row.
       children: () => (
         <div>
           <div class="tuning-slider-area">
-            <InfoBox infoKey="skew" infoContent={SKEW_INFO}>
+            <InfoBox infoKey="skew" infoContent={SKEW_INFO} resetId="skew-slider-reset" onReset={() => callbacks.onSkewChange(0)}>
               <SliderRow def={{
                 id: 'skew-slider',
                 badgeId: 'skew-thumb-badge',
@@ -183,7 +183,7 @@ layout selector. Each slider wraps its info button in a `ctrl-group` flex row.
             </InfoBox>
           </div>
           <div class="tuning-slider-area mt-18">
-            <InfoBox infoKey="shear" infoContent={SHEAR_INFO}>
+            <InfoBox infoKey="shear" infoContent={SHEAR_INFO} resetId="bfact-slider-reset" onReset={() => callbacks.onShearChange(0)}>
               <SliderRow def={{
                 id: 'bfact-slider',
                 badgeId: 'shear-thumb-badge',
@@ -201,7 +201,7 @@ layout selector. Each slider wraps its info button in a `ctrl-group` flex row.
             </InfoBox>
           </div>
           <div class="tuning-slider-area mt-18">
-            <InfoBox infoKey="zoom" infoContent={ZOOM_INFO}>
+            <InfoBox infoKey="zoom" infoContent={ZOOM_INFO} resetId="zoom-slider-reset" onReset={() => callbacks.onZoomChange(callbacks.getDefaultZoom())}>
               <SliderRow def={{
                 id: 'zoom-slider',
                 badgeId: 'zoom-thumb-badge',
