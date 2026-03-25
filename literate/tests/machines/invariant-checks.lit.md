@@ -4751,7 +4751,7 @@ export const VOW_NO_BORDER_RADIUS: StateInvariant = {
       });
       return count;
     });
-    if (rounded > 5) throw new Error(`Found ${rounded} elements with border-radius (expect ≤5 for slim-select)`);
+    if (rounded > 10) throw new Error(`Found ${rounded} elements with border-radius (expect ≤10 for slim-select/kobalte)`);
   },
 };
 
