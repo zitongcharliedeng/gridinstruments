@@ -114,6 +114,7 @@ export interface SliderDef {
   max: number;
   step: number;
   defaultValue: number;
+  value?: number;
   getDefaultValue?: () => number;
   formatBadge?: (v: number) => string;
   onChange?: (v: number) => void;
@@ -134,7 +135,9 @@ and optional preset marks.
 export function SliderRow(props: { def: SliderDef }): JSX.Element {
   const defVal = (): number => props.def.getDefaultValue ? props.def.getDefaultValue() : props.def.defaultValue;
   const fmt = (): ((v: number) => string) => props.def.formatBadge ?? ((v: number): string => v.toFixed(1));
-  const [value, setValue] = createSignal(props.def.defaultValue);
+  const [localValue, setLocalValue] = createSignal(props.def.value ?? props.def.defaultValue);
+  const value = (): number => props.def.value ?? localValue();
+  const setValue = (v: number): void => { setLocalValue(v); };
 
   const ratio = (): number => {
     const range = props.def.max - props.def.min;
