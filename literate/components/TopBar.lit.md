@@ -12,6 +12,12 @@ the content to the existing script.
 
 ``` {.css file=_generated/components/TopBar.css}
 .top-bar-left { display:flex; align-items:center; gap:8px; min-width:0; }
+.about-trigger {
+  width:14px; height:14px; padding:0; display:inline-flex; align-items:center; justify-content:center;
+  font-family:var(--font); font-size:9px; font-style:italic; color:var(--dim); background:none;
+  border:1px solid var(--border); cursor:pointer; flex-shrink:0;
+}
+.about-trigger:hover { color:var(--fg); border-color:var(--accent); }
 .site-title { font-weight:700; font-size:11px; color:#fff; letter-spacing:0.04em; }
 .gh-actions { display:inline-flex; align-items:center; border:1px solid var(--border); font-size:10px; }
 .gh-mark { padding:2px 6px; border-right:1px solid var(--border); background:var(--subtle); }
@@ -104,7 +110,7 @@ export function TopBar(props: TopBarProps): JSX.Element {
   return (
     <>
       <div class="info-box" style={{ width: 'auto' }}>
-        <button id="about-btn" class="slider-info-btn" onClick={onAboutClick}>i</button>
+        <button id="about-btn" class="about-trigger" onClick={onAboutClick}>i</button>
         <div class="info-box-content"><span class="site-title">gridinstruments.xyz</span></div>
       </div>
       <div class="gh-actions">
