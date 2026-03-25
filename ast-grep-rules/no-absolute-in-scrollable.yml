@@ -1,0 +1,18 @@
+id: no-absolute-in-scrollable
+language: css
+rule:
+  all:
+    - pattern: "position: absolute"
+    - inside:
+        any:
+          - has:
+              pattern: "overflow-y: auto"
+          - has:
+              pattern: "overflow: auto"
+        stopBy: end
+files:
+  - "_generated/**"
+  - "index.html"
+severity: error
+message: "position:absolute inside overflow:auto container — the element will render at BOTH positions in some browsers. Use position:sticky instead."
+note: "See #272: Chrome renders absolute-positioned children at scroll position AND absolute position when parent has overflow-y:auto."
