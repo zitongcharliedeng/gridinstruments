@@ -135,23 +135,11 @@ border; active press fills with the subtle background.
 
 ## Cog Button
 
-`.grid-cog` is the 32×32 settings toggle button that sits at the top-left of
-its container at z-index 15. The two instances are positioned by their IDs:
-`#grid-settings-btn` for the keyboard overlay and `#vis-settings-btn` for the
-visualiser. The `.active` class inverts colours to signal the open state.
+All three settings cogs (grid, vis, game) are rendered by the `SettingsCog`
+SolidJS component (`SettingsCog.lit.md`). Positioning is via inline styles
+passed as `style` props. No CSS needed here — the component owns its own styles.
 
 ``` {.css file=_generated/components/SettingsOverlay.css}
-.grid-cog {
-  position:absolute; z-index:15; width:32px; height:32px; font-size:16px;
-  background:var(--bg); color:var(--dim); border:1px solid var(--border);
-  cursor:pointer; display:flex; align-items:center; justify-content:center;
-  font-family:var(--font);
-}
-#grid-settings-btn { top:8px; left:8px; }
-#vis-settings-btn { top:4px; right:8px; }
-.grid-cog:hover { color:var(--fg); border-color:var(--accent); }
-.grid-cog.active { color:var(--bg); background:var(--fg); border-color:var(--fg); }
-#game-settings-btn.active { color:var(--bg); background:var(--fg); border-color:var(--fg); }
 ```
 
 ## Checkbox
