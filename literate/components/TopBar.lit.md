@@ -103,8 +103,10 @@ export function TopBar(props: TopBarProps): JSX.Element {
 
   return (
     <>
-      <button id="about-btn" class="slider-info-btn" data-info="about" onClick={onAboutClick}>i</button>
-      <span class="site-title">gridinstruments.xyz</span>
+      <div class="info-box" style={{ width: 'auto' }}>
+        <button id="about-btn" class="slider-info-btn" data-info="about" onClick={onAboutClick}>i</button>
+        <div class="info-box-content"><span class="site-title">gridinstruments.xyz</span></div>
+      </div>
       <div class="gh-actions">
         <span class="gh-mark icon">
           <svg viewBox="0 0 16 16">
