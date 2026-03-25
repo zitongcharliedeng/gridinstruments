@@ -4296,6 +4296,20 @@ export const DIALOG_SINGLE_CLOSE: StateInvariant = {
   },
 };
 
+export const SLIDER_RESETS_IN_INFOBOX: StateInvariant = {
+  id: 'SLIDER-RESETS-INFOBOX',
+  description: 'All slider reset buttons are inside .info-box (not .slider-row)',
+  check: async (page: Page) => {
+    await page.locator('#grid-settings-btn').click();
+    await page.waitForTimeout(300);
+    const inSlider = await page.evaluate(() => document.querySelectorAll('.slider-row .slider-reset').length);
+    const inInfoBox = await page.evaluate(() => document.querySelectorAll('.info-box .slider-reset').length);
+    if (inSlider > 0) throw new Error(`${inSlider} reset buttons inside .slider-row — must be in .info-box`);
+    if (inInfoBox < 6) throw new Error(`Only ${inInfoBox} reset buttons in .info-box — expect 6+ for sliders`);
+    await page.keyboard.press('Escape');
+  },
+};
+
 export const INFOBOX_STRUCTURE: StateInvariant = {
   id: 'INFOBOX-STRUCTURE',
   description: 'All .info-box elements have .slider-info-btn + .info-box-content children',

@@ -158,6 +158,7 @@ import {
      GAME_SETTINGS_COG,
      ALL_COGS_CONSISTENT,
      DIALOG_SINGLE_CLOSE,
+     SLIDER_RESETS_IN_INFOBOX,
      INFOBOX_STRUCTURE,
      CAL_NOT_DIMMED,
      INFO_POPUP_1,
@@ -946,6 +947,10 @@ The SongBar progress and calibration tests verify that the in-game status elemen
 
   test('DIALOG-SINGLE-CLOSE: about dialog has exactly 1 close button', async ({ page }) => {
     await DIALOG_SINGLE_CLOSE.check(page);
+  });
+
+  test('SLIDER-RESETS-INFOBOX: all slider resets in InfoBox, not SliderRow', async ({ page }) => {
+    await SLIDER_RESETS_IN_INFOBOX.check(page);
   });
 
   test('INFOBOX-STRUCTURE: all InfoBox elements have required children', async ({ page }) => {
