@@ -118,6 +118,7 @@ export interface SliderDef {
   getDefaultValue?: () => number;
   formatBadge?: (v: number) => string;
   onChange?: (v: number) => void;
+  onReset?: () => void;
   presets?: PresetDef[];
   presetsId?: string;
   alternateTicks?: boolean;
@@ -133,7 +134,6 @@ and optional preset marks.
 ``` {.typescript file=_generated/components/SliderRow.tsx}
 
 export function SliderRow(props: { def: SliderDef }): JSX.Element {
-  const defVal = (): number => props.def.getDefaultValue ? props.def.getDefaultValue() : props.def.defaultValue;
   const fmt = (): ((v: number) => string) => props.def.formatBadge ?? ((v: number): string => v.toFixed(1));
   const [localValue, setLocalValue] = createSignal(props.def.value ?? props.def.defaultValue);
   const value = (): number => props.def.value ?? localValue();
@@ -225,9 +225,6 @@ export function SliderRow(props: { def: SliderDef }): JSX.Element {
             </div>
           </Show>
         </Slider>
-        <button class="slider-reset icon-btn icon-md" id={`${props.def.id}-reset`} onClick={(): void => { setValue(defVal()); props.def.onChange?.(defVal()); }}>
-          <i data-lucide="rotate-cw" />
-        </button>
       </div>
     </div>
   );

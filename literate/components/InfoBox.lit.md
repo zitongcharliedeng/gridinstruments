@@ -31,6 +31,7 @@ export interface InfoBoxProps {
   infoKey: string;
   infoContent?: string;
   resetId?: string;
+  onReset?: () => void;
 }
 
 export function InfoBox(props: ParentProps<InfoBoxProps>): JSX.Element {
@@ -41,7 +42,7 @@ export function InfoBox(props: ParentProps<InfoBoxProps>): JSX.Element {
         {props.children}
       </div>
       {props.resetId && (
-        <button class="slider-reset icon-btn icon-md" id={props.resetId}>
+        <button class="slider-reset icon-btn icon-md" id={props.resetId} onClick={() => props.onReset?.()}>
           <i data-lucide="rotate-cw" />
         </button>
       )}
