@@ -4310,6 +4310,22 @@ export const SLIDER_RESETS_IN_INFOBOX: StateInvariant = {
   },
 };
 
+export const TOPBAR_INFOBOX_WRAP: StateInvariant = {
+  id: 'TOPBAR-INFOBOX-WRAP',
+  description: 'Top bar title, fullscreen, and reset page all wrapped in .info-box',
+  check: async (page: Page) => {
+    const wrapped = await page.evaluate(() => {
+      const aboutInBox = document.getElementById('about-btn')?.closest('.info-box') !== null;
+      const fsInBox = document.getElementById('fullscreen-btn')?.closest('.info-box') !== null;
+      const resetInBox = document.getElementById('reset-layout')?.closest('.info-box') !== null;
+      return { aboutInBox, fsInBox, resetInBox };
+    });
+    if (!wrapped.aboutInBox) throw new Error('#about-btn not inside .info-box');
+    if (!wrapped.fsInBox) throw new Error('#fullscreen-btn not inside .info-box');
+    if (!wrapped.resetInBox) throw new Error('#reset-layout not inside .info-box');
+  },
+};
+
 export const INFOBOX_STRUCTURE: StateInvariant = {
   id: 'INFOBOX-STRUCTURE',
   description: 'All .info-box elements have .slider-info-btn + .info-box-content children',

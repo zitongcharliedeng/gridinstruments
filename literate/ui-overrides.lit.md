@@ -107,13 +107,6 @@ OverlayScrollbars overrides apply the `gi-scrollbar` class. The 12 px track widt
 
 dialog {
   position: relative;
-  overflow: visible;
-}
-.dialog-close-btn {
-  position: absolute;
-  top: 8px;
-  right: 12px;
-  z-index: 100;
 }
 
 #grid-overlay {
