@@ -101,10 +101,9 @@ that floats above the slider thumb.
 
 ``` {.css file=_generated/components/SettingsOverlay.css}
 .overlay-section { position:relative; margin-left:0; margin-bottom:8px; }
-.overlay-section .muuri-item { position:absolute; display:block; z-index:1; }
-.overlay-section .muuri-item.muuri-item-positioning { z-index:2; }
+.overlay-section .muuri-item { position:absolute; width:calc(50% - 4px); margin:2px; }
 .overlay-section .muuri-item-content { position:relative; }
-.overlay-section .info-box { min-width:0; }
+.overlay-section .info-box { min-width:0; width:100%; }
 .overlay-section .ctrl-label { color:#fff; }
 .overlay-section .tuning-slider-area { position:relative; width:100%; margin-bottom:40px; grid-column:1 / -1; }
 .overlay-section .tuning-slider-area .slider-row { width:100%; }
