@@ -105,10 +105,20 @@ OverlayScrollbars overrides apply the `gi-scrollbar` class. The 12 px track widt
   min-height: 40px;
 }
 
+.dialog-chrome {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  height: 0;
+  overflow: visible;
+  pointer-events: none;
+}
 #about-close, #info-close {
   position: absolute !important;
   top: 8px !important;
   right: 12px !important;
+  z-index: 101 !important;
+  pointer-events: auto;
 }
 
 #grid-overlay {
