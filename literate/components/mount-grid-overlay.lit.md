@@ -32,7 +32,7 @@ const BEND_INFO = `<h2>Pitch Bend</h2><p>Bend range ±2 to ±48 semitones. MPE: 
 const VELOCITY_INFO = `<h2>Velocity</h2><p>Note-on strike force → initial volume + timbre. MIDI: 0-127 sensor. Keyboard: fixed. Touch: pressure.</p>${srcLink('keyboard-visualizer.lit.md', 'Source: keyboard-visualizer.lit.md')}`;
 const PRESSURE_INFO = `<h2>Pressure</h2><p>Aftertouch force after strike. Channel (all notes) or Poly (per note, MPE).</p>${srcLink('mpe-service.lit.md', 'Source: mpe-service.lit.md')}`;
 const TIMBRE_INFO = `<h2>Timbre (CC74)</h2><p>Brightness/slide via CC74 (MPE standard), CC11 (expression), or poly pressure.</p>${srcLink('mpe-service.lit.md', 'Source: mpe-service.lit.md')}`;
-const DEAD_ZONE_INFO = `<h2>Touch Dead Zone</h2><p>Min finger velocity (px/ms) for pitch bend. 0=sensitive, 0.15=default, 0.3+=deliberate.</p>${srcLink('app-core.lit.md', 'Source: app-core.lit.md')}`;
+const DEAD_ZONE_INFO = `<h2>Pitch Bend Threshold</h2><p>Min finger velocity (px/ms) for pitch bend. 0=sensitive, 0.15=default, 0.3+=deliberate. Controls how much mouse/touch movement is needed before microtonal pitch bending engages.</p>${srcLink('app-core.lit.md', 'Source: app-core.lit.md')}`;
 ```
 
 The mount function accepts the container element and the cog button. It owns
@@ -95,6 +95,7 @@ export function mountGridOverlay(
   const [skewVal, setSkewVal] = createSignal(parseFloat(String(callbacks.initialSkew)) || 0);
   const [shearVal, setShearVal] = createSignal(parseFloat(String(callbacks.initialShear)) || 0);
   const [zoomVal, setZoomVal] = createSignal(callbacks.initialZoom);
+  const [dzVal, setDzVal] = createSignal(0.15);
 
   const toggle = (): void => { setVisible(v => !v); };
   const onEscape = (e: KeyboardEvent): void => {
@@ -291,10 +292,17 @@ MPE dimensions are active. Pressure mode and CC source use slim-select dropdowns
                   <span class="text-dim-plain">Rev</span>
                 </label>
               </InfoBox>
-              <InfoBox infoKey="touchDeadZone" infoContent={DEAD_ZONE_INFO} resetId="touch-dead-zone-reset">
-                <span class="text-white-12">Touch Dead Zone</span>
-                <input type="range" id="touch-dead-zone-slider" min="0" max="0.5" step="0.01" value="0.15" class="inline-slider" />
-                <span id="touch-dead-zone-badge" class="text-dim-sm">0.15</span>
+              <InfoBox infoKey="touchDeadZone" infoContent={DEAD_ZONE_INFO} resetId="touch-dead-zone-reset" onReset={() => { setDzVal(0.15); }}>
+                <SliderRow def={{
+                  id: 'touch-dead-zone-slider',
+                  badgeId: 'touch-dead-zone-badge',
+                  label: 'BEND THRESHOLD',
+                  min: 0, max: 0.5, step: 0.01,
+                  defaultValue: 0.15,
+                  value: dzVal(),
+                  formatBadge: (v: number) => v.toFixed(2),
+                  onChange: (v: number) => { setDzVal(v); },
+                }} />
               </InfoBox>
               <div class="midi-panel-row" id="mpe-output-row">
                 <span class="ctrl-label">MPE Out:</span>
