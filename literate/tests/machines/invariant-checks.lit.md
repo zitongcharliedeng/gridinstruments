@@ -4288,10 +4288,10 @@ export const DIALOG_SINGLE_CLOSE: StateInvariant = {
   id: 'DIALOG-SINGLE-CLOSE',
   description: 'About dialog has exactly 1 close button (no OverlayScrollbars duplication)',
   check: async (page: Page) => {
-    await page.evaluate(() => (document.getElementById('about-dialog') as HTMLDialogElement)?.showModal());
+    await page.evaluate(() => { (document.getElementById('about-dialog') as HTMLDialogElement)?.showModal(); });
     await page.waitForTimeout(500);
     const btnCount = await page.evaluate(() => document.querySelectorAll('#about-dialog button').length);
-    await page.evaluate(() => (document.getElementById('about-dialog') as HTMLDialogElement)?.close());
+    await page.evaluate(() => { (document.getElementById('about-dialog') as HTMLDialogElement)?.close(); });
     if (btnCount !== 1) throw new Error(`About dialog has ${btnCount} buttons (expect exactly 1 close button)`);
   },
 };
