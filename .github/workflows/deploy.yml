@@ -31,35 +31,12 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps firefox
 
-      - name: Determine deploy target
-        id: target
-        run: |
-          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
-            echo "is_stable=true" >> $GITHUB_OUTPUT
-          else
-            echo "is_stable=false" >> $GITHUB_OUTPUT
-          fi
-
       - name: Verify (tangle → build → lint → test)
         run: npm run verify
 
-      - name: Rebuild with /dev base (if dev deploy)
-        if: steps.target.outputs.is_stable == 'false'
-        run: npx vite build --base /dev/
-
-      - name: Deploy stable to GitHub Pages root
-        if: steps.target.outputs.is_stable == 'true'
+      - name: Deploy to GitHub Pages root
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./dist
-          keep_files: true
-
-      - name: Deploy dev to GitHub Pages /dev
-        if: steps.target.outputs.is_stable == 'false'
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist
-          destination_dir: dev
           keep_files: true
