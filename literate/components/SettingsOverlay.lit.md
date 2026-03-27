@@ -54,6 +54,7 @@ scroll the panel without triggering notes.
   padding: 40px 12px 12px 40px; overflow-y: auto; overflow-x: hidden;
   scrollbar-width: thin; scrollbar-color: var(--dim) transparent;
   touch-action: auto !important; -webkit-overflow-scrolling: touch;
+  max-width: 520px;
 }
 ```
 
@@ -99,9 +100,10 @@ crowd their section title. `.slider-badge-edit` styles the inline numeric input
 that floats above the slider thumb.
 
 ``` {.css file=_generated/components/SettingsOverlay.css}
-.overlay-section { display:flex; flex-wrap:wrap; gap:4px; margin-left:0; margin-bottom:8px; max-width:480px; }
-.overlay-section > * { flex:1 1 180px; min-width:0; }
-.overlay-section .tuning-slider-area { flex:1 1 100%; }
+.overlay-section { display:flex; flex-wrap:wrap; gap:4px; margin-left:0; margin-bottom:8px; }
+.overlay-section > * { flex:0 1 100%; min-width:0; }
+.overlay-section > .info-box { flex:1 1 200px; }
+.overlay-section .tuning-slider-area { flex:0 0 100%; }
 .overlay-section .info-box { min-width:0; }
 .overlay-section .ctrl-label { color:#fff; }
 .overlay-section .tuning-slider-area { position:relative; width:100%; margin-bottom:40px; grid-column:1 / -1; }
