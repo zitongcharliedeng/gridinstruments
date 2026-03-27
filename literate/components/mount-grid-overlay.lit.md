@@ -260,7 +260,12 @@ MPE dimensions are active. Pressure mode and CC source use slim-select dropdowns
               </InfoBox>
               <div id="midi-device-list" />
               <span class="overlay-section-title">EXPRESSION</span>
-              <InfoBox infoKey="bend" infoContent={BEND_INFO} resetId="bend-reset">
+              <InfoBox infoKey="bend" infoContent={BEND_INFO} resetId="bend-reset" onReset={() => {
+                const cb = document.getElementById('expr-bend') as HTMLInputElement | null;
+                const pb = document.getElementById('midi-pb-range-expr') as HTMLInputElement | null;
+                if (cb) cb.checked = true;
+                if (pb) { pb.value = '24'; pb.dispatchEvent(new Event('change', { bubbles: true })); }
+              }}>
                 <label class="expr-label">
                   <span class="gi-checkbox"><input type="checkbox" id="expr-bend" checked /><span class="gi-check" /></span>
                   <span class="text-white">Pitch Bend</span>
@@ -268,20 +273,35 @@ MPE dimensions are active. Pressure mode and CC source use slim-select dropdowns
                   <span class="text-dim-sm">semitones</span>
                 </label>
               </InfoBox>
-              <InfoBox infoKey="velocity" infoContent={VELOCITY_INFO} resetId="velocity-reset">
+              <InfoBox infoKey="velocity" infoContent={VELOCITY_INFO} resetId="velocity-reset" onReset={() => {
+                const cb = document.getElementById('expr-velocity') as HTMLInputElement | null;
+                if (cb) cb.checked = true;
+              }}>
                 <label class="expr-label">
                   <span class="gi-checkbox"><input type="checkbox" id="expr-velocity" checked /><span class="gi-check" /></span>
                   <span class="text-white">Note Velocity</span>
                 </label>
               </InfoBox>
-              <InfoBox infoKey="pressure" infoContent={PRESSURE_INFO} resetId="pressure-reset">
+              <InfoBox infoKey="pressure" infoContent={PRESSURE_INFO} resetId="pressure-reset" onReset={() => {
+                const modeSlot = document.getElementById('pressure-mode-slot');
+                const srcSlot = document.getElementById('pressure-cc-source-slot');
+                const modeSelect = modeSlot?.querySelector('select') as HTMLSelectElement | null;
+                const srcSelect = srcSlot?.querySelector('select') as HTMLSelectElement | null;
+                if (modeSelect) { modeSelect.value = 'channel'; modeSelect.dispatchEvent(new Event('change', { bubbles: true })); }
+                if (srcSelect) { srcSelect.value = 'aftertouch'; srcSelect.dispatchEvent(new Event('change', { bubbles: true })); }
+              }}>
                 <span class="text-white-12">Pressure</span>
                 <span class="text-dim">mode</span>
                 <span id="pressure-mode-slot" />
                 <span class="text-dim">source</span>
                 <span id="pressure-cc-source-slot" />
               </InfoBox>
-              <InfoBox infoKey="timbre" infoContent={TIMBRE_INFO} resetId="timbre-reset">
+              <InfoBox infoKey="timbre" infoContent={TIMBRE_INFO} resetId="timbre-reset" onReset={() => {
+                const cb = document.getElementById('expr-timbre') as HTMLInputElement | null;
+                const rev = document.getElementById('timbre-reverse') as HTMLInputElement | null;
+                if (cb) cb.checked = true;
+                if (rev) rev.checked = false;
+              }}>
                 <label class="expr-label">
                   <span class="gi-checkbox"><input type="checkbox" id="expr-timbre" checked /><span class="gi-check" /></span>
                   <span class="text-white">Timbre Slide</span>
