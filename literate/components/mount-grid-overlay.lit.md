@@ -30,7 +30,6 @@ const ZOOM_INFO = `<h2>Zoom</h2><p>Scales grid cell size. Default calculated fro
 const MIDI_INFO = `<h2>MIDI Input</h2><p>External MIDI controllers send note numbers (0-127). 12-note constraint: microtonal tunings produce duplicate mappings. Use Calibrate to restrict range.</p>${srcLink('midi-input.lit.md', 'Source: midi-input.lit.md')}`;
 const BEND_INFO = `<h2>Pitch Bend</h2><p>Bend range ±2 to ±48 semitones. MPE: per-note bend. Standard: all notes.</p>${srcLink('mpe-service.lit.md', 'Source: mpe-service.lit.md')}`;
 const VELOCITY_INFO = `<h2>Velocity</h2><p>Note-on strike force → initial volume + timbre. MIDI: 0-127 sensor. Keyboard: fixed. Touch: pressure.</p>${srcLink('keyboard-visualizer.lit.md', 'Source: keyboard-visualizer.lit.md')}`;
-const PRESSURE_INFO = `<h2>Pressure</h2><p>Aftertouch force after strike. Channel (all notes) or Poly (per note, MPE).</p>${srcLink('mpe-service.lit.md', 'Source: mpe-service.lit.md')}`;
 const TIMBRE_INFO = `<h2>Timbre (CC74)</h2><p>Brightness/slide via CC74 (MPE standard), CC11 (expression), or poly pressure.</p>${srcLink('mpe-service.lit.md', 'Source: mpe-service.lit.md')}`;
 const DEAD_ZONE_INFO = `<h2>Pitch Bend Threshold</h2><p>Min finger velocity (px/ms) for pitch bend. 0=sensitive, 0.15=default, 0.3+=deliberate. Controls how much mouse/touch movement is needed before microtonal pitch bending engages.</p>${srcLink('app-core.lit.md', 'Source: app-core.lit.md')}`;
 ```
@@ -288,31 +287,35 @@ MPE dimensions are active. Pressure mode and CC source use slim-select dropdowns
                   <span class="text-white">Note Velocity</span>
                 </label>
               </InfoBox>
-              <InfoBox infoKey="pressure" infoContent={PRESSURE_INFO} resetId="pressure-reset" onReset={() => {
-                const modeSlot = document.getElementById('pressure-mode-slot');
-                const srcSlot = document.getElementById('pressure-cc-source-slot');
-                const modeSelect = modeSlot?.querySelector('select') as HTMLSelectElement | null;
-                const srcSelect = srcSlot?.querySelector('select') as HTMLSelectElement | null;
-                if (modeSelect) { modeSelect.value = 'channel'; modeSelect.dispatchEvent(new Event('change', { bubbles: true })); }
-                if (srcSelect) { srcSelect.value = 'aftertouch'; srcSelect.dispatchEvent(new Event('change', { bubbles: true })); }
+              <InfoBox infoKey="pressureMode" infoContent={`<h2>Pressure Mode</h2><p>Channel = one pressure value per channel. Poly = per-note pressure (MPE).</p>`} resetId="pressure-mode-reset" onReset={() => {
+                const sel = document.getElementById('pressure-mode-slot')?.querySelector('select') as HTMLSelectElement | null;
+                if (sel) { sel.value = 'channel'; sel.dispatchEvent(new Event('change', { bubbles: true })); }
               }}>
                 <span class="text-white-12">Pressure</span>
                 <span class="text-dim">mode</span>
                 <span id="pressure-mode-slot" />
+              </InfoBox>
+              <InfoBox infoKey="pressureSource" infoContent={`<h2>Pressure Source</h2><p>Aftertouch = key pressure after note-on. CC sources send continuous controller messages.</p>`} resetId="pressure-source-reset" onReset={() => {
+                const sel = document.getElementById('pressure-cc-source-slot')?.querySelector('select') as HTMLSelectElement | null;
+                if (sel) { sel.value = 'aftertouch'; sel.dispatchEvent(new Event('change', { bubbles: true })); }
+              }}>
                 <span class="text-dim">source</span>
                 <span id="pressure-cc-source-slot" />
               </InfoBox>
-              <InfoBox infoKey="timbre" infoContent={TIMBRE_INFO} resetId="timbre-reset" onReset={() => {
+              <InfoBox infoKey="timbreEnable" infoContent={TIMBRE_INFO} resetId="timbre-enable-reset" onReset={() => {
                 const cb = document.getElementById('expr-timbre') as HTMLInputElement | null;
-                const rev = document.getElementById('timbre-reverse') as HTMLInputElement | null;
                 if (cb) cb.checked = true;
-                if (rev) rev.checked = false;
               }}>
                 <label class="expr-label">
                   <span class="gi-checkbox"><input type="checkbox" id="expr-timbre" checked /><span class="gi-check" /></span>
                   <span class="text-white">Timbre Slide</span>
                 </label>
                 <span id="timbre-cc-mode-slot" />
+              </InfoBox>
+              <InfoBox infoKey="timbreReverse" infoContent={`<h2>Timbre Reverse</h2><p>Invert the timbre slide axis direction.</p>`} resetId="timbre-reverse-reset" onReset={() => {
+                const rev = document.getElementById('timbre-reverse') as HTMLInputElement | null;
+                if (rev) rev.checked = false;
+              }}>
                 <label class="expr-label-sm">
                   <span class="gi-checkbox"><input type="checkbox" id="timbre-reverse" /><span class="gi-check" /></span>
                   <span class="text-dim-plain">Rev</span>
