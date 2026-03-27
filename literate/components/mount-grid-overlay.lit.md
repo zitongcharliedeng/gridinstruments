@@ -260,7 +260,7 @@ MPE dimensions are active. Pressure mode and CC source use slim-select dropdowns
               </InfoBox>
               <div id="midi-device-list" />
               <span class="overlay-section-title">EXPRESSION</span>
-              <InfoBox infoKey="bend" infoContent={BEND_INFO}>
+              <InfoBox infoKey="bend" infoContent={BEND_INFO} resetId="bend-reset">
                 <label class="expr-label">
                   <span class="gi-checkbox"><input type="checkbox" id="expr-bend" checked /><span class="gi-check" /></span>
                   <span class="text-white">Pitch Bend</span>
@@ -268,20 +268,20 @@ MPE dimensions are active. Pressure mode and CC source use slim-select dropdowns
                   <span class="text-dim-sm">semitones</span>
                 </label>
               </InfoBox>
-              <InfoBox infoKey="velocity" infoContent={VELOCITY_INFO}>
+              <InfoBox infoKey="velocity" infoContent={VELOCITY_INFO} resetId="velocity-reset">
                 <label class="expr-label">
                   <span class="gi-checkbox"><input type="checkbox" id="expr-velocity" checked /><span class="gi-check" /></span>
                   <span class="text-white">Note Velocity</span>
                 </label>
               </InfoBox>
-              <InfoBox infoKey="pressure" infoContent={PRESSURE_INFO}>
+              <InfoBox infoKey="pressure" infoContent={PRESSURE_INFO} resetId="pressure-reset">
                 <span class="text-white-12">Pressure</span>
                 <span class="text-dim">mode</span>
                 <span id="pressure-mode-slot" />
                 <span class="text-dim">source</span>
                 <span id="pressure-cc-source-slot" />
               </InfoBox>
-              <InfoBox infoKey="timbre" infoContent={TIMBRE_INFO}>
+              <InfoBox infoKey="timbre" infoContent={TIMBRE_INFO} resetId="timbre-reset">
                 <label class="expr-label">
                   <span class="gi-checkbox"><input type="checkbox" id="expr-timbre" checked /><span class="gi-check" /></span>
                   <span class="text-white">Timbre Slide</span>
