@@ -15,8 +15,7 @@ element (cog button) that shows/hides it, and an array of section definitions
 containing sliders and other controls.
 
 ``` {.typescript file=_generated/components/SettingsOverlay.tsx}
-import { For, Show, createEffect, type JSX } from 'solid-js';
-import Muuri from 'muuri';
+import { For, Show, type JSX } from 'solid-js';
 import { SliderRow } from './SliderRow';
 import type { SliderDef } from './SliderRow';
 import './SettingsOverlay.css';
@@ -100,9 +99,7 @@ crowd their section title. `.slider-badge-edit` styles the inline numeric input
 that floats above the slider thumb.
 
 ``` {.css file=_generated/components/SettingsOverlay.css}
-.overlay-section { position:relative; margin-left:0; margin-bottom:8px; }
-.overlay-section .muuri-item { position:absolute; }
-.overlay-section .muuri-item-content { position:relative; padding:2px; }
+.overlay-section { display:grid; grid-template-columns:repeat(auto-fill, minmax(180px, 1fr)); gap:4px; margin-left:0; margin-bottom:8px; align-items:start; max-width:480px; }
 .overlay-section .info-box { min-width:0; }
 .overlay-section .ctrl-label { color:#fff; }
 .overlay-section .tuning-slider-area { position:relative; width:100%; margin-bottom:40px; grid-column:1 / -1; }
@@ -174,44 +171,8 @@ before the user opens the panel.
 
 export function SettingsOverlay(props: SettingsOverlayProps): JSX.Element {
   const sectionClass = (): string => props.sectionClass ?? 'overlay-section';
-  let overlayRef: HTMLDivElement | undefined;
-  const grids: Muuri[] = [];
-  let initialized = false;
-
-  const initMuuri = (): void => {
-    if (initialized || !overlayRef) return;
-    const containerWidth = overlayRef.getBoundingClientRect().width - 52;
-    if (containerWidth <= 0) return;
-    initialized = true;
-    const sections = overlayRef.querySelectorAll('.' + sectionClass().replace(/ /g, '.'));
-    sections.forEach(container => {
-      Array.from(container.children).forEach(child => {
-        if (child.classList.contains('muuri-item') || child.classList.contains('overlay-section-title')) return;
-        const hasPresets = child.querySelector('.slider-presets') !== null;
-        const isWide = hasPresets || child.classList.contains('tuning-slider-area') || child.getBoundingClientRect().width > containerWidth * 0.6;
-        const w = isWide ? containerWidth : Math.max(180, Math.floor(containerWidth / 2) - 4);
-        const wrapper = document.createElement('div');
-        wrapper.className = 'muuri-item';
-        wrapper.style.width = w + 'px';
-        const content = document.createElement('div');
-        content.className = 'muuri-item-content';
-        child.parentNode?.insertBefore(wrapper, child);
-        content.appendChild(child);
-        wrapper.appendChild(content);
-      });
-      if (container.querySelectorAll('.muuri-item').length > 0) {
-        grids.push(new Muuri(container as HTMLElement, { layout: { fillGaps: true }, dragEnabled: false }));
-      }
-    });
-  };
-
-  createEffect(() => {
-    if (props.visible() && !initialized) initMuuri();
-    if (props.visible() && grids.length > 0) grids.forEach(g => g.layout());
-  });
-
   return (
-    <div ref={overlayRef} id={props.overlayId} class="settings-overlay" classList={{ hidden: !props.visible() }}>
+    <div id={props.overlayId} class="settings-overlay" classList={{ hidden: !props.visible() }}>
       <For each={props.sections}>
         {(section) => (
           <>
@@ -219,7 +180,7 @@ export function SettingsOverlay(props: SettingsOverlayProps): JSX.Element {
             <div class={sectionClass()}>
               <Show when={section.sliders}>
                 <For each={section.sliders}>
-                  {(slider) => <div class="muuri-item"><div class="muuri-item-content"><SliderRow def={slider} /></div></div>}
+                  {(slider) => <SliderRow def={slider} />}
                 </For>
               </Show>
               <Show when={section.children}>
