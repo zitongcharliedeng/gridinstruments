@@ -54,7 +54,6 @@ scroll the panel without triggering notes.
   padding: 40px 12px 12px 40px; overflow-y: auto; overflow-x: hidden;
   scrollbar-width: thin; scrollbar-color: var(--dim) transparent;
   touch-action: auto !important; -webkit-overflow-scrolling: touch;
-  max-width: 520px;
 }
 ```
 
