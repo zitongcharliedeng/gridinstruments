@@ -34,7 +34,7 @@ jobs:
       - name: Determine deploy target
         id: target
         run: |
-          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+          if [[ "$GITHUB_REF" == refs/tags/* ]] || [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             echo "is_stable=true" >> $GITHUB_OUTPUT
           else
             echo "is_stable=false" >> $GITHUB_OUTPUT
