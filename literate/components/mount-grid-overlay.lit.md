@@ -111,7 +111,10 @@ export function mountGridOverlay(
       title: 'SOUND (global)',
       children: () => (
         <>
-          <InfoBox infoKey="waveform" infoContent={`<h2>Waveform</h2><p>Oscillator shape: sine, triangle, sawtooth, square, guitar.</p>${srcLink('synth.lit.md', 'Source: synth.lit.md')}`} resetId="wave-reset">
+          <InfoBox infoKey="waveform" infoContent={`<h2>Waveform</h2><p>Oscillator shape: sine, triangle, sawtooth, square, guitar.</p>${srcLink('synth.lit.md', 'Source: synth.lit.md')}`} resetId="wave-reset" onReset={() => {
+            const sel = document.getElementById('wave-select-slot')?.querySelector('select') as HTMLSelectElement | null;
+            if (sel) { sel.value = 'sawtooth'; sel.dispatchEvent(new Event('change', { bubbles: true })); }
+          }}>
             <span class="ctrl-label">WAVE</span>
             <span id="wave-select-slot" />
           </InfoBox>
@@ -249,13 +252,16 @@ MPE dimensions are active. Pressure mode and CC source use slim-select dropdowns
       title: 'INPUT (global)',
       children: () => (
         <>
-          <InfoBox infoKey="layout" infoContent={`<h2>Keyboard Layout</h2><p>ANSI (US), ISO (EU), Dvorak. Auto-detected via Keyboard API.</p>${srcLink('keyboard-layouts.lit.md', 'Source')}`} resetId="layout-reset">
+          <InfoBox infoKey="layout" infoContent={`<h2>Keyboard Layout</h2><p>ANSI (US), ISO (EU), Dvorak. Auto-detected via Keyboard API.</p>${srcLink('keyboard-layouts.lit.md', 'Source')}`} resetId="layout-reset" onReset={() => {
+            const sel = document.getElementById('layout-select-slot')?.querySelector('select') as HTMLSelectElement | null;
+            if (sel) { sel.selectedIndex = 0; sel.dispatchEvent(new Event('change', { bubbles: true })); }
+          }}>
             <span class="ctrl-label">KEYBOARD LAYOUT</span>
             <span id="layout-select-slot" />
           </InfoBox>
           <div class="mt-18">
             <div id="midi-settings-panel">
-              <InfoBox infoKey="midi" infoContent={MIDI_INFO}>
+              <InfoBox infoKey="midi" infoContent={MIDI_INFO} resetId="midi-reset">
                 <span class="overlay-section-title">MIDI</span>
               </InfoBox>
               <div id="midi-device-list" />
@@ -324,14 +330,17 @@ MPE dimensions are active. Pressure mode and CC source use slim-select dropdowns
                   onChange: (v: number) => { setDzVal(v); },
                 }} />
               </InfoBox>
-              <div class="midi-panel-row" id="mpe-output-row">
-                <span class="ctrl-label">MPE Out:</span>
+              <InfoBox infoKey="mpeOutput" infoContent={`<h2>MPE Output</h2><p>Send MPE messages to external MIDI devices. Enable and select output port.</p>`} resetId="mpe-output-reset" onReset={() => {
+                const cb = document.getElementById('mpe-enabled') as HTMLInputElement | null;
+                if (cb) cb.checked = false;
+              }}>
+                <span class="ctrl-label">MPE OUT:</span>
                 <label class="expr-label">
                   <span class="gi-checkbox"><input type="checkbox" id="mpe-enabled" /><span class="gi-check" /></span>
                   Enable
                 </label>
                 <span id="mpe-output-select-slot" class="select-slot" />
-              </div>
+              </InfoBox>
             </div>
           </div>
         </>
