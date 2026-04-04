@@ -102,18 +102,14 @@
         "nixpkgs": "nixpkgs_4"
       },
       "locked": {
-        "lastModified": 1774352699,
-        "narHash": "sha256-p6x1kWnXVxc7Cgp3+bET+TTuMKmwMWId4iwJToumYZs=",
-        "owner": "zitongcharliedeng",
-        "repo": "build-state-machines-from-literate-wiki",
-        "rev": "8c1b4bc14bbf411fa1240f264ba2d92e4507a887",
-        "type": "github"
+        "lastModified": 1775310802,
+        "narHash": "sha256-G2ibJw7IkKlIcAXVobEKJhNSQ5uTIh9tejeYCPnr0WM=",
+        "path": "/home/firstinstallusername/literate-state-machine-wiki",
+        "type": "path"
       },
       "original": {
-        "owner": "zitongcharliedeng",
-        "ref": "lsmw-gridinstruments-verify-gate-20260316",
-        "repo": "build-state-machines-from-literate-wiki",
-        "type": "github"
+        "path": "/home/firstinstallusername/literate-state-machine-wiki",
+        "type": "path"
       }
     },
     "nixpkgs": {
