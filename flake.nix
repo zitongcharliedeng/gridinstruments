@@ -15,7 +15,17 @@
         inherit pkgs;
         src = ./.;
         sourceDir = "literate.lit.mdx";
-        linters = [ ];
+        linters = [
+          {
+            name = "ast-grep-scan";
+            description = "AST-grep structural lint rules";
+            mode = "warn";
+            command = ''
+              ast-grep scan --config sgconfig.yml
+            '';
+            nativeBuildInputs = [ pkgs.ast-grep ];
+          }
+        ];
         tests = [ ];
         minProseLines = 1;
         maxBlockLength = 100;
