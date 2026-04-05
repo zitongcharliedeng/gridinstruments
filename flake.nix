@@ -45,6 +45,16 @@
             nativeBuildInputs = [ pkgs.ast-grep ];
             mode = "warn";
           }
+          {
+            name = "vite-build";
+            description = "Build production bundle from verified tangled output";
+            command = ''
+              ln -s ${npmDeps}/node_modules ./node_modules
+              export PATH="${npmDeps}/node_modules/.bin:$PATH"
+              vite build
+            '';
+            nativeBuildInputs = [ pkgs.nodejs_22 ];
+          }
         ];
 
         tests = [ ];
