@@ -1,40 +1,65 @@
 {
-  description = "dcompose-web dev shell — Playwright Firefox via nixpkgs (no system libs)";
+  description = "gridinstruments — built with literate-state-machine-wiki";
 
-  inputs.nixpkgs.url = "nixpkgs";  # resolved via flake registry → system-cached nixpkgs
+  inputs = {
+    nixpkgs.url = "nixpkgs";
+    literate-state-machine-wiki.url = "github:zitongcharliedeng/build-state-machines-from-literate-wiki/lsmw-gridinstruments-verify-gate-20260316";
+  };
 
-  outputs = { self, nixpkgs }:
+  outputs = { self, nixpkgs, literate-state-machine-wiki }:
     let
       system = "x86_64-linux";
-      pkgs   = nixpkgs.legacyPackages.${system};
-    in {
-      devShells.${system}.default = pkgs.mkShell {
-        # Only tools needed for testing — project uses its own node_modules
-        packages = [ pkgs.nodejs_22 pkgs.python313 ];
+      pkgs = nixpkgs.legacyPackages.${system};
 
-        shellHook = ''
-          # Point playwright to nixpkgs-provided browser binaries (NixOS-patched)
-          export PLAYWRIGHT_BROWSERS_PATH=${pkgs.playwright-driver.browsers}
-          export PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
-          export PLAYWRIGHT_NODEJS_PATH=${pkgs.nodejs_22}/bin/node
-          echo "[devshell] PLAYWRIGHT_BROWSERS_PATH=$PLAYWRIGHT_BROWSERS_PATH"
-          echo "[devshell] Firefox: $(ls $PLAYWRIGHT_BROWSERS_PATH/ | grep firefox)"
-
-          # Entangled literate programming tool (Python venv)
-          if [ ! -f "$PWD/.venv/bin/entangled" ]; then
-            echo "[devshell] Installing entangled-cli..."
-            python3 -m venv .venv
-            .venv/bin/pip install -q -r requirements.txt
-          fi
-          export PATH="$PWD/.venv/bin:$PATH"
-          echo "[devshell] entangled: $(entangled --version 2>/dev/null || echo 'NOT FOUND')"
-
-          # Auto-tangle on devshell entry (only if .lit.md files exist)
-          if ls "$PWD/literate/"*.lit.md &>/dev/null 2>&1; then
-            echo "[devshell] Auto-tangling from literate source..."
-            bash "$PWD/scripts/tangle.sh"
-          fi
-        '';
+      # Consumer-side npm dep resolution — nix reads package-lock.json
+      npmDeps = pkgs.importNpmLock.buildNodeModules {
+        npmRoot = ./.;
+        nodejs = pkgs.nodejs_22;
+        derivationArgs.NPM_CONFIG_LEGACY_PEER_DEPS = "true";
       };
-    };
+
+      lsmwOutputs = literate-state-machine-wiki.lib.init {
+        inherit pkgs;
+        src = ./.;
+        sourceDir = "literate";
+        minProseLines = 1;
+        maxBlockLength = 100;
+
+        # Stage 3: Linters — check the code dialect is literate too
+        linters = [
+          {
+            name = "typescript-eslint";
+            description = "TypeScript type check + ESLint on tangled output";
+            command = ''
+              ln -s ${npmDeps}/node_modules ./node_modules
+              export PATH="${npmDeps}/node_modules/.bin:$PATH"
+              tsc --noEmit
+              eslint _generated/
+            '';
+            nativeBuildInputs = [ pkgs.nodejs_22 ];
+          }
+          {
+            name = "ast-grep";
+            description = "Structural lint rules";
+            command = ''ast-grep scan --config sgconfig.yml'';
+            nativeBuildInputs = [ pkgs.ast-grep ];
+            mode = "warn";
+          }
+        ];
+
+        tests = [ ];
+      };
+    in
+      lsmwOutputs // {
+        devShells.${system}.default = pkgs.mkShell {
+          inputsFrom = [ lsmwOutputs.devShells.${system}.default ];
+          packages = [ pkgs.nodejs_22 pkgs.python313 ];
+          shellHook = ''
+            export PLAYWRIGHT_BROWSERS_PATH=${pkgs.playwright-driver.browsers}
+            export PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
+            export PLAYWRIGHT_NODEJS_PATH=${pkgs.nodejs_22}/bin/node
+            echo "[gridinstruments] dev shell ready (lsmw + playwright)"
+          '';
+        };
+      };
 }

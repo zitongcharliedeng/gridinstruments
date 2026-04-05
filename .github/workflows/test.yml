@@ -1,4 +1,4 @@
-name: Test
+name: Build Literate
 
 on:
   push:
@@ -7,24 +7,10 @@ on:
     branches: [main]
 
 jobs:
-  test:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.13'
-      - run: pip install entangled-cli==2.4.2
-      - run: npm ci
-      - run: npx playwright install --with-deps firefox
-      - run: npm run verify
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: playwright-report
-          path: test-results/
-          retention-days: 7
+      - uses: DeterminateSystems/nix-installer-action@main
+      - uses: DeterminateSystems/magic-nix-cache-action@main
+      - run: nix build

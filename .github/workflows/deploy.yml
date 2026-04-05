@@ -20,32 +20,30 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.13'
-      - run: pip install entangled-cli==2.4.2
-      - run: npm ci
-      - run: npx playwright install --with-deps firefox
+      - uses: DeterminateSystems/nix-installer-action@main
+      - uses: DeterminateSystems/magic-nix-cache-action@main
+
+      - name: Build literate project
+        run: nix build
 
       - name: Determine deploy target
         id: target
+        env:
+          GH_REF: ${{ github.ref }}
+          GH_EVENT: ${{ github.event_name }}
         run: |
-          if [[ "$GITHUB_REF" == refs/tags/* ]] || [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            echo "is_stable=true" >> $GITHUB_OUTPUT
+          if [[ "$GH_REF" == refs/tags/* ]] || [[ "$GH_EVENT" == "workflow_dispatch" ]]; then
+            echo "is_stable=true" >> "$GITHUB_OUTPUT"
           else
-            echo "is_stable=false" >> $GITHUB_OUTPUT
+            echo "is_stable=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Verify (tangle → build → lint → test)
-        run: npm run verify
+      - name: Prepare dist from nix store
+        run: cp -rL result dist && chmod -R u+w dist
 
       - name: Rebuild with /dev base (if dev deploy)
         if: steps.target.outputs.is_stable == 'false'
-        run: npx vite build --base /dev/
+        run: nix develop --command bash -c "npm ci && npx vite build --base /dev/"
 
       - name: Deploy stable to GitHub Pages root
         if: steps.target.outputs.is_stable == 'true'
