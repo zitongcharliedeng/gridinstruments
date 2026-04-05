@@ -11,24 +11,44 @@
       system = "x86_64-linux";
       pkgs = nixpkgs.legacyPackages.${system};
 
+      # Consumer-side npm dependency resolution — the library doesn't know about npm
+      npmDeps = pkgs.importNpmLock.buildNodeModules {
+        npmRoot = ./.;
+        nodejs = pkgs.nodejs_22;
+        derivationArgs.NPM_CONFIG_LEGACY_PEER_DEPS = "true";
+      };
+
       lsmwOutputs = literate-state-machine-wiki.lib.init {
         inherit pkgs;
         src = ./.;
         sourceDir = "literate.lit.mdx";
-        linters = [
-          {
-            name = "ast-grep-scan";
-            description = "AST-grep structural lint rules";
-            mode = "warn";
-            command = ''
-              ast-grep scan --config sgconfig.yml
-            '';
-            nativeBuildInputs = [ pkgs.ast-grep ];
-          }
-        ];
-        tests = [ ];
         minProseLines = 1;
         maxBlockLength = 100;
+
+        # Stage 3: Linters — consumer bundles npm-dependent checks together
+        linters = [
+          {
+            name = "typescript-eslint";
+            description = "TypeScript type check + ESLint on tangled output";
+            mode = "warn";
+            command = ''
+              ln -s ${npmDeps}/node_modules ./node_modules
+              export PATH="${npmDeps}/node_modules/.bin:$PATH"
+              tsc --noEmit
+              eslint _generated/
+            '';
+            nativeBuildInputs = [ pkgs.nodejs_22 ];
+          }
+          {
+            name = "ast-grep";
+            description = "Structural lint rules";
+            command = ''ast-grep scan --config sgconfig.yml'';
+            nativeBuildInputs = [ pkgs.ast-grep ];
+            mode = "warn";
+          }
+        ];
+
+        tests = [ ];
       };
     in
       lsmwOutputs // {

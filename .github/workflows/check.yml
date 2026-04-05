@@ -1,4 +1,4 @@
-name: Check and Deploy
+name: Build Literate
 on:
   push:
     branches: [main]
@@ -10,19 +10,16 @@ permissions:
   id-token: write
 
 jobs:
-  check:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: pip install entangled-cli
-      - run: entangled tangle --force
       - uses: DeterminateSystems/nix-installer-action@main
       - uses: DeterminateSystems/magic-nix-cache-action@main
-      - run: nix flake check
-      - run: nix develop --command npx vite build
+      - run: nix build
 
   deploy:
-    needs: check
+    needs: build
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment:
@@ -30,11 +27,10 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
-      - run: pip install entangled-cli
-      - run: entangled tangle --force
       - uses: DeterminateSystems/nix-installer-action@main
       - uses: DeterminateSystems/magic-nix-cache-action@main
-      - run: nix develop --command bash -c "npm ci && npx vite build"
+      - run: nix build
+      - run: cp -rL result dist
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
