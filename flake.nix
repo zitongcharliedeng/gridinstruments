@@ -13,7 +13,7 @@
 
       # Consumer-side npm dep resolution — nix reads package-lock.json
       npmDeps = pkgs.importNpmLock.buildNodeModules {
-        npmRoot = ./.;
+        npmRoot = ./literate.lit.mdx;
         nodejs = pkgs.nodejs_22;
         derivationArgs.NPM_CONFIG_LEGACY_PEER_DEPS = "true";
       };
