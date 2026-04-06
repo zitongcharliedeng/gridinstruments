@@ -1,8 +1,0 @@
-id: no-async-component
-language: typescript
-rule:
-  pattern: "export async function $NAME($$$): $RET {$$$}"
-files:
-  - "_generated/components/**"
-severity: error
-message: "SolidJS components must be synchronous — async data loading belongs in createResource or parent."

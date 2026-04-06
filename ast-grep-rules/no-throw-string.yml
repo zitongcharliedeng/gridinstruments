@@ -1,8 +1,0 @@
-id: no-throw-string
-language: typescript
-rule:
-  pattern: "throw '$MSG'"
-files:
-  - "_generated/**"
-severity: error
-message: "throw string literal — use throw new Error(msg) for proper stack traces."

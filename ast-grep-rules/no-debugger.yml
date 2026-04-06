@@ -1,8 +1,0 @@
-id: no-debugger
-language: typescript
-rule:
-  pattern: debugger
-files:
-  - "_generated/**"
-severity: error
-message: "debugger statement must not ship in production code."

@@ -42,3 +42,59 @@ export function InfoButton(props: InfoButtonProps): JSX.Element {
   );
 }
 ```
+
+
+## Structural Rule: No Adhoc Icon Styling
+
+Inline `line-height: 0` collapses icon boxes and breaks alignment — use `.icon` class instead
+
+```{.yaml file=ast-grep-rules/no-adhoc-icon-styling.yml}
+id: no-adhoc-icon-styling
+language: html
+rule:
+  pattern: |
+    <$TAG style="$_line-height: 0$_" $$$>
+severity: warning
+message: "Inline `line-height: 0` collapses icon boxes and breaks alignment — use `.icon` class instead"
+note: "Icon elements must use the `.icon` CSS class for proper vertical alignment. Inline style mutations bypass the design system."
+```
+
+
+## Structural Rule: No Infobutton Without Content
+
+InfoButton missing content prop — info content must be co-located with the component, not in a centralized map
+
+```{.yaml file=ast-grep-rules/no-infobutton-without-content.yml}
+id: no-infobutton-without-content
+language: tsx
+rule:
+  pattern: |
+    <InfoButton infoKey=$KEY />
+  not:
+    has:
+      pattern: content={$_}
+severity: warning
+message: "InfoButton missing content prop — info content must be co-located with the component, not in a centralized map"
+note: "Every InfoButton must have a content prop with inline HTML. See #266."
+```
+
+
+## Structural Rule: No Standalone Infobutton
+
+Standalone <InfoButton> — wrap in <InfoBox> instead. InfoBox is the universal wrapper for all settings.
+
+```{.yaml file=ast-grep-rules/no-standalone-infobutton.yml}
+id: no-standalone-infobutton
+language: tsx
+rule:
+  pattern: |
+    <InfoButton $$$/>
+  not:
+    inside:
+      kind: jsx_element
+      has:
+        pattern: InfoBox
+severity: warning
+message: "Standalone <InfoButton> — wrap in <InfoBox> instead. InfoBox is the universal wrapper for all settings."
+note: "InfoButton should only be used internally by InfoBox. Use <InfoBox infoKey=... infoContent=...> to wrap components. See #271."
+```

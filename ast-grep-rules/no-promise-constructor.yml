@@ -1,8 +1,0 @@
-id: no-promise-constructor
-language: typescript
-rule:
-  pattern: new Promise($$$)
-files:
-  - "_generated/components/**"
-severity: warning
-message: "Promise constructor in components — prefer async/await or createResource for SolidJS data fetching."

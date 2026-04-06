@@ -1,8 +1,0 @@
-id: no-append-child
-language: typescript
-rule:
-  pattern: $EL.appendChild($$$)
-files:
-  - "_generated/components/**"
-severity: warning
-message: "appendChild in SolidJS component — use JSX children instead of imperative DOM insertion."

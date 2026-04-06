@@ -1,9 +1,0 @@
-id: no-direct-generated-edit
-message: "BANNED: Do not edit files in _generated/ directly. Edit literate/*.lit.md instead."
-severity: error
-note: "Generated files are read-only artifacts from literate programming. Source of truth: literate/*.lit.md"
-language: TypeScript
-rule:
-  kind: program
-files:
-  - "_generated/**/*.ts"

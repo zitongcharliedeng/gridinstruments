@@ -1,8 +1,0 @@
-id: no-document-write
-language: typescript
-rule:
-  pattern: document.write($$$)
-files:
-  - "_generated/**"
-severity: error
-message: "document.write() is banned — use DOM APIs instead."

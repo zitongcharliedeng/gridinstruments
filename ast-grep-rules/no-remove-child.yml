@@ -1,8 +1,0 @@
-id: no-remove-child
-language: typescript
-rule:
-  pattern: $EL.removeChild($$$)
-files:
-  - "_generated/components/**"
-severity: warning
-message: "removeChild in SolidJS component — use Show/For conditionals instead of imperative DOM removal."

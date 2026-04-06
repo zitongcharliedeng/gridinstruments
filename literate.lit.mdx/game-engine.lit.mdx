@@ -371,3 +371,25 @@ Deduplication removes double-hits where two source events snap to the same grid 
   return deduped;
 }
 ```
+
+
+## Structural Rule: No Game Reset Without Reload
+
+GAME_RESET without loadMidiFromBuffer — the song will be lost. Use lastMidiBuffer to reload.
+
+```{.yaml file=ast-grep-rules/no-game-reset-without-reload.yml}
+id: no-game-reset-without-reload
+language: typescript
+rule:
+  all:
+    - pattern: "send({ type: 'GAME_RESET' })"
+    - not:
+        inside:
+          pattern: "loadMidiFromBuffer($$$)"
+          stopBy: end
+files:
+  - "_generated/app-core.ts"
+severity: warning
+message: "GAME_RESET without loadMidiFromBuffer — the song will be lost. Use lastMidiBuffer to reload."
+note: "See #273: calibrate/maxKeys/restart must save+restore the song."
+```
