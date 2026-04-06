@@ -80,29 +80,29 @@ TypeScript, Vite, Canvas 2D, Web Audio, Web MIDI. Vanilla TS single-page app -- 
 
 The codebase uses [Entangled](https://entangled.github.io/) for literate programming. This is the most important architectural decision in the project.
 
-- **Source of truth**: `literate/*.lit.md` files (Markdown with embedded TypeScript code blocks)
-- **Generated output**: `_generated/*.ts` files -- these are BUILD ARTIFACTS (like `node_modules/` or `dist/`)
+- **Source of truth**: `literate.lit.mdxx/*.lit.mdx` files (Markdown with embedded TypeScript code blocks)
+- **Generated output**: `*.ts` files -- these are BUILD ARTIFACTS (like `node_modules/` or `dist/`)
 - **Generated files are**:
   - Gitignored -- not in git, cannot be committed
   - chmod 444 -- read-only, OS blocks edits (Claude Code `Edit`/`Write` will get EACCES)
   - Deleted and regenerated on every `npm run build` and `npm test`
 
-**CRITICAL: To make code changes, edit `.lit.md` files -- NEVER edit `_generated/*.ts` files directly.**
+**CRITICAL: To make code changes, edit `.lit.mdx` files -- NEVER edit `*.ts` files directly.**
 
-The tangling pipeline: `literate/*.lit.md` --> `entangled tangle` --> `_generated/*.ts` --> `tsc && vite build` --> `dist/`
+The tangling pipeline: `literate.lit.mdxx/*.lit.mdx` --> `entangled tangle` --> `*.ts` --> `tsc && vite build` --> `dist/`
 
 ### XState Machines
 
-All UI state is modeled as XState v5 state machines in `literate/machines/*.lit.md`. The machines define:
+All UI state is modeled as XState v5 state machines in `literate.lit.mdxx/machines/*.lit.mdx`. The machines define:
 - State transitions (events, guards, actions)
 - Spawned actors (input actors, MIDI actors, panel machines)
-- Context types (typed via `literate/machines/types.lit.md`)
+- Context types (typed via `literate.lit.mdxx/machines/types.lit.mdx`)
 
 The test suite uses `getAdjacencyMap` to auto-generate one test per `(state, event)` pair per machine. This means adding a state or event automatically adds test coverage.
 
 ### Effect-TS
 
-The `effect` npm package is allowed ONLY in `_generated/services/` (tangled from `literate/services/`). It provides typed browser API dependency injection (AudioContext, MIDI, Canvas).
+The `effect` npm package is allowed ONLY in `services/` (tangled from `literate.lit.mdxx/services/`). It provides typed browser API dependency injection (AudioContext, MIDI, Canvas).
 
 Effect-TS is **banned from**: synth hot path, render loop, pure math, state machines.
 
@@ -110,17 +110,17 @@ Effect-TS is **banned from**: synth hot path, render loop, pure math, state mach
 
 | Source (edit these) | Generated output | Purpose |
 |---------------------|-----------------|---------|
-| `literate/main.lit.md` | `_generated/main.ts` | App wiring -- event listeners, DOM bindings |
-| `literate/keyboard-visualizer.lit.md` | `_generated/lib/keyboard-visualizer.ts` | Canvas keyboard grid -- geometry, rendering, hit detection |
-| `literate/note-colors.lit.md` | `_generated/lib/note-colors.ts` | OKLCH color system for notes |
-| `literate/keyboard-layouts.lit.md` | `_generated/lib/keyboard-layouts.ts` | Isomorphic coordinate formulas, note naming |
-| `literate/synth.lit.md` | `_generated/lib/synth.ts` | Web Audio synth, tuning markers |
-| `literate/note-history-visualizer.lit.md` | `_generated/lib/note-history-visualizer.ts` | Staff + waterfall + chord panel |
-| `literate/midi-input.lit.md` | `_generated/lib/midi-input.ts` | Web MIDI device management |
-| `literate/chord-detector.lit.md` | `_generated/lib/chord-detector.ts` | Chord name detection |
-| `literate/mpe-service.lit.md` | `_generated/lib/mpe-service.ts` | MPE service |
-| `literate/chord-graffiti.lit.md` | `_generated/lib/chord-graffiti.ts` | Yellow chord shape hints (roughjs SVG overlay) |
-| `literate/game-engine.lit.md` | `_generated/lib/game-engine.ts` | Game engine for Piano Tiles mode |
+| `literate.lit.mdxx/main.lit.mdx` | `main.ts` | App wiring -- event listeners, DOM bindings |
+| `literate.lit.mdxx/keyboard-visualizer.lit.mdx` | `lib/keyboard-visualizer.ts` | Canvas keyboard grid -- geometry, rendering, hit detection |
+| `literate.lit.mdxx/note-colors.lit.mdx` | `lib/note-colors.ts` | OKLCH color system for notes |
+| `literate.lit.mdxx/keyboard-layouts.lit.mdx` | `lib/keyboard-layouts.ts` | Isomorphic coordinate formulas, note naming |
+| `literate.lit.mdxx/synth.lit.mdx` | `lib/synth.ts` | Web Audio synth, tuning markers |
+| `literate.lit.mdxx/note-history-visualizer.lit.mdx` | `lib/note-history-visualizer.ts` | Staff + waterfall + chord panel |
+| `literate.lit.mdxx/midi-input.lit.mdx` | `lib/midi-input.ts` | Web MIDI device management |
+| `literate.lit.mdxx/chord-detector.lit.mdx` | `lib/chord-detector.ts` | Chord name detection |
+| `literate.lit.mdxx/mpe-service.lit.mdx` | `lib/mpe-service.ts` | MPE service |
+| `literate.lit.mdxx/chord-graffiti.lit.mdx` | `lib/chord-graffiti.ts` | Yellow chord shape hints (roughjs SVG overlay) |
+| `literate.lit.mdxx/game-engine.lit.mdx` | `lib/game-engine.ts` | Game engine for Piano Tiles mode |
 | `index.html` | (not generated) | UI structure, all CSS inline in `<style>` block |
 
 | Test file | Purpose |
@@ -152,17 +152,17 @@ nix develop --command npx playwright test --project=firefox --workers=1
 # Run structural invariants only
 nix develop --command npx playwright test --project=firefox --workers=1 -g "Structural"
 
-# Tangle only (generate .ts from .lit.md)
-nix develop --command entangled tangle
+# Tangle only (generate .ts from .lit.mdx)
+literate-state-machine-wiki build
 
 # Force tangle (overwrite existing)
-nix develop --command entangled tangle --force
+literate-state-machine-wiki build
 
-# Stitch (sync .ts edits back to .lit.md -- bidirectional)
-nix develop --command entangled stitch
+# Stitch (sync .ts edits back to .lit.mdx -- bidirectional)
+# stitch not available in store-based workflow
 
 # Watch mode (live tangle daemon)
-nix develop --command entangled watch
+# watch not available in store-based workflow
 
 # AST-grep structural lint
 nix develop --command npx ast-grep scan
@@ -173,12 +173,12 @@ nix develop --command npm run lint
 
 The `flake.nix` devshell provides the correct nixpkgs Firefox matching the npm `@playwright/test` version. The dev server auto-starts via `playwright.config.ts` webServer config.
 
-Entangled CLI: `entangled-cli==2.4.2` (Python, installed via venv in Nix devshell, see `requirements.txt`).
+Entangled CLI: `managed by literate-state-machine-wiki` (Python, installed via venv in Nix devshell, see `requirements.txt`).
 
 ### Development Workflow
 
-1. Edit `literate/<module>.lit.md`
-2. `nix develop --command entangled tangle` -- generate `.ts`
+1. Edit `literate.lit.mdxx/<module>.lit.mdx`
+2. `literate-state-machine-wiki build` -- generate `.ts`
 3. `nix develop --command npm run build` -- build (auto-tangles via prebuild hook)
 4. `nix develop --command npx playwright test --project=firefox --workers=1` -- test (auto-tangles via pretest hook)
 
@@ -218,11 +218,11 @@ These rules are structurally enforced -- by the build, by ast-grep rules, by the
 
 | Restriction | Enforcement |
 |-------------|-------------|
-| Never edit `_generated/*.ts` directly | chmod 444 + gitignored; `Edit`/`Write` will EACCES; ast-grep `no-direct-generated-edit` |
+| Never edit `*.ts` directly | immutable in nix store; `Edit`/`Write` will EACCES; ast-grep `no-direct-generated-edit` |
 | No `as any`, `@ts-ignore`, `@ts-expect-error` | `tsc --strict`; ast-grep `no-ts-comments` |
 | No `!` non-null assertions | ast-grep `no-type-assertion`; use `if (!x) throw new Error(msg)` or optional chaining |
 | No standalone `test()` calls outside the spec file | ast-grep `no-imperative-test-files` |
-| No `Effect` imports outside `_generated/services/` | ast-grep `no-effect-outside-services` |
+| No `Effect` imports outside `services/` | ast-grep `no-effect-outside-services` |
 | No native `<select>` elements in HTML | ast-grep `no-native-select-in-html` (use slim-select) |
 | No raw `title=` tooltip attributes in HTML | ast-grep `no-raw-tooltips` (use InfoButton component) |
 | No raw `setAttribute` calls | ast-grep `no-raw-setattribute` (go through machine actions) |
@@ -302,7 +302,7 @@ These are not structurally enforced but are project policy. Violating them creat
 - **Scroll on the page** -- `overflow: hidden` at page level, always
 - **Placing drag handles on `grid-area` or `keyboard-canvas`** -- handles live on the inner border of panels
 - **Auto-deploying from `main`** -- deploys are tag-triggered only (see Deploy Strategy)
-- **Editing generated files** -- edit `literate/*.lit.md`, never `_generated/*.ts`
+- **Editing generated files** -- edit `literate.lit.mdxx/*.lit.mdx`, never `*.ts`
 
 ---
 
