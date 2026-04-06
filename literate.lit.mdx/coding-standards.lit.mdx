@@ -240,21 +240,6 @@ severity: error
 message: "debugger statement must not ship in production code."
 ```
 
-## No Direct Generated Edit
-
-BANNED: Do not edit files in _generated/ directly. Edit literate/*.lit.md instead.
-
-```{.yaml file=ast-grep-rules/no-direct-generated-edit.yml}
-id: no-direct-generated-edit
-message: "BANNED: Do not edit files in _generated/ directly. Edit literate/*.lit.md instead."
-severity: error
-note: "Generated files are read-only artifacts from literate programming. Source of truth: literate/*.lit.md"
-language: TypeScript
-rule:
-  kind: program
-files:
-  - "**/*.ts"
-```
 
 ## No Document Queryselector In Components
 
@@ -312,7 +297,7 @@ message: "Use === instead of == (except for null checks). Strict equality preven
 
 ## No Effect Outside Services
 
-Effect-TS imports are only allowed in _generated/services/. Banned from synth hot path, render loop, pure math, and state machines.
+Effect-TS imports are only allowed in services/. Banned from synth hot path, render loop, pure math, and state machines.
 
 ```{.yaml file=ast-grep-rules/no-effect-outside-services.yml}
 id: no-effect-outside-services
@@ -324,8 +309,8 @@ files:
 ignores:
   - "services/**/*.ts"
 severity: error
-message: "Effect-TS imports are only allowed in _generated/services/. Banned from synth hot path, render loop, pure math, and state machines."
-note: "Move Effect-TS usage to _generated/services/. See AGENTS.md Literate Programming section."
+message: "Effect-TS imports are only allowed in services/. Banned from synth hot path, render loop, pure math, and state machines."
+note: "Move Effect-TS usage to services/. See AGENTS.md Literate Programming section."
 ```
 
 ## No Eval
@@ -522,7 +507,7 @@ message: "MutationObserver — use SolidJS reactivity or XState subscriptions in
 
 ## No Naked Browser Api
 
-Direct browser API usage should be wrapped in Effect services (_generated/services/). This warning will become an error in Wave 8.
+Direct browser API usage should be wrapped in Effect services (services/). This warning will become an error in Wave 8.
 
 ```{.yaml file=ast-grep-rules/no-naked-browser-api.yml}
 id: no-naked-browser-api
@@ -542,7 +527,7 @@ ignores:
   - "main.ts"
   - "services/**/*.ts"
 severity: warning
-message: "Direct browser API usage should be wrapped in Effect services (_generated/services/). This warning will become an error in Wave 8."
+message: "Direct browser API usage should be wrapped in Effect services (services/). This warning will become an error in Wave 8."
 note: "See AGENTS.md for Effect-TS service layer guidance."
 ```
 
@@ -658,7 +643,7 @@ files:
   - "main.ts"
 severity: error
 message: "classList.add() is banned in main.ts — use XState actor.send() and handle DOM in the subscriber."
-note: "All UI state must be managed by XState actors. See _generated/machines/ for examples."
+note: "All UI state must be managed by XState actors. See machines/ for examples."
 ```
 
 ## No Raw Classlist Remove
@@ -681,7 +666,7 @@ files:
   - "main.ts"
 severity: error
 message: "classList.remove() is banned in main.ts — use XState actor.send() and handle DOM in the subscriber."
-note: "All UI state must be managed by XState actors. See _generated/machines/ for examples."
+note: "All UI state must be managed by XState actors. See machines/ for examples."
 ```
 
 ## No Raw Classlist Toggle
@@ -712,7 +697,7 @@ files:
   - "main.ts"
 severity: error
 message: "classList.toggle() is banned in main.ts — use XState actor.send() and handle DOM in the subscriber."
-note: "All UI state must be managed by XState actors. See _generated/machines/ for examples."
+note: "All UI state must be managed by XState actors. See machines/ for examples."
 ```
 
 ## No Raw Disabled
@@ -735,7 +720,7 @@ files:
   - "main.ts"
 severity: error
 message: "Direct .disabled assignment is banned in main.ts — use XState actor.send() and handle DOM in the subscriber."
-note: "All UI state must be managed by XState actors. See _generated/machines/ for examples."
+note: "All UI state must be managed by XState actors. See machines/ for examples."
 ```
 
 ## No Raw Dispatchevent In Specs
@@ -795,7 +780,7 @@ files:
   - "main.ts"
 severity: error
 message: "Direct .hidden assignment is banned in main.ts — use XState actor.send() and handle DOM in the subscriber."
-note: "All UI state must be managed by XState actors. See _generated/machines/ for examples."
+note: "All UI state must be managed by XState actors. See machines/ for examples."
 ```
 
 ## No Raw Innerhtml
@@ -826,7 +811,7 @@ files:
   - "main.ts"
 severity: error
 message: "innerHTML assignment is banned in main.ts — use XState actor.send() and handle DOM in the subscriber."
-note: "All UI state must be managed by XState actors. See _generated/machines/ for examples."
+note: "All UI state must be managed by XState actors. See machines/ for examples."
 ```
 
 ## No Raw Setattribute
@@ -849,7 +834,7 @@ files:
   - "main.ts"
 severity: error
 message: "setAttribute()/removeAttribute() is banned in main.ts — use XState actor.send() and handle DOM in the subscriber."
-note: "All UI state must be managed by XState actors. See _generated/machines/ for examples."
+note: "All UI state must be managed by XState actors. See machines/ for examples."
 ```
 
 ## No Raw Slider Manipulation
@@ -897,7 +882,7 @@ files:
   - "main.ts"
 severity: error
 message: "Direct style mutation is banned in main.ts — use XState actor.send() and handle DOM in the subscriber."
-note: "All UI state must be managed by XState actors. See _generated/machines/ for examples."
+note: "All UI state must be managed by XState actors. See machines/ for examples."
 ```
 
 ## No Raw Textcontent
@@ -928,7 +913,7 @@ files:
   - "main.ts"
 severity: error
 message: "textContent assignment is banned in main.ts — use XState actor.send() and handle DOM in the subscriber."
-note: "All UI state must be managed by XState actors. See _generated/machines/ for examples."
+note: "All UI state must be managed by XState actors. See machines/ for examples."
 ```
 
 ## No Raw Tooltips
