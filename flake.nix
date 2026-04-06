@@ -11,9 +11,13 @@
       system = "x86_64-linux";
       pkgs = nixpkgs.legacyPackages.${system};
 
-      # Consumer-side npm dep resolution — nix reads package-lock.json
+      # npm deps: package.json form emerges from literate source via tangleAndRead
+      # package-lock.json is a committed lockfile (like flake.lock — auto-generated, not literate)
       npmDeps = pkgs.importNpmLock.buildNodeModules {
-        npmRoot = ./literate.lit.mdx;
+        package = builtins.fromJSON (literate-state-machine-wiki.lib.tangleAndRead {
+          inherit pkgs; src = ./literate.lit.mdx; file = "package.json";
+        });
+        packageLock = builtins.fromJSON (builtins.readFile ./literate.lit.mdx/package-lock.json);
         nodejs = pkgs.nodejs_22;
         derivationArgs.NPM_CONFIG_LEGACY_PEER_DEPS = "true";
       };
