@@ -4,7 +4,7 @@ Wraps ANY child component with an info button (left) and optional reset
 button (right). The wrapper forms ONE continuous bordered box:
 `[i | child content | ↺]`. No gaps. Same height. One border.
 
-``` {.css file=_generated/components/InfoBox.css}
+``` {.css file=components/InfoBox.css}
 .info-box {
   display: flex; align-items: stretch; gap: 0;
   border: 1px solid var(--border); width: 100%;
@@ -22,7 +22,7 @@ button (right). The wrapper forms ONE continuous bordered box:
 }
 ```
 
-``` {.typescript file=_generated/components/InfoBox.tsx}
+``` {.typescript file=components/InfoBox.tsx}
 import { type JSX, type ParentProps } from 'solid-js';
 import { InfoButton } from './InfoButton';
 import './InfoBox.css';

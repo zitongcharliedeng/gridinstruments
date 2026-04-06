@@ -4,7 +4,7 @@ App-level XState actor creation and DOM-to-actor event wiring.
 
 ## Imports
 
-``` {.typescript file=_generated/app-actor-wiring.ts}
+``` {.typescript file=app-actor-wiring.ts}
 import { createActor } from 'xstate';
 import { appMachine } from './machines/appMachine';
 import { getElementOrNull } from './app-dom';
@@ -18,7 +18,7 @@ import type { DComposeApp } from './app-core';
 non-slider controls. It receives the `DComposeApp` instance so that the debug exposure at the
 bottom can delegate property lookups back to the app object.
 
-``` {.typescript file=_generated/app-actor-wiring.ts}
+``` {.typescript file=app-actor-wiring.ts}
 export function setupAppActor(app: DComposeApp): void {
   const appActor = createActor(appMachine, {
     input: { initialVolume: -10.5, defaultZoom: (app as unknown as { defaultZoom: number }).defaultZoom, touchDevice: 'ontouchstart' in window },
@@ -30,7 +30,7 @@ export function setupAppActor(app: DComposeApp): void {
 
 Starting the actor triggers the initial snapshot with the default context values.
 
-``` {.typescript file=_generated/app-actor-wiring.ts}
+``` {.typescript file=app-actor-wiring.ts}
    appActor.start();
 ```
 
@@ -40,7 +40,7 @@ These listeners wire non-slider DOM events to the actor. Slider display (fill gr
 position and text) is handled entirely by `SliderRow`'s SolidJS reactive signals — no
 imperative wiring needed here.
 
-``` {.typescript file=_generated/app-actor-wiring.ts}
+``` {.typescript file=app-actor-wiring.ts}
   document.getElementById('midi-settings-toggle')?.addEventListener('click', () => {
     appActor.send({ type: 'MIDI_PANEL_TOGGLE' });
   });
@@ -73,7 +73,7 @@ imperative wiring needed here.
 
 Attached to `window.dcomposeApp` for Playwright verification and browser console inspection.
 
-``` {.typescript file=_generated/app-actor-wiring.ts}
+``` {.typescript file=app-actor-wiring.ts}
   (window as unknown as { dcomposeApp?: unknown }).dcomposeApp = {
     actor: appActor,
     getSnapshot: () => appActor.getSnapshot(),

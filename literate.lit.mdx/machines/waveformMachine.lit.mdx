@@ -12,7 +12,7 @@ The context holds `active: WaveformType`. The event carries the target waveform.
 
 The machine has no state nodes — it uses a root-level `on` handler so `SELECT` is accepted in any state. Context is initialised from `input.initial` so the parent can set the startup waveform declaratively.
 
-``` {.typescript file=_generated/machines/waveformMachine.ts}
+``` {.typescript file=machines/waveformMachine.ts}
 import { setup, assign, assertEvent } from 'xstate';
 import type { WaveformType } from '../lib/synth';
 

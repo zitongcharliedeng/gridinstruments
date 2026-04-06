@@ -16,7 +16,7 @@ Three-panel canvas strip rendered at 60fps. The layout from left to right:
 
 The visualizer imports `noteColor` for per-pitch-class OKLCH colors, `detectChord` for Tonal.js-backed chord detection, and `formatNoteWithOctavePrefix` from `keyboard-layouts` — the single source of truth for D-relative note name formatting. Two interfaces describe the note lifecycle: `ActiveNote` for held notes (no end time yet) and `HistoryNote` for released notes (with an end time for fade-out).
 
-``` {.typescript file=_generated/lib/note-history-visualizer.ts}
+``` {.typescript file=lib/note-history-visualizer.ts}
 import { noteColor } from './note-colors';
 import { detectChord } from './chord-detector';
 import { formatNoteWithOctavePrefix, pitchClassName } from './keyboard-layouts';
@@ -41,7 +41,7 @@ interface HistoryNote {
 
 The idle state renders a multi-line hint message. `wrapText` splits a string into lines that each fit within `maxWidth` canvas pixels, using the current canvas font for measurement.
 
-``` {.typescript file=_generated/lib/note-history-visualizer.ts}
+``` {.typescript file=lib/note-history-visualizer.ts}
 function wrapText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string[] {
   const words = text.split(' ');
   const lines: string[] = [];
@@ -70,7 +70,7 @@ The class holds canvas state, note collections, display parameters, and idle ani
 - `idleAlpha` / `idleTarget` — lerped opacity for the "Play some notes" hint text.
 - `ghostNote` — the next expected MIDI note in game mode, shown as a faint outline on the piano strip.
 
-``` {.typescript file=_generated/lib/note-history-visualizer.ts}
+``` {.typescript file=lib/note-history-visualizer.ts}
 export class NoteHistoryVisualizer {
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
@@ -102,7 +102,7 @@ export class NoteHistoryVisualizer {
 
 The constructor grabs the 2D context and sizes the canvas to its current DOM dimensions (falling back to 900×220 if it has not yet been laid out). `resize` applies device pixel ratio scaling so the canvas is crisp on HiDPI displays.
 
-``` {.typescript file=_generated/lib/note-history-visualizer.ts}
+``` {.typescript file=lib/note-history-visualizer.ts}
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
     const ctx = canvas.getContext('2d');
@@ -125,7 +125,7 @@ The constructor grabs the 2D context and sizes the canvas to its current DOM dim
 
 Four small methods let the host application tune the display. Time window and note range changes take effect on the next render frame with no re-initialization.
 
-``` {.typescript file=_generated/lib/note-history-visualizer.ts}
+``` {.typescript file=lib/note-history-visualizer.ts}
   setTimeWindow(seconds: number): void {
     const clamped = Math.max(1, Math.min(10, seconds));
     this.historyWindowMs = clamped * 1000;
@@ -150,7 +150,7 @@ Four small methods let the host application tune the display. Time window and no
 
 `noteOn` / `noteOff` move notes between `activeNotes` and `history`. `clearAll` flushes all active notes to history (used on focus loss or stop-all). The idle helpers manage the "Play some notes" overlay: `setIdleState(true)` fades it in, `setIdleState(false)` snaps alpha to 0 immediately for responsiveness. Ghost note methods control the game-mode next-note indicator on the piano strip.
 
-``` {.typescript file=_generated/lib/note-history-visualizer.ts}
+``` {.typescript file=lib/note-history-visualizer.ts}
   noteOn(coordX: number, coordY: number, midiNote: number): void {
     this.idleAlpha = 0;
     this.idleTarget = 0;
@@ -205,7 +205,7 @@ Four small methods let the host application tune the display. Time window and no
 
 The `requestAnimationFrame` loop calls `render()` at up to 60fps. `start()` is idempotent — calling it when already running is a no-op.
 
-``` {.typescript file=_generated/lib/note-history-visualizer.ts}
+``` {.typescript file=lib/note-history-visualizer.ts}
   start(): void {
     if (this.animFrame !== null) return;
     const loop = (): void => {
@@ -227,7 +227,7 @@ The `requestAnimationFrame` loop calls `render()` at up to 60fps. `start()` is i
 
 Each frame: trim stale history, clear the canvas, and either show the idle overlay (when no notes exist) or draw all three panels. The idle text fades in/out via per-frame lerp toward `idleTarget`. When notes are present the three panels render in left-to-right order with a 1px divider between the chord panel and the roll.
 
-``` {.typescript file=_generated/lib/note-history-visualizer.ts}
+``` {.typescript file=lib/note-history-visualizer.ts}
   private render(): void {
     const now = performance.now();
 
@@ -286,7 +286,7 @@ Each frame: trim stale history, clear the canvas, and either show the idle overl
 
 The piano strip draws white keys at full width then black keys on top at 60% width, mimicking a real keyboard cross-section. Active notes get a bright fill overlay; ghost notes get a white outline. C notes are labelled in D-relative octave notation (e.g. "C'" for the octave above D-ref). A thin vertical line on the right edge marks the "now" boundary where notes enter the roll.
 
-``` {.typescript file=_generated/lib/note-history-visualizer.ts}
+``` {.typescript file=lib/note-history-visualizer.ts}
   private drawPianoKeys(x: number, w: number, h: number, _now: number): void {
     const ctx = this.ctx;
     const midiRange = this.midiMax - this.midiMin + 1;
@@ -305,7 +305,7 @@ The piano strip draws white keys at full width then black keys on top at 60% wid
 
 White keys are drawn first as a base layer. Active notes receive a bright fill overlay; the ghost note (the hovered-but-not-played suggestion) gets a white outline instead.
 
-``` {.typescript file=_generated/lib/note-history-visualizer.ts}
+``` {.typescript file=lib/note-history-visualizer.ts}
     for (let midi = this.midiMin; midi <= this.midiMax; midi++) {
       if (isBlackKey(midi)) continue;
       const ky = midiToY(midi);
@@ -334,7 +334,7 @@ White keys are drawn first as a base layer. Active notes receive a bright fill o
 
 Black keys are drawn in a second pass at 60% width, on top of the white key layer. The same active/ghost treatment applies.
 
-``` {.typescript file=_generated/lib/note-history-visualizer.ts}
+``` {.typescript file=lib/note-history-visualizer.ts}
     for (let midi = this.midiMin; midi <= this.midiMax; midi++) {
       if (!isBlackKey(midi)) continue;
       const ky = midiToY(midi);
@@ -361,7 +361,7 @@ Black keys are drawn in a second pass at 60% width, on top of the white key laye
 
 C notes are labelled right-aligned using D-relative octave notation. A thin bright vertical line marks the right edge as the "now" boundary where notes enter the roll.
 
-``` {.typescript file=_generated/lib/note-history-visualizer.ts}
+``` {.typescript file=lib/note-history-visualizer.ts}
     ctx.font = `bold ${Math.max(6, noteH * 0.75)}px 'JetBrains Mono', monospace`;
     ctx.fillStyle = '#666666';
     ctx.textAlign = 'right';
@@ -388,7 +388,7 @@ The roll maps time to horizontal position: `t = now` is the left edge (piano bou
 
 Background stripes alternate between a slightly darker shade for black-key rows, and horizontal lines mark octave boundaries at each C note.
 
-``` {.typescript file=_generated/lib/note-history-visualizer.ts}
+``` {.typescript file=lib/note-history-visualizer.ts}
   private drawNoteRoll(x: number, w: number, h: number, now: number): void {
     const ctx = this.ctx;
 
@@ -402,7 +402,7 @@ Background stripes alternate between a slightly darker shade for black-key rows,
 
 Background stripes alternate between a slightly darker shade for black-key rows. Horizontal lines at each C note mark octave boundaries.
 
-``` {.typescript file=_generated/lib/note-history-visualizer.ts}
+``` {.typescript file=lib/note-history-visualizer.ts}
     for (let midi = this.midiMin; midi <= this.midiMax; midi++) {
       const ky = midiToY(midi);
       ctx.fillStyle = isBlackKey(midi) ? '#0a0808' : '#0d0d0d';
@@ -426,7 +426,7 @@ Background stripes alternate between a slightly darker shade for black-key rows.
 
 Released notes scroll rightward and fade out linearly with age over the history window. Active (still-held) notes are anchored to the left "now" edge and grow rightward; bars wide enough to show a label get the pitch-class name printed inside.
 
-``` {.typescript file=_generated/lib/note-history-visualizer.ts}
+``` {.typescript file=lib/note-history-visualizer.ts}
     for (const note of this.history) {
       const age = now - note.endTime;
       if (age > this.historyWindowMs) continue;
@@ -474,7 +474,7 @@ Released notes scroll rightward and fade out linearly with age over the history 
 
 One private name formatter for the waterfall. `midiToNoteName` returns a plain pitch class name (e.g. "F#") used for bar labels inside the waterfall where octave context is provided by vertical position. For the chord panel note list, `formatNoteWithOctavePrefix` from `keyboard-layouts` is the canonical single source of truth for D-relative names.
 
-``` {.typescript file=_generated/lib/note-history-visualizer.ts}
+``` {.typescript file=lib/note-history-visualizer.ts}
   private midiToNoteName(midi: number): string {
     return pitchClassName(midi);
   }
@@ -484,7 +484,7 @@ One private name formatter for the waterfall. `midiToNoteName` returns a plain p
 
 The chord panel occupies the leftmost 25% of the canvas. When notes are active, Tonal.js detection yields a primary chord name rendered in the note's color and up to two alternate voicings in grey below it. Active notes are listed below in D-relative octave notation, sorted highest to lowest, colored per pitch class.
 
-``` {.typescript file=_generated/lib/note-history-visualizer.ts}
+``` {.typescript file=lib/note-history-visualizer.ts}
   private drawChordPanel(x: number, w: number, h: number, _now: number): void {
     const ctx = this.ctx;
     const pad = 12;

@@ -2,7 +2,7 @@
 
 Cost control utilities for LLM vision assertions — env gating, screenshot hashing, and result caching to prevent redundant API calls.
 
-``` {.typescript file=_generated/tests/fixtures/cost-control.ts}
+``` {.typescript file=tests/fixtures/cost-control.ts}
 import { createHash } from 'crypto';
 import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { join } from 'path';
@@ -28,7 +28,7 @@ export function getScreenshotHash(buffer: Buffer): string {
 
 The `VisionCache` class persists results to disk, keyed by screenshot hash, to avoid redundant API calls across test runs.
 
-``` {.typescript file=_generated/tests/fixtures/cost-control.ts}
+``` {.typescript file=tests/fixtures/cost-control.ts}
 const CACHE_FILENAME = '.vision-cache.json';
 
 export class VisionCache {

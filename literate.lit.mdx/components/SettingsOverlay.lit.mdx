@@ -14,7 +14,7 @@ The overlay accepts a `target` element to position itself within, a `toggler`
 element (cog button) that shows/hides it, and an array of section definitions
 containing sliders and other controls.
 
-``` {.typescript file=_generated/components/SettingsOverlay.tsx}
+``` {.typescript file=components/SettingsOverlay.tsx}
 import { For, Show, type JSX } from 'solid-js';
 import { SliderRow } from './SliderRow';
 import type { SliderDef } from './SliderRow';
@@ -47,7 +47,7 @@ the canvas. It uses a dark semi-transparent background and enables scrolling for
 long settings lists. Touch scrolling is explicitly allowed so mobile users can
 scroll the panel without triggering notes.
 
-``` {.css file=_generated/components/SettingsOverlay.css}
+``` {.css file=components/SettingsOverlay.css}
 .settings-overlay {
   position: absolute; top: 0; left: 0; right: 0; bottom: 0;
   background: rgba(30, 30, 32, 0.78); z-index: 12;
@@ -64,7 +64,7 @@ without any DOM overhead. The gradient runs at 300% width so the sweep travels
 fully across in 60 seconds at a constant pace. `pointer-events: none` keeps it
 non-interactive.
 
-``` {.css file=_generated/components/SettingsOverlay.css}
+``` {.css file=components/SettingsOverlay.css}
 .settings-overlay::before {
   content: ''; position: absolute; inset: 0;
   background: linear-gradient(110deg, rgba(255,255,255,0.04) 20%, rgba(255,255,255,0.10) 40%, rgba(255,255,255,0.14) 50%, rgba(255,255,255,0.10) 60%, rgba(255,255,255,0.04) 80%);
@@ -81,7 +81,7 @@ non-interactive.
 and `.show-inline` force display back on for elements that are conditionally
 revealed. `.faded` and `.visible-full` control opacity transitions.
 
-``` {.css file=_generated/components/SettingsOverlay.css}
+``` {.css file=components/SettingsOverlay.css}
 .hidden { display: none !important; pointer-events: none !important; }
 .show-flex { display: flex !important; }
 .show-inline { display: inline-flex !important; }
@@ -98,7 +98,7 @@ contextually unavailable. `.slider-row-track` adds top margin so sliders don't
 crowd their section title. `.slider-badge-edit` styles the inline numeric input
 that floats above the slider thumb.
 
-``` {.css file=_generated/components/SettingsOverlay.css}
+``` {.css file=components/SettingsOverlay.css}
 .overlay-section { display:flex; flex-wrap:wrap; gap:4px; margin-left:0; margin-bottom:8px; }
 .overlay-section > * { flex:0 1 100%; min-width:0; }
 .overlay-section > .info-box { flex:1 1 200px; }
@@ -125,7 +125,7 @@ that floats above the slider thumb.
 monospace, black background, 1px border in the dim colour. Hover brightens the
 border; active press fills with the subtle background.
 
-``` {.css file=_generated/components/SettingsOverlay.css}
+``` {.css file=components/SettingsOverlay.css}
 .overlay-btn {
   font-family:var(--font); font-size:11px; font-weight:700;
   text-transform:uppercase; letter-spacing:0.08em; background:#000;
@@ -142,7 +142,7 @@ All three settings cogs (grid, vis, game) are rendered by the `SettingsCog`
 SolidJS component (`SettingsCog.lit.md`). Positioning is via inline styles
 passed as `style` props. No CSS needed here — the component owns its own styles.
 
-``` {.css file=_generated/components/SettingsOverlay.css}
+``` {.css file=components/SettingsOverlay.css}
 ```
 
 ## Checkbox
@@ -153,7 +153,7 @@ The checked state fills the block with the foreground colour and draws a
 CSS-only checkmark via an `::after` pseudo-element. Focus-visible shows an
 accent border for keyboard navigation.
 
-``` {.css file=_generated/components/SettingsOverlay.css}
+``` {.css file=components/SettingsOverlay.css}
 .gi-checkbox { position:relative; display:inline-block; width:14px; height:14px; cursor:pointer; vertical-align:middle; }
 .gi-checkbox input { position:absolute; inset:0; margin:0; cursor:pointer; appearance:none; -webkit-appearance:none; background:transparent; border:none; z-index:1; }
 .gi-checkbox .gi-check { display:block; width:14px; height:14px; border:1px solid var(--border); background:var(--bg); pointer-events:none; }
@@ -170,7 +170,7 @@ with their slider rows. The overlay stays mounted even when hidden so legacy
 DOM lookups and structural tests can still find controls like `#zoom-slider`
 before the user opens the panel.
 
-``` {.typescript file=_generated/components/SettingsOverlay.tsx}
+``` {.typescript file=components/SettingsOverlay.tsx}
 
 export function SettingsOverlay(props: SettingsOverlayProps): JSX.Element {
   const sectionClass = (): string => props.sectionClass ?? 'overlay-section';

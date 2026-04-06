@@ -7,7 +7,7 @@ Configure via environment variables:
 - `LLM_VISION_KEY` — API key (falls back to `ANTHROPIC_API_KEY` or `OPENAI_API_KEY`)
 - `LLM_VISION_MODEL` — model name (default: auto-detected from provider)
 
-``` {.typescript file=_generated/tests/fixtures/llm-vision.ts}
+``` {.typescript file=tests/fixtures/llm-vision.ts}
 export interface VisionAssertionResult {
   pass: boolean;
   confidence: 'high' | 'medium' | 'low';
@@ -29,7 +29,7 @@ function getConfig(): { url: string; key: string; model: string; isAnthropic: bo
 
 The system prompt instructs the model to evaluate a single visual invariant and return structured JSON.
 
-``` {.typescript file=_generated/tests/fixtures/llm-vision.ts}
+``` {.typescript file=tests/fixtures/llm-vision.ts}
 const SYSTEM_PROMPT = `You are a visual QA tester for a browser-based music synthesizer called GridInstruments. Given a screenshot and an invariant description, determine whether the invariant holds in the screenshot.
 
 Rules:
@@ -44,7 +44,7 @@ Respond with ONLY valid JSON (no markdown, no explanation outside JSON):
 
 The exported function sends the screenshot and invariant text via the OpenAI-compatible chat completions API (or Anthropic messages API), returning a fail-open result if unavailable.
 
-``` {.typescript file=_generated/tests/fixtures/llm-vision.ts}
+``` {.typescript file=tests/fixtures/llm-vision.ts}
 export async function assertWithVision(
   screenshot: Buffer,
   invariant: string,
@@ -94,7 +94,7 @@ export async function assertWithVision(
 
 After the API call, the response text is parsed as JSON. Malformed responses return a fail-open result with `confidence: 'low'` rather than throwing, and any network or API error also returns fail-open so a missing API key never blocks the test suite.
 
-``` {.typescript file=_generated/tests/fixtures/llm-vision.ts}
+``` {.typescript file=tests/fixtures/llm-vision.ts}
     const parsed = JSON.parse(text) as unknown as VisionAssertionResult;
 
     if (typeof parsed.pass !== 'boolean' || typeof parsed.reason !== 'string') {

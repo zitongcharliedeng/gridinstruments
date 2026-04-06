@@ -4,14 +4,14 @@ Ten independent XState v5 machines modelling user-visible UI state transitions �
 
 The module opens by importing all invariant check functions from `invariant-checks` — each check is a `StateInvariant` object that Playwright evaluates when the machine enters that state.
 
-``` {.typescript file=_generated/tests/machines/uiMachine.ts}
+``` {.typescript file=tests/machines/uiMachine.ts}
 import { setup } from 'xstate';
 import { type Page, expect } from '@playwright/test';
 ```
 
 Two shared Playwright helpers power all the panel drag and keyboard-focus tests. `tabUntil` cycles through focusable elements until the target selector is active; `dragHandle` simulates a pointer drag on a resize handle by the given pixel delta.
 
-``` {.typescript file=_generated/tests/machines/uiMachine.ts}
+``` {.typescript file=tests/machines/uiMachine.ts}
 async function tabUntil(page: Page, selector: string, maxTabs = 120): Promise<void> {
   for (let i = 0; i < maxTabs; i++) {
     const focused = await page.evaluate((sel) => document.activeElement?.matches(sel) ?? false, selector);
@@ -40,7 +40,7 @@ async function dragHandle(
 
 The overlay machine models the grid settings panel toggled by the cog button. In `visible` state it runs the full battery of overlay invariants — background, shimmer, section layout, preset selector, MPE controls, focus preservation, icon sizing, slider badge positions, and color checks.
 
-``` {.typescript file=_generated/tests/machines/uiMachine.ts}
+``` {.typescript file=tests/machines/uiMachine.ts}
 type OverlayEvent =
   | { type: 'CLICK_COG' }
   | { type: 'CLICK_BACKDROP' }
@@ -77,7 +77,7 @@ export const overlayMachine = setup({
 
 The Playwright action table maps each overlay event to its DOM interaction, and the invariants and DOM assertion records complete the overlay machine's test contract.
 
-``` {.typescript file=_generated/tests/machines/uiMachine.ts}
+``` {.typescript file=tests/machines/uiMachine.ts}
 export const overlayPlaywrightActions: Record<OverlayEvent['type'], (page: Page) => Promise<void>> = {
   CLICK_COG: async (page) => {
     await page.locator('#grid-settings-btn').click();
@@ -108,7 +108,7 @@ export const overlayDomAssertions: Record<string, (page: Page) => Promise<void>>
 
 The visualiser machine models the note-history panel above the keyboard grid. It has three states — `default` (standard height), `expanded` (taller, triggered by dragging the handle down), and `collapsed` (zero height, toggled by Enter on the handle or double-click to restore).
 
-``` {.typescript file=_generated/tests/machines/uiMachine.ts}
+``` {.typescript file=tests/machines/uiMachine.ts}
 type VisualiserEvent =
   | { type: 'DRAG_VIS_EXPAND' }
   | { type: 'DRAG_VIS_FROM_COLLAPSED' }
@@ -160,7 +160,7 @@ export const visualiserMachine = setup({
 
 The Playwright action table, invariants map, and DOM assertions complete the visualiser machine's test contract, using the `dragHandle` helper for all resize interactions.
 
-``` {.typescript file=_generated/tests/machines/uiMachine.ts}
+``` {.typescript file=tests/machines/uiMachine.ts}
 const VIS_HANDLE = '#visualiser-panel .panel-resize-handle';
 
 export const visualiserPlaywrightActions: Record<VisualiserEvent['type'], (page: Page) => Promise<void>> = {
@@ -211,7 +211,7 @@ export const visualiserDomAssertions: Record<string, (page: Page) => Promise<voi
 
 The pedals machine mirrors the visualiser pattern for the bottom panel containing sustain and vibrato buttons. The `DRAG_PED_FROM_COLLAPSED` action uses raw pointer events rather than the `dragHandle` helper because the collapsed panel needs pointer dispatch at precise coordinates.
 
-``` {.typescript file=_generated/tests/machines/uiMachine.ts}
+``` {.typescript file=tests/machines/uiMachine.ts}
 type PedalsEvent =
   | { type: 'DRAG_PED_EXPAND' }
   | { type: 'DRAG_PED_FROM_COLLAPSED' }
@@ -262,7 +262,7 @@ export const pedalsMachine = setup({
 
 The `DRAG_PED_FROM_COLLAPSED` action uses raw pointer events rather than the `dragHandle` helper because the collapsed panel needs pointer dispatch at precise coordinates; the invariants and DOM assertions complete the pedals machine's test contract.
 
-``` {.typescript file=_generated/tests/machines/uiMachine.ts}
+``` {.typescript file=tests/machines/uiMachine.ts}
 const PED_HANDLE = '#pedals-panel .panel-resize-handle';
 
 export const pedalsPlaywrightActions: Record<PedalsEvent['type'], (page: Page) => Promise<void>> = {
@@ -291,7 +291,7 @@ export const pedalsPlaywrightActions: Record<PedalsEvent['type'], (page: Page) =
 
 The pedals invariants and DOM assertions mirror the visualiser pattern, checking for the `collapsed` CSS class and bounding-box height thresholds.
 
-``` {.typescript file=_generated/tests/machines/uiMachine.ts}
+``` {.typescript file=tests/machines/uiMachine.ts}
 export const pedalsInvariants: Record<string, string> = {
   default: 'The pedals panel is at its default height (~44px), showing sustain and vibrato buttons. No black gap anywhere.',
   expanded: 'The pedals panel is expanded taller than default. No black gap anywhere.',
@@ -321,7 +321,7 @@ export const pedalsDomAssertions: Record<string, (page: Page) => Promise<void>> 
 
 The waveform machine tracks which oscillator waveform is active in the synth. It cycles between four states — `sawtooth` (default), `sine`, `square`, and `triangle` — each reachable from every other via a direct select event.
 
-``` {.typescript file=_generated/tests/machines/uiMachine.ts}
+``` {.typescript file=tests/machines/uiMachine.ts}
 type WaveformEvent =
   | { type: 'SELECT_SAWTOOTH' }
   | { type: 'SELECT_SINE' }
@@ -331,7 +331,7 @@ type WaveformEvent =
 
 The machine itself defines all four waveform states with their metadata and full transition tables, forming a complete graph where every waveform is one step from every other.
 
-``` {.typescript file=_generated/tests/machines/uiMachine.ts}
+``` {.typescript file=tests/machines/uiMachine.ts}
 export const waveformMachine = setup({
   types: { events: {} as WaveformEvent },
 }).createMachine({
@@ -388,7 +388,7 @@ export const waveformMachine = setup({
 
 The `selectWaveform` helper clicks the slim-select dropdown (the native `<select>` is hidden per project rules) and waits for the DOM to settle; the action table, invariants map, and DOM assertions complete the waveform machine's test contract.
 
-``` {.typescript file=_generated/tests/machines/uiMachine.ts}
+``` {.typescript file=tests/machines/uiMachine.ts}
 async function selectWaveform(page: Page, value: string): Promise<void> {
   await page.selectOption('#wave-select', value);
   await page.waitForTimeout(100);
@@ -426,7 +426,7 @@ export const waveformDomAssertions: Record<string, (page: Page) => Promise<void>
 
 The sustain machine models the Space-bar hold modifier. Sustain is hold-on/release-off — `PRESS_SPACE` activates it, `RELEASE_SPACE` deactivates it. The `inactive` state carries the `rKeyNotSustainCheck` invariant verifying that `R` is never bound to sustain.
 
-``` {.typescript file=_generated/tests/machines/uiMachine.ts}
+``` {.typescript file=tests/machines/uiMachine.ts}
 type SustainEvent =
   | { type: 'PRESS_SPACE' }
   | { type: 'RELEASE_SPACE' }
@@ -468,7 +468,7 @@ export const sustainMachine = setup({
 
 The sustain Playwright actions, invariants, and DOM assertions complete the sustain machine's test contract; both Space-key and pointer-event paths are covered.
 
-``` {.typescript file=_generated/tests/machines/uiMachine.ts}
+``` {.typescript file=tests/machines/uiMachine.ts}
 export const sustainPlaywrightActions: Record<SustainEvent['type'], (page: Page) => Promise<void>> = {
   PRESS_SPACE: async (page) => {
     await page.keyboard.down('Space');
@@ -504,7 +504,7 @@ export const sustainDomAssertions: Record<string, (page: Page) => Promise<void>>
 
 The vibrato machine is structurally identical to the sustain machine but models the Shift-key hold modifier. Both are hold-on/release-off — there is no toggle; pressing and then releasing the key always returns to `inactive`.
 
-``` {.typescript file=_generated/tests/machines/uiMachine.ts}
+``` {.typescript file=tests/machines/uiMachine.ts}
 type VibratoEvent =
   | { type: 'PRESS_SHIFT' }
   | { type: 'RELEASE_SHIFT' }
@@ -545,7 +545,7 @@ export const vibratoMachine = setup({
 
 The vibrato Playwright actions, invariants, and DOM assertions complete the vibrato machine's test contract; the structure mirrors the sustain machine exactly with Shift-key and pointer-event paths.
 
-``` {.typescript file=_generated/tests/machines/uiMachine.ts}
+``` {.typescript file=tests/machines/uiMachine.ts}
 export const vibratoPlaywrightActions: Record<VibratoEvent['type'], (page: Page) => Promise<void>> = {
   PRESS_SHIFT: async (page) => {
     await page.keyboard.down('Shift');
@@ -581,7 +581,7 @@ export const vibratoDomAssertions: Record<string, (page: Page) => Promise<void>>
 
 The MIDI panel machine models the collapsible MIDI settings section inside the overlay. A single `TOGGLE_MIDI` event cycles between `closed` and `open`; the DOM assertion checks for the `open` CSS class on `#midi-settings-panel`.
 
-``` {.typescript file=_generated/tests/machines/uiMachine.ts}
+``` {.typescript file=tests/machines/uiMachine.ts}
 interface MidiPanelEvent { type: 'TOGGLE_MIDI' }
 
 export const midiPanelMachine = setup({
@@ -630,7 +630,7 @@ export const midiPanelDomAssertions: Record<string, (page: Page) => Promise<void
 
 The MPE machine models the enabled/disabled state of the MPE output dropdown. When `disabled`, the `#mpe-output-select` element is greyed out; when `enabled`, it becomes interactive and accepts device selection.
 
-``` {.typescript file=_generated/tests/machines/uiMachine.ts}
+``` {.typescript file=tests/machines/uiMachine.ts}
 interface MpeEvent { type: 'TOGGLE_MPE' }
 
 export const mpeMachine = setup({
@@ -679,7 +679,7 @@ export const mpeDomAssertions: Record<string, (page: Page) => Promise<void>> = {
 
 The text input focus machine tracks whether the D-ref frequency input (`#d-ref-input`) is focused. When focused, keyboard events go to the input for numeric entry rather than to the keyboard grid for note triggering; Enter or Escape returns focus to the grid.
 
-``` {.typescript file=_generated/tests/machines/uiMachine.ts}
+``` {.typescript file=tests/machines/uiMachine.ts}
 type TextInputFocusEvent =
   | { type: 'CLICK_INPUT' }
   | { type: 'PRESS_ENTER' }
@@ -714,7 +714,7 @@ export const textInputFocusMachine = setup({
 
 The text input focus Playwright actions, invariants, and DOM assertions complete the machine's test contract; Enter and Escape both return to `blurred`, and `toBeFocused` confirms the `focused` state.
 
-``` {.typescript file=_generated/tests/machines/uiMachine.ts}
+``` {.typescript file=tests/machines/uiMachine.ts}
 export const textInputFocusPlaywrightActions: Record<TextInputFocusEvent['type'], (page: Page) => Promise<void>> = {
   CLICK_INPUT: async (page) => {
     await page.locator('#d-ref-input').click();
@@ -744,7 +744,7 @@ export const textInputFocusDomAssertions: Record<string, (page: Page) => Promise
 
 The skew label machine tracks the layout mode annotation shown next to the skew slider. At minimum skew the label reads "DCompose / Wicki-Hayden"; at maximum skew it reads "MidiMech". The Playwright actions set the slider value programmatically and fire an `input` event to trigger the label update.
 
-``` {.typescript file=_generated/tests/machines/uiMachine.ts}
+``` {.typescript file=tests/machines/uiMachine.ts}
 type SkewLabelEvent =
   | { type: 'SET_SKEW_MAX' }
   | { type: 'SET_SKEW_MIN' };
@@ -775,7 +775,7 @@ export const skewLabelMachine = setup({
 
 The skew label Playwright actions set the slider value programmatically and fire an `input` event to trigger the label update; the invariants and DOM assertions verify the label text at each extreme position.
 
-``` {.typescript file=_generated/tests/machines/uiMachine.ts}
+``` {.typescript file=tests/machines/uiMachine.ts}
 export const skewLabelPlaywrightActions: Record<SkewLabelEvent['type'], (page: Page) => Promise<void>> = {
   SET_SKEW_MAX: async (page) => {
     await page.evaluate(() => {
@@ -813,7 +813,7 @@ export const skewLabelDomAssertions: Record<string, (page: Page) => Promise<void
 
 The remaining machines live in dedicated sub-modules and are re-exported here so the test spec can import everything from a single entry point. The `allMachines` array is the canonical list consumed by the graph-traversal test harness — every machine registered here gets automatic `(state, event)` coverage.
 
-``` {.typescript file=_generated/tests/machines/uiMachine.ts}
+``` {.typescript file=tests/machines/uiMachine.ts}
 import {
   tuningSliderMachine, tuningSliderPlaywrightActions, tuningSliderDomAssertions, tuningSliderInvariants,
   skewSliderMachine, skewSliderPlaywrightActions, skewSliderDomAssertions, skewSliderInvariants,
@@ -861,7 +861,7 @@ export {
 
 The `allMachines` array is the canonical list consumed by the graph-traversal test harness — every machine registered here gets automatic `(state, event)` coverage from the `enumerateTransitions` loop in the spec file.
 
-``` {.typescript file=_generated/tests/machines/uiMachine.ts}
+``` {.typescript file=tests/machines/uiMachine.ts}
 export const allMachines = [
   { name: 'overlay', machine: overlayMachine },
   { name: 'visualiser', machine: visualiserMachine },

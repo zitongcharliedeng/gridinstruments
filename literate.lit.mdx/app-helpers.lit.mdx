@@ -4,7 +4,7 @@ Pure utility functions — Markdown rendering, type guards, numeric parsing, sli
 
 ## Imports
 
-``` {.typescript file=_generated/app-helpers.ts}
+``` {.typescript file=app-helpers.ts}
 import type { WaveformType } from './lib/synth';
 import type { SliderPresetPoint } from './app-constants';
 ```
@@ -15,7 +15,7 @@ import type { SliderPresetPoint } from './app-constants';
 
 Tables are handled before inline formatting to avoid confusing pipe characters with other syntax.
 
-``` {.typescript file=_generated/app-helpers.ts}
+``` {.typescript file=app-helpers.ts}
 export function renderMarkdown(md: string): string {
   const withoutDev = md
     .replace(/^# .+\n/m, '')
@@ -45,7 +45,7 @@ export function renderMarkdown(md: string): string {
 
 `isWaveformType` narrows `unknown` to `WaveformType`. `parseNum` wraps `parseFloat` with a fallback for `NaN` — used everywhere slider attribute strings are read.
 
-``` {.typescript file=_generated/app-helpers.ts}
+``` {.typescript file=app-helpers.ts}
 export function isWaveformType(value: unknown): value is WaveformType {
   return typeof value === 'string' && ['sine', 'square', 'sawtooth', 'triangle', 'pluck', 'organ', 'brass', 'pad', 'bell', 'bass', 'bright', 'warm', 'guitar'].includes(value);
 }
@@ -60,7 +60,7 @@ export function parseNum(s: string, fallback: number): number {
 
 `formatSliderAnnotation` displays the value as an offset from the nearest named preset. When the distance is below the display threshold (half the last displayed digit) it shows the preset label directly. Otherwise it shows `"label ±N.NNunit"` with a Unicode minus sign for negative offsets.
 
-``` {.typescript file=_generated/app-helpers.ts}
+``` {.typescript file=app-helpers.ts}
 export function formatSliderAnnotation(
   value: number,
   presets: SliderPresetPoint[],
@@ -86,7 +86,7 @@ export function formatSliderAnnotation(
 
 The D-reference pitch is the frequency anchor for the entire grid. `noteNameToHz` parses a note name like `"A4"` and returns its frequency relative to D4 = 293.66 Hz using semitone arithmetic. `hzToNoteAnnotation` does the inverse — given a frequency and the current D4 reference, it returns a display string like `"A4"` or `"G#4 +12¢"`.
 
-``` {.typescript file=_generated/app-helpers.ts}
+``` {.typescript file=app-helpers.ts}
 const NOTE_SEMITONES: Record<string, number> = {
   C: 0, 'C#': 1, Db: 1, D: 2, 'D#': 3, Eb: 3, E: 4, F: 5,
   'F#': 6, Gb: 6, G: 7, 'G#': 8, Ab: 8, A: 9, 'A#': 10, Bb: 10, B: 11,

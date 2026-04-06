@@ -6,7 +6,7 @@ DOM query helpers and element factory functions — safe element lookup with typ
 
 `getElement` throws if the element is missing or the wrong type — fail-fast for required elements. `getElementOrNull` returns `null` instead of throwing — useful for optional elements where absence is a valid state.
 
-``` {.typescript file=_generated/app-dom.ts}
+``` {.typescript file=app-dom.ts}
 export function getElement<T extends HTMLElement>(id: string, type: new() => T): T {
   const el = document.getElementById(id);
   if (!(el instanceof type)) {
@@ -27,7 +27,7 @@ export function getElementOrNull<T extends HTMLElement>(id: string, type: new() 
 
 `createSelectAtSlot` creates a `<select>` element and replaces a placeholder `<div>` slot in the DOM. SlimSelect-wrapped selects are created in JavaScript rather than in HTML source so that a lint rule can enforce the absence of native `<select>` tags in the HTML file.
 
-``` {.typescript file=_generated/app-dom.ts}
+``` {.typescript file=app-dom.ts}
 
 export function createSelectAtSlot(
   slotId: string,

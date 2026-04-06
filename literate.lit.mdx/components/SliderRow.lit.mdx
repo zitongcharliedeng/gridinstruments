@@ -17,7 +17,7 @@ Kobalte renders semantic elements (`[data-orientation="horizontal"]`) that we
 style to match the app's dark design language. The fill, track, and thumb
 all use CSS on Kobalte's data attributes — no inline styles needed.
 
-``` {.css file=_generated/components/SliderRow.css}
+``` {.css file=components/SliderRow.css}
 .slider-row { position: relative; margin-top: 8px; width: 100%; }
 .slider-row [data-orientation="horizontal"] { position: relative; overflow: visible; }
 .slider-input-area { flex: 1; min-width: 0; position: relative; overflow: visible; }
@@ -47,7 +47,7 @@ all use CSS on Kobalte's data attributes — no inline styles needed.
 
 The editable badge floats above the thumb. The reset button sits at the end.
 
-``` {.css file=_generated/components/SliderRow.css}
+``` {.css file=components/SliderRow.css}
 input.badge-input {
   position: absolute; bottom: 100%; transform: translateX(-50%);
   font-size: 9px; color: #fff; background: none; padding: 0 3px;
@@ -69,7 +69,7 @@ input.badge-input:invalid { border-color: #cc3333; }
 
 Tick marks below the slider snap to named values. Active presets highlight green.
 
-``` {.css file=_generated/components/SliderRow.css}
+``` {.css file=components/SliderRow.css}
 .slider-presets {
   position: absolute; left: 0; right: 0; top: 100%;
   pointer-events: none; overflow: visible; min-height: 32px; padding-bottom: 4px;
@@ -95,7 +95,7 @@ Tick marks below the slider snap to named values. Active presets highlight green
 
 ## Interface
 
-``` {.typescript file=_generated/components/SliderRow.tsx}
+``` {.typescript file=components/SliderRow.tsx}
 import { createSignal, For, Show, type JSX } from 'solid-js';
 import { Slider } from '@kobalte/core/slider';
 import './SliderRow.css';
@@ -131,7 +131,7 @@ Kobalte's `Slider.Root` manages value state, accessibility, and keyboard
 navigation. We wrap it with our label overlay, editable badge, reset button,
 and optional preset marks.
 
-``` {.typescript file=_generated/components/SliderRow.tsx}
+``` {.typescript file=components/SliderRow.tsx}
 
 export function SliderRow(props: { def: SliderDef }): JSX.Element {
   const fmt = (): ((v: number) => string) => props.def.formatBadge ?? ((v: number): string => v.toFixed(1));

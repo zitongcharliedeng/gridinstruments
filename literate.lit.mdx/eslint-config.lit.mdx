@@ -23,7 +23,7 @@ export default tseslint.config(
   ...tseslint.configs.stylisticTypeChecked,
 
   {
-    files: ['_generated/**/*.ts', '_generated/**/*.tsx'],
+    files: ['**/*.ts', '**/*.tsx'],
     languageOptions: {
       parserOptions: {
         projectService: true,
@@ -33,7 +33,7 @@ export default tseslint.config(
   },
 
   {
-    files: ['_generated/tests/**/*.ts'],
+    files: ['./tests/**/*.ts'],
     languageOptions: {
       parserOptions: {
         projectService: false,
@@ -90,7 +90,7 @@ export default tseslint.config(
   },
 
   {
-    files: ['_generated/tests/**/*.ts'],
+    files: ['./tests/**/*.ts'],
     rules: {
       '@typescript-eslint/no-unsafe-call': 'off',
       '@typescript-eslint/no-unsafe-member-access': 'off',
@@ -114,7 +114,7 @@ export default tseslint.config(
   },
 
   {
-    files: ['_generated/**/*.tsx'],
+    files: ['**/*.tsx'],
     ...solid,
   },
 

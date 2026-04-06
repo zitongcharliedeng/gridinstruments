@@ -35,7 +35,7 @@
               ln -s ${npmDeps}/node_modules ./node_modules
               export PATH="${npmDeps}/node_modules/.bin:$PATH"
               tsc --noEmit
-              eslint _generated/
+              eslint .
             '';
             nativeBuildInputs = [ pkgs.nodejs_22 ];
           }

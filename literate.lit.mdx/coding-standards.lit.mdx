@@ -28,7 +28,7 @@ rule:
               pattern: "overflow: auto"
         stopBy: end
 files:
-  - "_generated/**"
+  - "**"
   - "index.html"
 severity: error
 message: "position:absolute inside overflow:auto container — the element will render at BOTH positions in some browsers. Use position:sticky instead."
@@ -45,11 +45,11 @@ language: typescript
 rule:
   pattern: $EXPR as any
 files:
-  - "_generated/components/**"
-  - "_generated/lib/**"
-  - "_generated/app-core.ts"
-  - "_generated/main.ts"
-  - "_generated/machines/**"
+  - "components/**"
+  - "lib/**"
+  - "app-core.ts"
+  - "main.ts"
+  - "machines/**"
 severity: error
 message: "'as any' is banned — use proper types or 'unknown' with type narrowing."
 note: "See CLAUDE.md heavenly restrictions: no 'as any'."
@@ -65,7 +65,7 @@ language: typescript
 rule:
   pattern: $EL.appendChild($$$)
 files:
-  - "_generated/components/**"
+  - "components/**"
 severity: warning
 message: "appendChild in SolidJS component — use JSX children instead of imperative DOM insertion."
 ```
@@ -80,7 +80,7 @@ language: typescript
 rule:
   pattern: "export async function $NAME($$$): $RET {$$$}"
 files:
-  - "_generated/components/**"
+  - "components/**"
 severity: error
 message: "SolidJS components must be synchronous — async data loading belongs in createResource or parent."
 ```
@@ -95,7 +95,7 @@ language: css
 rule:
   pattern: "border-radius: $VAL"
 files:
-  - "_generated/**"
+  - "**"
   - "index.html"
 severity: error
 message: "border-radius is banned — the design language uses sharp corners only."
@@ -116,7 +116,7 @@ rule:
         - has:
             pattern: render()
 files:
-  - "_generated/components/**"
+  - "components/**"
 severity: error
 message: "Class components are banned — use SolidJS functional components."
 ```
@@ -138,8 +138,8 @@ rule:
             - pattern: "$ACTOR.subscribe($$$)"
           stopBy: end
 files:
-  - "_generated/components/**"
-  - "_generated/main.ts"
+  - "components/**"
+  - "main.ts"
 severity: warning
 message: "classList.contains in non-subscriber code — use SolidJS classList prop for reactive class checking."
 ```
@@ -156,7 +156,7 @@ rule:
     - pattern: "'#fff'"
     - pattern: "'white'"
 files:
-  - "_generated/components/**"
+  - "components/**"
 severity: warning
 message: "Color literal in component TS — use CSS custom properties for theming consistency."
 ```
@@ -171,10 +171,10 @@ language: typescript
 rule:
   pattern: console.log($$$)
 files:
-  - "_generated/components/**"
-  - "_generated/lib/**"
-  - "_generated/app-core.ts"
-  - "_generated/main.ts"
+  - "components/**"
+  - "lib/**"
+  - "app-core.ts"
+  - "main.ts"
 severity: warning
 message: "console.log() should not ship in production code — use structured logging or remove."
 ```
@@ -189,7 +189,7 @@ language: typescript
 rule:
   pattern: document.createElement($$$)
 files:
-  - "_generated/components/**"
+  - "components/**"
 severity: warning
 message: "createElement in SolidJS component — use JSX instead of imperative element creation."
 ```
@@ -218,8 +218,8 @@ rule:
               pattern: "_d4Hz"
               stopBy: end
 files:
-  - "_generated/components/**"
-  - "_generated/lib/**"
+  - "components/**"
+  - "lib/**"
 severity: error
 message: "String 'D4' in component code — use 'D-ref' for user-facing text. Legacy API names (setD4Hz/getD4Hz) are allowed."
 note: "See CLAUDE.md: D-ref naming convention. The reference pitch is adjustable, not fixed to D4."
@@ -235,7 +235,7 @@ language: typescript
 rule:
   pattern: debugger
 files:
-  - "_generated/**"
+  - "**"
 severity: error
 message: "debugger statement must not ship in production code."
 ```
@@ -253,7 +253,7 @@ language: TypeScript
 rule:
   kind: program
 files:
-  - "_generated/**/*.ts"
+  - "**/*.ts"
 ```
 
 ## No Document Queryselector In Components
@@ -268,7 +268,7 @@ rule:
     - pattern: document.querySelector($$$)
     - pattern: document.querySelectorAll($$$)
 files:
-  - "_generated/components/**"
+  - "components/**"
 severity: warning
 message: "document.querySelector in SolidJS components — use refs or getElementById with known IDs."
 note: "SolidJS components should use ref props for DOM access, not global queries."
@@ -284,7 +284,7 @@ language: typescript
 rule:
   pattern: document.write($$$)
 files:
-  - "_generated/**"
+  - "**"
 severity: error
 message: "document.write() is banned — use DOM APIs instead."
 ```
@@ -305,7 +305,7 @@ rule:
       - pattern: $A == null
       - pattern: $A != null
 files:
-  - "_generated/**"
+  - "**"
 severity: warning
 message: "Use === instead of == (except for null checks). Strict equality prevents type coercion bugs."
 ```
@@ -320,9 +320,9 @@ language: typescript
 rule:
   pattern: import $$$FROM from 'effect'
 files:
-  - "_generated/**/*.ts"
+  - "**/*.ts"
 ignores:
-  - "_generated/services/**/*.ts"
+  - "services/**/*.ts"
 severity: error
 message: "Effect-TS imports are only allowed in _generated/services/. Banned from synth hot path, render loop, pure math, and state machines."
 note: "Move Effect-TS usage to _generated/services/. See AGENTS.md Literate Programming section."
@@ -338,7 +338,7 @@ language: typescript
 rule:
   pattern: eval($$$)
 files:
-  - "_generated/**"
+  - "**"
 severity: error
 message: "eval() is banned — use structured code, not string evaluation."
 note: "XSS and CSP violation risk."
@@ -361,7 +361,7 @@ rule:
           - has:
               pattern: "JetBrains Mono"
 files:
-  - "_generated/**"
+  - "**"
 severity: error
 message: "font-family must use var(--font) or 'JetBrains Mono' — no other fonts allowed."
 note: "See CLAUDE.md: JetBrains Mono is the only allowed font."
@@ -381,7 +381,7 @@ rule:
   not:
     pattern: window.dcomposeApp = $VAL
 files:
-  - "_generated/**"
+  - "**"
 severity: warning
 message: "Global mutation — only window.dcomposeApp is allowed. Use module scope or DI for state."
 ```
@@ -414,7 +414,7 @@ language: css
 rule:
   pattern: "!important"
 files:
-  - "_generated/components/*.css"
+  - "components/*.css"
 severity: warning
 message: "!important in component CSS — use specificity or ui-overrides.css for OverlayScrollbars fixes."
 note: "Only ui-overrides.css should use !important (for OverlayScrollbars position fixes)."
@@ -450,7 +450,7 @@ language: typescript
 rule:
   pattern: "$EL.outerHTML = $VAL"
 files:
-  - "_generated/**"
+  - "**"
 severity: error
 message: "outerHTML assignment is banned — use DOM APIs."
 ```
@@ -475,8 +475,8 @@ rule:
             - pattern: "loadSetting($$$)"
           stopBy: end
 files:
-  - "_generated/components/**"
-  - "_generated/lib/**"
+  - "components/**"
+  - "lib/**"
 severity: warning
 message: "Direct localStorage access in components — use app-core saveSetting/loadSetting for consistent key prefixing."
 ```
@@ -496,9 +496,9 @@ rule:
           pattern: $ACTOR.subscribe($$$)
           stopBy: end
 files:
-  - "_generated/components/**"
-  - "_generated/lib/**"
-  - "_generated/main.ts"
+  - "components/**"
+  - "lib/**"
+  - "main.ts"
 severity: warning
 message: "setTimeout in component/library code — prefer XState delayed transitions or actor-based timing."
 note: "XState handles timing declaratively. setTimeout creates hidden state outside the machine."
@@ -514,8 +514,8 @@ language: typescript
 rule:
   pattern: new MutationObserver($$$)
 files:
-  - "_generated/components/**"
-  - "_generated/lib/**"
+  - "components/**"
+  - "lib/**"
 severity: warning
 message: "MutationObserver — use SolidJS reactivity or XState subscriptions instead of observing DOM mutations."
 ```
@@ -533,14 +533,14 @@ rule:
     - pattern: new AudioContext($OPTS)
     - pattern: navigator.requestMIDIAccess($$$)
 files:
-  - "_generated/**/*.ts"
+  - "**/*.ts"
 ignores:
-  - "_generated/lib/synth.ts"
-  - "_generated/lib/midi-input.ts"
-  - "_generated/lib/mpe-output.ts"
-  - "_generated/lib/mpe-service.ts"
-  - "_generated/main.ts"
-  - "_generated/services/**/*.ts"
+  - "lib/synth.ts"
+  - "lib/midi-input.ts"
+  - "lib/mpe-output.ts"
+  - "lib/mpe-service.ts"
+  - "main.ts"
+  - "services/**/*.ts"
 severity: warning
 message: "Direct browser API usage should be wrapped in Effect services (_generated/services/). This warning will become an error in Wave 8."
 note: "See AGENTS.md for Effect-TS service layer guidance."
@@ -572,7 +572,7 @@ language: typescript
 rule:
   pattern: "$A ? $B : $C ? $D : $E"
 files:
-  - "_generated/**"
+  - "**"
 severity: warning
 message: "Nested ternary — use if/else or early return for readability."
 ```
@@ -603,7 +603,7 @@ language: typescript
 rule:
   pattern: new Promise($$$)
 files:
-  - "_generated/components/**"
+  - "components/**"
 severity: warning
 message: "Promise constructor in components — prefer async/await or createResource for SolidJS data fetching."
 ```
@@ -633,7 +633,7 @@ rule:
           - has:
               pattern: "8px"
 files:
-  - "_generated/**"
+  - "**"
 severity: warning
 message: "Non-standard font-size — use 8/9/10/11/12/16px for consistency."
 ```
@@ -653,9 +653,9 @@ rule:
           pattern: $ACTOR.subscribe($$$)
           stopBy: end
 files:
-  - "_generated/components/**"
-  - "_generated/lib/**"
-  - "_generated/main.ts"
+  - "components/**"
+  - "lib/**"
+  - "main.ts"
 severity: error
 message: "classList.add() is banned in main.ts — use XState actor.send() and handle DOM in the subscriber."
 note: "All UI state must be managed by XState actors. See _generated/machines/ for examples."
@@ -676,9 +676,9 @@ rule:
           pattern: $ACTOR.subscribe($$$)
           stopBy: end
 files:
-  - "_generated/components/**"
-  - "_generated/lib/**"
-  - "_generated/main.ts"
+  - "components/**"
+  - "lib/**"
+  - "main.ts"
 severity: error
 message: "classList.remove() is banned in main.ts — use XState actor.send() and handle DOM in the subscriber."
 note: "All UI state must be managed by XState actors. See _generated/machines/ for examples."
@@ -707,9 +707,9 @@ rule:
           kind: method_definition
           stopBy: end
 files:
-  - "_generated/components/**"
-  - "_generated/lib/**"
-  - "_generated/main.ts"
+  - "components/**"
+  - "lib/**"
+  - "main.ts"
 severity: error
 message: "classList.toggle() is banned in main.ts — use XState actor.send() and handle DOM in the subscriber."
 note: "All UI state must be managed by XState actors. See _generated/machines/ for examples."
@@ -730,9 +730,9 @@ rule:
           pattern: $ACTOR.subscribe($$$)
           stopBy: end
 files:
-  - "_generated/components/**"
-  - "_generated/lib/**"
-  - "_generated/main.ts"
+  - "components/**"
+  - "lib/**"
+  - "main.ts"
 severity: error
 message: "Direct .disabled assignment is banned in main.ts — use XState actor.send() and handle DOM in the subscriber."
 note: "All UI state must be managed by XState actors. See _generated/machines/ for examples."
@@ -790,9 +790,9 @@ rule:
           pattern: $ACTOR.subscribe($$$)
           stopBy: end
 files:
-  - "_generated/components/**"
-  - "_generated/lib/**"
-  - "_generated/main.ts"
+  - "components/**"
+  - "lib/**"
+  - "main.ts"
 severity: error
 message: "Direct .hidden assignment is banned in main.ts — use XState actor.send() and handle DOM in the subscriber."
 note: "All UI state must be managed by XState actors. See _generated/machines/ for examples."
@@ -821,9 +821,9 @@ rule:
           kind: method_definition
           stopBy: end
 files:
-  - "_generated/components/**"
-  - "_generated/lib/**"
-  - "_generated/main.ts"
+  - "components/**"
+  - "lib/**"
+  - "main.ts"
 severity: error
 message: "innerHTML assignment is banned in main.ts — use XState actor.send() and handle DOM in the subscriber."
 note: "All UI state must be managed by XState actors. See _generated/machines/ for examples."
@@ -846,7 +846,7 @@ rule:
           pattern: $ACTOR.subscribe($$$)
           stopBy: end
 files:
-  - "_generated/main.ts"
+  - "main.ts"
 severity: error
 message: "setAttribute()/removeAttribute() is banned in main.ts — use XState actor.send() and handle DOM in the subscriber."
 note: "All UI state must be managed by XState actors. See _generated/machines/ for examples."
@@ -892,9 +892,9 @@ rule:
           kind: method_definition
           stopBy: end
 files:
-  - "_generated/components/**"
-  - "_generated/lib/**"
-  - "_generated/main.ts"
+  - "components/**"
+  - "lib/**"
+  - "main.ts"
 severity: error
 message: "Direct style mutation is banned in main.ts — use XState actor.send() and handle DOM in the subscriber."
 note: "All UI state must be managed by XState actors. See _generated/machines/ for examples."
@@ -923,9 +923,9 @@ rule:
           kind: method_definition
           stopBy: end
 files:
-  - "_generated/components/**"
-  - "_generated/lib/**"
-  - "_generated/main.ts"
+  - "components/**"
+  - "lib/**"
+  - "main.ts"
 severity: error
 message: "textContent assignment is banned in main.ts — use XState actor.send() and handle DOM in the subscriber."
 note: "All UI state must be managed by XState actors. See _generated/machines/ for examples."
@@ -960,7 +960,7 @@ language: typescript
 rule:
   pattern: $EL.removeChild($$$)
 files:
-  - "_generated/components/**"
+  - "components/**"
 severity: warning
 message: "removeChild in SolidJS component — use Show/For conditionals instead of imperative DOM removal."
 ```
@@ -980,7 +980,7 @@ message: |
   ResizeObserver is a DOM observer outside the reactive system.
 severity: error
 files:
-  - "_generated/components/**"
+  - "components/**"
 ```
 
 ## No Scroll Overflow Auto
@@ -1023,7 +1023,7 @@ message: |
   and creates race conditions with framework reactivity.
 severity: error
 files:
-  - "_generated/components/**"
+  - "components/**"
 ```
 
 ## No Sync Xhr
@@ -1036,7 +1036,7 @@ language: typescript
 rule:
   pattern: new XMLHttpRequest()
 files:
-  - "_generated/**"
+  - "**"
 severity: error
 message: "XMLHttpRequest is banned — use fetch() API."
 ```
@@ -1051,7 +1051,7 @@ language: typescript
 rule:
   pattern: "throw '$MSG'"
 files:
-  - "_generated/**"
+  - "**"
 severity: error
 message: "throw string literal — use throw new Error(msg) for proper stack traces."
 ```
@@ -1065,13 +1065,13 @@ id: no-ts-comments
 message: |
   Use literate prose instead of code comments. End the code block, write markdown, resume:
 
-  ``` {.typescript file=_generated/example.ts}
+  ``` {.typescript file=example.ts}
   const a = computeValue();
   ```
 
   Explain WHY `a` is computed this way, with [MDN links](https://developer.mozilla.org) etc.
 
-  ``` {.typescript file=_generated/example.ts}
+  ``` {.typescript file=example.ts}
   const b = a * KNOWN_CONSTANT;
   ```
 
@@ -1123,7 +1123,7 @@ language: typescript
 rule:
   pattern: "var $NAME = $INIT"
 files:
-  - "_generated/**"
+  - "**"
 severity: error
 message: "'var' is banned — use 'const' or 'let' for proper block scoping."
 ```
@@ -1141,7 +1141,7 @@ rule:
     - pattern: "-moz-$PROP: $VAL"
     - pattern: "-ms-$PROP: $VAL"
 files:
-  - "_generated/**"
+  - "**"
   - "index.html"
 severity: error
 message: "Vendor-prefixed CSS is banned — use only standard properties that work identically in ALL browsers."
@@ -1164,7 +1164,7 @@ rule:
     - pattern: prompt($$$)
     - pattern: window.prompt($$$)
 files:
-  - "_generated/**"
+  - "**"
 severity: error
 message: "Native browser dialogs (alert/confirm/prompt) are banned — use custom UI components."
 ```

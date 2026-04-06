@@ -54,7 +54,7 @@ The conversion pipeline is: **OKLCH -> OKLAB -> LMS -> linear sRGB -> gamma sRGB
 5. Linear to gamma sRGB: apply the
    [sRGB transfer function](https://en.wikipedia.org/wiki/SRGB#Transfer_function_(%22gamma%22))
 
-``` {.typescript file=_generated/lib/note-colors.ts}
+``` {.typescript file=lib/note-colors.ts}
 import { D_REF_MIDI } from './keyboard-layouts';
 
 function oklchToRgb(L: number, C: number, H: number): [number, number, number] {
@@ -94,7 +94,7 @@ The `oklchToRgb` result is a triple of 0-255 integers. Two helpers turn that
 into the `#rrggbb` hex format used by the Canvas 2D API, and provide a
 convenient single-call `oklch(L, C, H)` shorthand.
 
-``` {.typescript file=_generated/lib/note-colors.ts}
+``` {.typescript file=lib/note-colors.ts}
 
 function rgbToHex(r: number, g: number, b: number): string {
   return '#' + [r, g, b].map(v => v.toString(16).padStart(2, '0')).join('');
@@ -123,7 +123,7 @@ hue by first recovering the pitch class. Each step on the x-axis is 7 semitones
 `((n % 12) + 12) % 12` handles negative coordinates correctly in JavaScript
 (where `%` can return negative values).
 
-``` {.typescript file=_generated/lib/note-colors.ts}
+``` {.typescript file=lib/note-colors.ts}
 
 
 function pcHue(pc: number): number {
@@ -168,7 +168,7 @@ circle-of-fifths position relative to D:
 This table is the inverse of the `chromaticHue` mapping: given a MIDI note, find
 its pitch class, look up the CoF position, then compute the grid coordinate.
 
-``` {.typescript file=_generated/lib/note-colors.ts}
+``` {.typescript file=lib/note-colors.ts}
 
 
 const COF_FROM_PC: readonly number[] = [
@@ -204,7 +204,7 @@ Lightness 0.72 with chroma 0.19 produces saturated, clearly distinguishable
 colors. The dim variant drops to lightness 0.32 and chroma 0.07 for a subtle
 background presence without visual clutter.
 
-``` {.typescript file=_generated/lib/note-colors.ts}
+``` {.typescript file=lib/note-colors.ts}
 
 
 export const NOTE_COLORS: readonly string[] = Array.from({ length: 12 }, (_, pc) =>
@@ -223,7 +223,7 @@ safe double-modulo pattern, then returns a pre-computed hex string. When an alph
 value other than 1 is needed (for transparency effects), it falls back to
 computing an `rgba()` string on the fly.
 
-``` {.typescript file=_generated/lib/note-colors.ts}
+``` {.typescript file=lib/note-colors.ts}
 
 
 export function noteColor(midiNote: number, alpha = 1): string {
@@ -241,7 +241,7 @@ export function noteColor(midiNote: number, alpha = 1): string {
 a vivid hex color. This is used by the grid renderer when it knows the coordinate
 but not the MIDI note number.
 
-``` {.typescript file=_generated/lib/note-colors.ts}
+``` {.typescript file=lib/note-colors.ts}
 
 export function colorFromCoordX(coordX: number): string {
   return oklch(0.72, 0.19, chromaticHue(coordX));
@@ -279,7 +279,7 @@ The OKLCH parameters for each state:
 The uncalibrated states use chroma 0 (greyscale) because lightness is reserved
 for MPE pressure visualization once calibration is complete.
 
-``` {.typescript file=_generated/lib/note-colors.ts}
+``` {.typescript file=lib/note-colors.ts}
 
 export function cellColors(
   coordX: number,
@@ -328,7 +328,7 @@ hue angle directly, bypassing the coordinate-to-hue lookup. This is used by
 the keyboard visualizer when it has already interpolated the hue from a pitch
 bend and does not want the hue recomputed from a grid coordinate.
 
-``` {.typescript file=_generated/lib/note-colors.ts}
+``` {.typescript file=lib/note-colors.ts}
 
 export function lerpHue(h0: number, h1: number, t: number): number {
   const ct = Math.max(0, Math.min(1, t));
@@ -390,7 +390,7 @@ pitch-cents formula:
 
 where `pitchCents = (midi - 62) * 100` measures the interval from D4 in cents.
 
-``` {.typescript file=_generated/lib/note-colors.ts}
+``` {.typescript file=lib/note-colors.ts}
 
 export function pitchClassFromCoordX(coordX: number): number {
   return ((2 + coordX * 7) % 12 + 12) % 12;

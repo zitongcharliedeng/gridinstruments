@@ -15,7 +15,7 @@ Screenshot comparison tolerances are deliberately loose (`maxDiffPixelRatio: 0.1
 ```{.typescript file=playwright.config.ts}
 import { defineConfig, devices } from '@playwright/test';
 export default defineConfig({
-  testDir: './_generated/tests',
+  testDir: './tests',
   snapshotDir: './tests',
   testMatch: ['**/xstate-graph.spec.ts'],
   timeout: 60_000,

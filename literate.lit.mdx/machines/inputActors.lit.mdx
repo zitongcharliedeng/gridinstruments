@@ -8,7 +8,7 @@ Dual-cleanup pattern is used throughout per XState `fromCallback` bug #5433: bot
 
 The internal `CleanupEvent` is sent by a parent machine to request early teardown. It is not part of the public AppEvent union.
 
-``` {.typescript file=_generated/machines/inputActors.ts}
+``` {.typescript file=machines/inputActors.ts}
 import { fromCallback } from 'xstate';
 import type {
   KeyDownEvent,
@@ -27,7 +27,7 @@ interface CleanupEvent { type: 'CLEANUP' }
 
 Listens for `keydown`/`keyup` on `document` and sends `KEY_DOWN`/`KEY_UP` events. Repeated keys (`e.repeat === true`) and events originating in `HTMLInputElement` or `HTMLSelectElement` are filtered out so text fields are not intercepted.
 
-``` {.typescript file=_generated/machines/inputActors.ts}
+``` {.typescript file=machines/inputActors.ts}
 export const keyboardListener = fromCallback<CleanupEvent>(
   ({ sendBack, receive }) => {
     const onKeyDown = (e: KeyboardEvent): void => {
@@ -71,7 +71,7 @@ Attaches pointer event listeners to the provided canvas. `POINTER_MOVE` is throt
 
 `pointerleave` and `pointercancel` are both mapped to `POINTER_UP` so the machine always receives a clean terminal event for every active pointer.
 
-``` {.typescript file=_generated/machines/inputActors.ts}
+``` {.typescript file=machines/inputActors.ts}
 export interface PointerListenerInput {
   canvas: HTMLCanvasElement;
 }
@@ -96,7 +96,7 @@ export const pointerListener = fromCallback<CleanupEvent, PointerListenerInput>(
 
 `pointerdown` records the initial position in `lastSent` so subsequent move throttling has a reference point. `pointermove` is only forwarded when the pointer has crossed the cell-size threshold or pressure changed enough — preventing the >30 Hz XState event flood anti-pattern.
 
-``` {.typescript file=_generated/machines/inputActors.ts}
+``` {.typescript file=machines/inputActors.ts}
     const onPointerDown = (e: PointerEvent): void => {
       const { x, y } = getCanvasCoords(e);
       lastSent.set(e.pointerId, { x, y, pressure: e.pressure });
@@ -140,7 +140,7 @@ export const pointerListener = fromCallback<CleanupEvent, PointerListenerInput>(
 
 `pointerleave` and `pointercancel` are both mapped to `POINTER_UP` so the machine always receives a clean terminal event for every active pointer, even when the pointer exits the canvas boundary.
 
-``` {.typescript file=_generated/machines/inputActors.ts}
+``` {.typescript file=machines/inputActors.ts}
     const onPointerUp = (e: PointerEvent): void => {
       lastSent.delete(e.pointerId);
       const event: PointerUpEvent = { type: 'POINTER_UP', pointerId: e.pointerId };
@@ -168,7 +168,7 @@ export const pointerListener = fromCallback<CleanupEvent, PointerListenerInput>(
 
 Dual-cleanup mirrors the `midiInputListener` pattern — `receive` covers parent-initiated teardown, the return function covers normal actor stop.
 
-``` {.typescript file=_generated/machines/inputActors.ts}
+``` {.typescript file=machines/inputActors.ts}
     const removeListeners = (): void => {
       canvas.removeEventListener('pointerdown', onPointerDown);
       canvas.removeEventListener('pointermove', onPointerMove);
@@ -194,7 +194,7 @@ Dual-cleanup mirrors the `midiInputListener` pattern — `receive` covers parent
 
 Listens for `resize` and `blur` on the global `window`. `WINDOW_BLUR` is used to stop all active notes when the application loses focus (e.g. Alt+Tab), preventing stuck notes.
 
-``` {.typescript file=_generated/machines/inputActors.ts}
+``` {.typescript file=machines/inputActors.ts}
 export const windowListener = fromCallback<CleanupEvent>(
   ({ sendBack, receive }) => {
     const onResize = (): void => {

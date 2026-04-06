@@ -10,7 +10,7 @@ manipulation inside.
 
 ## Props Interface
 
-``` {.typescript file=_generated/components/SongBar.tsx}
+``` {.typescript file=components/SongBar.tsx}
 import { createSignal, type JSX } from 'solid-js';
 import { InfoBox } from './InfoBox';
 import { SettingsCog } from './SettingsCog';
@@ -75,7 +75,7 @@ sub-sections — search, status, and calibrate — are each inline-flex with a
 small gap. The active calibrate button inverts colors to signal the locked
 state. The dropping highlight provides visual feedback during MIDI drag-and-drop.
 
-``` {.css file=_generated/components/SongBar.css}
+``` {.css file=components/SongBar.css}
 #song-bar {
   display:inline-flex; align-items:center; gap:8px; padding:2px 0;
   font-size:11px; flex-wrap:wrap; margin-left:auto; max-width:700px;
@@ -93,7 +93,7 @@ Results render in an absolutely positioned dropdown. Each result row is a
 flex row with the title taking all available space and the source label
 pinned to the right. Hover uses the subtle background to confirm interactivity.
 
-``` {.css file=_generated/components/SongBar.css}
+``` {.css file=components/SongBar.css}
 .search-result {
   display:flex; justify-content:space-between; align-items:center;
   padding:4px 6px; cursor:pointer; font-family:var(--font);
@@ -113,7 +113,7 @@ icon. The results dropdown is hidden until the machine opens it. The max-keys
 input is a narrow inline text field. The search sub-section stacks as a column
 so the dropdown appears directly below the input row.
 
-``` {.css file=_generated/components/SongBar.css}
+``` {.css file=components/SongBar.css}
 #midi-search-input { width:200px; box-sizing:border-box; font-family:var(--font); font-size:10px; background:var(--bg); color:var(--fg); border:1px solid var(--border); padding:2px 6px 2px 22px; }
 #midi-search-results { position:absolute; top:100%; left:0; min-width:280px; max-height:300px; overflow-y:auto; background:var(--bg); border:1px solid var(--border); z-index:25; display:none; }
 #max-keys-input { width:3ch; font-family:var(--font); font-size:9px; background:var(--bg); color:var(--fg); border:1px solid var(--border); padding:1px 2px; text-align:center; }
@@ -127,7 +127,7 @@ at 160 px. The progress bar is a 2 px tall inline-block with a white fill child.
 The quantization badge and elapsed timer are dimmed metadata. The hint fades in
 after idle time via an opacity transition.
 
-``` {.css file=_generated/components/SongBar.css}
+``` {.css file=components/SongBar.css}
 #game-status { display:none; align-items:center; gap:8px; }
 #game-song-title { font-family:var(--font); font-size:10px; color:var(--fg); text-transform:uppercase; letter-spacing:0.06em; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:160px; }
 #game-progress { width:80px; height:2px; background:var(--border); position:relative; display:inline-block; vertical-align:middle; }
@@ -144,7 +144,7 @@ overlay the button without reflow. The confirm and cancel buttons use green
 and red accent colors. The warning label floats above the banner to signal
 edge-of-range conditions without blocking the action buttons.
 
-``` {.css file=_generated/components/SongBar.css}
+``` {.css file=components/SongBar.css}
 #calibrate-btn { font-family:var(--font); font-size:9px; background:none; color:var(--dim); border:1px solid var(--border); padding:2px 8px; cursor:pointer; white-space:nowrap; }
 #calibration-banner { display:none; font-family:var(--font); font-size:9px; gap:4px; align-items:center; white-space:nowrap; position:absolute; left:0; top:0; right:0; bottom:0; justify-content:center; background:var(--bg); z-index:1; }
 #calibration-warning { display:none; position:absolute; left:50%; top:-14px; transform:translateX(-50%); font-size:8px; color:var(--dim); white-space:nowrap; pointer-events:none; }
@@ -162,7 +162,7 @@ overlay. The file input is hidden and triggered programmatically. Game controls
 group the progress bar and badge. The upload button is a square icon button.
 The progress fill animates width smoothly at 0.1 s.
 
-``` {.css file=_generated/components/SongBar.css}
+``` {.css file=components/SongBar.css}
 .search-row { display:inline-flex; align-items:center; gap:4px; }
 .search-input-wrap { position:relative; display:inline-flex; align-items:center; }
 .search-icon { position:absolute; left:6px; width:12px; height:12px; color:var(--dim); pointer-events:none; }
@@ -188,7 +188,7 @@ magnifying-glass icon, and the results dropdown. The dropdown is absolutely
 positioned below the input wrapper so it overlays content below without pushing
 layout.
 
-``` {.typescript file=_generated/components/SongBar.tsx}
+``` {.typescript file=components/SongBar.tsx}
 
 export function SongBar(props: SongBarProps): JSX.Element {
   const [maxKeys, setMaxKeys] = createSignal(props.initialMaxKeys ?? 8);
@@ -223,7 +223,7 @@ file upload), game status (progress bar, timer, score), and calibrate (playable
 area range with confirm/cancel). Each section is independently visible and
 wraps on narrow screens.
 
-``` {.typescript file=_generated/components/SongBar.tsx}
+``` {.typescript file=components/SongBar.tsx}
 
   return (
     <div id="song-bar">
@@ -271,7 +271,7 @@ wraps on narrow screens.
 The status section shows the quantization dropdown and — when a game is
 active — the song title, progress bar, elapsed timer, and restart button.
 
-``` {.typescript file=_generated/components/SongBar.tsx}
+``` {.typescript file=components/SongBar.tsx}
 
       <div id="song-bar-status">
         <SettingsCog
@@ -352,7 +352,7 @@ The hint fades in when the user is idle — managed externally by toggling
 `style.opacity`. The calibrate section lets MIDI users define their playable
 range. The banner with confirm/cancel actions appears when calibration is active.
 
-``` {.typescript file=_generated/components/SongBar.tsx}
+``` {.typescript file=components/SongBar.tsx}
 
       <span id="song-bar-hint" />
 

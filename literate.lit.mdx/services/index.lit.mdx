@@ -8,7 +8,7 @@ Typed tags for AudioContext, Web MIDI, and Canvas 2D, plus their concrete `*Live
 
 Service contracts — consumers depend only on these tags.
 
-``` {.typescript file=_generated/services/index.ts}
+``` {.typescript file=services/index.ts}
 import { Context, Effect, Layer } from 'effect';
 
 
@@ -49,7 +49,7 @@ of Effect-returning functions — no effectful setup is needed at layer construc
 Wraps the Web Audio API. `createContext` instantiates a fresh `AudioContext`;
 the other methods delegate to its promise-based lifecycle methods.
 
-``` {.typescript file=_generated/services/index.ts}
+``` {.typescript file=services/index.ts}
 
 
 export const AudioServiceLive = Layer.succeed(
@@ -88,7 +88,7 @@ export const AudioServiceLive = Layer.succeed(
 Wraps `navigator.requestMIDIAccess` and iterates the `inputs`/`outputs` maps.
 Sysex is disabled by default — callers needing SysEx can provide a custom layer.
 
-``` {.typescript file=_generated/services/index.ts}
+``` {.typescript file=services/index.ts}
 
 export const MidiServiceLive = Layer.succeed(
   MidiService,
@@ -121,7 +121,7 @@ export const MidiServiceLive = Layer.succeed(
 `resizeToDisplaySize` matches the canvas backing store to its CSS display size,
 accounting for `devicePixelRatio`. Returns `true` if dimensions changed.
 
-``` {.typescript file=_generated/services/index.ts}
+``` {.typescript file=services/index.ts}
 
 export const CanvasServiceLive = Layer.succeed(
   CanvasService,

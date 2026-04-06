@@ -8,7 +8,7 @@ Lower zone only: manager channel = 1, member channels = 2–16 (15 voices). FIFO
 
 `MpeOutput` holds a reference to the active `MIDIAccess` and `MIDIOutput`, a FIFO queue of free member channels, a map from note IDs to allocated channels, and configuration for enable state and bend range.
 
-``` {.typescript file=_generated/lib/mpe-output.ts}
+``` {.typescript file=lib/mpe-output.ts}
 export class MpeOutput {
   private access: MIDIAccess | null = null;
   private output: MIDIOutput | null = null;
@@ -27,7 +27,7 @@ export class MpeOutput {
 
 `init` requests Web MIDI access. Failure is silently swallowed so the rest of the app works without MIDI hardware.
 
-``` {.typescript file=_generated/lib/mpe-output.ts}
+``` {.typescript file=lib/mpe-output.ts}
   async init(): Promise<void> {
     if (!('requestMIDIAccess' in navigator)) return;
     try {
@@ -41,7 +41,7 @@ export class MpeOutput {
 
 `setOutput` stores the selected output and immediately sends the MCM zone configuration. `getAvailableOutputs` enumerates all outputs from the MIDI access map. `setEnabled` / `isEnabled` gate all message sends; disabling fires an all-notes-off burst.
 
-``` {.typescript file=_generated/lib/mpe-output.ts}
+``` {.typescript file=lib/mpe-output.ts}
   setOutput(output: MIDIOutput | null): void {
     this.output = output;
     if (output) this.sendMCM();
@@ -72,7 +72,7 @@ export class MpeOutput {
 
 `allocate` pops the front of the free-channel queue and records the assignment. `release` pushes the channel back onto the tail, giving FIFO reuse order — the longest-idle channel is always picked next.
 
-``` {.typescript file=_generated/lib/mpe-output.ts}
+``` {.typescript file=lib/mpe-output.ts}
   private allocate(noteId: string): number | null {
     if (this.freeChannels.length === 0) return null;
     const ch = this.freeChannels.shift();
@@ -93,7 +93,7 @@ export class MpeOutput {
 
 `noteOn` allocates a member channel, resets its per-note state (pitch bend center, CC74 center, pressure zero), then sends the note-on. `noteOff` sends note-off with release velocity 64 and frees the channel.
 
-``` {.typescript file=_generated/lib/mpe-output.ts}
+``` {.typescript file=lib/mpe-output.ts}
   noteOn(noteId: string, midiNote: number, velocity: number): void {
     if (!this._enabled || !this.output) return;
     const ch = this.allocate(noteId);
@@ -122,7 +122,7 @@ export class MpeOutput {
 
 Per-note pressure (channel pressure / `0xD0`), slide (CC74 / `0xB0 74`), and pitch bend (`0xE0`). Pitch bend converts semitones to the 14-bit unsigned integer format required by the MIDI spec: `uint14 = round((normalized + 1) * 8191.5)`.
 
-``` {.typescript file=_generated/lib/mpe-output.ts}
+``` {.typescript file=lib/mpe-output.ts}
   sendPressure(noteId: string, pressure: number): void {
     if (!this._enabled || !this.output) return;
     const ch = this.channelByNoteId.get(noteId);
@@ -159,7 +159,7 @@ Per-note pressure (channel pressure / `0xD0`), slide (CC74 / `0xB0 74`), and pit
 
 `sendMCM` configures the MPE lower zone via RPN 0x00/0x06 (MPE Configuration Message) then disables the upper zone via channel 16. It then sends Pitch Bend Sensitivity (RPN 0x00/0x00) on the manager channel and on every member channel — some synths don't propagate the manager channel setting to members.
 
-``` {.typescript file=_generated/lib/mpe-output.ts}
+``` {.typescript file=lib/mpe-output.ts}
   sendMCM(): void {
     if (!this.output) return;
     this.output.send([0xB0, 101, 0]);
@@ -197,7 +197,7 @@ Per-note pressure (channel pressure / `0xD0`), slide (CC74 / `0xB0 74`), and pit
 
 `allNotesOff` sends CC123 on every member channel and resets the channel allocator. `dispose` additionally clears the output and access references.
 
-``` {.typescript file=_generated/lib/mpe-output.ts}
+``` {.typescript file=lib/mpe-output.ts}
   allNotesOff(): void {
     if (this.output) {
       for (let ch = 2; ch <= 16; ch++) {

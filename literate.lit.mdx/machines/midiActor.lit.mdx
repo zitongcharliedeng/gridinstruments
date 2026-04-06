@@ -8,7 +8,7 @@ Note on / note off are forwarded immediately (latency-critical). High-frequency 
 
 These events are produced by the actor and sent to its parent. They are not yet part of the root `AppEvent` union — wiring happens when the actor is invoked.
 
-``` {.typescript file=_generated/machines/midiActor.ts}
+``` {.typescript file=machines/midiActor.ts}
 import { fromCallback } from 'xstate';
 import type { MidiNoteOnEvent, MidiNoteOffEvent } from './types';
 import type {
@@ -59,7 +59,7 @@ interface MidiActorReceiveEvent {
 
 Expression CCs can arrive at >100 Hz from hardware controllers. Throttling at ~30 fps prevents saturating the XState event queue while keeping visual feedback smooth.
 
-``` {.typescript file=_generated/machines/midiActor.ts}
+``` {.typescript file=machines/midiActor.ts}
 const THROTTLE_MS = 33;
 ```
 
@@ -69,7 +69,7 @@ The actor registers six callbacks on the `MidiInput` instance. Note on/off are f
 
 Dual-cleanup pattern per XState `fromCallback` bug #5433: the `receive` handler covers explicit early teardown from the parent; the return value covers normal actor stop.
 
-``` {.typescript file=_generated/machines/midiActor.ts}
+``` {.typescript file=machines/midiActor.ts}
 export const midiInputListener = fromCallback<
   MidiActorReceiveEvent,
   { midi: MidiInput }
@@ -81,7 +81,7 @@ export const midiInputListener = fromCallback<
 
 Note on/off and device status changes are forwarded unthrottled — they are low-frequency and must arrive immediately. The `disposed` flag guards the expression callbacks below.
 
-``` {.typescript file=_generated/machines/midiActor.ts}
+``` {.typescript file=machines/midiActor.ts}
   const onNoteOn: MidiNoteCallback = (note, velocity, channel, deviceId) => {
     sendBack({ type: 'MIDI_NOTE_ON', note, velocity, channel, deviceId });
   };
@@ -101,7 +101,7 @@ Note on/off and device status changes are forwarded unthrottled — they are low
 
 Expression CCs (pitch bend, slide, pressure) can arrive above 100 Hz from hardware. Each is throttled independently at ~30 fps using a per-type timestamp. The `disposed` check is necessary because `MidiInput` has no `removePitchBend`/`removeSlide`/`removePressure` methods.
 
-``` {.typescript file=_generated/machines/midiActor.ts}
+``` {.typescript file=machines/midiActor.ts}
   const onPitchBend: MidiExpressionCallback = (channel, value) => {
     if (disposed) return;
     const now = performance.now();
@@ -136,7 +136,7 @@ Expression CCs (pitch bend, slide, pressure) can arrive above 100 Hz from hardwa
 
 Dual-cleanup pattern per XState `fromCallback` bug #5433: `receive` covers explicit early teardown from the parent machine; the returned function covers normal actor stop. Both paths call the same `cleanup`.
 
-``` {.typescript file=_generated/machines/midiActor.ts}
+``` {.typescript file=machines/midiActor.ts}
   const cleanup = (): void => {
     disposed = true;
     midi.removeNoteOn(onNoteOn);

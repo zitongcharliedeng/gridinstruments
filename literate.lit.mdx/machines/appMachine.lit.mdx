@@ -6,7 +6,7 @@ badgeText, labelText, editing) and handles `SLIDER_INPUT`, `SLIDER_RESET`, and
 
 ## Imports
 
-``` {.typescript file=_generated/machines/appMachine.ts}
+``` {.typescript file=machines/appMachine.ts}
 import { setup, fromPromise, assign, assertEvent } from 'xstate';
 import type { AppContext, AppEvent, SliderName, SliderState } from './types';
 import type { Synth } from '../lib/synth';
@@ -17,7 +17,7 @@ import type { Synth } from '../lib/synth';
 `formatBadge` produces the compact string shown in the thumb badge; `formatLabel` produces
 the longer track label, which may include unit annotations or named landmarks.
 
-``` {.typescript file=_generated/machines/appMachine.ts}
+``` {.typescript file=machines/appMachine.ts}
 function formatBadge(slider: SliderName, v: number): string {
   switch (slider) {
     case 'tuning': return v.toFixed(1);
@@ -42,7 +42,7 @@ function formatLabel(slider: SliderName, v: number): string {
 Default numeric values for each slider, used by `SLIDER_RESET` when no dynamic default is
 available (zoom uses `context.defaultZoom` instead).
 
-``` {.typescript file=_generated/machines/appMachine.ts}
+``` {.typescript file=machines/appMachine.ts}
 const SLIDER_DEFAULTS: Record<SliderName, number> = {
   tuning: 700,
   skew:   0,
@@ -59,7 +59,7 @@ const SLIDER_DEFAULTS: Record<SliderName, number> = {
 The `initAudio` actor resolves the Web Audio context. It is defined here so the type system
 knows about it, even though it is not yet invoked by a state transition.
 
-``` {.typescript file=_generated/machines/appMachine.ts}
+``` {.typescript file=machines/appMachine.ts}
 export const appMachine = setup({
   types: {
     context: {} as AppContext,
@@ -76,7 +76,7 @@ export const appMachine = setup({
 
 Slider actions recompute the full `SliderState` — value, badge text, and label text — in one `assign`. `handleSliderReset` treats zoom specially: its default comes from `context.defaultZoom` (caller-supplied) rather than the compile-time constants.
 
-``` {.typescript file=_generated/machines/appMachine.ts}
+``` {.typescript file=machines/appMachine.ts}
     handleSliderInput: assign(({ context, event }) => {
       assertEvent(event, 'SLIDER_INPUT');
       const newSliders = { ...context.sliders };
@@ -122,7 +122,7 @@ Slider actions recompute the full `SliderState` — value, badge text, and label
 
 The remaining actions cover MIDI panel, MPE, waveform, layout, and window blur. `handleWindowBlur` resets all transient note and pointer state so no notes get stuck when the app loses focus.
 
-``` {.typescript file=_generated/machines/appMachine.ts}
+``` {.typescript file=machines/appMachine.ts}
     handleMidiPanelToggle: assign(({ context }) => ({
       midiPanelOpen: !context.midiPanelOpen,
     })),
@@ -162,7 +162,7 @@ The remaining actions cover MIDI panel, MPE, waveform, layout, and window blur. 
 Context is initialised from the `input` object passed at actor creation time. Volume and zoom
 use the caller-supplied values; all other sliders start at their compile-time defaults.
 
-``` {.typescript file=_generated/machines/appMachine.ts}
+``` {.typescript file=machines/appMachine.ts}
 }).createMachine({
   id: 'dcompose',
   context: ({ input }) => ({
@@ -198,7 +198,7 @@ use the caller-supplied values; all other sliders start at their compile-time de
 Both `uninitialized` and `audioReady` accept the same set of events. The `AUDIO_READY`
 transition moves the machine from `uninitialized` to `audioReady` and is a one-way door.
 
-``` {.typescript file=_generated/machines/appMachine.ts}
+``` {.typescript file=machines/appMachine.ts}
   initial: 'uninitialized',
   states: {
     uninitialized: {

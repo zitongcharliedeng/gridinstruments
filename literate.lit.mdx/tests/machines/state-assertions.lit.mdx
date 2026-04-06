@@ -4,7 +4,7 @@ Unified state assertion registry for XState graph test generation — single loo
 
 The module imports all per-machine assertion triples (actions, invariants, domAssertions) from the central uiMachine barrel, plus the shared Page type from Playwright.
 
-``` {.typescript file=_generated/tests/machines/state-assertions.ts}
+``` {.typescript file=tests/machines/state-assertions.ts}
 import type { Page } from '@playwright/test';
 
 import {
@@ -40,7 +40,7 @@ import {
 
 The second half of the import list brings in the slider, dialog, and newer machine triples — skew label, all four sliders, about dialog, D-ref input, modifier compound, layout persistence, viewport, and song bar.
 
-``` {.typescript file=_generated/tests/machines/state-assertions.ts}
+``` {.typescript file=tests/machines/state-assertions.ts}
   skewLabelPlaywrightActions,
   skewLabelInvariants,
   skewLabelDomAssertions,
@@ -79,7 +79,7 @@ The second half of the import list brings in the slider, dialog, and newer machi
 
 `MachineAssertionKit` bundles the three assertion surfaces for one machine. The `registry` object maps each machine name to its kit, providing O(1) lookup by name string.
 
-``` {.typescript file=_generated/tests/machines/state-assertions.ts}
+``` {.typescript file=tests/machines/state-assertions.ts}
 export interface MachineAssertionKit {
   actions: Partial<Record<string, (page: Page) => Promise<void>>>;
   invariants: Partial<Record<string, string>>;
@@ -89,7 +89,7 @@ export interface MachineAssertionKit {
 
 The registry's first half covers the core UI machines: overlay, visualiser, pedals, waveform, sustain, vibrato, MIDI panel, MPE, and text-input focus.
 
-``` {.typescript file=_generated/tests/machines/state-assertions.ts}
+``` {.typescript file=tests/machines/state-assertions.ts}
 const registry: Partial<Record<string, MachineAssertionKit>> = {
   overlay: {
     actions: overlayPlaywrightActions,
@@ -140,7 +140,7 @@ const registry: Partial<Record<string, MachineAssertionKit>> = {
 
 The second half of the registry maps the slider, dialog, and newer machines — skew label, the four slider resets, about dialog, D-ref input, modifier compound, layout persistence, viewport, and song bar.
 
-``` {.typescript file=_generated/tests/machines/state-assertions.ts}
+``` {.typescript file=tests/machines/state-assertions.ts}
   skewLabel: {
     actions: skewLabelPlaywrightActions,
     invariants: skewLabelInvariants,
@@ -175,7 +175,7 @@ The second half of the registry maps the slider, dialog, and newer machines — 
 
 The final registry entries cover the newer interaction machines — D-ref frequency input, compound modifier keys, panel layout persistence, responsive viewport states, and the song-bar game mode.
 
-``` {.typescript file=_generated/tests/machines/state-assertions.ts}
+``` {.typescript file=tests/machines/state-assertions.ts}
   drefInput: {
     actions: drefInputPlaywrightActions,
     invariants: drefInputInvariants,
@@ -206,7 +206,7 @@ The final registry entries cover the newer interaction machines — D-ref freque
 
 The four exported lookup functions provide the public API consumed by the graph-generated test runner — `getKit` for bulk access, `getAction` for event dispatch, `assertDomState` for state verification, and `getInvariant` for LLM prompt text.
 
-``` {.typescript file=_generated/tests/machines/state-assertions.ts}
+``` {.typescript file=tests/machines/state-assertions.ts}
 export function getKit(machineName: string): MachineAssertionKit {
   const kit = registry[machineName];
   if (!kit) throw new Error(`Unknown machine: ${machineName}`);

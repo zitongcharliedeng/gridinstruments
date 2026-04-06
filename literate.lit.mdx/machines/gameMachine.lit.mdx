@@ -9,7 +9,7 @@ it was the last group. Wrong notes are silently ignored.
 
 ## Imports
 
-``` {.typescript file=_generated/machines/gameMachine.ts}
+``` {.typescript file=machines/gameMachine.ts}
 import { setup, assign, assertEvent, and } from 'xstate';
 ```
 
@@ -17,7 +17,7 @@ import { setup, assign, assertEvent, and } from 'xstate';
 
 A single note in game coordinates, ready for grid display.
 
-``` {.typescript file=_generated/machines/gameMachine.ts}
+``` {.typescript file=machines/gameMachine.ts}
 export interface GameNote {
   cellId: string;
   midiNote: number;
@@ -28,7 +28,7 @@ export interface GameNote {
 
 A chord group — one or more simultaneous notes that glow together on the grid.
 
-``` {.typescript file=_generated/machines/gameMachine.ts}
+``` {.typescript file=machines/gameMachine.ts}
 export interface NoteGroup {
   cellIds: string[];
   midiNotes: number[];
@@ -41,7 +41,7 @@ MIDI notes the player has satisfied so far in the current chord group. This is
 separate from `pressedCellIds` because mirror cells (different grid positions
 producing the same 12-TET pitch) should count toward chord completion.
 
-``` {.typescript file=_generated/machines/gameMachine.ts}
+``` {.typescript file=machines/gameMachine.ts}
 export interface GameContext {
   noteGroups: NoteGroup[];
   currentGroupIndex: number;
@@ -57,7 +57,7 @@ export interface GameContext {
 
 The discriminated union of all events the game machine accepts.
 
-``` {.typescript file=_generated/machines/gameMachine.ts}
+``` {.typescript file=machines/gameMachine.ts}
 export type GameEvent =
   | { type: 'FILE_DROPPED'; file: File }
   | { type: 'SONG_LOADED'; noteGroups: NoteGroup[] }
@@ -75,7 +75,7 @@ state configuration.
 
 ### Actions
 
-``` {.typescript file=_generated/machines/gameMachine.ts}
+``` {.typescript file=machines/gameMachine.ts}
 export const gameMachine = setup({
   types: {
     context: {} as GameContext,
@@ -115,7 +115,7 @@ export const gameMachine = setup({
 
 The remaining actions advance to the next chord group, record the finish timestamp, and provide reset and restart variants that zero or preserve the loaded song data respectively.
 
-``` {.typescript file=_generated/machines/gameMachine.ts}
+``` {.typescript file=machines/gameMachine.ts}
     advanceGroup: assign(({ context }) => {
       const nextIndex = context.currentGroupIndex + 1;
       const pressedCellIds: string[] = [];
@@ -171,7 +171,7 @@ canonical positions and mirror positions count toward completion.
 
 `isLastGroup` checks if advancing would exhaust the groups array.
 
-``` {.typescript file=_generated/machines/gameMachine.ts}
+``` {.typescript file=machines/gameMachine.ts}
   guards: {
     isCorrectNote: ({ context, event }) => {
       assertEvent(event, 'NOTE_PRESSED');
@@ -199,7 +199,7 @@ canonical positions and mirror positions count toward completion.
 
 The initial context zeroes all runtime fields. `idle` and `loading` are waiting states before any song data is available.
 
-``` {.typescript file=_generated/machines/gameMachine.ts}
+``` {.typescript file=machines/gameMachine.ts}
 }).createMachine({
   id: 'game',
   context: {
@@ -231,7 +231,7 @@ The initial context zeroes all runtime fields. `idle` and `loading` are waiting 
 
 `playing` handles `NOTE_PRESSED` with a priority-ordered guard chain: completing the last chord group wins over completing a non-last group, which wins over simply accumulating the note. Wrong notes fall through all guards and are silently ignored.
 
-``` {.typescript file=_generated/machines/gameMachine.ts}
+``` {.typescript file=machines/gameMachine.ts}
     playing: {
       on: {
         NOTE_PRESSED: [

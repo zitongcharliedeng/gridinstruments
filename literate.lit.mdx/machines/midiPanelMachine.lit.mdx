@@ -6,7 +6,7 @@ A minimal two-state machine that controls whether the MIDI device panel is visib
 
 The event union has a single member: `TOGGLE_MIDI`. No context is required — visibility is captured entirely by the active state.
 
-``` {.typescript file=_generated/machines/midiPanelMachine.ts}
+``` {.typescript file=machines/midiPanelMachine.ts}
 import { setup } from 'xstate';
 
 interface MidiPanelEvent { type: 'TOGGLE_MIDI' }
@@ -16,7 +16,7 @@ interface MidiPanelEvent { type: 'TOGGLE_MIDI' }
 
 Both states respond to `TOGGLE_MIDI` by crossing to the other state. The machine starts `closed`.
 
-``` {.typescript file=_generated/machines/midiPanelMachine.ts}
+``` {.typescript file=machines/midiPanelMachine.ts}
 export const midiPanelMachine = setup({
   types: {
     events: {} as MidiPanelEvent,

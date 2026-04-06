@@ -6,7 +6,7 @@ A two-state machine representing a sustain or vibrato pedal. The pedal is either
 
 Two asymmetric events: `ACTIVATE` moves to `active`, `DEACTIVATE` returns to `inactive`. Using separate events (rather than a single toggle) avoids state-sync bugs when multiple input sources can activate the pedal concurrently.
 
-``` {.typescript file=_generated/machines/pedalMachines.ts}
+``` {.typescript file=machines/pedalMachines.ts}
 import { setup } from 'xstate';
 
 type PedalEvent = { type: 'ACTIVATE' } | { type: 'DEACTIVATE' };
@@ -16,7 +16,7 @@ type PedalEvent = { type: 'ACTIVATE' } | { type: 'DEACTIVATE' };
 
 The machine starts `inactive`. `ACTIVATE` is only accepted in `inactive`; `DEACTIVATE` is only accepted in `active`. Sending the wrong event for the current state is silently ignored by XState.
 
-``` {.typescript file=_generated/machines/pedalMachines.ts}
+``` {.typescript file=machines/pedalMachines.ts}
 export const pedalMachine = setup({
   types: { events: {} as PedalEvent },
 }).createMachine({

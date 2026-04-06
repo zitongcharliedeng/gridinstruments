@@ -10,7 +10,7 @@ The [MPE specification (MIDI Association, 2018)](https://www.midi.org/specificat
 
 `MPEVoice` is the runtime snapshot of a single sounding note — its assigned channel, normalized expression values, and lifecycle state. `MPEListener` is a callback type for UI subscribers that receive the full voice list on every state change.
 
-``` {.typescript file=_generated/lib/mpe-service.ts}
+``` {.typescript file=lib/mpe-service.ts}
 export interface MPESettings {
   masterChannel: 1 | 16;
   memberChannelCount: number;
@@ -51,7 +51,7 @@ The service holds a reference to the `MIDIAccess` object (obtained during `init(
 
 The constructor accepts an optional partial settings override and immediately builds the free-channel pool from the resulting settings.
 
-``` {.typescript file=_generated/lib/mpe-service.ts}
+``` {.typescript file=lib/mpe-service.ts}
 export class MPEService {
   private access: MIDIAccess | null = null;
   private output: MIDIOutput | null = null;
@@ -73,7 +73,7 @@ export class MPEService {
 
 `updateSettings()` applies a partial patch and selectively reacts: changing `masterChannel` or `memberChannelCount` requires a full channel-pool reset (which also panics to avoid orphaned notes on the old channels), and if an output is connected the MCM is re-sent immediately so the receiving synth updates its zone configuration.
 
-``` {.typescript file=_generated/lib/mpe-service.ts}
+``` {.typescript file=lib/mpe-service.ts}
 
   async init(): Promise<void> {
     if (!('requestMIDIAccess' in navigator)) return;
@@ -102,7 +102,7 @@ export class MPEService {
 
 `getAvailableOutputs()` iterates the `MIDIAccess.outputs` map (a `MIDIOutputMap`, not a plain array) and returns it as a plain array for easier rendering in select UI elements.
 
-``` {.typescript file=_generated/lib/mpe-service.ts}
+``` {.typescript file=lib/mpe-service.ts}
 
   setEnabled(enabled: boolean): void {
     this._enabled = enabled;
@@ -134,7 +134,7 @@ export class MPEService {
 
 The listener set implements a simple pub/sub for reactive UI. `subscribe()` returns an unsubscribe function following the common Svelte/React pattern, so callers can clean up in `onDestroy` / `useEffect` return. `activeVoices()` provides a one-shot snapshot filtered to only `'active'` voices (excluding voices that have been released but not yet removed from the map).
 
-``` {.typescript file=_generated/lib/mpe-service.ts}
+``` {.typescript file=lib/mpe-service.ts}
 
   subscribe(listener: MPEListener): () => void {
     this.listeners.add(listener);
@@ -154,7 +154,7 @@ The listener set implements a simple pub/sub for reactive UI. `subscribe()` retu
 
 `noteOff()` sends Note Off with a fixed release velocity of 64 (the MPE-conventional "no-op" value), marks the voice as `'released'`, notifies listeners (so the UI can show the release state), then pushes the channel back onto the free queue via `release()`.
 
-``` {.typescript file=_generated/lib/mpe-service.ts}
+``` {.typescript file=lib/mpe-service.ts}
 
   noteOn(noteId: string, midiNote: number, velocity: number): void {
     if (!this._enabled || !this.output) return;
@@ -207,7 +207,7 @@ These three methods deliver the "3D" expression that distinguishes MPE from stan
 
 **Pitch Bend** encodes a semitone offset as a 14-bit unsigned integer. The formula `(normalised + 1) × 8191.5` maps the −1..+1 range to 0..16383, where 8192 is centre (no bend). The `pitchBendRange` setting must match the value sent in the MCM (see `sendPitchBendSensitivity`) for the semitone arithmetic to be accurate.
 
-``` {.typescript file=_generated/lib/mpe-service.ts}
+``` {.typescript file=lib/mpe-service.ts}
 
   sendPressure(noteId: string, pressure: number): void {
     if (!this._enabled || !this.output) return;
@@ -252,7 +252,7 @@ These three methods deliver the "3D" expression that distinguishes MPE from stan
 
 `dispose()` extends panic by also clearing all listeners and nulling references — intended for component teardown.
 
-``` {.typescript file=_generated/lib/mpe-service.ts}
+``` {.typescript file=lib/mpe-service.ts}
 
   panic(): void {
     if (this.output) {
@@ -280,7 +280,7 @@ The MIDI spec allows any voice-allocation strategy; this implementation uses a s
 
 `buildChannelPool()` derives the member channel numbers from the current zone settings. For the Lower Zone (master = 1) the members are channels 2 through `1 + memberChannelCount`, capped at 16. For the Upper Zone (master = 16) the members are channels `16 − memberChannelCount` through 15, floored at 1. `resetChannelPool()` delegates to `panic()` rather than just rebuilding the queue, because any in-flight notes on the old channels must be silenced first.
 
-``` {.typescript file=_generated/lib/mpe-service.ts}
+``` {.typescript file=lib/mpe-service.ts}
 
   private buildChannelPool(): number[] {
     const channels: number[] = [];
@@ -324,7 +324,7 @@ The MIDI spec allows any voice-allocation strategy; this implementation uses a s
 
 The MPE spec leaves pressure routing open to the implementer. Channel Aftertouch (`0xDn`) is a single data byte and is supported by virtually every synth; it is the default here. Poly Aftertouch (`0xAn`) is per-note (requiring the note number as the first data byte) but many older synths ignore it entirely. CC mode (`0xBn`) routes pressure to an arbitrary CC number — useful for synths that expose pressure only through their modulation matrix (e.g. many software instruments that map CC 11 Expression to filter cutoff).
 
-``` {.typescript file=_generated/lib/mpe-service.ts}
+``` {.typescript file=lib/mpe-service.ts}
 
   private sendPressureRaw(chIdx: number, midiNote: number, pressure: number): void {
     if (!this.output) return;
@@ -351,7 +351,7 @@ Pitch Bend Sensitivity (RPN 0x00/0x00) must be sent on the manager channel and o
 
 Both RPNs are terminated with a null RPN (CC 101 = 127, CC 100 = 127) to prevent accidental data entry from being interpreted as further RPN changes.
 
-``` {.typescript file=_generated/lib/mpe-service.ts}
+``` {.typescript file=lib/mpe-service.ts}
 
   private sendMCM(): void {
     if (!this.output) return;

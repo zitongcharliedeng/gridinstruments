@@ -4,7 +4,7 @@ CSS overrides for third-party library styles (slim-select, OverlayScrollbars). L
 
 slim-select CSS custom properties set the dark palette: black background, white text, zero border-radius (sharp corners only), and compact 26 px height matching the rest of the control bar.
 
-``` {.css file=_generated/ui-overrides.css}
+``` {.css file=ui-overrides.css}
 :root {
   --ss-bg-color: #000;
   --ss-font-color: #fff;
@@ -27,7 +27,7 @@ slim-select CSS custom properties set the dark palette: black background, white 
 
 slim-select element overrides enforce JetBrains Mono, suppress the default focus ring, and style the dropdown arrow and open-state border to match the app's `#888` accent.
 
-``` {.css file=_generated/ui-overrides.css}
+``` {.css file=ui-overrides.css}
 .ss-main {
   font-family: 'JetBrains Mono', 'Courier New', monospace;
   font-size: 12px;
@@ -91,7 +91,7 @@ slim-select element overrides enforce JetBrains Mono, suppress the default focus
 
 OverlayScrollbars overrides apply the `gi-scrollbar` class. The 12 px track width and 40 px minimum handle height keep the scrollbar usable without conflicting with the app's sharp-corner design language.
 
-``` {.css file=_generated/ui-overrides.css}
+``` {.css file=ui-overrides.css}
 .os-scrollbar.gi-scrollbar {
   --os-size: 12px;
   --os-handle-bg: #888;

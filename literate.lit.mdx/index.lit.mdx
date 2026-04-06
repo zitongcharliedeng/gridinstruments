@@ -2,7 +2,7 @@
 
 Single-page HTML for GridInstruments — all CSS inline, all DOM structure.
 This is the sole HTML file in the project; everything else is TypeScript
-generated from literate sources into `_generated/`.
+generated from literate sources to the store.
 
 ## Structure
 
@@ -39,7 +39,7 @@ The page is a vertical flex layout (`#app`) with these major sections:
   `showModal()`).
 
 - **Scripts** (lines 1096--1111) — ES module entry point
-  (`/_generated/main.ts`), inline GitHub star-count fetch, and an SVG `<defs>`
+  (`/main.ts`), inline GitHub star-count fetch, and an SVG `<defs>`
   block defining the spray-paint roughen filter for chord graffiti.
 
 ## Head — doctype, meta tags, font import, and CSS reset
@@ -539,7 +539,7 @@ bottom border; `data-*` attributes declare the min/max/default heights and the
 
 The grid area contains the keyboard canvas and the settings overlay mount point.
 The overlay content (SOUND, VISUAL, INPUT sections) is rendered by the SolidJS
-`mountGridOverlay` component from `_generated/components/mount-grid-overlay.tsx`.
+`mountGridOverlay` component from `components/mount-grid-overlay.tsx`.
 The cog button (`#grid-settings-btn`) stays in HTML; only the overlay content
 becomes a Solid component.
 
@@ -584,7 +584,7 @@ The ghosting toast appears at the bottom-centre of the screen when keyboard
 rollover is detected, prompting the player to switch to MIDI or touchscreen for
 polyphonic chords. The two `<dialog>` elements use `showModal()` and carry their
 content in dynamically-populated `<div>` children. The module script entry
-point loads `_generated/main.ts`; a small inline script fetches the live GitHub
+point loads `main.ts`; a small inline script fetches the live GitHub
 star count without blocking page load. The SVG `<defs>` block defines the
 `spray-roughen` displacement filter used by chord graffiti to give roughjs
 strokes a hand-drawn texture.
@@ -607,7 +607,7 @@ strokes a hand-drawn texture.
     <form method="dialog"><button id="info-close" class="dialog-close-btn">&#x2715;</button></form>
   </dialog>
 
-  <script type="module" src="/_generated/main.ts"></script>
+  <script type="module" src="/main.ts"></script>
   <script>
     fetch('https://api.github.com/repos/zitongcharliedeng/gridinstruments')
       .then(r => r.json()).then(d => {

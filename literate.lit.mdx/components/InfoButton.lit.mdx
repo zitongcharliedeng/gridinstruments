@@ -7,7 +7,7 @@ Click opens the info dialog. No tooltip — tooltips are banned.
 This is the single source of truth for all info buttons in the app.
 No other pattern should be used for contextual help icons.
 
-``` {.css file=_generated/components/InfoButton.css}
+``` {.css file=components/InfoButton.css}
 .slider-info-btn {
   position: relative; transform: none; z-index: 3; color: var(--dim);
   width: 14px; height: 14px; padding: 0;
@@ -21,7 +21,7 @@ No other pattern should be used for contextual help icons.
 .slider-info-btn.active { color: var(--bg); background: var(--fg); border-color: var(--fg); }
 ```
 
-``` {.typescript file=_generated/components/InfoButton.tsx}
+``` {.typescript file=components/InfoButton.tsx}
 import { type JSX } from 'solid-js';
 import './InfoButton.css';
 

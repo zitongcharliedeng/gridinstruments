@@ -11,7 +11,7 @@ The overlay preserves every existing DOM ID so that the app-core event
 listeners continue to work without modification. Solid renders the structure;
 app-core wires up the behaviour.
 
-``` {.typescript file=_generated/components/mount-grid-overlay.tsx}
+``` {.typescript file=components/mount-grid-overlay.tsx}
 import { render } from 'solid-js/web';
 import { createSignal } from 'solid-js';
 import { SettingsOverlay } from './SettingsOverlay';
@@ -38,7 +38,7 @@ The mount function accepts the container element and the cog button. It owns
 the `visible` signal and toggles it on cog clicks, returning a `toggle`
 function so app-core can drive visibility from the `overlayMachine` actor.
 
-``` {.css file=_generated/components/mount-grid-overlay.css}
+``` {.css file=components/mount-grid-overlay.css}
 #mpe-output-select {
   position:absolute !important; width:1px !important; height:1px !important;
   opacity:0 !important; overflow:hidden !important; pointer-events:none !important;
@@ -61,7 +61,7 @@ function so app-core can drive visibility from the `overlayMachine` actor.
 #d-ref-input { width:80px; text-transform:none; }
 ```
 
-``` {.typescript file=_generated/components/mount-grid-overlay.tsx}
+``` {.typescript file=components/mount-grid-overlay.tsx}
 import { SettingsCog } from './SettingsCog';
 import './mount-grid-overlay.css';
 
@@ -171,7 +171,7 @@ Per-grid visual settings: skew (DCompose ↔ MidiMech morph), wicked shear
 (row-offset angle), zoom (cell size), QWERTY overlay toggle, and keyboard
 layout selector. Each slider wraps its info button in a `ctrl-group` flex row.
 
-``` {.typescript file=_generated/components/mount-grid-overlay.tsx}
+``` {.typescript file=components/mount-grid-overlay.tsx}
     {
       title: 'VISUAL (per grid)',
       children: () => (
@@ -246,7 +246,7 @@ Global input settings: MIDI device management, pitch bend range, and expression
 controls (bend, velocity, pressure, timbre). Expression checkboxes toggle which
 MPE dimensions are active. Pressure mode and CC source use slim-select dropdowns.
 
-``` {.typescript file=_generated/components/mount-grid-overlay.tsx}
+``` {.typescript file=components/mount-grid-overlay.tsx}
     {
       title: 'INPUT (global)',
       children: () => (

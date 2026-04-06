@@ -10,7 +10,7 @@ the content to the existing script.
 
 ## Styles
 
-``` {.css file=_generated/components/TopBar.css}
+``` {.css file=components/TopBar.css}
 .top-bar-left { display:flex; align-items:center; gap:8px; min-width:0; }
 .top-bar-group {
   display:inline-flex; align-items:center; border:1px solid var(--border);
@@ -64,7 +64,7 @@ Three callbacks cover the interactive elements that require app-level wiring.
 The fullscreen toggle is self-contained (inline `onclick`) so no callback is
 needed for it.
 
-``` {.typescript file=_generated/components/TopBar.tsx}
+``` {.typescript file=components/TopBar.tsx}
 import { type JSX } from 'solid-js';
 import { InfoBox } from './InfoBox';
 import { srcLink } from '../app-constants';
@@ -94,7 +94,7 @@ The component renders the exact same markup as the original `index.html`
 `.top-bar-left` block. Lucide icons are resolved by the global `createIcons`
 call in app-core after mount.
 
-``` {.typescript file=_generated/components/TopBar.tsx}
+``` {.typescript file=components/TopBar.tsx}
 
 export function TopBar(props: TopBarProps): JSX.Element {
   const onAboutClick = (): void => {

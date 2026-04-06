@@ -10,7 +10,7 @@ Adapters use module-level in-memory caching for GitHub tree responses. No localS
 
 The [GitHub Trees API](https://docs.github.com/en/rest/git/trees) returns a flat array of tree items when called with `?recursive=1`. Each item carries its repo-relative path, type (`blob` or `tree`), SHA, and API URL. Only `blob` items with a `.mid` extension are retained.
 
-``` {.typescript file=_generated/lib/midi-search.ts}
+``` {.typescript file=lib/midi-search.ts}
 interface GitHubTreeItem {
   path: string;
   type: string;
@@ -30,7 +30,7 @@ interface GitHubTreeResponse {
 
 `MidiSearchAdapter` is the interface every adapter must satisfy. The `id` field is a stable dot-free identifier (e.g. `github:mutopia`) used for display attribution and deduplication. Both `search` and `fetch` return Promises; `search` must never throw — it returns an empty array on failure. `fetch` may throw on network error.
 
-``` {.typescript file=_generated/lib/midi-search.ts}
+``` {.typescript file=lib/midi-search.ts}
 export interface MidiSearchResult {
   title: string;
   source: string;
@@ -55,7 +55,7 @@ The result is stored in the caller-provided `cache` object — a mutable holder 
 
 GitHub's unauthenticated rate limit is 60 requests per hour. The tree fetch counts as one request and is cached for the full browser session, so repeated searches cost nothing after the first.
 
-``` {.typescript file=_generated/lib/midi-search.ts}
+``` {.typescript file=lib/midi-search.ts}
 async function loadGitHubMidis(
   owner: string,
   repo: string,
@@ -84,7 +84,7 @@ GitHub serves raw file content from `raw.githubusercontent.com`. The URL structu
 
 Both `api.github.com` and `raw.githubusercontent.com` include `Access-Control-Allow-Origin: *` response headers, making them safe to call directly from browser JavaScript without a proxy.
 
-``` {.typescript file=_generated/lib/midi-search.ts}
+``` {.typescript file=lib/midi-search.ts}
 function encodeGitHubPath(path: string): string {
   return path.split('/').map(encodeURIComponent).join('/');
 }
@@ -99,7 +99,7 @@ function rawUrl(owner: string, repo: string, path: string): string {
 
 `searchTree` performs a case-insensitive substring match against the repo-relative paths of all cached tree items. The display title strips the directory prefix and `.mid` extension, showing only the bare filename. Results include the full `fetchUrl` pointing to raw bytes, ready to pass to `parseMidi`.
 
-``` {.typescript file=_generated/lib/midi-search.ts}
+``` {.typescript file=lib/midi-search.ts}
 function searchTree(
   tree: GitHubTreeItem[],
   query: string,
@@ -134,7 +134,7 @@ function searchTree(
 
 A small shared helper that wraps `fetch` + `arrayBuffer()` with a descriptive error on non-200 responses. The returned `ArrayBuffer` is passed directly to `parseMidi(buffer)`.
 
-``` {.typescript file=_generated/lib/midi-search.ts}
+``` {.typescript file=lib/midi-search.ts}
 async function fetchArrayBuffer(url: string): Promise<ArrayBuffer> {
   const response = await fetch(url);
   if (!response.ok) {
@@ -151,7 +151,7 @@ async function fetchArrayBuffer(url: string): Promise<ArrayBuffer> {
 
 The adapter holds its own `_cache` object so the tree is loaded once per browser session. Both `search` and `fetch` delegate to the shared helpers above.
 
-``` {.typescript file=_generated/lib/midi-search.ts}
+``` {.typescript file=lib/midi-search.ts}
 export class GitHubMidiAdapter implements MidiSearchAdapter {
   readonly id = 'github:thewildwestmidis';
   readonly name = 'Wild West MIDIs';
@@ -175,7 +175,7 @@ export class GitHubMidiAdapter implements MidiSearchAdapter {
 
 [MutopiaProject/MutopiaProject](https://github.com/MutopiaProject/MutopiaProject) contains approximately 2 124 classical music pieces arranged in a `ftp/Composer/Catalog/` directory hierarchy. All pieces are in the public domain or licensed under Creative Commons. The tree is large — the initial recursive fetch takes a few seconds on a cold cache.
 
-``` {.typescript file=_generated/lib/midi-search.ts}
+``` {.typescript file=lib/midi-search.ts}
 export class MutopiaMidiAdapter implements MidiSearchAdapter {
   readonly id = 'github:mutopia';
   readonly name = 'Mutopia Project';
@@ -201,7 +201,7 @@ export class MutopiaMidiAdapter implements MidiSearchAdapter {
 
 The adapter handles the unstable API gracefully: a list failure returns empty results and logs a warning rather than throwing. The fetch path similarly catches errors and re-throws so the caller sees a clean error. Metadata objects may carry either `title` or `name` for the display label; the adapter checks both with a fallback to the raw `id`.
 
-``` {.typescript file=_generated/lib/midi-search.ts}
+``` {.typescript file=lib/midi-search.ts}
 export class MidishareMidiAdapter implements MidiSearchAdapter {
   readonly id = 'midishare';
   readonly name = 'Midishare';
@@ -212,7 +212,7 @@ export class MidishareMidiAdapter implements MidiSearchAdapter {
 
 `search` lazy-loads the full catalogue on the first call, caching it for subsequent queries. A failed list request returns an empty array rather than throwing, so a network error degrades gracefully without breaking the other adapters.
 
-``` {.typescript file=_generated/lib/midi-search.ts}
+``` {.typescript file=lib/midi-search.ts}
   async search(query: string): Promise<MidiSearchResult[]> {
     if (this._cache.midis === null) {
       try {
@@ -251,7 +251,7 @@ export class MidishareMidiAdapter implements MidiSearchAdapter {
 
 `fetch` retrieves the raw MIDI bytes for a single search result. Errors are re-thrown after logging so the caller can surface them in the UI.
 
-``` {.typescript file=_generated/lib/midi-search.ts}
+``` {.typescript file=lib/midi-search.ts}
   async fetch(result: MidiSearchResult): Promise<ArrayBuffer> {
     try {
       const response = await fetch(result.fetchUrl);
@@ -274,7 +274,7 @@ export class MidishareMidiAdapter implements MidiSearchAdapter {
 
 The three adapter instances are registered in a module-level array. `searchAllAdapters` fans out to all of them in parallel using `Promise.allSettled`, which — unlike `Promise.all` — never short-circuits on failure. A rejected adapter logs a warning and contributes an empty array; the merged result always includes output from every adapter that succeeded.
 
-``` {.typescript file=_generated/lib/midi-search.ts}
+``` {.typescript file=lib/midi-search.ts}
 const adapters: MidiSearchAdapter[] = [
   new GitHubMidiAdapter(),
   new MutopiaMidiAdapter(),

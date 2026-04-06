@@ -10,7 +10,7 @@ The engine depends on three modules: the MIDI parser for event types, the game m
 
 `CHORD_THRESHOLD_MS` defines the simultaneity window. Two notes whose `startMs` values fall within 20 ms of each other are treated as a single chord. This matches typical human MIDI performance timing where notes intended as simultaneous arrive slightly apart.
 
-``` {.typescript file=_generated/lib/game-engine.ts}
+``` {.typescript file=lib/game-engine.ts}
 import { NoteEvent, TempoEvent, TimeSigEvent } from './midi-parser';
 import { NoteGroup } from '../machines/gameMachine';
 import { midiToCoord } from './note-colors';
@@ -25,7 +25,7 @@ export type GameNoteGroup = NoteGroup;
 
 The grid is a Circle of Fifths layout. Each cell is addressed by a string `"x_y"` derived from the CoF position of the note's pitch class and octave. `midiToCoord` returns the canonical shortest-path coordinates; this function simply serializes them.
 
-``` {.typescript file=_generated/lib/game-engine.ts}
+``` {.typescript file=lib/game-engine.ts}
 export function midiToCellId(midiNote: number): string {
   const [x, y] = midiToCoord(midiNote);
   return `${x}_${y}`;
@@ -40,7 +40,7 @@ A new group opens whenever the current event starts more than `CHORD_THRESHOLD_M
 
 Channel 9 (General MIDI drums) is filtered defensively; `parseMidi` already excludes drums but this guard prevents malformed inputs from breaking the grouper.
 
-``` {.typescript file=_generated/lib/game-engine.ts}
+``` {.typescript file=lib/game-engine.ts}
 export function buildNoteGroups(events: NoteEvent[], maxKeys = 8): GameNoteGroup[] {
   const sorted = [...events]
     .filter(e => e.channel !== 9)
@@ -73,7 +73,7 @@ export function buildNoteGroups(events: NoteEvent[], maxKeys = 8): GameNoteGroup
 
 The game grid is anchored at D (MIDI 62). To auto-center a song's pitch content on the grid, the UI computes the median MIDI note of all events and shifts the D-ref so it lands on that median. Returns 62 (D4) for an empty input.
 
-``` {.typescript file=_generated/lib/game-engine.ts}
+``` {.typescript file=lib/game-engine.ts}
 export function computeMedianMidiNote(events: NoteEvent[]): number {
   if (events.length === 0) return D_REF_MIDI;
   const sorted = [...events].map(e => e.midiNote).sort((a, b) => a - b);
@@ -87,7 +87,7 @@ export function computeMedianMidiNote(events: NoteEvent[]): number {
 
 Notes that land outside the valid MIDI range (0–127) after transposition are dropped individually. Groups that become entirely empty after the cull are also removed. This means a very large transposition applied to a song with notes near the edges of the MIDI range will silently lose those notes rather than producing invalid data.
 
-``` {.typescript file=_generated/lib/game-engine.ts}
+``` {.typescript file=lib/game-engine.ts}
 export function transposeSong(groups: GameNoteGroup[], semitones: number): GameNoteGroup[] {
   return groups.map(group => {
     const transposedMidi = group.midiNotes.map(m => m + semitones);
@@ -111,7 +111,7 @@ After transposition the song may still contain notes that fall outside the instr
 
 This is applied after `findOptimalTransposition` has already maximized in-range coverage, so in practice only edge notes are cropped.
 
-``` {.typescript file=_generated/lib/game-engine.ts}
+``` {.typescript file=lib/game-engine.ts}
 export function cropToRange(groups: GameNoteGroup[], availableRange: ReadonlySet<string>): GameNoteGroup[] {
   return groups.map(group => {
     const filtered = group.cellIds.reduce<{ cellIds: string[]; midiNotes: number[] }>(
@@ -133,7 +133,7 @@ export function cropToRange(groups: GameNoteGroup[], availableRange: ReadonlySet
 
 Instead of dropping out-of-range notes (`cropToRange`), `foldOctaves` tries to wrap each note into the available range by shifting it ±12 semitones (one octave at a time). This preserves the song's harmonic identity while fitting it to a narrow calibrated range. Notes that can't be folded into range after ±4 octaves are dropped.
 
-``` {.typescript file=_generated/lib/game-engine.ts}
+``` {.typescript file=lib/game-engine.ts}
 export function foldOctaves(groups: GameNoteGroup[], availableRange: ReadonlySet<string>): GameNoteGroup[] {
   return groups.map(group => {
     const foldedCellIds: string[] = [];
@@ -173,7 +173,7 @@ Before loading a song the engine searches ±24 semitones (two octaves in each di
 
 Ties are broken by proximity to zero: a transposition of 0 semitones (no change) is preferred over ±12 when both produce the same in-range count. This keeps the song as close to its original key as possible.
 
-``` {.typescript file=_generated/lib/game-engine.ts}
+``` {.typescript file=lib/game-engine.ts}
 export function findOptimalTransposition(groups: GameNoteGroup[], availableRange: ReadonlySet<string>): number {
   let bestSemitones = 0;
   let bestCount = -1;
@@ -213,7 +213,7 @@ Four levels are supported:
 
 The divisor is how many grid points fit in one quarter-note beat. A higher divisor = finer grid = more events to hit.
 
-``` {.typescript file=_generated/lib/game-engine.ts}
+``` {.typescript file=lib/game-engine.ts}
 export type QuantizationLevel = '1/4' | '1/8' | '1/16' | 'none';
 
 const QUANTIZE_DIVISOR: Record<Exclude<QuantizationLevel, 'none'>, number> = {
@@ -229,7 +229,7 @@ MIDI stores timing in ticks. Converting a tick position to wall-clock millisecon
 
 `ppq` (pulses per quarter note) comes from the file header. The default of 480 matches the most common MIDI resolution.
 
-``` {.typescript file=_generated/lib/game-engine.ts}
+``` {.typescript file=lib/game-engine.ts}
 function tickPositionToMs(tempoMap: TempoEvent[], tickPosition: number, ppq: number): number {
   if (tempoMap.length === 0) return 0;
   let ms = 0;
@@ -260,7 +260,7 @@ A song with a single tempo at 120 BPM quantized to `1/8` produces grid points ev
 
 Odd meters (5/4, 7/8, etc.) are handled automatically because the grid is purely BPM-based. The time signature determines how humans hear groupings of beats but does not affect the millisecond spacing between grid points.
 
-``` {.typescript file=_generated/lib/game-engine.ts}
+``` {.typescript file=lib/game-engine.ts}
 function buildBeatGrid(
   tempoMap: TempoEvent[],
   timeSigMap: TimeSigEvent[],
@@ -304,7 +304,7 @@ function buildBeatGrid(
 
 **Deduplication** removes double-hits: if two notes snap to the same grid point and have the same `midiNote` (common when a melody note and a chord note are near-simultaneous and share the same pitch), only the first is kept. The key is `"startMs_midiNote"` rounded to two decimal places to absorb floating-point noise.
 
-``` {.typescript file=_generated/lib/game-engine.ts}
+``` {.typescript file=lib/game-engine.ts}
 export function quantizeNotes(
   events: NoteEvent[],
   tempoMap: TempoEvent[],
@@ -324,7 +324,7 @@ export function quantizeNotes(
 
 `snapToGrid` is a binary search over the sorted grid array. It finds the closest grid point to a given millisecond value in O(log N) time, checking both the upper-bound candidate and its predecessor.
 
-``` {.typescript file=_generated/lib/game-engine.ts}
+``` {.typescript file=lib/game-engine.ts}
   const snapToGrid = (ms: number): number => {
     let lo = 0;
     let hi = grid.length - 1;
@@ -347,7 +347,7 @@ export function quantizeNotes(
 
 For each event, snapping finds the nearest grid point. The note keeps its original duration — sustained notes are NOT split into repeated taps. This gives a natural "hold the note" feel instead of button-mashing spam.
 
-``` {.typescript file=_generated/lib/game-engine.ts}
+``` {.typescript file=lib/game-engine.ts}
   for (const event of events) {
     const snappedStart = snapToGrid(event.startMs);
     result.push({ ...event, startMs: snappedStart });
@@ -356,7 +356,7 @@ For each event, snapping finds the nearest grid point. The note keeps its origin
 
 Deduplication removes double-hits where two source events snap to the same grid point with the same pitch. The key uses `toFixed(2)` to absorb floating-point noise without treating genuinely distinct times as equal.
 
-``` {.typescript file=_generated/lib/game-engine.ts}
+``` {.typescript file=lib/game-engine.ts}
   const seen = new Set<string>();
   const deduped: NoteEvent[] = [];
   for (const event of result) {
@@ -388,7 +388,7 @@ rule:
           pattern: "loadMidiFromBuffer($$$)"
           stopBy: end
 files:
-  - "_generated/app-core.ts"
+  - "app-core.ts"
 severity: warning
 message: "GAME_RESET without loadMidiFromBuffer — the song will be lost. Use lastMidiBuffer to reload."
 note: "See #273: calibrate/maxKeys/restart must save+restore the song."

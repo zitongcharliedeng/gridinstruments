@@ -16,7 +16,7 @@ Multiple keyboard form factors (ANSI, ISO, 60%/65%/75%) are built by filtering t
 
 ## Imports and Types
 
-``` {.typescript file=_generated/lib/keyboard-layouts.ts}
+``` {.typescript file=lib/keyboard-layouts.ts}
 import { COORDS_BY_CODE } from 'isomorphic-qwerty';
 
 export type KeyCoordinate = [number, number];
@@ -42,7 +42,7 @@ dcompX = 2 * ex - iqY - 12
 dcompY = -ex + 7
 ```
 
-``` {.typescript file=_generated/lib/keyboard-layouts.ts}
+``` {.typescript file=lib/keyboard-layouts.ts}
 const ROW_STAGGER: Record<number, number> = { 0: 0, 1: 1, 2: 2, 3: 3 };
 
 function iqToDCompose(iqX: number, iqY: number): KeyCoordinate {
@@ -55,7 +55,7 @@ function iqToDCompose(iqX: number, iqY: number): KeyCoordinate {
 
 The numpad is a regular rectangular grid with no row stagger — unlike the main keyboard where each row shifts right. Feeding numpad keys through `iqToDCompose` (which applies main-keyboard stagger) produces coordinates that overlap with the WASD area. Instead, `numpadToDCompose` uses the same isomorphic DCompose formula but without stagger and without the main keyboard's centering offset (-12). A fixed offset of 20 on the X axis places the numpad grid to the right of the main keyboard (main keyboard X range is -14 to 12, numpad raw X range is -4 to 6, so offset 20 gives 16 to 26).
 
-``` {.typescript file=_generated/lib/keyboard-layouts.ts}
+``` {.typescript file=lib/keyboard-layouts.ts}
 const NUMPAD_X_OFFSET = 20;
 
 function numpadToDCompose(iqX: number, iqY: number): KeyCoordinate {
@@ -67,7 +67,7 @@ function numpadToDCompose(iqX: number, iqY: number): KeyCoordinate {
 
 All layer-1 (main keyboard, z=1) entries use `iqToDCompose` with row stagger. Layer-3 (numpad, z=3) entries use `numpadToDCompose` which applies no stagger and offsets to the right.
 
-``` {.typescript file=_generated/lib/keyboard-layouts.ts}
+``` {.typescript file=lib/keyboard-layouts.ts}
 const LAYER1_KEY_MAP: Record<string, KeyCoordinate> = {};
 const NUMPAD_KEY_MAP: Record<string, KeyCoordinate> = {};
 
@@ -84,7 +84,7 @@ for (const [code, [iqX, iqY, iqZ]] of COORDS_BY_CODE) {
 
 `MODIFIER_ROW_KEYS` lists every key that is never a note regardless of layout — modifiers, function keys, navigation cluster, and special keys. `SPECIAL_KEYS` names the sustain and vibrato bindings.
 
-``` {.typescript file=_generated/lib/keyboard-layouts.ts}
+``` {.typescript file=lib/keyboard-layouts.ts}
 export const MODIFIER_ROW_KEYS = new Set([
   'ControlLeft', 'ControlRight',
   'AltLeft', 'AltRight',
@@ -117,7 +117,7 @@ export const SPECIAL_KEYS = {
 
 `buildKeyMap` filters `LAYER1_KEY_MAP` (and optionally `NUMPAD_KEY_MAP`) by removing modifier keys, layout-specific exclusions, and keys absent from the physical form factor (IntlBackslash for ISO layouts, Backslash for ANSI).
 
-``` {.typescript file=_generated/lib/keyboard-layouts.ts}
+``` {.typescript file=lib/keyboard-layouts.ts}
 function buildKeyMap(opts: {
   hasIntlBackslash: boolean;
   hasBackslash: boolean;
@@ -150,7 +150,7 @@ function buildKeyMap(opts: {
 
 Compact form factors exclude keys that are physically absent. 60% keyboards have no function row, navigation cluster, or numpad. 65% adds arrow keys and a few nav keys. 75% restores the function row but keeps a compact footprint.
 
-``` {.typescript file=_generated/lib/keyboard-layouts.ts}
+``` {.typescript file=lib/keyboard-layouts.ts}
 const SIXTY_PCT_EXCLUDE = new Set([
   'F1','F2','F3','F4','F5','F6','F7','F8','F9','F10','F11','F12',
   'PrintScreen','ScrollLock','Pause',
@@ -209,7 +209,7 @@ export function isDvorakLayout(id: string): boolean {
 
 `getNoteNameFromCoord` returns the circle-of-fifths spelling for a given x coordinate, using ♯/♭ glyphs. Double-sharp (𝄪) and double-flat (𝄫) SMP codepoints are avoided because JetBrains Mono lacks them — repeated ♯♯/♭♭ are used instead.
 
-``` {.typescript file=_generated/lib/keyboard-layouts.ts}
+``` {.typescript file=lib/keyboard-layouts.ts}
 const FIFTHS_NATURALS = ['F', 'C', 'G', 'D', 'A', 'E', 'B'];
 export function getNoteNameFromCoord(x: number): string {
   const baseIndex = ((x + 3) % 7 + 7) % 7;
@@ -237,7 +237,7 @@ function buildFlats(n: number): string {
 
 `get12TETName` maps a circle-of-fifths position to its closest 12-TET pitch class name — used for bracket notation and black-key detection. `getCentDeviation` gives the deviation from 12-TET in cents for a given fifth size.
 
-``` {.typescript file=_generated/lib/keyboard-layouts.ts}
+``` {.typescript file=lib/keyboard-layouts.ts}
 const PITCH_CLASS_12TET = ['C', 'C\u266F', 'D', 'E\u266D', 'E', 'F', 'F\u266F', 'G', 'A\u266D', 'A', 'B\u266D', 'B'];
 
 export function get12TETName(x: number): string {
@@ -259,7 +259,7 @@ function that needs to know where D-ref sits in MIDI space uses this constant.
 D-ref. `coordToFrequency` converts to Hz using a configurable generator
 interval pair (default: 700¢ fifth, 1200¢ octave) and base frequency.
 
-``` {.typescript file=_generated/lib/keyboard-layouts.ts}
+``` {.typescript file=lib/keyboard-layouts.ts}
 export const D_REF_MIDI = 62;
 
 export function coordToMidi(x: number, y: number, octaveOffset = 0): number {
@@ -299,7 +299,7 @@ Examples: `D` = D-ref, `¹D` = one octave above, `₂C` = C two octaves below,
 formatter AND the grid canvas renderer — one function, one source of truth
 for determining octave distance from D-ref.
 
-``` {.typescript file=_generated/lib/keyboard-layouts.ts}
+``` {.typescript file=lib/keyboard-layouts.ts}
 const SUPERSCRIPT_DIGITS = '\u2070\u00B9\u00B2\u00B3\u2074\u2075\u2076\u2077\u2078\u2079';
 const SUBSCRIPT_DIGITS = '\u2080\u2081\u2082\u2083\u2084\u2085\u2086\u2087\u2088\u2089';
 
@@ -336,7 +336,7 @@ export function formatNoteWithOctavePrefix(midi: number): string {
 
 `getAllMappedKeys` and `isKeyMapped` query the default (ANSI) layout. `codeToLabel` converts a W3C key code to a short display string for the keyboard overlay. It accepts an optional `labelLayout` parameter: `'qwerty'` (default) uses standard US labels, `'dvorak'` remaps letter keys to Dvorak positions. Digit keys, numpad keys, and punctuation use their printed symbol.
 
-``` {.typescript file=_generated/lib/keyboard-layouts.ts}
+``` {.typescript file=lib/keyboard-layouts.ts}
 export type LabelLayout = 'qwerty' | 'dvorak';
 
 const DVORAK_MAP: Record<string, string> = {

@@ -6,7 +6,7 @@ driven by the `.active` class toggled by the state machine via props callbacks.
 
 ## Styles
 
-``` {.css file=_generated/components/PedalsPanel.css}
+``` {.css file=components/PedalsPanel.css}
 #pedals-panel {
   flex-shrink:0; display:flex; gap:0; background:var(--bg); height:44px;
   overflow:visible; position:relative; z-index:1; border-top:1px solid var(--border);
@@ -30,7 +30,7 @@ driven by the `.active` class toggled by the state machine via props callbacks.
 Props expose four pointer-event callbacks — down and up for each pedal — so the
 parent can wire the `pedalMachine` actors without any direct DOM access.
 
-``` {.typescript file=_generated/components/PedalsPanel.tsx}
+``` {.typescript file=components/PedalsPanel.tsx}
 import { type JSX } from 'solid-js';
 import './PedalsPanel.css';
 
@@ -51,7 +51,7 @@ the existing wiring expects (`sustain-indicator`, `vibrato-indicator`). The
 Pointer-leave fires `onUp` so releasing outside the button boundary still
 deactivates the pedal, matching the existing imperative behaviour.
 
-``` {.typescript file=_generated/components/PedalsPanel.tsx}
+``` {.typescript file=components/PedalsPanel.tsx}
 
 function HoldButton(props: {
   id: string;

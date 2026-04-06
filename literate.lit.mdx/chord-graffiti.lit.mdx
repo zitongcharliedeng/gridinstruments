@@ -10,7 +10,7 @@ The overlay depends on `roughjs` for hand-drawn polygon rendering and on `Keyboa
 
 Chord shapes are expressed in fifth/octave grid coordinates `(fifth steps, octave steps)`. Root position gives the cleanest triangle geometry: the major triad points "up" (▲) and the minor triad points "down" (▽).
 
-``` {.css file=_generated/lib/chord-graffiti.css}
+``` {.css file=lib/chord-graffiti.css}
 .graffiti-overlay {
   position:absolute; pointer-events:none; mix-blend-mode:screen;
   z-index:5; transition:opacity 1.5s ease;
@@ -24,13 +24,13 @@ Chord shapes are expressed in fifth/octave grid coordinates `(fifth steps, octav
 }
 ```
 
-``` {.typescript file=_generated/lib/chord-graffiti.ts}
+``` {.typescript file=lib/chord-graffiti.ts}
 import rough from 'roughjs';
 import type { KeyboardVisualizer } from './keyboard-visualizer';
 import './chord-graffiti.css';
 ```
 
-``` {.typescript file=_generated/lib/chord-graffiti.ts}
+``` {.typescript file=lib/chord-graffiti.ts}
 const MAJOR_SHAPE: [number, number][] = [[0, 0], [4, -2], [1, 0]];
 const MINOR_SHAPE: [number, number][] = [[0, 0], [-3, 2], [1, 0]];
 
@@ -41,7 +41,7 @@ const MINOR_HINT = "it's a reflection of a major chord, neat huh?";
 
 `GraffitiConfig` wires the overlay to the DOM and the visualizer. `ButtonLike` is the minimal slice of a button object needed for position arithmetic — x/y in pixels, coordX/coordY in grid space.
 
-``` {.typescript file=_generated/lib/chord-graffiti.ts}
+``` {.typescript file=lib/chord-graffiti.ts}
 interface GraffitiConfig {
   container: HTMLElement;
   visualizer: KeyboardVisualizer;
@@ -54,7 +54,7 @@ interface ButtonLike { x: number; y: number; coordX: number; coordY: number }
 
 `createChordGraffiti` inserts an absolutely-positioned SVG into the container, then returns an `update` function to call whenever the grid geometry changes (skew, tuning, zoom).
 
-``` {.typescript file=_generated/lib/chord-graffiti.ts}
+``` {.typescript file=lib/chord-graffiti.ts}
 export function createChordGraffiti(config: GraffitiConfig): () => void {
   const { container, visualizer } = config;
 
@@ -92,7 +92,7 @@ export function createChordGraffiti(config: GraffitiConfig): () => void {
 
 The overlay SVG sits at position `0,0` with `pointer-events: none` so it never blocks touch or mouse input on the keyboard beneath it.
 
-``` {.typescript file=_generated/lib/chord-graffiti.ts}
+``` {.typescript file=lib/chord-graffiti.ts}
 function createSvgElement(): SVGSVGElement {
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   svg.classList.add('graffiti-overlay', 'graffiti-svg');
@@ -104,7 +104,7 @@ function createSvgElement(): SVGSVGElement {
 
 `findCornerRoot` scans every button as a candidate root, checks that all shape offsets land on visible buttons with a 20 px margin, and picks the one whose centroid is closest to the target corner. Returns `null` if no valid root exists (e.g. when the grid is too small to show a complete chord).
 
-``` {.typescript file=_generated/lib/chord-graffiti.ts}
+``` {.typescript file=lib/chord-graffiti.ts}
 type Corner = 'top-left' | 'bottom-right';
 
 function findCornerRoot(
@@ -160,7 +160,7 @@ function findCornerRoot(
 
 `renderChord` draws the roughjs polygon triangle and up to two text labels. The optional `hint` line appears 14 px below the main label at reduced size and opacity.
 
-``` {.typescript file=_generated/lib/chord-graffiti.ts}
+``` {.typescript file=lib/chord-graffiti.ts}
 function renderChord(
   svg: SVGSVGElement,
   shape: [number, number][],
@@ -186,7 +186,7 @@ function renderChord(
 
 With positions resolved, rough.js draws the hachure polygon connecting those grid cells. If any cell in the shape is off-screen the function returns early above, so `notePositions` is always complete here.
 
-``` {.typescript file=_generated/lib/chord-graffiti.ts}
+``` {.typescript file=lib/chord-graffiti.ts}
   const rc = rough.svg(svg);
 
   const triPoints: [number, number][] = notePositions.map(p => [p.x, p.y]);
@@ -214,7 +214,7 @@ With positions resolved, rough.js draws the hachure polygon connecting those gri
 
 The main label is centred at the polygon centroid. When a `hint` line is present it appears 14 px below the main label at reduced size and opacity.
 
-``` {.typescript file=_generated/lib/chord-graffiti.ts}
+``` {.typescript file=lib/chord-graffiti.ts}
   const textEl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
   textEl.setAttribute('x', String(Math.round(cx)));
   textEl.setAttribute('y', String(Math.round(labelY)));

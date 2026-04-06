@@ -18,7 +18,7 @@ waveforms. The `Voice` interface tracks everything needed per sounding note:
 oscillator, timbre filter, gain envelope, grid coordinates (for live re-tuning),
 and a per-voice vibrato gain node.
 
-``` {.typescript file=_generated/lib/synth.ts}
+``` {.typescript file=lib/synth.ts}
 export type WaveformType = 'sine' | 'square' | 'sawtooth' | 'triangle' | 'pluck' | 'organ' | 'brass' | 'pad' | 'bell' | 'bass' | 'bright' | 'warm' | 'guitar';
 
 const CUSTOM_WAVES: Record<string, { real: number[]; imag: number[] }> = {
@@ -71,7 +71,7 @@ systems:
 | `tet19` | 694.74 | [19-TET](https://en.xen.wiki/w/19edo) | 19 equal divisions |
 | `tet7` | 685.71 | [7-TET](https://en.xen.wiki/w/7edo) | Thai, Mandinka balafon |
 
-``` {.typescript file=_generated/lib/synth.ts}
+``` {.typescript file=lib/synth.ts}
 export const TUNING_MARKERS: { id: string; name: string; fifth: number; description: string }[] = [
   { id: 'tet5', name: '5', fifth: 720, description: '5-TET · Indonesian slendro' },
   { id: 'tet17', name: '17', fifth: 705.88, description: '17-TET · 17 equal divisions' },
@@ -93,7 +93,7 @@ The slider range `[683, 722]` is chosen to tightly cover all presets from
 `findNearestMarker` performs a linear scan to snap a continuous slider value to
 the closest named tuning. This drives the UI label that appears on the slider.
 
-``` {.typescript file=_generated/lib/synth.ts}
+``` {.typescript file=lib/synth.ts}
 export const FIFTH_MIN = 683;
 export const FIFTH_MAX = 722;
 export const FIFTH_DEFAULT = 700;
@@ -129,7 +129,7 @@ produces standard 12-TET. The base frequency `293.66 Hz` is D4 at A440 -- the
 center of the [DCompose](https://en.xen.wiki/w/Wicki-Hayden_note_layout)
 isomorphic layout (coordinate `[0, 0]`).
 
-``` {.typescript file=_generated/lib/synth.ts}
+``` {.typescript file=lib/synth.ts}
 export class Synth {
   private context: AudioContext | null = null;
   private masterGain: GainNode | null = null;
@@ -168,7 +168,7 @@ mobile browsers require a user interaction before creating an AudioContext
 `tryUnlock` provides a synchronous entry point safe for iOS Safari, while
 `init` is the async variant.
 
-``` {.typescript file=_generated/lib/synth.ts}
+``` {.typescript file=lib/synth.ts}
   private initSync(): void {
     if (this.context) return;
 
@@ -213,7 +213,7 @@ voices update their
 [OscillatorNode.type](https://developer.mozilla.org/en-US/docs/Web/API/OscillatorNode/type)
 immediately -- no click, no gap.
 
-``` {.typescript file=_generated/lib/synth.ts}
+``` {.typescript file=lib/synth.ts}
   setWaveform(waveform: WaveformType): void {
     this.waveform = waveform;
     for (const voice of this.voices.values()) {
@@ -249,7 +249,7 @@ is the pair `[fifth, octave]` measured in cents. Changing it re-tunes every
 active voice instantly by recalculating frequencies from stored grid
 coordinates.
 
-``` {.typescript file=_generated/lib/synth.ts}
+``` {.typescript file=lib/synth.ts}
   setGenerator(generator: [number, number]): void {
     this.generator = generator;
     
@@ -273,7 +273,7 @@ coordinates.
 (standard 2:1 ratio) and only varies the fifth. `setTuningMarker` jumps to a
 named preset from the `TUNING_MARKERS` table above.
 
-``` {.typescript file=_generated/lib/synth.ts}
+``` {.typescript file=lib/synth.ts}
   setFifth(cents: number): void {
     this.setGenerator([cents, 1200]);
   }
@@ -302,7 +302,7 @@ The user can shift D-ref across the full range 100 Hz -- 2000 Hz to transpose
 the entire instrument. Every sounding voice updates immediately, just like
 `setGenerator`.
 
-``` {.typescript file=_generated/lib/synth.ts}
+``` {.typescript file=lib/synth.ts}
   setD4Hz(hz: number): void {
     this._d4Hz = Math.max(100, Math.min(2000, hz));
     this.baseFreq = this._d4Hz;
@@ -330,7 +330,7 @@ Master volume is applied via
 with a 10 ms time constant. This exponential ramp avoids the audible clicks
 that an instantaneous `.value =` assignment would cause.
 
-``` {.typescript file=_generated/lib/synth.ts}
+``` {.typescript file=lib/synth.ts}
   setMasterVolume(volume: number): void {
     this._masterVolume = Math.max(0, Math.min(1, volume));
     if (this.masterGain && this.context) {
@@ -354,7 +354,7 @@ A single [highshelf](https://developer.mozilla.org/en-US/docs/Web/API/BiquadFilt
 filter at 3 kHz provides a simple tone control. The UI maps `-1..+1` to
 `-12 dB..+12 dB`, giving a bass-boost to treble-boost sweep.
 
-``` {.typescript file=_generated/lib/synth.ts}
+``` {.typescript file=lib/synth.ts}
   setEQ(value: number): void {
     this._eqValue = Math.max(-1, Math.min(1, value));
     if (this.eqFilter && this.context) {
@@ -379,7 +379,7 @@ When sustain is on, `stopNote` defers the release -- the voice keeps sounding
 until sustain is toggled off. This mirrors the behavior of a piano sustain
 pedal and is wired to the MIDI CC64 (damper) input.
 
-``` {.typescript file=_generated/lib/synth.ts}
+``` {.typescript file=lib/synth.ts}
   setSustain(enabled: boolean): void {
     this.sustain = enabled;
 
@@ -412,7 +412,7 @@ comes from the cents-to-ratio formula: a small interval of `d` cents
 corresponds to a frequency deviation of `f * (2^(d/1200) - 1)`, which for
 small `d` approximates to `f * d / 1200`.
 
-``` {.typescript file=_generated/lib/synth.ts}
+``` {.typescript file=lib/synth.ts}
   private ensureVibratoLFO(): void {
     if (!this.context || this.vibratoLFO) return;
     
@@ -431,7 +431,7 @@ When enabled, the shared LFO connects to each voice's frequency
 through a per-voice gain node. When disabled, gain is zeroed and the LFO is
 disconnected.
 
-``` {.typescript file=_generated/lib/synth.ts}
+``` {.typescript file=lib/synth.ts}
   setVibrato(enabled: boolean): void {
     if (!this.context) return;
     this._vibratoEnabled = enabled;
@@ -474,7 +474,7 @@ x-axis steps through the
 [circle of fifths](https://en.wikipedia.org/wiki/Circle_of_fifths); moving
 along y steps through octaves.
 
-``` {.typescript file=_generated/lib/synth.ts}
+``` {.typescript file=lib/synth.ts}
   private getFrequency(x: number, y: number, octaveOffset = 0): number {
     const cents = y * this.generator[1] + x * this.generator[0] + octaveOffset * 1200;
     return this.baseFreq * Math.pow(2, cents / 1200);
@@ -502,7 +502,7 @@ for a smooth exponential attack. A square-root velocity curve
 If vibrato is active, the shared LFO is connected to this voice's frequency
 input through a per-voice gain node.
 
-``` {.typescript file=_generated/lib/synth.ts}
+``` {.typescript file=lib/synth.ts}
   playNote(noteId: string, x: number, y: number, octaveOffset = 0, velocity = 1): void {
     if (!this.context || !this.masterGain || this.context.state !== 'running') return;
     if (this.voices.has(noteId)) return;
@@ -558,7 +558,7 @@ gain node is disconnected during cleanup.
 If sustain is active and `force` is false, the note is deferred to the
 `sustainedVoices` set instead of being released.
 
-``` {.typescript file=_generated/lib/synth.ts}
+``` {.typescript file=lib/synth.ts}
   stopNote(noteId: string, force = false): void {
     if (!this.context) return;
     
@@ -593,7 +593,7 @@ If sustain is active and `force` is false, the note is deferred to the
 oscillator frequency by a given number of semitones (can be fractional) using
 the standard equal-temperament formula `bentFreq = baseFreq * 2^(semitones/12)`.
 
-``` {.typescript file=_generated/lib/synth.ts}
+``` {.typescript file=lib/synth.ts}
   setPitchBend(noteId: string, semitones: number): void {
     if (!this.context) return;
     const voice = this.voices.get(noteId);
@@ -611,7 +611,7 @@ Timbre controls the lowpass filter cutoff via the same `500 * 36^v`
 exponential curve used in `playNote`, giving CC74 slide a consistent brightness
 range from 500 Hz to 18 000 Hz.
 
-``` {.typescript file=_generated/lib/synth.ts}
+``` {.typescript file=lib/synth.ts}
   setTimbre(noteId: string, value: number): void {
     if (!this.context) return;
     const voice = this.voices.get(noteId);
@@ -632,7 +632,7 @@ attack timbre (filter cutoff) but NOT the sustained volume ceiling.
 Full pressure always reaches full volume regardless of strike velocity.
 A small floor (0.01) prevents total silence.
 
-``` {.typescript file=_generated/lib/synth.ts}
+``` {.typescript file=lib/synth.ts}
   setPressure(noteId: string, value: number): void {
     if (!this.context) return;
     const voice = this.voices.get(noteId);
@@ -649,7 +649,7 @@ A small floor (0.01) prevents total silence.
 Utility methods for panic (stop all voices), introspection (active note list,
 voice count), and teardown (close the AudioContext).
 
-``` {.typescript file=_generated/lib/synth.ts}
+``` {.typescript file=lib/synth.ts}
   stopAll(): void {
     for (const noteId of this.voices.keys()) {
       this.stopNote(noteId, true);

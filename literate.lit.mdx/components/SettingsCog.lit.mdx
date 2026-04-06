@@ -4,7 +4,7 @@ A single SolidJS component used by ALL three settings panels (grid, vis, game).
 Renders a 32x32 cog button with consistent styling. The active state shows an
 white color inversion (toggled = white bg, black text) matching the design language.
 
-``` {.css file=_generated/components/SettingsCog.css}
+``` {.css file=components/SettingsCog.css}
 .settings-cog {
   width: 32px; height: 32px; font-size: 16px;
   background: var(--bg); color: var(--dim); border: 1px solid var(--border);
@@ -15,7 +15,7 @@ white color inversion (toggled = white bg, black text) matching the design langu
 .settings-cog.active { color: var(--bg); background: var(--fg); border-color: var(--fg); }
 ```
 
-``` {.typescript file=_generated/components/SettingsCog.tsx}
+``` {.typescript file=components/SettingsCog.tsx}
 import { type JSX } from 'solid-js';
 import './SettingsCog.css';
 

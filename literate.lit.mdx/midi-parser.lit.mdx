@@ -8,7 +8,7 @@ The [Standard MIDI File specification](https://www.midi.org/specifications/file-
 
 A `NoteEvent` is the primary output unit — one record per sounded note, with timing already converted to milliseconds.
 
-``` {.typescript file=_generated/lib/midi-parser.ts}
+``` {.typescript file=lib/midi-parser.ts}
 export interface NoteEvent {
   midiNote: number;
   startMs: number;
@@ -26,7 +26,7 @@ The MIDI spec encodes tempo as microseconds per quarter note rather than BPM. Me
 
 Time signatures use a compact encoding: the denominator is stored as a power of two (`dd`), so `2` means `2^2 = 4` (quarter note), `3` means `2^3 = 8` (eighth note). Meta event `FF 58 04 nn dd cc bb` carries numerator, denominator power, MIDI clocks per click, and 32nd notes per quarter.
 
-``` {.typescript file=_generated/lib/midi-parser.ts}
+``` {.typescript file=lib/midi-parser.ts}
 export interface TempoEvent {
   tickPosition: number;
   microsecondsPerQuarter: number;
@@ -52,7 +52,7 @@ export interface ParsedMidi {
 
 These four interfaces are used only during parsing and are not exported. `TempoEntry` and `TimeSigEntry` are the raw accumulated entries before conversion to the exported forms. `TickNote` holds a fully closed note in tick coordinates. `PendingNote` tracks an open Note On waiting for its matching Note Off.
 
-``` {.typescript file=_generated/lib/midi-parser.ts}
+``` {.typescript file=lib/midi-parser.ts}
 interface TempoEntry {
   tick: number;
   tempoUs: number;
@@ -87,7 +87,7 @@ interface PendingNote {
 
 MIDI uses a variable-length quantity (VLQ) encoding for delta times and meta-event lengths. Each byte contributes 7 bits of value; the high bit is a continuation flag. Reading stops at the first byte where bit 7 is clear. A single byte encodes values 0–127; two bytes reach 16 383; four bytes reach the maximum of 268 435 455 ticks.
 
-``` {.typescript file=_generated/lib/midi-parser.ts}
+``` {.typescript file=lib/midi-parser.ts}
 function readVarLen(view: DataView, offset: number): { value: number; bytesRead: number } {
   let value = 0;
   let bytesRead = 0;
@@ -108,7 +108,7 @@ Tick time is converted to wall-clock milliseconds by walking the sorted tempo ma
 
 `readUint24` reads a big-endian 24-bit integer — the wire format for tempo values. `closePending` finalises an open note by moving it from the pending map into the completed notes array.
 
-``` {.typescript file=_generated/lib/midi-parser.ts}
+``` {.typescript file=lib/midi-parser.ts}
 function tickToMs(tick: number, tempoMap: readonly TempoEntry[], ppq: number): number {
   let ms = 0;
   let prevTick = 0;
@@ -151,7 +151,7 @@ function closePending(pending: Map<string, PendingNote>, key: string, endTick: n
 
 Running status is a MIDI bandwidth optimisation: if the current byte is a data byte (value < 128 / 0x80), the previous status byte is reused without retransmission. The parser tracks `runningStatus` across events within the track.
 
-``` {.typescript file=_generated/lib/midi-parser.ts}
+``` {.typescript file=lib/midi-parser.ts}
 function parseTrack(
   view: DataView,
   trackStart: number,
@@ -191,7 +191,7 @@ Meta events (`0xFF`) carry non-audio information. The type byte immediately foll
 
 Three meta types matter here. `FF 51` (Set Tempo) updates the tempo map — collected only from the authoritative tempo track. `FF 58` (Time Signature) updates the meter map similarly. `FF 2F` (End of Track) is mandatory at the end of every `MTrk` chunk; on encountering it the parser advances past the payload and exits the loop.
 
-``` {.typescript file=_generated/lib/midi-parser.ts}
+``` {.typescript file=lib/midi-parser.ts}
     if (statusByte === 0xff) {
       const metaType = view.getUint8(offset);
       offset++;
@@ -226,7 +226,7 @@ SysEx messages (`0xF0` / `0xF7`) carry manufacturer-specific data and are skippe
 
 Channel voice messages occupy the lower nybble of the status byte for channel (0–15) and the upper nybble for message type. Note On (`0x90`) with velocity zero is treated as Note Off per the MIDI 1.0 spec. Aftertouch (`0xA0`), Control Change (`0xB0`), and Pitch Bend (`0xE0`) each consume two data bytes; Program Change (`0xC0`) and Channel Pressure (`0xD0`) consume one. Any notes still open when the track ends are closed at the final tick.
 
-``` {.typescript file=_generated/lib/midi-parser.ts}
+``` {.typescript file=lib/midi-parser.ts}
     if (statusByte === 0xf0 || statusByte === 0xf7) {
       const len = readVarLen(view, offset);
       offset += len.bytesRead + len.value;
@@ -246,7 +246,7 @@ Channel voice messages occupy the lower nybble of the status byte for channel (0
 
 Channel voice messages decode the upper nybble as message type and the lower nybble as channel. Note On with velocity 0 is treated as Note Off per the MIDI 1.0 spec.
 
-``` {.typescript file=_generated/lib/midi-parser.ts}
+``` {.typescript file=lib/midi-parser.ts}
     runningStatus = statusByte;
     const msgType = statusByte & 0xf0;
     const channel = statusByte & 0x0f;
@@ -293,7 +293,7 @@ Channel voice messages decode the upper nybble as message type and the lower nyb
 
 Any notes still open when the track data ends are closed at the final tick, ensuring every pending note event produces a complete `NoteEvent` in the output.
 
-``` {.typescript file=_generated/lib/midi-parser.ts}
+``` {.typescript file=lib/midi-parser.ts}
   for (const [key] of pending) {
     closePending(pending, key, tick, notes);
   }
@@ -311,7 +311,7 @@ The SMF header layout: bytes 0–3 are the tag `MThd`; bytes 4–7 are the 32-bi
 
 In Type 1 files only track 0 is authoritative for tempo and time signature data; subsequent tracks may duplicate these meta events for DAW compatibility but the parser ignores them.
 
-``` {.typescript file=_generated/lib/midi-parser.ts}
+``` {.typescript file=lib/midi-parser.ts}
 export function parseMidi(buffer: ArrayBuffer): ParsedMidi {
   const view = new DataView(buffer);
 
@@ -367,7 +367,7 @@ Channel 9 (General MIDI drum channel, labelled "channel 10" in 1-indexed notatio
 
 The exported tempo map adds the pre-computed `bpm` field. If no tempo events were found at all, a single 120 BPM entry is inserted at tick 0 — the MIDI default.
 
-``` {.typescript file=_generated/lib/midi-parser.ts}
+``` {.typescript file=lib/midi-parser.ts}
   tempoMap.sort((a, b) => a.tick - b.tick);
   timeSigEntries.sort((a, b) => a.tick - b.tick);
 

@@ -8,7 +8,7 @@ A "calibrated range" is a `Set<string>` of cell IDs that the player can physical
 
 All three functions share a single constant key. Centralising it here prevents key-name drift if the storage scheme changes.
 
-``` {.typescript file=_generated/lib/calibration.ts}
+``` {.typescript file=lib/calibration.ts}
 const STORAGE_KEY = 'gi_calibrated_range';
 ```
 
@@ -16,7 +16,7 @@ const STORAGE_KEY = 'gi_calibrated_range';
 
 `loadCalibratedRange` reads and JSON-parses the stored value. It returns `null` (not an empty set) when no calibration has been saved, so callers can distinguish "never calibrated" from "calibrated to zero cells". Type narrowing ensures only string elements survive the parse — non-string entries are silently dropped. All errors (missing key, malformed JSON, storage unavailable) return `null`.
 
-``` {.typescript file=_generated/lib/calibration.ts}
+``` {.typescript file=lib/calibration.ts}
 export function loadCalibratedRange(): ReadonlySet<string> | null {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -34,7 +34,7 @@ export function loadCalibratedRange(): ReadonlySet<string> | null {
 
 `saveCalibratedRange` spreads the set into an array before serialising — `JSON.stringify` does not handle `Set` directly. Storage quota errors and private-browsing restrictions are silently swallowed; the calibration workflow can still function in-session without persistence.
 
-``` {.typescript file=_generated/lib/calibration.ts}
+``` {.typescript file=lib/calibration.ts}
 export function saveCalibratedRange(cellIds: ReadonlySet<string>): void {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify([...cellIds]));
@@ -47,7 +47,7 @@ export function saveCalibratedRange(cellIds: ReadonlySet<string>): void {
 
 `clearCalibratedRange` removes the key entirely, returning the app to the "never calibrated" state. Errors are swallowed for the same reasons as `saveCalibratedRange`.
 
-``` {.typescript file=_generated/lib/calibration.ts}
+``` {.typescript file=lib/calibration.ts}
 export function clearCalibratedRange(): void {
   try { localStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
 }
