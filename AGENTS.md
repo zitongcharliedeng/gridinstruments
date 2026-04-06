@@ -89,7 +89,7 @@ The codebase uses [Entangled](https://entangled.github.io/) for literate program
 
 **CRITICAL: To make code changes, edit `.lit.mdx` files -- NEVER edit `*.ts` files directly.**
 
-The tangling pipeline: `literate.lit.mdxx/*.lit.mdx` --> `entangled tangle` --> `*.ts` --> `tsc && vite build` --> `dist/`
+The build pipeline: `literate-state-machine-wiki build` runs the escalating pipeline: pre-check → tangle → postTangle hooks → verified store output
 
 ### XState Machines
 
@@ -173,7 +173,7 @@ nix develop --command npm run lint
 
 The `flake.nix` devshell provides the correct nixpkgs Firefox matching the npm `@playwright/test` version. The dev server auto-starts via `playwright.config.ts` webServer config.
 
-Entangled CLI: `managed by literate-state-machine-wiki` (Python, installed via venv in Nix devshell, see `requirements.txt`).
+Entangled CLI: managed internally by literate-state-machine-wiki — consumers never interact with it directly.
 
 ### Development Workflow
 
