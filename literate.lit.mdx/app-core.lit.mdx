@@ -727,7 +727,7 @@ the double-click snap-to-nearest-TET behavior.
      this.visualizer?.setBFact(parseFloat(this.loadSetting('bfact', '0')));
      this.synth.setD4Hz(parseFloat(this.loadSetting('dref', '293.66')));
      this.visualizer?.setD4Hz(parseFloat(this.loadSetting('dref', '293.66')));
-```text
+```
 
 The spacing input adjusts the pixel gap between keys. It is a debug/advanced control wired directly to the visualizer.
 
@@ -736,7 +736,7 @@ The spacing input adjusts the pixel gap between keys. It is a debug/advanced con
     spacingInput?.addEventListener('input', () => {
       this.visualizer?.setButtonSpacing(parseNum(spacingInput.value, 0));
     });
-```text
+```
 
 MIDI expression settings let the user configure pitch bend range (2-48 semitones) and toggle individual expression dimensions on or off. This is important because not all controllers send all MPE dimensions, and some players prefer deterministic behavior over expressive control.
 
@@ -762,7 +762,7 @@ MIDI expression settings let the user configure pitch bend range (2-48 semitones
       });
     }
 
-```text
+```
 
 Each expression dimension (bend, velocity, pressure, timbre) has a checkbox that
 toggles it on or off, persisted in localStorage. The timbre CC mode cycles through
@@ -826,7 +826,7 @@ button component.
       }});
       void pcSS;
     }
-```text
+```
 
 The touch dead zone slider controls the minimum finger velocity (in CSS px per ms) that triggers continuous pitch bend. Below this threshold, touch input snaps to the cell center. Higher values require faster finger movement before microtonal bends engage.
 
@@ -854,7 +854,7 @@ The touch dead zone slider controls the minimum finger velocity (in CSS px per m
         });
       }
     }
-```text
+```
 
 MPE output sends per-note expression data to an external MIDI device. The state machine (`mpeMachine`) gates the enable/disable toggle, while the SlimSelect dropdown lists available MIDI outputs. The output list refreshes automatically when devices are connected or disconnected.
 
@@ -923,7 +923,7 @@ MPE output sends per-note expression data to an external MIDI device. The state 
     if (midiAccess) {
       midiAccess.onstatechange = () => { refreshMpeOutputs(); };
     }
-```text
+```
 
 Prevent the browser's default Space-key scroll behavior when the keyboard body has focus, since Space is the sustain pedal.
 
@@ -933,7 +933,7 @@ Prevent the browser's default Space-key scroll behavior when the keyboard body h
     });
 
 
-```text
+```
 
 ### Default Zoom — matching grid cells to finger instrument key widths
 
@@ -957,7 +957,7 @@ The target cell side length is a standard white piano key width:
 
 ``` {.typescript file=_generated/app-core.ts}
      const TARGET_KEY_MM = 23.5;
-```text
+```
 
 **There is no browser API that reliably converts physical mm to CSS px.**
 CSS abandoned physical unit accuracy on screens in 2011 (CSS Values Level 3:
@@ -981,7 +981,7 @@ metrological conversion. To change the target, change `TARGET_KEY_MM`.
      document.body.appendChild(measureEl);
      const pianoKeyPx = measureEl.offsetWidth;
      document.body.removeChild(measureEl);
-```text
+```
 
 The DPI probe is retained only for the grid geometry engine (lattice basis
 vectors need `cssPxPerInch`). It does NOT affect the key sizing target.
@@ -1011,7 +1011,7 @@ vectors need `cssPxPerInch`). It does NOT affect the key sizing target.
      if (physicalDPI !== this.detectedDpi) {
        this.visualizer?.setCssPxPerInch(physicalDPI);
      }
-```text
+```
 
 The grid's cell size at zoom=1.0 comes from the lattice geometry half-vectors.
 A cell is a parallelogram with sides along `cellHv1` (wholetone) and `cellHv2`
@@ -1034,7 +1034,7 @@ half-vector, double it (half → full side), and take the minimum:
      const zoomToApply = (Number.isFinite(savedZoom) && savedZoom > 0.1 && savedZoom < 10) ? savedZoom : this.defaultZoom;
      this.visualizer?.setZoom(zoomToApply);
      this.gridOverlayHandle?.setZoomValue(zoomToApply);
-```text
+```
 
 The DPI override input lets users correct auto-detection on non-standard displays. When set, the value is persisted to localStorage and applied to the visualizer's `cssPxPerInch`, then the zoom reset target is recalculated so the physical key size stays accurate. The reset button clears the override and restores the auto-detected value.
 
@@ -1070,7 +1070,7 @@ The DPI override input lets users correct auto-detection on non-standard display
        this.saveSetting('dpi', '');
        applyDpi(this.detectedDpi);
      });
-```text
+```
 
 The QWERTY overlay toggle renders physical key labels (Q, W, E, R...) on the grid cells so players can see which keyboard key triggers which note. When the toggle is off, grid cells show only note names.
 
@@ -1096,7 +1096,7 @@ The QWERTY overlay toggle renders physical key labels (Q, W, E, R...) on the gri
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'hidden') this.stopAllNotes();
     });
-```text
+```
 
 Focus management prevents UI controls from capturing keyboard input after interaction. Selects, sliders, and checkboxes auto-blur on pointer-up so subsequent keypresses route to the synth instead of the control. Text inputs blur on Enter/Escape to return focus to the instrument.
 
@@ -1115,7 +1115,7 @@ Focus management prevents UI controls from capturing keyboard input after intera
         }
       });
     });
-```text
+```
 
 The grid settings overlay is a SolidJS component mounted into `#grid-overlay-mount`.
 `mountGridOverlay` wires the cog button toggle and returns a `setVisible` handle.
@@ -1124,7 +1124,7 @@ as before, since all IDs are preserved.
 
 ``` {.typescript file=_generated/app-core.ts}
 
-```text
+```
 
 Sustain and vibrato pedals are modeled as `pedalMachine` actors (activate/deactivate state). Keyboard modifiers (Space/Shift) drive the actors directly; the on-screen pedal buttons are handled by the `PedalsPanel` SolidJS component mounted into `#pedals-mount`. The actors' subscriptions toggle CSS classes and synth behavior in lockstep.
 
@@ -1151,7 +1151,7 @@ Sustain and vibrato pedals are modeled as `pedalMachine` actors (activate/deacti
       this.synth.setVibrato(active);
     });
     this.vibratoActor.start();
-```text
+```
 
 The SolidJS SongBar component mounts into `#songbar-mount` and owns all song bar UI.
 Callbacks delegate back into the app for calibration, game reset, max-keys persistence,
@@ -1163,7 +1163,7 @@ target notes, progress bar, elapsed timer, and score overlay.
     this.gameActor = createActor(gameMachine);
     this.gameActor.start();
 
-```text
+```
 
 The game actor subscription drives the entire Piano Tiles UI. On each state
 transition, it updates target note highlighting, progress bar width, elapsed
@@ -1207,7 +1207,7 @@ the tuning slider and calibrate button to prevent mid-game tuning changes.
           }
           this.visualizer.setTargetNotes(allTargetCellIds);
 
-```text
+```
 
 The ghosting warning detects when a game chord requires more simultaneous keys
 than the user has demonstrated they can press. This helps keyboard users
@@ -1268,7 +1268,7 @@ realise their hardware limit before frustration sets in.
           updateTimer();
           this.gameElapsedInterval = setInterval(updateTimer, 1000);
         }
-```text
+```
 
 The remaining game states handle loading (show progress bar, hide hint), completion (show score overlay, stop timer), and idle/error (clear all game visuals, restore the song bar hint).
 
@@ -1318,7 +1318,7 @@ The remaining game states handle loading (show progress bar, hide hint), complet
         if (elapsedTimer) elapsedTimer.textContent = '';
       }
     });
-```text
+```
 
 Drag-and-drop MIDI file loading lets users drop a `.mid` file anywhere on the page. The song bar gets a visual `dropping` class during drag-over, and the file is parsed into note groups for the game engine on drop.
 
@@ -1373,7 +1373,7 @@ Drag-and-drop MIDI file loading lets users drop a `.mid` file anywhere on the pa
         this.loadMidiFromBuffer(buffer, songTitle);
       }).catch(() => { /* handled by game actor */ });
     }) as EventListener);
-```text
+```
 
 The MIDI search input queries multiple online MIDI repositories via `searchAllAdapters` with 300ms debounce. Results render as clickable rows that fetch and load the selected file directly into the game engine.
 
@@ -1427,11 +1427,11 @@ The MIDI search input queries multiple online MIDI repositories via `searchAllAd
         })(), 300);
       });
     }
-```text
+```
 
 ``` {.typescript file=_generated/app-core.ts}
   }
-```text
+```
 
 Keyboard input handling maps physical key codes to grid coordinates through the current layout's `keyMap`. Modifier keys are intercepted first: Shift triggers vibrato, Space triggers sustain, and arrow keys bend pitch (or produce vibrato when both are held simultaneously). Regular keys play notes by computing grid coordinates with octave and transpose offsets applied.
 
@@ -1522,7 +1522,7 @@ Keyboard input handling maps physical key codes to grid coordinates through the 
       this.mpe.noteOn(audioNoteId, midiNote, 0.7);
     }
   }
-```text
+```
 
 Key-up mirrors key-down: arrow releases clear pitch bend (or switch from vibrato back to single-direction bend), Shift/Space deactivate their respective pedal actors, and note keys stop the corresponding synth voice and update the history visualizer.
 
@@ -1584,7 +1584,7 @@ Key-up mirrors key-down: arrow releases clear pitch bend (or switch from vibrato
     this.trackNoteOff(effectiveCoordX, effectiveCoordY);
     this.render();
   }
-```text
+```
 
 Pointer input (touch and mouse) uses the Pointer Events API for unified handling. Pointer-down starts a note, pointer-move slides between cells (stopping the old note and starting the new one), and pointer-up releases. For MPE-enabled sessions, pointer-move also tracks pressure, pitch bend (vertical displacement within a cell), and slide/timbre (horizontal displacement).
 
@@ -1602,7 +1602,7 @@ Pointer input (touch and mouse) uses the Pointer Events API for unified handling
     this.pointerDown.set(event.pointerId, button);
   }
 
-```text
+```
 
 Pointer-move handles two cases: (1) the finger crossed a cell boundary → stop
 the old note and start a new one, or (2) the finger is within the same cell →
@@ -1705,7 +1705,7 @@ touch is stationary (snap to cell center) or sliding (continuous microtonal bend
     }
   }
 
-```text
+```
 
 Pointer-up releases the note, cleans up expression state, and releases
 pointer capture. The wiggle tracker is also cleaned up so vibrato stops
@@ -1730,7 +1730,7 @@ when all fingers are lifted.
     const rect = this.getCanvasRect();
     return this.visualizer.getButtonAtPoint(event.clientX - rect.left, event.clientY - rect.top);
   }
-```text
+```
 
 `playPointerNote` and `stopPointerNote` are the pointer equivalents of the keyboard note-on/off path. They apply the same octave and transpose offsets, feed the same synth and MPE pipelines, and participate in calibration mode and game hit detection identically to keyboard input.
 
@@ -1767,7 +1767,7 @@ when all fingers are lifted.
     this.trackNoteOff(effectiveCoordX, effectiveCoordY);
     this.render();
   }
-```text
+```
 
 Note tracking uses reference counting (`noteHoldCounts`) because multiple input sources can play the same grid cell simultaneously -- e.g. a MIDI controller and a keyboard key both hitting the same note. The history visualizer only gets a note-on when the count goes from 0 to 1, and a note-off when it returns to 0.
 
@@ -1807,7 +1807,7 @@ Note tracking uses reference counting (`noteHoldCounts`) because multiple input 
     this.midiChannelVoice.clear();
     this.render();
   }
-```text
+```
 
 The idle timer controls the visibility of decorative elements (chord graffiti, song bar hint) that should fade out during active free-play and reappear after 3 seconds of silence. During an active game session, the idle timer is suppressed and graffiti stays visible -- chord shape hints are a teaching aid that should persist throughout gameplay.
 
@@ -1855,7 +1855,7 @@ The idle timer controls the visibility of decorative elements (chord graffiti, s
 
     this.historyVisualizer?.setIdleState(idle);
   }
-```text
+```
 
 Search result click handling fetches the MIDI file from the remote URL and pipes it into the same `loadMidiFromBuffer` path used by drag-and-drop. The results div shows a loading indicator during the fetch.
 
@@ -1878,7 +1878,7 @@ Search result click handling fetches the MIDI file from the remote URL and pipes
       }
     }
   }
-```text
+```
 
 MIDI buffer loading is the shared entry point for both drag-and-drop files and search results. It parses the raw MIDI bytes, applies quantization, computes optimal transposition to fit the calibrated range, adjusts the D-ref frequency to center the song's median pitch, and forces 12-TET tuning (since standard MIDI files assume equal temperament).
 
@@ -1949,7 +1949,7 @@ MIDI buffer loading is the shared entry point for both drag-and-drop files and s
       actor.send({ type: 'LOAD_FAILED', error: msg });
     }
   }
-```text
+```
 
 Game UI overlays are created programmatically rather than in HTML because they appear only transiently. The score overlay shows completion time with a "Play again" button, the tuning warning auto-dismisses after 3 seconds, and the ghosting toast warns keyboard users when a chord requires more simultaneous keys than their keyboard can register.
 
@@ -1998,7 +1998,7 @@ Game UI overlays are created programmatically rather than in HTML because they a
      document.body.appendChild(banner);
    }
 
-```text
+```
 
 MPE vibrato uses `requestAnimationFrame` to oscillate pitch bend at approximately 5Hz across all active notes. Arrow-key vibrato uses `setInterval` instead because it runs at a fixed tick rate independent of frame rendering. Both systems track phase to produce smooth sinusoidal bends.
 
@@ -2064,13 +2064,13 @@ MPE vibrato uses `requestAnimationFrame` to oscillate pitch bend at approximatel
     }
     this.arrowVibratoPhase = 0;
   }
-```text
+```
 
 Slider presets (tick marks, active highlighting) are now rendered reactively by
 the SliderRow component via its `presets` prop — see `SliderRow.lit.md`.
 
 ``` {.typescript file=_generated/app-core.ts}
-```text
+```
 
 The render method is throttled to one repaint per animation frame via `renderScheduled`. It computes which grid cells are active by projecting note coordinates through the current fifth-size tuning, then hands the set to the visualizer. This projection is necessary because in non-12-TET tunings, the same pitch can map to different grid positions.
 
@@ -2099,7 +2099,7 @@ The render method is throttled to one repaint per animation frame via `renderSch
     this.cachedCanvasRect = this.canvas.getBoundingClientRect();
     return this.cachedCanvasRect;
   }
-```text
+```
 
 Calibration mode shows a banner instructing the user to play all reachable notes on their controller. Each note-on (from any input source) adds the cell to the calibrated set, which is persisted to localStorage. The game engine later uses this range to transpose songs and crop notes that fall outside the player's physical reach.
 
@@ -2171,7 +2171,7 @@ Calibration mode shows a banner instructing the user to play all reachable notes
     }
     this.render();
   }
-```text
+```
 
 `buildKeyboardLabels` maps each physical key code in the current layout to its printable label (e.g. `KeyQ` becomes `Q`). The resulting map is keyed by grid cell ID (`coordX_coordY`) so the visualizer can render the label on the correct cell.
 
@@ -2189,4 +2189,4 @@ Calibration mode shows a banner instructing the user to play all reachable notes
     return map;
   }
 }
-```text
+```
