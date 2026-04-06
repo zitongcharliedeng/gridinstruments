@@ -26,7 +26,7 @@
         maxBlockLength = 200;
 
         # Stage 3: Linters — check the code dialect is literate too
-        linters = [
+        postTangle = [
           {
             name = "typescript-eslint";
             description = "TypeScript type check + ESLint on tangled output";
@@ -57,7 +57,6 @@
           }
         ];
 
-        tests = [ ];
       };
     in
       lsmwOutputs // {
