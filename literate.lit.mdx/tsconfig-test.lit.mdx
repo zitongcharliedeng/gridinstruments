@@ -1,0 +1,17 @@
+---
+title: Test TypeScript Configuration
+description: Extends main tsconfig for test files — includes _generated/tests
+tags: [config, typescript, test]
+---
+
+# Test TypeScript Configuration
+
+Tests need their own tsconfig because they include `_generated/tests` which the main tsconfig excludes. This extends the main config and overrides just the include/exclude paths.
+
+```{.json file=tsconfig.test.json}
+{
+  "extends": "./tsconfig.json",
+  "include": ["_generated/tests"],
+  "exclude": []
+}
+```

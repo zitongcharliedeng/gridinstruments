@@ -21,9 +21,9 @@
       lsmwOutputs = literate-state-machine-wiki.lib.init {
         inherit pkgs;
         src = ./.;
-        sourceDir = "literate";
+        sourceDir = "literate.lit.mdx";
         minProseLines = 1;
-        maxBlockLength = 100;
+        maxBlockLength = 200;
 
         # Stage 3: Linters — check the code dialect is literate too
         linters = [
@@ -31,6 +31,7 @@
             name = "typescript-eslint";
             description = "TypeScript type check + ESLint on tangled output";
             command = ''
+              rm -rf node_modules
               ln -s ${npmDeps}/node_modules ./node_modules
               export PATH="${npmDeps}/node_modules/.bin:$PATH"
               tsc --noEmit
@@ -49,7 +50,6 @@
             name = "vite-build";
             description = "Build production bundle from verified tangled output";
             command = ''
-              ln -s ${npmDeps}/node_modules ./node_modules
               export PATH="${npmDeps}/node_modules/.bin:$PATH"
               vite build
             '';

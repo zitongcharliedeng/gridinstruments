@@ -36,7 +36,7 @@ export interface KeyboardLayout {
 
 Physical keyboard rows are staggered: the ZXCV row (iqY=3) sits half a unit to the right of the ASDF row. `ROW_STAGGER` encodes this offset per row index. `iqToDCompose` applies the derived formula:
 
-```
+```text
 ex = iqX + rowStagger[iqY]
 dcompX = 2 * ex - iqY - 12
 dcompY = -ex + 7

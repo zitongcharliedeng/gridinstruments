@@ -1,0 +1,3 @@
+- [2026-03-24 18:55:47] USER: test hook message
+- [2026-03-24 18:57:49] This is a test user message
+- [2026-03-24 18:59:33] RAW: {"session_id":"37fea3ed-b21a-4724-90fc-389051127f5f","transcript_path":"/home/firstinstallusername/.claude/projects/-home-firstinstallusername-gridinstruments/37fea3ed-b21a-4724-90fc-389051127f5f.jsonl","cwd":"/home/firstinstallusername/gridinstruments","permission_mode":"bypassPermissions","hook_ev

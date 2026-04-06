@@ -1,3 +1,18 @@
+---
+title: Playwright Configuration
+description: Test runner config — Firefox + Chromium, vite dev server, XState graph spec only
+tags: [config, playwright, test]
+---
+
+# Playwright Configuration
+
+All tests run from a single spec file (`xstate-graph.spec.ts`) enforced by `testMatch`. The dev server auto-starts on port 3099 via vite.
+
+Firefox is the primary test target (matches the nix-provided browser). Chromium is secondary. Both mute audio to avoid CI noise.
+
+Screenshot comparison tolerances are deliberately loose (`maxDiffPixelRatio: 0.15`) because font rendering varies across nix store rebuilds.
+
+```{.typescript file=playwright.config.ts}
 import { defineConfig, devices } from '@playwright/test';
 export default defineConfig({
   testDir: './_generated/tests',
@@ -47,3 +62,4 @@ export default defineConfig({
     reuseExistingServer: true,
   },
 });
+```

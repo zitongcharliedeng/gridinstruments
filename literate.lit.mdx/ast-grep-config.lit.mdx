@@ -1,0 +1,16 @@
+---
+title: AST-grep Configuration
+description: Points ast-grep at the structural lint rules directory
+tags: [config, ast-grep, lint]
+---
+
+# AST-grep Configuration
+
+ast-grep scans the tangled TypeScript for structural antipatterns defined in `ast-grep-rules/`. Each rule is a YAML file that matches AST patterns — no runtime needed, just syntax.
+
+The rules enforce the project's heavenly restrictions: no direct DOM manipulation, no type escape hatches, no imperative test files.
+
+```{.yaml file=sgconfig.yml}
+ruleDirs:
+  - ./ast-grep-rules
+```
