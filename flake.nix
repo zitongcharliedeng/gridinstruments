@@ -3,7 +3,7 @@
 
   inputs = {
     nixpkgs.url = "nixpkgs";
-    literate-state-machine-wiki.url = "github:zitongcharliedeng/build-state-machines-from-literate-wiki/lsmw-gridinstruments-verify-gate-20260316";
+    literate-state-machine-wiki.url = "github:zitongcharliedeng/build-state-machines-from-literate-wiki/main";
     bun2nix.url = "github:nix-community/bun2nix";
     bun2nix.inputs.nixpkgs.follows = "nixpkgs";
   };
