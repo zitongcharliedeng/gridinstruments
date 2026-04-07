@@ -11,17 +11,6 @@
       system = "x86_64-linux";
       pkgs = nixpkgs.legacyPackages.${system};
 
-      # npm deps: package.json form emerges from literate source via tangleAndRead
-      # package-lock.json is a committed lockfile (like flake.lock — auto-generated, not literate)
-      npmDeps = pkgs.importNpmLock.buildNodeModules {
-        package = builtins.fromJSON (literate-state-machine-wiki.lib.tangleAndRead {
-          inherit pkgs; src = ./literate.lit.mdx; file = "package.json";
-        });
-        packageLock = builtins.fromJSON (builtins.readFile ./literate.lit.mdx/package-lock.json);
-        nodejs = pkgs.nodejs_22;
-        derivationArgs.NPM_CONFIG_LEGACY_PEER_DEPS = "true";
-      };
-
       lsmwOutputs = literate-state-machine-wiki.lib.init {
         inherit pkgs;
         src = ./.;
@@ -29,19 +18,23 @@
         minProseLines = 1;
         maxBlockLength = 200;
 
-        # Stage 3: Linters — check the code dialect is literate too
         postTangle = [
+          {
+            name = "deps";
+            description = "Install dependencies via bun (replaces npm — no IFD, no importNpmLock)";
+            command = ''
+              bun install --frozen-lockfile 2>/dev/null || bun install
+            '';
+            nativeBuildInputs = [ pkgs.bun ];
+          }
           {
             name = "typescript-eslint";
             description = "TypeScript type check + ESLint on tangled output";
             command = ''
-              rm -rf node_modules
-              ln -s ${npmDeps}/node_modules ./node_modules
-              export PATH="${npmDeps}/node_modules/.bin:$PATH"
-              tsc --noEmit
-              eslint .
+              bunx tsc --noEmit
+              bunx eslint .
             '';
-            nativeBuildInputs = [ pkgs.nodejs_22 ];
+            nativeBuildInputs = [ pkgs.bun ];
           }
           {
             name = "ast-grep";
@@ -54,10 +47,9 @@
             name = "vite-build";
             description = "Build production bundle from verified tangled output";
             command = ''
-              export PATH="${npmDeps}/node_modules/.bin:$PATH"
-              vite build
+              bunx vite build
             '';
-            nativeBuildInputs = [ pkgs.nodejs_22 ];
+            nativeBuildInputs = [ pkgs.bun ];
           }
         ];
 
@@ -66,7 +58,7 @@
       lsmwOutputs // {
         devShells.${system}.default = pkgs.mkShell {
           inputsFrom = [ lsmwOutputs.devShells.${system}.default ];
-          packages = [ pkgs.nodejs_22 pkgs.python313 ];
+          packages = [ pkgs.bun pkgs.nodejs_22 pkgs.python313 ];
           shellHook = ''
             export PLAYWRIGHT_BROWSERS_PATH=${pkgs.playwright-driver.browsers}
             export PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
