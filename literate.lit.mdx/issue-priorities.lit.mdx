@@ -7,10 +7,10 @@ Use this order to avoid 16-20 minute loops on every change.
 Run only build/type/lint/static checks:
 
 ```bash
-nix develop --command npm run verify
+nix build
 ```
 
-This is the default `verify` command and does **not** run Playwright.
+This runs the full literate-state-machine-wiki pipeline (pre-tangle, tangle, postTangle hooks) but does **not** run Playwright.
 
 ## Tier 1 - Core Contract Invariants
 
@@ -41,5 +41,5 @@ nix develop --command npx playwright test --project=firefox --workers=1 -g "GAME
 Run full suite only when Tier 0-3 are green, or before release:
 
 ```bash
-nix develop --command npm run verify:full
+nix build && nix develop --command bash -c "bunx playwright test --project=firefox --workers=1"
 ```

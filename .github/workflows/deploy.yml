@@ -43,7 +43,7 @@ jobs:
 
       - name: Rebuild with /dev base (if dev deploy)
         if: steps.target.outputs.is_stable == 'false'
-        run: nix develop --command bash -c "npm ci && npx vite build --base /dev/"
+        run: nix develop --command bash -c "bun install && bunx vite build --base /dev/"
 
       - name: Deploy stable to GitHub Pages root
         if: steps.target.outputs.is_stable == 'true'
