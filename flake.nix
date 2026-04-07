@@ -33,10 +33,14 @@
         bunNix = ./literate.lit.mdx/bun.nix;
       };
 
-      # Pre-built node_modules tree — symlinked into postTangle derivations
-      # Uses bun2nix hook which runs bun install against the pre-fetched cache.
-      # src = literate.lit.mdx directory which contains package.json + bun.lock
-      # (both are committed artifacts, not literate source).
+      # package.json derived from literate source at eval time (never committed)
+      packageJson = pkgs.writeText "package.json" (literate-state-machine-wiki.lib.tangleAndRead {
+        inherit pkgs; src = ./literate.lit.mdx; file = "package.json";
+      });
+
+      # Pre-built node_modules tree — bun install against pre-fetched cache.
+      # package.json is injected from tangleAndRead (not committed).
+      # bun.lock + bun.nix are committed infrastructure (like flake.lock).
       bunNodeModules = pkgs.stdenv.mkDerivation {
         name = "gridinstruments-bun-node-modules";
         src = ./literate.lit.mdx;
@@ -44,8 +48,10 @@
         inherit bunDeps;
         dontUseBunBuild = true;
         dontUseBunCheck = true;
-        dontUseBunInstall = true;
         dontRunLifecycleScripts = true;
+        postUnpack = ''
+          cp ${packageJson} $sourceRoot/package.json
+        '';
         buildPhase = ''
           mkdir -p $out
           cp -r node_modules $out/
