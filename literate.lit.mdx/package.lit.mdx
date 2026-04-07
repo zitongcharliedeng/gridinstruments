@@ -1,12 +1,12 @@
 ---
 title: Package Declaration
-description: npm dependency manifest — consumed by importNpmLock in the nix flake
-tags: [config, npm, bootstrap]
+description: bun dependency manifest — consumed by bun2nix in the nix flake
+tags: [config, bun, bootstrap]
 ---
 
 # Package Declaration
 
-This file declares the npm dependencies consumed by `importNpmLock` inside the nix flake. It is a bootstrap artifact — it must exist at the project root for nix evaluation, same as `flake.nix`.
+This file declares the npm dependencies consumed by `bun2nix` inside the nix flake. It is a bootstrap artifact — it must exist at the project root for bun to generate `bun.lock` and `bun.nix`, same as `flake.nix`.
 
 The `scripts` section is minimal — `literate-state-machine-wiki build` handles the full pipeline. These scripts exist only as convenience aliases for developer muscle memory.
 
