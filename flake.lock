@@ -161,11 +161,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1775581651,
-        "narHash": "sha256-qIJV2okLhMHgR11JgT2JUyVQ6o03IoDoRuKxC2OOL+Q=",
+        "lastModified": 1775880901,
+        "narHash": "sha256-OEC72lzog7ug68up8oy1hcrwvUldmJ2q86LG1uXYtQE=",
         "owner": "zitongcharliedeng",
         "repo": "build-state-machines-from-literate-wiki",
-        "rev": "3b0f4b12237bde5ff7325c54f743e0c5791e5933",
+        "rev": "d664a88d9dd8729f7bcac549d2715a633bde3e2f",
         "type": "github"
       },
       "original": {
