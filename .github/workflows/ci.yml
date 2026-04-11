@@ -1,0 +1,27 @@
+name: CI
+
+on: [push, workflow_dispatch]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: DeterminateSystems/nix-installer-action@main
+      - uses: DeterminateSystems/magic-nix-cache-action@main
+
+      - name: Build
+        id: build
+        run: echo "store_path=$(nix build --print-out-paths --no-link)" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy to GitHub Pages
+        if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ${{ steps.build.outputs.store_path }}
+          destination_dir: ${{ startsWith(github.ref, 'refs/tags/') && '.' || 'dev' }}
+          keep_files: true

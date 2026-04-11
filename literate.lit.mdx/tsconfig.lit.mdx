@@ -1,0 +1,38 @@
+---
+title: TypeScript Configuration
+description: Strict TypeScript config — Rust-level type safety for the tangled output
+tags: [config, typescript, build]
+---
+
+# TypeScript Configuration
+
+TypeScript runs on the tangled output in `_generated/`. It never sees the literate source — it only sees the code blocks that entangled extracted.
+
+Strict mode is non-negotiable. `noUnusedLocals` and `noUnusedParameters` catch dead code that prose should have removed. `jsx: "preserve"` defers JSX handling to the SolidJS vite plugin.
+
+The `include` targets `_generated` (where entangled writes TypeScript) and `raw.d.ts` (module declarations for raw imports). Tests are excluded — they have their own tsconfig.
+
+```{.json file=tsconfig.json}
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "module": "ESNext",
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "preserve",
+    "jsxImportSource": "solid-js",
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true
+  },
+  "include": [".", "raw.d.ts"],
+  "exclude": ["tests"]
+}
+```

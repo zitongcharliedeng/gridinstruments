@@ -1,0 +1,384 @@
+# Grid Overlay Mount
+
+Mounts the SolidJS SettingsOverlay component into the grid keyboard area.
+This is the bridge between the vanilla TS app and the Solid component system
+for the per-grid settings panel. The `mountGridOverlay` function is called from
+app-core during initialization.
+
+All settings (SOUND, VISUAL, INPUT) live in this single overlay panel.
+
+The overlay preserves every existing DOM ID so that the app-core event
+listeners continue to work without modification. Solid renders the structure;
+app-core wires up the behaviour.
+
+``` {.typescript file=components/mount-grid-overlay.tsx}
+import { render } from 'solid-js/web';
+import { createSignal } from 'solid-js';
+import { SettingsOverlay } from './SettingsOverlay';
+import type { SectionDef } from './SettingsOverlay';
+import { InfoBox } from './InfoBox';
+import { SliderRow } from './SliderRow';
+import { TUNING_MARKERS } from '../lib/synth';
+import { srcLink, tuningTableRows } from '../app-constants';
+
+const VOLUME_INFO = `<h2>Volume</h2><p>Master output volume.</p>${srcLink('synth.lit.md', 'Source: synth.lit.md')}`;
+const TUNING_INFO = `<h2>Fifths Tuning</h2><p>Sets the perfect fifth generator in cents. This single parameter determines the entire tuning system.</p><table>${tuningTableRows}</table><p>Click a marker to snap to an equal temperament.</p>${srcLink('synth.lit.md', 'Source: synth.lit.md')}`;
+const DREF_INFO = `<h2>D-ref Frequency</h2><p>The reference pitch at grid origin [0,0]. Default 293.66 Hz (D4 in 12-TET). Adjustable to any frequency.</p>${srcLink('keyboard-layouts.lit.md', 'Source: keyboard-layouts.lit.md')}`;
+const SKEW_INFO = `<h2>Mech Skew</h2><p>Interpolates between DCompose/Wicki-Hayden (0) and MidiMech (1) grid layouts.</p>${srcLink('note-colors.lit.md', 'Source: note-colors.lit.md')}`;
+const SHEAR_INFO = `<h2>Wicked Shear</h2><p>Shear mapping: 0=DCompose (natural angle), 1=Wicki-Hayden (horizontal rows). Area-preserving.</p>${srcLink('note-colors.lit.md', 'Source: note-colors.lit.md')}`;
+const ZOOM_INFO = `<h2>Zoom</h2><p>Scales grid cell size. Default calculated from physical key width (23.5mm piano key target).</p>${srcLink('app-core.lit.md', 'Source: app-core.lit.md')}`;
+const MIDI_INFO = `<h2>MIDI Input</h2><p>External MIDI controllers send note numbers (0-127). 12-note constraint: microtonal tunings produce duplicate mappings. Use Calibrate to restrict range.</p>${srcLink('midi-input.lit.md', 'Source: midi-input.lit.md')}`;
+const BEND_INFO = `<h2>Pitch Bend</h2><p>Bend range ±2 to ±48 semitones. MPE: per-note bend. Standard: all notes.</p>${srcLink('mpe-service.lit.md', 'Source: mpe-service.lit.md')}`;
+const VELOCITY_INFO = `<h2>Velocity</h2><p>Note-on strike force → initial volume + timbre. MIDI: 0-127 sensor. Keyboard: fixed. Touch: pressure.</p>${srcLink('keyboard-visualizer.lit.md', 'Source: keyboard-visualizer.lit.md')}`;
+const TIMBRE_INFO = `<h2>Timbre (CC74)</h2><p>Brightness/slide via CC74 (MPE standard), CC11 (expression), or poly pressure.</p>${srcLink('mpe-service.lit.md', 'Source: mpe-service.lit.md')}`;
+const DEAD_ZONE_INFO = `<h2>Pitch Bend Threshold</h2><p>Min finger velocity (px/ms) for pitch bend. 0=sensitive, 0.15=default, 0.3+=deliberate. Controls how much mouse/touch movement is needed before microtonal pitch bending engages.</p>${srcLink('app-core.lit.md', 'Source: app-core.lit.md')}`;
+```
+
+The mount function accepts the container element and the cog button. It owns
+the `visible` signal and toggles it on cog clicks, returning a `toggle`
+function so app-core can drive visibility from the `overlayMachine` actor.
+
+``` {.css file=components/mount-grid-overlay.css}
+#mpe-output-select {
+  position:absolute !important; width:1px !important; height:1px !important;
+  opacity:0 !important; overflow:hidden !important; pointer-events:none !important;
+  margin:0 !important; padding:0 !important; border-width:0 !important;
+}
+.midi-panel-row { display:flex; align-items:center; gap:2px; font-size:11px; flex-wrap:wrap; }
+.mt-18 { margin-top:18px; }
+.expr-label { display:inline-flex; align-items:center; gap:4px; cursor:pointer; font-size:12px; }
+.ctrl-group { display:flex; align-items:center; gap:5px; flex-shrink:0; }
+.ctrl-label { font-size:9px; text-transform:uppercase; white-space:nowrap; color:#fff; flex-shrink:0; font-weight:700; letter-spacing:0.06em; }
+.text-white { color:#fff; }
+.text-white-12 { color:#fff; font-size:12px; }
+.text-dim { color:var(--dim); font-size:9px; }
+.text-dim-sm { color:var(--dim); font-size:10px; }
+.text-dim-plain { color:var(--dim); }
+.expr-label-sm { display:inline-flex; align-items:center; gap:3px; cursor:pointer; font-size:10px; }
+.expr-label-lg { display:inline-flex; align-items:center; gap:6px; cursor:pointer; font-size:12px; }
+.numeric-input { width:6ch; text-align:center; font-family:var(--font); font-size:10px; background:var(--bg); color:var(--fg); border:1px solid var(--border); padding:2px 3px; }
+.select-slot { min-width:120px; display:inline-block; }
+#d-ref-input { width:80px; text-transform:none; }
+```
+
+``` {.typescript file=components/mount-grid-overlay.tsx}
+import { SettingsCog } from './SettingsCog';
+import './mount-grid-overlay.css';
+
+export interface GridOverlayCallbacks {
+  onVolumeChange: (v: number) => void;
+  initialVolume: number;
+  onZoomChange: (v: number) => void;
+  initialZoom: number;
+  getDefaultZoom: () => number;
+  onSkewChange: (v: number) => void;
+  initialSkew: number;
+  onShearChange: (v: number) => void;
+  initialShear: number;
+  onTuningChange: (v: number) => void;
+  initialTuning: number;
+  onDRefChange: (v: number) => void;
+  initialDRef: number;
+  initialPbRange: number;
+}
+
+export function mountGridOverlay(
+  mountEl: HTMLElement,
+  cogMountEl: HTMLElement | null,
+  callbacks: GridOverlayCallbacks,
+): { toggle: () => void; setVisible: (v: boolean) => void; setZoomValue: (v: number) => void } {
+  const [visible, setVisible] = createSignal(false);
+  const [volVal, setVolVal] = createSignal(callbacks.initialVolume);
+  const [tuneVal, setTuneVal] = createSignal(parseFloat(String(callbacks.initialTuning)) || 700);
+  const [drefVal, setDrefVal] = createSignal(parseFloat(String(callbacks.initialDRef)) || 293.66);
+  const [skewVal, setSkewVal] = createSignal(parseFloat(String(callbacks.initialSkew)) || 0);
+  const [shearVal, setShearVal] = createSignal(parseFloat(String(callbacks.initialShear)) || 0);
+  const [zoomVal, setZoomVal] = createSignal(callbacks.initialZoom);
+  const [dzVal, setDzVal] = createSignal(0.15);
+
+  const toggle = (): void => { setVisible(v => !v); };
+  const onEscape = (e: KeyboardEvent): void => {
+    if (e.key === 'Escape' && visible()) { setVisible(false); }
+  };
+  document.addEventListener('keydown', onEscape);
+  if (cogMountEl) {
+    render(() => <SettingsCog id="grid-settings-btn" active={visible()} onClick={toggle} position="absolute" style={{ top: '8px', left: '8px', 'z-index': '15' }} />, cogMountEl);
+  }
+
+  const sections: SectionDef[] = [
+    {
+      title: 'SOUND (global)',
+      children: () => (
+        <>
+          <InfoBox infoKey="waveform" infoContent={`<h2>Waveform</h2><p>Oscillator shape: sine, triangle, sawtooth, square, guitar.</p>${srcLink('synth.lit.md', 'Source: synth.lit.md')}`} resetId="wave-reset" onReset={() => {
+            const sel = document.getElementById('wave-select-slot')?.querySelector('select') as HTMLSelectElement | null;
+            if (sel) { sel.value = 'sawtooth'; sel.dispatchEvent(new Event('change', { bubbles: true })); }
+          }}>
+            <span class="ctrl-label">WAVE</span>
+            <span id="wave-select-slot" />
+          </InfoBox>
+          <InfoBox infoKey="volume" infoContent={VOLUME_INFO} resetId="volume-slider-reset" onReset={() => { setVolVal(0.3); callbacks.onVolumeChange(0.3); }}>
+            <SliderRow def={{
+              id: 'volume-slider',
+              badgeId: 'volume-thumb-badge',
+              label: 'VOL',
+              min: 0, max: 1, step: 0.01,
+              defaultValue: callbacks.initialVolume,
+              value: volVal(),
+              formatBadge: (v: number) => (20 * Math.log10(Math.max(0.001, v))).toFixed(1),
+              onChange: (v: number) => { setVolVal(v); callbacks.onVolumeChange(v); },
+            }} />
+          </InfoBox>
+          <div class="tuning-slider-area mt-18">
+            <InfoBox infoKey="tuning" infoContent={TUNING_INFO} resetId="tuning-slider-reset" onReset={() => { setTuneVal(700); callbacks.onTuningChange(700); }}>
+              <SliderRow def={{
+                id: 'tuning-slider',
+                badgeId: 'tuning-thumb-badge',
+                label: 'FIFTHS (¢)',
+                min: 683, max: 722, step: 0.01,
+                defaultValue: 700,
+                value: tuneVal(),
+                formatBadge: (v: number) => v.toFixed(1),
+                onChange: (v: number) => { setTuneVal(v); callbacks.onTuningChange(v); },
+                presetsId: 'tet-presets',
+                alternateTicks: true,
+                presets: TUNING_MARKERS.map(m => ({ value: m.fifth, label: m.name, description: `${m.description} (${m.fifth.toFixed(2)}\u00a2)` })),
+              }} />
+            </InfoBox>
+          </div>
+          <div class="tuning-slider-area mt-18">
+            <InfoBox infoKey="dref" infoContent={DREF_INFO} resetId="d-ref-slider-reset" onReset={() => { setDrefVal(293.66); callbacks.onDRefChange(293.66); }}>
+              <SliderRow def={{
+                id: 'd-ref-slider',
+                badgeId: 'dref-thumb-badge',
+                label: 'D-REF',
+                min: 73.42, max: 1174.66, step: 0.01,
+                defaultValue: 293.66,
+                value: drefVal(),
+                formatBadge: (v: number) => v.toFixed(2),
+                onChange: (v: number) => { setDrefVal(v); callbacks.onDRefChange(v); },
+              }} />
+            </InfoBox>
+          </div>
+        </>
+      ),
+    },
+```
+
+### VISUAL section
+
+Per-grid visual settings: skew (DCompose ↔ MidiMech morph), wicked shear
+(row-offset angle), zoom (cell size), QWERTY overlay toggle, and keyboard
+layout selector. Each slider wraps its info button in a `ctrl-group` flex row.
+
+``` {.typescript file=components/mount-grid-overlay.tsx}
+    {
+      title: 'VISUAL (per grid)',
+      children: () => (
+        <>
+          <div class="tuning-slider-area">
+            <InfoBox infoKey="skew" infoContent={SKEW_INFO} resetId="skew-slider-reset" onReset={() => { setSkewVal(0); callbacks.onSkewChange(0); }}>
+              <SliderRow def={{
+                id: 'skew-slider',
+                badgeId: 'skew-thumb-badge',
+                label: 'SKEW',
+                min: -0.5, max: 1.5, step: 0.01,
+                defaultValue: 0,
+                value: skewVal(),
+                formatBadge: (v: number) => v.toFixed(2),
+                onChange: (v: number) => { setSkewVal(v); callbacks.onSkewChange(v); },
+                presetsId: 'skew-presets',
+                presets: [
+                  { value: 0, label: 'DCompose / Wicki-Hayden', description: 'DCompose: diagonal parallelogram grid (Striso angle). Wicki-Hayden shares this skew — use WICKED SHEAR to differentiate.' },
+                  { value: 1, label: 'MidiMech', description: 'MidiMech: orthogonal rectangular grid' },
+                ],
+              }} />
+            </InfoBox>
+          </div>
+          <div class="tuning-slider-area mt-18">
+            <InfoBox infoKey="shear" infoContent={SHEAR_INFO} resetId="bfact-slider-reset" onReset={() => { setShearVal(0); callbacks.onShearChange(0); }}>
+              <SliderRow def={{
+                id: 'bfact-slider',
+                badgeId: 'shear-thumb-badge',
+                label: 'SHEAR',
+                min: -0.5, max: 1.5, step: 0.01,
+                defaultValue: 0,
+                value: shearVal(),
+                formatBadge: (v: number) => v.toFixed(2),
+                onChange: (v: number) => { setShearVal(v); callbacks.onShearChange(v); },
+                presetsId: 'bfact-presets',
+                presets: [
+                  { value: 0, label: 'DCompose', description: 'DCompose: no row shear (default lattice)' },
+                  { value: 1, label: 'Wicki-Hayden', description: 'Wicki-Hayden: horizontal rows (shear mapping from Tonnetz)' },
+                ],
+              }} />
+            </InfoBox>
+          </div>
+          <div class="tuning-slider-area mt-18">
+            <InfoBox infoKey="zoom" infoContent={ZOOM_INFO} resetId="zoom-slider-reset" onReset={() => { const d = callbacks.getDefaultZoom(); setZoomVal(d); callbacks.onZoomChange(d); }}>
+              <SliderRow def={{
+                id: 'zoom-slider',
+                badgeId: 'zoom-thumb-badge',
+                label: 'ZOOM',
+                min: 0.2, max: 3, step: 0.01,
+                defaultValue: callbacks.initialZoom,
+                value: zoomVal(),
+                getDefaultValue: callbacks.getDefaultZoom,
+                formatBadge: (v: number) => v.toFixed(2),
+                onChange: (v: number) => { setZoomVal(v); callbacks.onZoomChange(v); },
+              }} />
+            </InfoBox>
+          </div>
+          <div class="slider-track mt-18">
+            <label class="expr-label-lg">
+              <span class="gi-checkbox"><input type="checkbox" id="qwerty-overlay-toggle" checked /><span class="gi-check" /></span>
+              <span class="text-white">COMPUTER KEYBOARD LABELS</span>
+            </label>
+          </div>
+        </>
+      ),
+    },
+```
+
+### INPUT section
+
+Global input settings: MIDI device management, pitch bend range, and expression
+controls (bend, velocity, pressure, timbre). Expression checkboxes toggle which
+MPE dimensions are active. Pressure mode and CC source use slim-select dropdowns.
+
+``` {.typescript file=components/mount-grid-overlay.tsx}
+    {
+      title: 'INPUT (global)',
+      children: () => (
+        <>
+          <InfoBox infoKey="layout" infoContent={`<h2>Keyboard Layout</h2><p>ANSI (US), ISO (EU), Dvorak. Auto-detected via Keyboard API.</p>${srcLink('keyboard-layouts.lit.md', 'Source')}`} resetId="layout-reset" onReset={() => {
+            const sel = document.getElementById('layout-select-slot')?.querySelector('select') as HTMLSelectElement | null;
+            if (sel) { sel.selectedIndex = 0; sel.dispatchEvent(new Event('change', { bubbles: true })); }
+          }}>
+            <span class="ctrl-label">KEYBOARD LAYOUT</span>
+            <span id="layout-select-slot" />
+          </InfoBox>
+          <div class="mt-18">
+            <div id="midi-settings-panel">
+              <InfoBox infoKey="midi" infoContent={MIDI_INFO} resetId="midi-reset">
+                <span class="overlay-section-title">MIDI</span>
+              </InfoBox>
+              <div id="midi-device-list" />
+              <span class="overlay-section-title">EXPRESSION</span>
+              <InfoBox infoKey="bend" infoContent={BEND_INFO} resetId="bend-reset" onReset={() => {
+                const cb = document.getElementById('expr-bend') as HTMLInputElement | null;
+                const pb = document.getElementById('midi-pb-range-expr') as HTMLInputElement | null;
+                if (cb) cb.checked = true;
+                if (pb) { pb.value = '24'; pb.dispatchEvent(new Event('change', { bubbles: true })); }
+              }}>
+                <label class="expr-label">
+                  <span class="gi-checkbox"><input type="checkbox" id="expr-bend" checked /><span class="gi-check" /></span>
+                  <span class="text-white">Pitch Bend</span>
+                  <input type="text" inputmode="decimal" id="midi-pb-range-expr" value={callbacks.initialPbRange} class="numeric-input" />
+                  <span class="text-dim-sm">semitones</span>
+                </label>
+              </InfoBox>
+              <InfoBox infoKey="velocity" infoContent={VELOCITY_INFO} resetId="velocity-reset" onReset={() => {
+                const cb = document.getElementById('expr-velocity') as HTMLInputElement | null;
+                if (cb) cb.checked = true;
+              }}>
+                <label class="expr-label">
+                  <span class="gi-checkbox"><input type="checkbox" id="expr-velocity" checked /><span class="gi-check" /></span>
+                  <span class="text-white">Note Velocity</span>
+                </label>
+              </InfoBox>
+              <InfoBox infoKey="pressureMode" infoContent={`<h2>Pressure Mode</h2><p>Channel = one pressure value per channel. Poly = per-note pressure (MPE).</p>`} resetId="pressure-mode-reset" onReset={() => {
+                const sel = document.getElementById('pressure-mode-slot')?.querySelector('select') as HTMLSelectElement | null;
+                if (sel) { sel.value = 'channel'; sel.dispatchEvent(new Event('change', { bubbles: true })); }
+              }}>
+                <span class="text-white-12">Pressure</span>
+                <span class="text-dim">mode</span>
+                <span id="pressure-mode-slot" />
+              </InfoBox>
+              <InfoBox infoKey="pressureSource" infoContent={`<h2>Pressure Source</h2><p>Aftertouch = key pressure after note-on. CC sources send continuous controller messages.</p>`} resetId="pressure-source-reset" onReset={() => {
+                const sel = document.getElementById('pressure-cc-source-slot')?.querySelector('select') as HTMLSelectElement | null;
+                if (sel) { sel.value = 'aftertouch'; sel.dispatchEvent(new Event('change', { bubbles: true })); }
+              }}>
+                <span class="text-dim">source</span>
+                <span id="pressure-cc-source-slot" />
+              </InfoBox>
+              <InfoBox infoKey="timbreEnable" infoContent={TIMBRE_INFO} resetId="timbre-enable-reset" onReset={() => {
+                const cb = document.getElementById('expr-timbre') as HTMLInputElement | null;
+                if (cb) cb.checked = true;
+              }}>
+                <label class="expr-label">
+                  <span class="gi-checkbox"><input type="checkbox" id="expr-timbre" checked /><span class="gi-check" /></span>
+                  <span class="text-white">Timbre Slide</span>
+                </label>
+                <span id="timbre-cc-mode-slot" />
+              </InfoBox>
+              <InfoBox infoKey="timbreReverse" infoContent={`<h2>Timbre Reverse</h2><p>Invert the timbre slide axis direction.</p>`} resetId="timbre-reverse-reset" onReset={() => {
+                const rev = document.getElementById('timbre-reverse') as HTMLInputElement | null;
+                if (rev) rev.checked = false;
+              }}>
+                <label class="expr-label-sm">
+                  <span class="gi-checkbox"><input type="checkbox" id="timbre-reverse" /><span class="gi-check" /></span>
+                  <span class="text-dim-plain">Rev</span>
+                </label>
+              </InfoBox>
+              <InfoBox infoKey="touchDeadZone" infoContent={DEAD_ZONE_INFO} resetId="touch-dead-zone-reset" onReset={() => { setDzVal(0.15); }}>
+                <SliderRow def={{
+                  id: 'touch-dead-zone-slider',
+                  badgeId: 'touch-dead-zone-badge',
+                  label: 'BEND THRESHOLD',
+                  min: 0, max: 0.5, step: 0.01,
+                  defaultValue: 0.15,
+                  value: dzVal(),
+                  formatBadge: (v: number) => v.toFixed(2),
+                  onChange: (v: number) => { setDzVal(v); },
+                }} />
+              </InfoBox>
+              <InfoBox infoKey="mpeOutput" infoContent={`<h2>MPE Output</h2><p>Send MPE messages to external MIDI devices. Enable and select output port.</p>`} resetId="mpe-output-reset" onReset={() => {
+                const cb = document.getElementById('mpe-enabled') as HTMLInputElement | null;
+                if (cb) cb.checked = false;
+              }}>
+                <span class="ctrl-label">MPE OUT:</span>
+                <label class="expr-label">
+                  <span class="gi-checkbox"><input type="checkbox" id="mpe-enabled" /><span class="gi-check" /></span>
+                  Enable
+                </label>
+                <span id="mpe-output-select-slot" class="select-slot" />
+              </InfoBox>
+            </div>
+          </div>
+        </>
+      ),
+    },
+  ];
+
+  render(
+    () => <SettingsOverlay overlayId="grid-overlay" sections={sections} visible={visible} onToggle={toggle} />,
+    mountEl,
+  );
+
+  mountEl.addEventListener('click', (e) => {
+    const target = e.target;
+    if (!(target instanceof HTMLElement)) return;
+    if (target.id === 'grid-overlay') { setVisible(false); }
+  });
+
+  return { toggle, setVisible, setZoomValue: setZoomVal };
+}
+```
+
+
+## Structural Rule: No Grid Cog Class
+
+grid-cog class is dead — all cogs must use the SettingsCog SolidJS component (class=settings-cog).
+
+```{.yaml file=ast-grep-rules/no-grid-cog-class.yml}
+id: no-grid-cog-class
+language: html
+rule:
+  pattern: 'class="grid-cog"'
+files:
+  - "index.html"
+severity: error
+message: "grid-cog class is dead — all cogs must use the SettingsCog SolidJS component (class=settings-cog)."
+note: "See #269: ONE component for all 3 cogs. No raw HTML cog buttons."
+```

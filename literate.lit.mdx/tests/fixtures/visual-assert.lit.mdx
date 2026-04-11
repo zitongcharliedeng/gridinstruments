@@ -1,0 +1,77 @@
+# Visual Assert
+
+Unified visual assertion fixture — three-layer verification pyramid: DOM assertions, golden screenshots, and LLM vision fallback.
+
+``` {.typescript file=tests/fixtures/visual-assert.ts}
+import type { Page } from '@playwright/test';
+import { expect } from '@playwright/test';
+import { isVisionEnabled, getScreenshotHash, VisionCache } from './cost-control';
+import { assertWithVision } from './llm-vision';
+import type { VisionResult } from './cost-control';
+
+let cacheInstance: VisionCache | null = null;
+
+function getCache(): VisionCache {
+  cacheInstance ??= new VisionCache();
+  return cacheInstance;
+}
+```
+
+The `VisualAssertOptions` and `VisualAssertResult` interfaces define the contract for the assertion function.
+
+``` {.typescript file=tests/fixtures/visual-assert.ts}
+export interface VisualAssertOptions {
+  invariant: string;
+  context?: string;
+  goldenName: string;
+  page: Page;
+  locator?: string;
+  maxDiffRatio?: number;
+}
+
+export interface VisualAssertResult {
+  goldenPassed: boolean;
+  visionResult: VisionResult | null;
+  passed: boolean;
+}
+```
+
+The main assertion function orchestrates golden screenshot comparison and optional LLM vision checks.
+
+``` {.typescript file=tests/fixtures/visual-assert.ts}
+export async function assertVisualState(
+  opts: VisualAssertOptions,
+): Promise<VisualAssertResult> {
+  const { page, invariant, context, goldenName, locator } = opts;
+
+  const target = locator ? page.locator(locator) : page;
+  const screenshotBuffer = await target.screenshot({ type: 'png' });
+
+  await expect(target).toHaveScreenshot(`${goldenName}.png`);
+  const goldenPassed = true;
+
+  let visionResult: VisionResult | null = null;
+
+  if (isVisionEnabled()) {
+    const hash = getScreenshotHash(screenshotBuffer);
+    const cache = getCache();
+
+    if (cache.has(hash)) {
+      visionResult = cache.get(hash) ?? null;
+    } else {
+      const llmResult = await assertWithVision(screenshotBuffer, invariant, context);
+      visionResult = {
+        pass: llmResult.pass,
+        confidence: llmResult.confidence,
+        reason: llmResult.reason,
+        timestamp: new Date().toISOString(),
+      };
+      cache.set(hash, visionResult);
+    }
+  }
+
+  const passed = visionResult === null || visionResult.pass;
+
+  return { goldenPassed, visionResult, passed };
+}
+```

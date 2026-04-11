@@ -1,0 +1,125 @@
+---
+title: ESLint Configuration
+description: Rust-level strict TypeScript linting — bans type escape hatches, enforces exhaustive patterns
+tags: [config, eslint, lint]
+---
+
+# ESLint Configuration
+
+ESLint enforces Rust-level type safety on the tangled TypeScript output. The base is `typescript-eslint` strict + stylistic with type-checking enabled.
+
+Every rule here exists because a specific bug or antipattern was caught in production. The comments explain why each override matters.
+
+SolidJS components (`.tsx`) get additional anti-pattern rules via `eslint-plugin-solid`. Test files relax unsafe-call rules because Playwright's `page.evaluate()` crosses a browser context boundary that TypeScript cannot track.
+
+```{.javascript file=eslint.config.mjs}
+import eslint from '@eslint/js';
+import tseslint from 'typescript-eslint';
+import solid from 'eslint-plugin-solid/configs/typescript';
+
+export default tseslint.config(
+  eslint.configs.recommended,
+  ...tseslint.configs.strictTypeChecked,
+  ...tseslint.configs.stylisticTypeChecked,
+
+  {
+    files: ['**/*.ts', '**/*.tsx'],
+    languageOptions: {
+      parserOptions: {
+        projectService: true,
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+  },
+
+  {
+    files: ['./tests/**/*.ts'],
+    languageOptions: {
+      parserOptions: {
+        projectService: false,
+        project: './tsconfig.test.json',
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+  },
+
+  {
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'error',
+      '@typescript-eslint/no-unsafe-argument': 'error',
+      '@typescript-eslint/no-unsafe-assignment': 'error',
+      '@typescript-eslint/no-unsafe-call': 'error',
+      '@typescript-eslint/no-unsafe-member-access': 'error',
+      '@typescript-eslint/no-unsafe-return': 'error',
+      '@typescript-eslint/consistent-type-assertions': ['error', {
+        assertionStyle: 'as',
+        objectLiteralTypeAssertions: 'allow',
+      }],
+      '@typescript-eslint/no-non-null-assertion': 'error',
+      '@typescript-eslint/explicit-function-return-type': ['error', {
+        allowExpressions: true,
+        allowTypedFunctionExpressions: true,
+      }],
+      '@typescript-eslint/switch-exhaustiveness-check': 'error',
+      '@typescript-eslint/prefer-nullish-coalescing': 'error',
+      '@typescript-eslint/no-floating-promises': 'error',
+      '@typescript-eslint/no-misused-promises': 'error',
+      '@typescript-eslint/strict-boolean-expressions': 'off',
+      '@typescript-eslint/no-unnecessary-type-conversion': 'off',
+      '@typescript-eslint/no-unnecessary-condition': 'off',
+      '@typescript-eslint/no-unnecessary-type-assertion': 'off',
+      '@typescript-eslint/prefer-for-of': 'off',
+      '@typescript-eslint/consistent-generic-constructors': 'off',
+      '@typescript-eslint/dot-notation': 'off',
+      '@typescript-eslint/return-await': 'off',
+      '@typescript-eslint/restrict-template-expressions': ['error', {
+        allowNumber: true,
+        allowBoolean: false,
+        allowAny: false,
+        allowNullish: false,
+      }],
+      '@typescript-eslint/no-unused-vars': ['error', {
+        argsIgnorePattern: '^_',
+        varsIgnorePattern: '^_',
+      }],
+      'no-empty': ['error', { allowEmptyCatch: true }],
+      '@typescript-eslint/no-empty-function': ['error', {
+        allow: ['methods'],
+      }],
+    },
+  },
+
+  {
+    files: ['./tests/**/*.ts'],
+    rules: {
+      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-return': 'off',
+      '@typescript-eslint/no-unsafe-argument': 'off',
+      '@typescript-eslint/require-await': 'off',
+      '@typescript-eslint/no-empty-function': 'off',
+      '@typescript-eslint/strict-boolean-expressions': 'off',
+      '@typescript-eslint/no-unnecessary-condition': 'off',
+      '@typescript-eslint/dot-notation': 'off',
+      '@typescript-eslint/restrict-template-expressions': 'off',
+      '@typescript-eslint/explicit-function-return-type': 'off',
+      '@typescript-eslint/prefer-optional-chain': 'off',
+      '@typescript-eslint/no-unused-vars': ['error', {
+        argsIgnorePattern: '^_',
+        varsIgnorePattern: '^_',
+      }],
+      'no-empty': 'off',
+    },
+  },
+
+  {
+    files: ['**/*.tsx'],
+    ...solid,
+  },
+
+  {
+    ignores: ['dist/**', 'node_modules/**', 'eslint.config.mjs', 'vite.config.ts', 'playwright.config.ts', 'ast-grep-rules/**'],
+  },
+);
+```

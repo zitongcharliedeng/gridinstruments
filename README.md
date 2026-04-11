@@ -1,1 +1,1 @@
-AGENTS.md
+literate.lit.mdx/index.lit.mdx

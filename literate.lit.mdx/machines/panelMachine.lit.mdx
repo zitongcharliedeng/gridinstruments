@@ -1,0 +1,175 @@
+# Panel Machine
+
+A resizable, collapsible panel machine. Panels can be dragged by a handle, toggled open/closed, double-clicked to restore default height, and stepped with keyboard shortcuts. Height is clamped to a dynamic maximum of 60% of the viewport so panels never overflow the screen on small displays.
+
+## Types and helpers
+
+`PanelEvent` covers all six interaction kinds. `PanelContext` stores the current height together with the bounds and drag-start snapshot needed for live resize. `PanelInput` is supplied once at machine creation time and seeds the initial context.
+
+`clampPanelHeight` is exported so that callers (e.g. persistence restore) can apply the same bounds logic before feeding a value into the machine.
+
+``` {.typescript file=machines/panelMachine.ts}
+import { setup, assign } from 'xstate';
+
+type PanelEvent =
+  | { type: 'DRAG_START'; clientY: number }
+  | { type: 'DRAG_MOVE'; clientY: number }
+  | { type: 'DRAG_END' }
+  | { type: 'DBLCLICK' }
+  | { type: 'TOGGLE' }
+  | { type: 'RESIZE_STEP'; grow: boolean };
+
+interface PanelContext {
+  height: number;
+  defaultHeight: number;
+  minHeight: number;
+  maxHeight: number;
+  dirUp: boolean;
+  dragStartY: number;
+  dragStartH: number;
+}
+
+interface PanelInput {
+  defaultHeight: number;
+  minHeight: number;
+  maxHeight: number;
+  dirUp: boolean;
+  initialHeight: number;
+  startCollapsed: boolean;
+}
+
+export function clampPanelHeight(h: number, min: number, max: number): number {
+  const dynamicMax = Math.min(max, Math.floor(window.innerHeight * 0.6));
+  return Math.max(min, Math.min(dynamicMax, h));
+}
+```
+
+## Guards
+
+`isInitCollapsed` checks whether the starting height is zero, directing the initial routing transition. `belowThreshold` collapses the panel automatically when a drag ends near the minimum — providing a snap-to-close affordance without requiring pixel-perfect precision.
+
+``` {.typescript file=machines/panelMachine.ts}
+const guards = {
+  isInitCollapsed: ({ context }: { context: PanelContext }) => context.height <= 0,
+  belowThreshold: ({ context }: { context: PanelContext }) => context.height <= context.minHeight + 10,
+};
+```
+
+## States: routing and idle
+
+`routing` is an entry trampoline — its `always` transitions immediately redirect to either `collapsed` or `idle` based on the initial height. The `idle` state handles the full interaction set: drag-start captures the y-anchor and current height, `TOGGLE` collapses, `DBLCLICK` restores the default height, and `RESIZE_STEP` moves height by ±10 px.
+
+``` {.typescript file=machines/panelMachine.ts}
+export const panelMachine = setup({
+  types: {
+    context: {} as PanelContext,
+    events: {} as PanelEvent,
+    input: {} as PanelInput,
+  },
+  guards,
+}).createMachine({
+  id: 'panel',
+  context: ({ input }) => ({
+    height: input.startCollapsed ? 0 : clampPanelHeight(input.initialHeight, input.minHeight, input.maxHeight),
+    defaultHeight: input.defaultHeight,
+    minHeight: input.minHeight,
+    maxHeight: input.maxHeight,
+    dirUp: input.dirUp,
+    dragStartY: 0,
+    dragStartH: 0,
+  }),
+  initial: 'routing',
+  states: {
+    routing: {
+      always: [
+        { guard: 'isInitCollapsed', target: 'collapsed' },
+        { target: 'idle' },
+      ],
+    },
+```
+
+The `idle` state is the primary interactive state — it accepts drag-start (capturing the y-anchor and height snapshot), toggle (collapsing immediately), double-click (restoring the default height), and resize-step (keyboard ±10 px increments).
+
+``` {.typescript file=machines/panelMachine.ts}
+    idle: {
+      on: {
+        DRAG_START: {
+          target: 'dragging',
+          actions: assign(({ context, event }) => ({
+            dragStartY: event.clientY,
+            dragStartH: context.height,
+          })),
+        },
+        TOGGLE: { target: 'collapsed' },
+        DBLCLICK: {
+          actions: assign(({ context }) => ({
+            height: clampPanelHeight(context.defaultHeight, context.minHeight, context.maxHeight),
+          })),
+        },
+        RESIZE_STEP: {
+          actions: assign(({ context, event }) => ({
+            height: clampPanelHeight(
+              context.height + (event.grow ? 10 : -10),
+              context.minHeight,
+              context.maxHeight,
+            ),
+          })),
+        },
+      },
+    },
+```
+
+## States: collapsed and dragging
+
+`collapsed` re-enables drag (starting from `minHeight` rather than zero) and responds to `TOGGLE` and `DBLCLICK` by restoring the default height. During `dragging`, `DRAG_MOVE` recomputes height from the delta — respecting `dirUp` so the same machine works for both bottom-anchored and top-anchored panels. When the drag ends, `belowThreshold` sends the panel to `collapsed`; otherwise it returns to `idle`.
+
+``` {.typescript file=machines/panelMachine.ts}
+    collapsed: {
+      on: {
+        DRAG_START: {
+          target: 'dragging',
+          actions: assign(({ context, event }) => ({
+            dragStartY: event.clientY,
+            dragStartH: context.minHeight,
+            height: context.minHeight,
+          })),
+        },
+        TOGGLE: {
+          target: 'idle',
+          actions: assign(({ context }) => ({
+            height: clampPanelHeight(context.defaultHeight, context.minHeight, context.maxHeight),
+          })),
+        },
+        DBLCLICK: {
+          target: 'idle',
+          actions: assign(({ context }) => ({
+            height: clampPanelHeight(context.defaultHeight, context.minHeight, context.maxHeight),
+          })),
+        },
+      },
+    },
+    dragging: {
+      on: {
+        DRAG_MOVE: {
+          actions: assign(({ context, event }) => {
+            const delta = context.dirUp
+              ? context.dragStartY - event.clientY
+              : event.clientY - context.dragStartY;
+            return {
+              height: clampPanelHeight(
+                context.dragStartH + delta,
+                context.minHeight,
+                context.maxHeight,
+              ),
+            };
+          }),
+        },
+        DRAG_END: [
+          { guard: 'belowThreshold', target: 'collapsed' },
+          { target: 'idle' },
+        ],
+      },
+    },
+  },
+});
+```

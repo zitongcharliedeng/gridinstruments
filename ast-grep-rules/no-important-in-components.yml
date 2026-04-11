@@ -1,9 +1,0 @@
-id: no-important-in-components
-language: css
-rule:
-  pattern: "!important"
-files:
-  - "_generated/components/*.css"
-severity: warning
-message: "!important in component CSS — use specificity or ui-overrides.css for OverlayScrollbars fixes."
-note: "Only ui-overrides.css should use !important (for OverlayScrollbars position fixes)."

@@ -1,8 +1,0 @@
-id: no-var-declaration
-language: typescript
-rule:
-  pattern: "var $NAME = $INIT"
-files:
-  - "_generated/**"
-severity: error
-message: "'var' is banned — use 'const' or 'let' for proper block scoping."

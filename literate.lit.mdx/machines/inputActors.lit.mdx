@@ -1,0 +1,228 @@
+# inputActors
+
+XState v5 `fromCallback` actors that translate raw DOM events into typed AppMachine events. These actors own no note logic — they purely bridge the DOM to the state machine event bus.
+
+Dual-cleanup pattern is used throughout per XState `fromCallback` bug #5433: both `receive((e) => { ... })` and the returned teardown function remove the same listeners so cleanup is guaranteed whether the actor is stopped normally or via an explicit `CLEANUP` message.
+
+## Shared types
+
+The internal `CleanupEvent` is sent by a parent machine to request early teardown. It is not part of the public AppEvent union.
+
+``` {.typescript file=machines/inputActors.ts}
+import { fromCallback } from 'xstate';
+import type {
+  KeyDownEvent,
+  KeyUpEvent,
+  PointerDownEvent,
+  PointerMoveEvent,
+  PointerUpEvent,
+  WindowResizeEvent,
+  WindowBlurEvent,
+} from './types';
+
+interface CleanupEvent { type: 'CLEANUP' }
+```
+
+## keyboardListener
+
+Listens for `keydown`/`keyup` on `document` and sends `KEY_DOWN`/`KEY_UP` events. Repeated keys (`e.repeat === true`) and events originating in `HTMLInputElement` or `HTMLSelectElement` are filtered out so text fields are not intercepted.
+
+``` {.typescript file=machines/inputActors.ts}
+export const keyboardListener = fromCallback<CleanupEvent>(
+  ({ sendBack, receive }) => {
+    const onKeyDown = (e: KeyboardEvent): void => {
+      if (e.repeat) return;
+      if (
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLSelectElement
+      ) return;
+      const event: KeyDownEvent = { type: 'KEY_DOWN', code: e.code, key: e.key };
+      sendBack(event);
+    };
+
+    const onKeyUp = (e: KeyboardEvent): void => {
+      if (
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLSelectElement
+      ) return;
+      const event: KeyUpEvent = { type: 'KEY_UP', code: e.code, key: e.key };
+      sendBack(event);
+    };
+
+    document.addEventListener('keydown', onKeyDown);
+    document.addEventListener('keyup', onKeyUp);
+
+    receive((_event) => {
+      document.removeEventListener('keydown', onKeyDown);
+      document.removeEventListener('keyup', onKeyUp);
+    });
+
+    return () => {
+      document.removeEventListener('keydown', onKeyDown);
+      document.removeEventListener('keyup', onKeyUp);
+    };
+  },
+);
+```
+
+## pointerListener
+
+Attaches pointer event listeners to the provided canvas. `POINTER_MOVE` is throttled: it is only forwarded when the pointer crosses an approximate cell boundary (>3 px displacement) or pressure changes by more than 0.05. This prevents the >30 Hz XState event flood anti-pattern.
+
+`pointerleave` and `pointercancel` are both mapped to `POINTER_UP` so the machine always receives a clean terminal event for every active pointer.
+
+``` {.typescript file=machines/inputActors.ts}
+export interface PointerListenerInput {
+  canvas: HTMLCanvasElement;
+}
+
+const POSITION_THRESHOLD = 3;
+const PRESSURE_THRESHOLD = 0.05;
+
+export const pointerListener = fromCallback<CleanupEvent, PointerListenerInput>(
+  ({ sendBack, receive, input }) => {
+    const { canvas } = input;
+
+    const lastSent = new Map<number, { x: number; y: number; pressure: number }>();
+
+    const getCanvasCoords = (e: PointerEvent): { x: number; y: number } => {
+      const rect = canvas.getBoundingClientRect();
+      return {
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top,
+      };
+    };
+```
+
+`pointerdown` records the initial position in `lastSent` so subsequent move throttling has a reference point. `pointermove` is only forwarded when the pointer has crossed the cell-size threshold or pressure changed enough — preventing the >30 Hz XState event flood anti-pattern.
+
+``` {.typescript file=machines/inputActors.ts}
+    const onPointerDown = (e: PointerEvent): void => {
+      const { x, y } = getCanvasCoords(e);
+      lastSent.set(e.pointerId, { x, y, pressure: e.pressure });
+      const event: PointerDownEvent = {
+        type: 'POINTER_DOWN',
+        pointerId: e.pointerId,
+        x,
+        y,
+        pressure: e.pressure,
+        pointerType: e.pointerType,
+      };
+      sendBack(event);
+    };
+
+    const onPointerMove = (e: PointerEvent): void => {
+      const last = lastSent.get(e.pointerId);
+      if (!last) return;
+
+      const { x, y } = getCanvasCoords(e);
+      const dx = Math.abs(x - last.x);
+      const dy = Math.abs(y - last.y);
+      const dp = Math.abs(e.pressure - last.pressure);
+
+      if (
+        dx > POSITION_THRESHOLD ||
+        dy > POSITION_THRESHOLD ||
+        dp > PRESSURE_THRESHOLD
+      ) {
+        lastSent.set(e.pointerId, { x, y, pressure: e.pressure });
+        const event: PointerMoveEvent = {
+          type: 'POINTER_MOVE',
+          pointerId: e.pointerId,
+          x,
+          y,
+          pressure: e.pressure,
+        };
+        sendBack(event);
+      }
+    };
+```
+
+`pointerleave` and `pointercancel` are both mapped to `POINTER_UP` so the machine always receives a clean terminal event for every active pointer, even when the pointer exits the canvas boundary.
+
+``` {.typescript file=machines/inputActors.ts}
+    const onPointerUp = (e: PointerEvent): void => {
+      lastSent.delete(e.pointerId);
+      const event: PointerUpEvent = { type: 'POINTER_UP', pointerId: e.pointerId };
+      sendBack(event);
+    };
+
+    const onPointerLeave = (e: PointerEvent): void => {
+      lastSent.delete(e.pointerId);
+      const event: PointerUpEvent = { type: 'POINTER_UP', pointerId: e.pointerId };
+      sendBack(event);
+    };
+
+    const onPointerCancel = (e: PointerEvent): void => {
+      lastSent.delete(e.pointerId);
+      const event: PointerUpEvent = { type: 'POINTER_UP', pointerId: e.pointerId };
+      sendBack(event);
+    };
+
+    canvas.addEventListener('pointerdown', onPointerDown);
+    canvas.addEventListener('pointermove', onPointerMove);
+    canvas.addEventListener('pointerup', onPointerUp);
+    canvas.addEventListener('pointerleave', onPointerLeave);
+    canvas.addEventListener('pointercancel', onPointerCancel);
+```
+
+Dual-cleanup mirrors the `midiInputListener` pattern — `receive` covers parent-initiated teardown, the return function covers normal actor stop.
+
+``` {.typescript file=machines/inputActors.ts}
+    const removeListeners = (): void => {
+      canvas.removeEventListener('pointerdown', onPointerDown);
+      canvas.removeEventListener('pointermove', onPointerMove);
+      canvas.removeEventListener('pointerup', onPointerUp);
+      canvas.removeEventListener('pointerleave', onPointerLeave);
+      canvas.removeEventListener('pointercancel', onPointerCancel);
+    };
+
+    receive((_event) => {
+      removeListeners();
+      lastSent.clear();
+    });
+
+    return () => {
+      removeListeners();
+      lastSent.clear();
+    };
+  },
+);
+```
+
+## windowListener
+
+Listens for `resize` and `blur` on the global `window`. `WINDOW_BLUR` is used to stop all active notes when the application loses focus (e.g. Alt+Tab), preventing stuck notes.
+
+``` {.typescript file=machines/inputActors.ts}
+export const windowListener = fromCallback<CleanupEvent>(
+  ({ sendBack, receive }) => {
+    const onResize = (): void => {
+      const event: WindowResizeEvent = {
+        type: 'WINDOW_RESIZE',
+        width: window.innerWidth,
+        height: window.innerHeight,
+      };
+      sendBack(event);
+    };
+
+    const onBlur = (): void => {
+      const event: WindowBlurEvent = { type: 'WINDOW_BLUR' };
+      sendBack(event);
+    };
+
+    window.addEventListener('resize', onResize);
+    window.addEventListener('blur', onBlur);
+
+    receive((_event) => {
+      window.removeEventListener('resize', onResize);
+      window.removeEventListener('blur', onBlur);
+    });
+
+    return () => {
+      window.removeEventListener('resize', onResize);
+      window.removeEventListener('blur', onBlur);
+    };
+  },
+);
+```

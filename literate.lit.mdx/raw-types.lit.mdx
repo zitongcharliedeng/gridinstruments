@@ -1,0 +1,18 @@
+---
+title: Raw Import Types
+description: TypeScript module declaration for Vite raw imports
+tags: [config, typescript, types]
+---
+
+# Raw Import Types
+
+Vite supports importing files as raw strings via the `?raw` suffix. This declaration tells TypeScript that `import content from './file.md?raw'` returns a string.
+
+Used for embedding literate source prose in the app's About dialog.
+
+```{.typescript file=raw.d.ts}
+declare module '*.md?raw' {
+  const content: string;
+  export default content;
+}
+```

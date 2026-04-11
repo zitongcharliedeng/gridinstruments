@@ -1,0 +1,1155 @@
+---
+title: Coding Standards
+description: Project-wide structural lint rules — the heavenly restrictions enforced by ast-grep
+tags: [standards, ast-grep, lint, rules]
+---
+
+# Coding Standards
+
+These rules enforce the project's heavenly restrictions. Each rule is an ast-grep YAML pattern that catches structural antipatterns in the tangled TypeScript. They run as part of the literate-state-machine-wiki lint stage.
+
+Rules that protect SPECIFIC components live in those component's `.lit.mdx` files. These are the UNIVERSAL rules that apply everywhere.
+
+## No Absolute In Scrollable
+
+position:absolute inside overflow:auto container — the element will render at BOTH positions in some browsers. Use position:sticky instead.
+
+```{.yaml file=ast-grep-rules/no-absolute-in-scrollable.yml}
+id: no-absolute-in-scrollable
+language: css
+rule:
+  all:
+    - pattern: "position: absolute"
+    - inside:
+        any:
+          - has:
+              pattern: "overflow-y: auto"
+          - has:
+              pattern: "overflow: auto"
+        stopBy: end
+files:
+  - "**"
+  - "index.html"
+severity: error
+message: "position:absolute inside overflow:auto container — the element will render at BOTH positions in some browsers. Use position:sticky instead."
+note: "See #272: Chrome renders absolute-positioned children at scroll position AND absolute position when parent has overflow-y:auto."
+```
+
+## No Any Type
+
+as any' is banned — use proper types or 'unknown' with type narrowing.
+
+```{.yaml file=ast-grep-rules/no-any-type.yml}
+id: no-any-type
+language: typescript
+rule:
+  pattern: $EXPR as any
+files:
+  - "components/**"
+  - "lib/**"
+  - "app-core.ts"
+  - "main.ts"
+  - "machines/**"
+severity: error
+message: "'as any' is banned — use proper types or 'unknown' with type narrowing."
+note: "See CLAUDE.md heavenly restrictions: no 'as any'."
+```
+
+## No Append Child
+
+appendChild in SolidJS component — use JSX children instead of imperative DOM insertion.
+
+```{.yaml file=ast-grep-rules/no-append-child.yml}
+id: no-append-child
+language: typescript
+rule:
+  pattern: $EL.appendChild($$$)
+files:
+  - "components/**"
+severity: warning
+message: "appendChild in SolidJS component — use JSX children instead of imperative DOM insertion."
+```
+
+## No Async Component
+
+SolidJS components must be synchronous — async data loading belongs in createResource or parent.
+
+```{.yaml file=ast-grep-rules/no-async-component.yml}
+id: no-async-component
+language: typescript
+rule:
+  pattern: "export async function $NAME($$$): $RET {$$$}"
+files:
+  - "components/**"
+severity: error
+message: "SolidJS components must be synchronous — async data loading belongs in createResource or parent."
+```
+
+## No Border Radius
+
+border-radius is banned — the design language uses sharp corners only.
+
+```{.yaml file=ast-grep-rules/no-border-radius.yml}
+id: no-border-radius
+language: css
+rule:
+  pattern: "border-radius: $VAL"
+files:
+  - "**"
+  - "index.html"
+severity: error
+message: "border-radius is banned — the design language uses sharp corners only."
+note: "See CLAUDE.md anti-patterns: no border-radius anywhere."
+```
+
+## No Class Component
+
+Class components are banned — use SolidJS functional components.
+
+```{.yaml file=ast-grep-rules/no-class-component.yml}
+id: no-class-component
+language: typescript
+rule:
+  all:
+    - pattern: "class $NAME extends $BASE {$$$}"
+    - any:
+        - has:
+            pattern: render()
+files:
+  - "components/**"
+severity: error
+message: "Class components are banned — use SolidJS functional components."
+```
+
+## No Classlist Contains
+
+classList.contains in non-subscriber code — use SolidJS classList prop for reactive class checking.
+
+```{.yaml file=ast-grep-rules/no-classlist-contains.yml}
+id: no-classlist-contains
+language: typescript
+rule:
+  all:
+    - pattern: $EL.classList.contains($$$)
+    - not:
+        inside:
+          any:
+            - pattern: "page.evaluate($$$)"
+            - pattern: "$ACTOR.subscribe($$$)"
+          stopBy: end
+files:
+  - "components/**"
+  - "main.ts"
+severity: warning
+message: "classList.contains in non-subscriber code — use SolidJS classList prop for reactive class checking."
+```
+
+## No Color Literals In Ts
+
+Color literal in component TS — use CSS custom properties for theming consistency.
+
+```{.yaml file=ast-grep-rules/no-color-literals-in-ts.yml}
+id: no-color-literals-in-ts
+language: typescript
+rule:
+  any:
+    - pattern: "'#fff'"
+    - pattern: "'white'"
+files:
+  - "components/**"
+severity: warning
+message: "Color literal in component TS — use CSS custom properties for theming consistency."
+```
+
+## No Console Log
+
+console.log() should not ship in production code — use structured logging or remove.
+
+```{.yaml file=ast-grep-rules/no-console-log.yml}
+id: no-console-log
+language: typescript
+rule:
+  pattern: console.log($$$)
+files:
+  - "components/**"
+  - "lib/**"
+  - "app-core.ts"
+  - "main.ts"
+severity: warning
+message: "console.log() should not ship in production code — use structured logging or remove."
+```
+
+## No Create Element
+
+createElement in SolidJS component — use JSX instead of imperative element creation.
+
+```{.yaml file=ast-grep-rules/no-create-element.yml}
+id: no-create-element
+language: typescript
+rule:
+  pattern: document.createElement($$$)
+files:
+  - "components/**"
+severity: warning
+message: "createElement in SolidJS component — use JSX instead of imperative element creation."
+```
+
+## No D4 In Ui Text
+
+String 'D4' in component code — use 'D-ref' for user-facing text. Legacy API names (setD4Hz/getD4Hz) are allowed.
+
+```{.yaml file=ast-grep-rules/no-d4-in-ui-text.yml}
+id: no-d4-in-ui-text
+language: typescript
+rule:
+  all:
+    - any:
+        - pattern: "'D4'"
+        - pattern: '"D4"'
+    - not:
+        any:
+          - inside:
+              pattern: "setD4Hz($$$)"
+              stopBy: end
+          - inside:
+              pattern: "getD4Hz($$$)"
+              stopBy: end
+          - inside:
+              pattern: "_d4Hz"
+              stopBy: end
+files:
+  - "components/**"
+  - "lib/**"
+severity: error
+message: "String 'D4' in component code — use 'D-ref' for user-facing text. Legacy API names (setD4Hz/getD4Hz) are allowed."
+note: "See CLAUDE.md: D-ref naming convention. The reference pitch is adjustable, not fixed to D4."
+```
+
+## No Debugger
+
+debugger statement must not ship in production code.
+
+```{.yaml file=ast-grep-rules/no-debugger.yml}
+id: no-debugger
+language: typescript
+rule:
+  pattern: debugger
+files:
+  - "**"
+severity: error
+message: "debugger statement must not ship in production code."
+```
+
+
+## No Document Queryselector In Components
+
+document.querySelector in SolidJS components — use refs or getElementById with known IDs.
+
+```{.yaml file=ast-grep-rules/no-document-queryselector-in-components.yml}
+id: no-document-queryselector-in-components
+language: typescript
+rule:
+  any:
+    - pattern: document.querySelector($$$)
+    - pattern: document.querySelectorAll($$$)
+files:
+  - "components/**"
+severity: warning
+message: "document.querySelector in SolidJS components — use refs or getElementById with known IDs."
+note: "SolidJS components should use ref props for DOM access, not global queries."
+```
+
+## No Document Write
+
+document.write() is banned — use DOM APIs instead.
+
+```{.yaml file=ast-grep-rules/no-document-write.yml}
+id: no-document-write
+language: typescript
+rule:
+  pattern: document.write($$$)
+files:
+  - "**"
+severity: error
+message: "document.write() is banned — use DOM APIs instead."
+```
+
+## No Double Equals
+
+Use === instead of == (except for null checks). Strict equality prevents type coercion bugs.
+
+```{.yaml file=ast-grep-rules/no-double-equals.yml}
+id: no-double-equals
+language: typescript
+rule:
+  any:
+    - pattern: $A == $B
+    - pattern: $A != $B
+  not:
+    any:
+      - pattern: $A == null
+      - pattern: $A != null
+files:
+  - "**"
+severity: warning
+message: "Use === instead of == (except for null checks). Strict equality prevents type coercion bugs."
+```
+
+## No Effect Outside Services
+
+Effect-TS imports are only allowed in services/. Banned from synth hot path, render loop, pure math, and state machines.
+
+```{.yaml file=ast-grep-rules/no-effect-outside-services.yml}
+id: no-effect-outside-services
+language: typescript
+rule:
+  pattern: import $$$FROM from 'effect'
+files:
+  - "**/*.ts"
+ignores:
+  - "services/**/*.ts"
+severity: error
+message: "Effect-TS imports are only allowed in services/. Banned from synth hot path, render loop, pure math, and state machines."
+note: "Move Effect-TS usage to services/. See AGENTS.md Literate Programming section."
+```
+
+## No Eval
+
+eval() is banned — use structured code, not string evaluation.
+
+```{.yaml file=ast-grep-rules/no-eval.yml}
+id: no-eval
+language: typescript
+rule:
+  pattern: eval($$$)
+files:
+  - "**"
+severity: error
+message: "eval() is banned — use structured code, not string evaluation."
+note: "XSS and CSP violation risk."
+```
+
+## No Font Family Override
+
+font-family must use var(--font) or 'JetBrains Mono' — no other fonts allowed.
+
+```{.yaml file=ast-grep-rules/no-font-family-override.yml}
+id: no-font-family-override
+language: css
+rule:
+  all:
+    - pattern: "font-family: $VAL"
+    - not:
+        any:
+          - has:
+              pattern: "var(--font)"
+          - has:
+              pattern: "JetBrains Mono"
+files:
+  - "**"
+severity: error
+message: "font-family must use var(--font) or 'JetBrains Mono' — no other fonts allowed."
+note: "See CLAUDE.md: JetBrains Mono is the only allowed font."
+```
+
+## No Global Mutation
+
+Global mutation — only window.dcomposeApp is allowed. Use module scope or DI for state.
+
+```{.yaml file=ast-grep-rules/no-global-mutation.yml}
+id: no-global-mutation
+language: typescript
+rule:
+  any:
+    - pattern: window.$PROP = $VAL
+    - pattern: "globalThis.$PROP = $VAL"
+  not:
+    pattern: window.dcomposeApp = $VAL
+files:
+  - "**"
+severity: warning
+message: "Global mutation — only window.dcomposeApp is allowed. Use module scope or DI for state."
+```
+
+## No Imperative Test Files
+
+Imperative tests banned in this file — all behavioral tests must be XState machine-generated via xstate-graph.spec.ts
+
+```{.yaml file=ast-grep-rules/no-imperative-test-files.yml}
+id: no-imperative-test-files
+language: typescript
+rule:
+  pattern: test($NAME, $$$)
+files:
+  - "tests/**/*.spec.ts"
+ignores:
+  - "tests/xstate-graph.spec.ts"
+severity: error
+message: "Imperative tests banned in this file — all behavioral tests must be XState machine-generated via xstate-graph.spec.ts"
+note: "Only xstate-graph.spec.ts may contain tests. All other spec files should be migrated to machine-generated tests."
+```
+
+## No Important In Components
+
+!important in component CSS — use specificity or ui-overrides.css for OverlayScrollbars fixes.
+
+```{.yaml file=ast-grep-rules/no-important-in-components.yml}
+id: no-important-in-components
+language: css
+rule:
+  pattern: "!important"
+files:
+  - "components/*.css"
+severity: warning
+message: "!important in component CSS — use specificity or ui-overrides.css for OverlayScrollbars fixes."
+note: "Only ui-overrides.css should use !important (for OverlayScrollbars position fixes)."
+```
+
+## No Inline Event Handler String
+
+Inline string event handlers in HTML — use addEventListener or SolidJS event props.
+
+```{.yaml file=ast-grep-rules/no-inline-event-handler-string.yml}
+id: no-inline-event-handler-string
+language: html
+rule:
+  any:
+    - pattern: 'onclick="$$$"'
+    - pattern: 'onchange="$$$"'
+    - pattern: 'oninput="$$$"'
+    - pattern: 'onkeydown="$$$"'
+files:
+  - "index.html"
+severity: error
+message: "Inline string event handlers in HTML — use addEventListener or SolidJS event props."
+note: "String handlers create eval-like execution and bypass CSP."
+```
+
+## No Innerhtml Assignment
+
+outerHTML assignment is banned — use DOM APIs.
+
+```{.yaml file=ast-grep-rules/no-innerhtml-assignment.yml}
+id: no-innerhtml-assignment
+language: typescript
+rule:
+  pattern: "$EL.outerHTML = $VAL"
+files:
+  - "**"
+severity: error
+message: "outerHTML assignment is banned — use DOM APIs."
+```
+
+## No Localstorage Direct
+
+Direct localStorage access in components — use app-core saveSetting/loadSetting for consistent key prefixing.
+
+```{.yaml file=ast-grep-rules/no-localstorage-direct.yml}
+id: no-localstorage-direct
+language: typescript
+rule:
+  all:
+    - any:
+        - pattern: localStorage.getItem($$$)
+        - pattern: localStorage.setItem($$$)
+        - pattern: localStorage.removeItem($$$)
+    - not:
+        inside:
+          any:
+            - pattern: "saveSetting($$$)"
+            - pattern: "loadSetting($$$)"
+          stopBy: end
+files:
+  - "components/**"
+  - "lib/**"
+severity: warning
+message: "Direct localStorage access in components — use app-core saveSetting/loadSetting for consistent key prefixing."
+```
+
+## No Magic Numbers Timing
+
+setTimeout in component/library code — prefer XState delayed transitions or actor-based timing.
+
+```{.yaml file=ast-grep-rules/no-magic-numbers-timing.yml}
+id: no-magic-numbers-timing
+language: typescript
+rule:
+  all:
+    - pattern: setTimeout($FN, $MS)
+    - not:
+        inside:
+          pattern: $ACTOR.subscribe($$$)
+          stopBy: end
+files:
+  - "components/**"
+  - "lib/**"
+  - "main.ts"
+severity: warning
+message: "setTimeout in component/library code — prefer XState delayed transitions or actor-based timing."
+note: "XState handles timing declaratively. setTimeout creates hidden state outside the machine."
+```
+
+## No Mutation Observer
+
+MutationObserver — use SolidJS reactivity or XState subscriptions instead of observing DOM mutations.
+
+```{.yaml file=ast-grep-rules/no-mutation-observer.yml}
+id: no-mutation-observer
+language: typescript
+rule:
+  pattern: new MutationObserver($$$)
+files:
+  - "components/**"
+  - "lib/**"
+severity: warning
+message: "MutationObserver — use SolidJS reactivity or XState subscriptions instead of observing DOM mutations."
+```
+
+## No Naked Browser Api
+
+Direct browser API usage should be wrapped in Effect services (services/). This warning will become an error in Wave 8.
+
+```{.yaml file=ast-grep-rules/no-naked-browser-api.yml}
+id: no-naked-browser-api
+language: typescript
+rule:
+  any:
+    - pattern: new AudioContext()
+    - pattern: new AudioContext($OPTS)
+    - pattern: navigator.requestMIDIAccess($$$)
+files:
+  - "**/*.ts"
+ignores:
+  - "lib/synth.ts"
+  - "lib/midi-input.ts"
+  - "lib/mpe-output.ts"
+  - "lib/mpe-service.ts"
+  - "main.ts"
+  - "services/**/*.ts"
+severity: warning
+message: "Direct browser API usage should be wrapped in Effect services (services/). This warning will become an error in Wave 8."
+note: "See AGENTS.md for Effect-TS service layer guidance."
+```
+
+## No Native Select In Html
+
+Native <select> banned in HTML — create <select> elements in JavaScript (for SlimSelect wrapping) or use a cycling <button>. See waveform/layout controls for the pattern.
+
+```{.yaml file=ast-grep-rules/no-native-select-in-html.yml}
+id: no-native-select-in-html
+language: html
+rule:
+  pattern: <select $$$ATTRS>$$$BODY</select>
+files:
+  - "**/*.html"
+severity: error
+message: "Native <select> banned in HTML — create <select> elements in JavaScript (for SlimSelect wrapping) or use a cycling <button>. See waveform/layout controls for the pattern."
+note: "SlimSelect-wrapped selects must be created programmatically in main.ts, not declared in HTML. For enum-type controls, use a cycling button with click handler."
+```
+
+## No Nested Ternary
+
+Nested ternary — use if/else or early return for readability.
+
+```{.yaml file=ast-grep-rules/no-nested-ternary.yml}
+id: no-nested-ternary
+language: typescript
+rule:
+  pattern: "$A ? $B : $C ? $D : $E"
+files:
+  - "**"
+severity: warning
+message: "Nested ternary — use if/else or early return for readability."
+```
+
+## No Non Bubbling Dispatch
+
+|
+
+```{.yaml file=ast-grep-rules/no-non-bubbling-dispatch.yml}
+id: no-non-bubbling-dispatch
+language: typescript
+rule:
+  pattern: $EL.dispatchEvent(new Event($NAME))
+message: |
+  BANNED: dispatchEvent without { bubbles: true }. SolidJS uses event
+  delegation (document-level listeners). Non-bubbling events never reach
+  SolidJS handlers. Use: new Event($NAME, { bubbles: true })
+severity: error
+```
+
+## No Promise Constructor
+
+Promise constructor in components — prefer async/await or createResource for SolidJS data fetching.
+
+```{.yaml file=ast-grep-rules/no-promise-constructor.yml}
+id: no-promise-constructor
+language: typescript
+rule:
+  pattern: new Promise($$$)
+files:
+  - "components/**"
+severity: warning
+message: "Promise constructor in components — prefer async/await or createResource for SolidJS data fetching."
+```
+
+## No Px Font Size
+
+Non-standard font-size — use 8/9/10/11/12/16px for consistency.
+
+```{.yaml file=ast-grep-rules/no-px-font-size.yml}
+id: no-px-font-size
+language: css
+rule:
+  all:
+    - pattern: "font-size: $VALpx"
+    - not:
+        any:
+          - has:
+              pattern: "9px"
+          - has:
+              pattern: "10px"
+          - has:
+              pattern: "11px"
+          - has:
+              pattern: "12px"
+          - has:
+              pattern: "16px"
+          - has:
+              pattern: "8px"
+files:
+  - "**"
+severity: warning
+message: "Non-standard font-size — use 8/9/10/11/12/16px for consistency."
+```
+
+## No Raw Classlist Add
+
+classList.add() is banned in main.ts — use XState actor.send() and handle DOM in the subscriber.
+
+```{.yaml file=ast-grep-rules/no-raw-classlist-add.yml}
+id: no-raw-classlist-add
+language: typescript
+rule:
+  all:
+    - pattern: $EL.classList.add($$$)
+    - not:
+        inside:
+          pattern: $ACTOR.subscribe($$$)
+          stopBy: end
+files:
+  - "components/**"
+  - "lib/**"
+  - "main.ts"
+severity: error
+message: "classList.add() is banned in main.ts — use XState actor.send() and handle DOM in the subscriber."
+note: "All UI state must be managed by XState actors. See machines/ for examples."
+```
+
+## No Raw Classlist Remove
+
+classList.remove() is banned in main.ts — use XState actor.send() and handle DOM in the subscriber.
+
+```{.yaml file=ast-grep-rules/no-raw-classlist-remove.yml}
+id: no-raw-classlist-remove
+language: typescript
+rule:
+  all:
+    - pattern: $EL.classList.remove($$$)
+    - not:
+        inside:
+          pattern: $ACTOR.subscribe($$$)
+          stopBy: end
+files:
+  - "components/**"
+  - "lib/**"
+  - "main.ts"
+severity: error
+message: "classList.remove() is banned in main.ts — use XState actor.send() and handle DOM in the subscriber."
+note: "All UI state must be managed by XState actors. See machines/ for examples."
+```
+
+## No Raw Classlist Toggle
+
+classList.toggle() is banned in main.ts — use XState actor.send() and handle DOM in the subscriber.
+
+```{.yaml file=ast-grep-rules/no-raw-classlist-toggle.yml}
+id: no-raw-classlist-toggle
+language: typescript
+rule:
+  all:
+    - pattern: $EL.classList.toggle($$$)
+    - not:
+        inside:
+          pattern: $ACTOR.subscribe($$$)
+          stopBy: end
+    - not:
+        inside:
+          kind: function_declaration
+          stopBy: end
+    - not:
+        inside:
+          kind: method_definition
+          stopBy: end
+files:
+  - "components/**"
+  - "lib/**"
+  - "main.ts"
+severity: error
+message: "classList.toggle() is banned in main.ts — use XState actor.send() and handle DOM in the subscriber."
+note: "All UI state must be managed by XState actors. See machines/ for examples."
+```
+
+## No Raw Disabled
+
+Direct .disabled assignment is banned in main.ts — use XState actor.send() and handle DOM in the subscriber.
+
+```{.yaml file=ast-grep-rules/no-raw-disabled.yml}
+id: no-raw-disabled
+language: typescript
+rule:
+  all:
+    - pattern: $EL.disabled = $VAL
+    - not:
+        inside:
+          pattern: $ACTOR.subscribe($$$)
+          stopBy: end
+files:
+  - "components/**"
+  - "lib/**"
+  - "main.ts"
+severity: error
+message: "Direct .disabled assignment is banned in main.ts — use XState actor.send() and handle DOM in the subscriber."
+note: "All UI state must be managed by XState actors. See machines/ for examples."
+```
+
+## No Raw Dispatchevent In Specs
+
+Raw dispatchEvent inside page.evaluate() banned in spec files — use PlaywrightActions from machine registry
+
+```{.yaml file=ast-grep-rules/no-raw-dispatchevent-in-specs.yml}
+id: no-raw-dispatchevent-in-specs
+language: typescript
+rule:
+  pattern: dispatchEvent(new $EVENT($$$))
+  inside:
+    pattern: page.evaluate($$$)
+    stopBy: end
+files:
+  - "tests/*.spec.ts"
+severity: error
+message: "Raw dispatchEvent inside page.evaluate() banned in spec files — use PlaywrightActions from machine registry"
+note: "All DOM event dispatch must go through XState machine PlaywrightActions for traceability. Machine files in tests/machines/ are exempt."
+```
+
+## No Raw Goto In Specs
+
+page.goto() banned in imperative spec files — all navigation handled by xstate-graph.spec.ts beforeEach
+
+```{.yaml file=ast-grep-rules/no-raw-goto-in-specs.yml}
+id: no-raw-goto-in-specs
+language: typescript
+rule:
+  pattern: page.goto($$$)
+files:
+  - "tests/**/*.spec.ts"
+ignores:
+  - "tests/xstate-graph.spec.ts"
+severity: error
+message: "page.goto() banned in imperative spec files — all navigation handled by xstate-graph.spec.ts beforeEach"
+note: "Only xstate-graph.spec.ts may use page.goto(). Other spec files should be migrated to machine-generated tests."
+```
+
+## No Raw Hidden
+
+Direct .hidden assignment is banned in main.ts — use XState actor.send() and handle DOM in the subscriber.
+
+```{.yaml file=ast-grep-rules/no-raw-hidden.yml}
+id: no-raw-hidden
+language: typescript
+rule:
+  all:
+    - pattern: $EL.hidden = $VAL
+    - not:
+        inside:
+          pattern: $ACTOR.subscribe($$$)
+          stopBy: end
+files:
+  - "components/**"
+  - "lib/**"
+  - "main.ts"
+severity: error
+message: "Direct .hidden assignment is banned in main.ts — use XState actor.send() and handle DOM in the subscriber."
+note: "All UI state must be managed by XState actors. See machines/ for examples."
+```
+
+## No Raw Innerhtml
+
+innerHTML assignment is banned in main.ts — use XState actor.send() and handle DOM in the subscriber.
+
+```{.yaml file=ast-grep-rules/no-raw-innerhtml.yml}
+id: no-raw-innerhtml
+language: typescript
+rule:
+  all:
+    - pattern: $EL.innerHTML = $VAL
+    - not:
+        inside:
+          pattern: $ACTOR.subscribe($$$)
+          stopBy: end
+    - not:
+        inside:
+          kind: function_declaration
+          stopBy: end
+    - not:
+        inside:
+          kind: method_definition
+          stopBy: end
+files:
+  - "components/**"
+  - "lib/**"
+  - "main.ts"
+severity: error
+message: "innerHTML assignment is banned in main.ts — use XState actor.send() and handle DOM in the subscriber."
+note: "All UI state must be managed by XState actors. See machines/ for examples."
+```
+
+## No Raw Setattribute
+
+setAttribute()/removeAttribute() is banned in main.ts — use XState actor.send() and handle DOM in the subscriber.
+
+```{.yaml file=ast-grep-rules/no-raw-setattribute.yml}
+id: no-raw-setattribute
+language: typescript
+rule:
+  all:
+    - any:
+        - pattern: $EL.setAttribute($$$)
+        - pattern: $EL.removeAttribute($$$)
+    - not:
+        inside:
+          pattern: $ACTOR.subscribe($$$)
+          stopBy: end
+files:
+  - "main.ts"
+severity: error
+message: "setAttribute()/removeAttribute() is banned in main.ts — use XState actor.send() and handle DOM in the subscriber."
+note: "All UI state must be managed by XState actors. See machines/ for examples."
+```
+
+## No Raw Slider Manipulation
+
+Raw slider manipulation via page.evaluate() banned in spec files — use sliderResetMachine PlaywrightActions
+
+```{.yaml file=ast-grep-rules/no-raw-slider-manipulation.yml}
+id: no-raw-slider-manipulation
+language: typescript
+rule:
+  pattern: page.evaluate($$$)
+  regex: "slider\\.value|getElementById.*slider.*\\.value"
+files:
+  - "tests/*.spec.ts"
+severity: error
+message: "Raw slider manipulation via page.evaluate() banned in spec files — use sliderResetMachine PlaywrightActions"
+note: "Slider state must be managed through XState machines. Machine files in tests/machines/ are exempt."
+```
+
+## No Raw Style Mutation
+
+Direct style mutation is banned in main.ts — use XState actor.send() and handle DOM in the subscriber.
+
+```{.yaml file=ast-grep-rules/no-raw-style-mutation.yml}
+id: no-raw-style-mutation
+language: typescript
+rule:
+  all:
+    - pattern: $EL.style.$PROP = $VAL
+    - not:
+        inside:
+          pattern: $ACTOR.subscribe($$$)
+          stopBy: end
+    - not:
+        inside:
+          kind: function_declaration
+          stopBy: end
+    - not:
+        inside:
+          kind: method_definition
+          stopBy: end
+files:
+  - "components/**"
+  - "lib/**"
+  - "main.ts"
+severity: error
+message: "Direct style mutation is banned in main.ts — use XState actor.send() and handle DOM in the subscriber."
+note: "All UI state must be managed by XState actors. See machines/ for examples."
+```
+
+## No Raw Textcontent
+
+textContent assignment is banned in main.ts — use XState actor.send() and handle DOM in the subscriber.
+
+```{.yaml file=ast-grep-rules/no-raw-textcontent.yml}
+id: no-raw-textcontent
+language: typescript
+rule:
+  all:
+    - pattern: $EL.textContent = $VAL
+    - not:
+        inside:
+          pattern: $ACTOR.subscribe($$$)
+          stopBy: end
+    - not:
+        inside:
+          kind: function_declaration
+          stopBy: end
+    - not:
+        inside:
+          kind: method_definition
+          stopBy: end
+files:
+  - "components/**"
+  - "lib/**"
+  - "main.ts"
+severity: error
+message: "textContent assignment is banned in main.ts — use XState actor.send() and handle DOM in the subscriber."
+note: "All UI state must be managed by XState actors. See machines/ for examples."
+```
+
+## No Raw Tooltips
+
+Raw `title=` tooltip banned — use the InfoButton component with data-info popup instead. See literate/components/InfoButton.lit.md for the pattern.
+
+```{.yaml file=ast-grep-rules/no-raw-tooltips.yml}
+id: no-raw-tooltips
+language: html
+rule:
+  any:
+    - pattern: <$TAG title="$$$TITLE" $$$ATTRS>
+    - pattern: <$TAG $$$ATTRS title="$$$TITLE">
+    - pattern: <$TAG $$$BEFORE title="$$$TITLE" $$$AFTER>
+files:
+  - "**/*.html"
+severity: error
+message: "Raw `title=` tooltip banned — use the InfoButton component with data-info popup instead. See literate/components/InfoButton.lit.md for the pattern."
+note: "All user-facing tooltips must use the InfoButton + dialog system (data-info attribute on .slider-info-btn). Raw title= attributes show inconsistent browser tooltips that don't match the design system."
+```
+
+## No Remove Child
+
+removeChild in SolidJS component — use Show/For conditionals instead of imperative DOM removal.
+
+```{.yaml file=ast-grep-rules/no-remove-child.yml}
+id: no-remove-child
+language: typescript
+rule:
+  pattern: $EL.removeChild($$$)
+files:
+  - "components/**"
+severity: warning
+message: "removeChild in SolidJS component — use Show/For conditionals instead of imperative DOM removal."
+```
+
+## No Resize Observer
+
+|
+
+```{.yaml file=ast-grep-rules/no-resize-observer.yml}
+id: no-resize-observer-in-components
+language: typescript
+rule:
+  pattern: new ResizeObserver($$$)
+message: |
+  BANNED: ResizeObserver in components. Use SolidJS reactive signals
+  (derived from value props) for visibility-dependent rendering.
+  ResizeObserver is a DOM observer outside the reactive system.
+severity: error
+files:
+  - "components/**"
+```
+
+## No Scroll Overflow Auto
+
+overflow:auto/scroll at page level — the instrument must be fully visible without scroll. Use overflow:hidden.
+
+```{.yaml file=ast-grep-rules/no-scroll-overflow-auto.yml}
+id: no-scroll-overflow-auto
+language: css
+rule:
+  any:
+    - pattern: "overflow: auto"
+    - pattern: "overflow: scroll"
+    - pattern: "overflow-y: auto"
+    - pattern: "overflow-y: scroll"
+    - pattern: "overflow-x: auto"
+    - pattern: "overflow-x: scroll"
+files:
+  - "index.html"
+severity: warning
+message: "overflow:auto/scroll at page level — the instrument must be fully visible without scroll. Use overflow:hidden."
+note: "See CLAUDE.md: no scroll on the page. Panels use OverlayScrollbars for internal scroll."
+```
+
+## No Settimeout In Components
+
+|
+
+```{.yaml file=ast-grep-rules/no-settimeout-in-components.yml}
+id: no-settimeout-in-components
+language: typescript
+rule:
+  pattern: setTimeout($$$)
+  inside:
+    kind: call_expression
+    stopBy: end
+message: |
+  BANNED: setTimeout in components. Use SolidJS createEffect, queueMicrotask,
+  or requestAnimationFrame instead. setTimeout is unreliable for DOM timing
+  and creates race conditions with framework reactivity.
+severity: error
+files:
+  - "components/**"
+```
+
+## No Sync Xhr
+
+XMLHttpRequest is banned — use fetch() API.
+
+```{.yaml file=ast-grep-rules/no-sync-xhr.yml}
+id: no-sync-xhr
+language: typescript
+rule:
+  pattern: new XMLHttpRequest()
+files:
+  - "**"
+severity: error
+message: "XMLHttpRequest is banned — use fetch() API."
+```
+
+## No Throw String
+
+throw string literal — use throw new Error(msg) for proper stack traces.
+
+```{.yaml file=ast-grep-rules/no-throw-string.yml}
+id: no-throw-string
+language: typescript
+rule:
+  pattern: "throw '$MSG'"
+files:
+  - "**"
+severity: error
+message: "throw string literal — use throw new Error(msg) for proper stack traces."
+```
+
+## No Ts Comments
+
+|
+
+```{.yaml file=ast-grep-rules/no-ts-comments.yml}
+id: no-ts-comments
+message: |
+  Use literate prose instead of code comments. End the code block, write markdown, resume:
+
+  ``` {.typescript file=example.ts}
+  const a = computeValue();
+  ```
+
+  Explain WHY `a` is computed this way, with [MDN links](https://developer.mozilla.org) etc.
+
+  ``` {.typescript file=example.ts}
+  const b = a * KNOWN_CONSTANT;
+  ```
+
+  Entangled concatenates all blocks targeting the same file in document order.
+  See: https://entangled.github.io/entangled/#multiple-code-blocks
+severity: error
+note: "Entangled v2 supports multiple code blocks per output file (concatenated in order). This is the core literate programming pattern — interleave prose and code."
+language: TypeScript
+rule:
+  kind: comment
+```
+
+## No Type Assertion
+
+|
+
+```{.yaml file=ast-grep-rules/no-type-assertion.yml}
+id: no-type-assertion
+message: |
+  Use type guards or generic parameters instead of `as` type assertions.
+
+  Allowed patterns:
+  - `as unknown` (double-cast entry point: `x as unknown as T`)
+  - XState setup pattern: `types: { context: {} as T, events: {} as T }`
+
+  Replace `value as SomeType` with:
+  - Type guards: `if (value instanceof SomeType) { ... }`
+  - Generic query: `document.querySelector<SomeType>('#id')`
+  - Typed variable: `const x: SomeType[] = []`
+  - `satisfies` for literal conformance checks
+severity: error
+language: TypeScript
+rule:
+  kind: as_expression
+  not:
+    any:
+      - pattern: $E as unknown
+      - pattern: $E as unknown as $T
+      - pattern: "{} as $T"
+```
+
+## No Var Declaration
+
+var' is banned — use 'const' or 'let' for proper block scoping.
+
+```{.yaml file=ast-grep-rules/no-var-declaration.yml}
+id: no-var-declaration
+language: typescript
+rule:
+  pattern: "var $NAME = $INIT"
+files:
+  - "**"
+severity: error
+message: "'var' is banned — use 'const' or 'let' for proper block scoping."
+```
+
+## No Vendor Prefix Css
+
+Vendor-prefixed CSS is banned — use only standard properties that work identically in ALL browsers.
+
+```{.yaml file=ast-grep-rules/no-vendor-prefix-css.yml}
+id: no-vendor-prefix-css
+language: css
+rule:
+  any:
+    - pattern: "-webkit-$PROP: $VAL"
+    - pattern: "-moz-$PROP: $VAL"
+    - pattern: "-ms-$PROP: $VAL"
+files:
+  - "**"
+  - "index.html"
+severity: error
+message: "Vendor-prefixed CSS is banned — use only standard properties that work identically in ALL browsers."
+note: "User rule: NO browser-vendor-specific features anywhere. If it needs a prefix, don't use it."
+```
+
+## No Window Alert
+
+Native browser dialogs (alert/confirm/prompt) are banned — use custom UI components.
+
+```{.yaml file=ast-grep-rules/no-window-alert.yml}
+id: no-window-alert
+language: typescript
+rule:
+  any:
+    - pattern: alert($$$)
+    - pattern: window.alert($$$)
+    - pattern: confirm($$$)
+    - pattern: window.confirm($$$)
+    - pattern: prompt($$$)
+    - pattern: window.prompt($$$)
+files:
+  - "**"
+severity: error
+message: "Native browser dialogs (alert/confirm/prompt) are banned — use custom UI components."
+```

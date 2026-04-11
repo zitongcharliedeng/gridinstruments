@@ -1,0 +1,73 @@
+---
+title: Package Declaration
+description: bun dependency manifest — consumed by bun2nix in the nix flake
+tags: [config, bun, bootstrap]
+---
+
+# Package Declaration
+
+This file declares the npm dependencies consumed by `bun2nix` inside the nix flake. It is a bootstrap artifact — it must exist at the project root for bun to generate `bun.lock` and `bun.nix`, same as `flake.nix`.
+
+The `scripts` section is minimal — `literate-state-machine-wiki build` handles the full pipeline. These scripts exist only as convenience aliases for developer muscle memory.
+
+## Dependencies
+
+**Runtime:** SolidJS (UI), XState (state machines), Effect-TS (dependency injection), tonal (music theory), roughjs (sketch rendering), overlayscrollbars, lucide (icons).
+
+**Dev:** TypeScript, Vite + SolidJS plugin, ESLint + typescript-eslint + solid plugin, Playwright (testing), ast-grep (structural linting).
+
+```{.json file=package.json as-absolute-file-path="tangleAndRead derives this at eval time for bun2nix"}
+{
+  "name": "gridinstruments",
+  "version": "1.0.0",
+  "description": "Web-based isomorphic grid keyboard synthesizer — GridInstruments",
+  "type": "module",
+  "scripts": {
+    "build": "tsc && vite build",
+    "dev": "vite",
+    "preview": "vite preview"
+  },
+  "keywords": [
+    "isomorphic",
+    "keyboard",
+    "synthesizer",
+    "wicki-hayden",
+    "dcompose",
+    "music",
+    "web-audio"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@anthropic-ai/sdk": "^0.78.0",
+    "@ast-grep/cli": "^0.41.0",
+    "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.57.0",
+    "@types/node": "^25.3.3",
+    "eslint": "^10.0.1",
+    "eslint-plugin-solid": "^0.14.5",
+    "typescript": "^5.3.3",
+    "typescript-eslint": "^8.56.0",
+    "vite": "^5.0.10"
+  },
+  "dependencies": {
+    "@kobalte/core": "^0.13.11",
+    "@solid-primitives/event-listener": "^2.4.5",
+    "@solid-primitives/media": "^2.3.5",
+    "@solid-primitives/resize-observer": "^2.1.5",
+    "@tonejs/midi": "^2.0.28",
+    "@xstate/solid": "^2.0.0",
+    "effect": "^3.19.19",
+    "isomorphic-qwerty": "^0.0.4",
+    "lucide": "^0.577.0",
+    "overlayscrollbars": "^2.14.0",
+    "roughjs": "^4.6.6",
+    "slim-select": "^3.4.3",
+    "solid-js": "^1.9.11",
+    "solid-primitives": "^0.0.1",
+    "tonal": "^6.0.1",
+    "vite-plugin-solid": "^2.11.11",
+    "xstate": "^5.28.0"
+  }
+}
+```

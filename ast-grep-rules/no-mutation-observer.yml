@@ -1,9 +1,0 @@
-id: no-mutation-observer
-language: typescript
-rule:
-  pattern: new MutationObserver($$$)
-files:
-  - "_generated/components/**"
-  - "_generated/lib/**"
-severity: warning
-message: "MutationObserver — use SolidJS reactivity or XState subscriptions instead of observing DOM mutations."

@@ -1,0 +1,30 @@
+---
+title: Vite Configuration
+description: Vite build config — SolidJS plugin, relative base path for GitHub Pages
+tags: [config, vite, build]
+---
+
+# Vite Configuration
+
+Vite builds the production bundle from the tangled TypeScript. The SolidJS plugin handles JSX transformation. `base: './'` produces relative asset paths so the app works on GitHub Pages without a custom domain redirect.
+
+Source maps are enabled — when debugging in DevTools, you see the tangled TypeScript, which maps 1:1 to the literate prose blocks that produced it.
+
+```{.typescript file=vite.config.ts}
+import { defineConfig } from 'vite';
+import solidPlugin from 'vite-plugin-solid';
+
+export default defineConfig({
+  base: './',
+  plugins: [solidPlugin()],
+  build: {
+    outDir: 'dist',
+    sourcemap: true,
+  },
+  server: {
+    port: 3000,
+    strictPort: true,
+    open: false,
+  },
+});
+```

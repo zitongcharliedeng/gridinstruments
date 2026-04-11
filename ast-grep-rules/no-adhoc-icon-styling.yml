@@ -1,8 +1,0 @@
-id: no-adhoc-icon-styling
-language: html
-rule:
-  pattern: |
-    <$TAG style="$_line-height: 0$_" $$$>
-severity: warning
-message: "Inline `line-height: 0` collapses icon boxes and breaks alignment — use `.icon` class instead"
-note: "Icon elements must use the `.icon` CSS class for proper vertical alignment. Inline style mutations bypass the design system."
